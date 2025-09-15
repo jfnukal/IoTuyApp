@@ -64,49 +64,52 @@ function App() {
     }, []);
 
     if (isLoading) {
-        return <div className="container"><h1>Načítám zařízení...</h1></div>;
+        return (
+            <div className="container">
+                <div className="loading">
+                    <h1>Načítám zařízení...</h1>
+                </div>
+            </div>
+        );
     }
 
     if (error) {
         return (
             <div className="container">
-                <h1>Chyba</h1>
-                <p>Nepodařilo se načíst data: {error}</p>
+                <div className="error">
+                    <h1>Chyba</h1>
+                    <p>Nepodařilo se načíst data: {error}</p>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="container">
-            <h1>Tuya Smart Zařízení</h1>
-            <p>Celkem zařízení: {devicesData?.length || 0}</p>
+            <h1 className="page-title">Tuya Smart Zařízení</h1>
+            <p className="device-count">
+                Celkem zařízení: {devicesData?.length || 0}
+            </p>
             
-            <div className="devices-grid" style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+            <div className="devices-grid">
                 {devicesData?.map((device) => {
                     const isOnline = device.online;
                     const switches = device.status?.filter(item => item.code.startsWith('switch_')) || [];
                     const countdowns = device.status?.filter(item => item.code.startsWith('countdown_')) || [];
                     
                     return (
-                        <div key={device.id} className="device-card" style={{
-                            border: '1px solid #ddd',
-                            borderRadius: '8px',
-                            padding: '16px',
-                            backgroundColor: isOnline ? '#f9f9f9' : '#ffeeee'
-                        }}>
-                            <h3>{device.custom_name || device.name}</h3>
+                        <div key={device.id} className={`device-card ${isOnline ? 'online' : 'offline'}`}>
+                            <h3 className="device-title">
+                                {device.custom_name || device.name}
+                            </h3>
+                            
                             <div className="device-info">
                                 <p><strong>ID:</strong> {device.id}</p>
                                 <p><strong>Kategorie:</strong> {device.category}</p>
                                 <p><strong>Produkt:</strong> {device.product_name || 'Neznámý'}</p>
-                                <p><strong>Stav:</strong> 
-                                    <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`} style={{
-                                        marginLeft: '8px',
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        color: 'white',
-                                        backgroundColor: isOnline ? 'green' : 'red'
-                                    }}>
+                                <p>
+                                    <strong>Stav:</strong> 
+                                    <span className={`status-badge ${isOnline ? 'online' : 'offline'}`}>
                                         {isOnline ? 'ONLINE' : 'OFFLINE'}
                                     </span>
                                 </p>
@@ -115,61 +118,24 @@ function App() {
 
                             {/* Zobrazení switchů pokud existují */}
                             {switches.length > 0 && (
-                                <div className="switches-section" style={{ 
-                                    marginTop: '16px',
-                                    padding: '15px',
-                                    backgroundColor: '#f8f9fa',
-                                    borderRadius: '8px'
-                                }}>
-                                    <h4 style={{ 
-                                        margin: '0 0 10px 0', 
-                                        color: '#2c3e50',
-                                        fontSize: '16px'
-                                    }}>
-                                        Spínače:
-                                    </h4>
+                                <div className="switches-section">
+                                    <h4 className="switches-title">Spínače:</h4>
                                     <div className="switches-list">
                                         {switches.map((switchItem) => {
                                             const switchNumber = switchItem.code.replace('switch_', '');
                                             const countdown = countdowns.find(c => c.code === `countdown_${switchNumber}`);
                                             
                                             return (
-                                                <div key={switchItem.code} className="switch-item" style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    padding: '10px',
-                                                    margin: '8px 0',
-                                                    backgroundColor: switchItem.value ? '#d4edda' : '#f8d7da',
-                                                    borderRadius: '6px',
-                                                    border: switchItem.value ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
-                                                }}>
-                                                    <span style={{ 
-                                                        fontWeight: 'bold',
-                                                        color: '#2c3e50'
-                                                    }}>
+                                                <div key={switchItem.code} className={`switch-item ${switchItem.value ? 'on' : 'off'}`}>
+                                                    <span className="switch-label">
                                                         Switch {switchNumber.toUpperCase()}
                                                     </span>
-                                                    <div>
-                                                        <span style={{
-                                                            padding: '6px 12px',
-                                                            borderRadius: '15px',
-                                                            color: 'white',
-                                                            backgroundColor: switchItem.value ? '#28a745' : '#dc3545',
-                                                            marginRight: '8px',
-                                                            fontSize: '12px',
-                                                            fontWeight: 'bold'
-                                                        }}>
+                                                    <div className="switch-controls">
+                                                        <span className={`switch-status ${switchItem.value ? 'on' : 'off'}`}>
                                                             {switchItem.value ? 'ZAP' : 'VYP'}
                                                         </span>
                                                         {countdown && countdown.value > 0 && (
-                                                            <span style={{
-                                                                fontSize: '12px',
-                                                                color: '#6c757d',
-                                                                backgroundColor: '#e9ecef',
-                                                                padding: '2px 6px',
-                                                                borderRadius: '10px'
-                                                            }}>
+                                                            <span className="countdown">
                                                                 ({countdown.value}s)
                                                             </span>
                                                         )}
@@ -183,47 +149,25 @@ function App() {
 
                             {/* Chyba při načítání stavu */}
                             {device.statusError && (
-                                <div className="status-error" style={{
-                                    marginTop: '16px',
-                                    padding: '8px',
-                                    backgroundColor: '#ffe6e6',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    color: '#d63031'
-                                }}>
+                                <div className="error-section">
                                     Chyba při načítání stavu: {device.statusError}
                                 </div>
                             )}
 
                             {/* Chyba při načítání zařízení */}
                             {device.error && (
-                                <div className="device-error" style={{
-                                    marginTop: '16px',
-                                    padding: '8px',
-                                    backgroundColor: '#ffe6e6',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    color: '#d63031'
-                                }}>
+                                <div className="error-section">
                                     Chyba: {device.error}
                                 </div>
                             )}
 
                             {/* Detailní informace o stavu */}
                             {device.status && device.status.length > 0 && (
-                                <details style={{ marginTop: '16px', fontSize: '12px' }}>
+                                <details className="debug-section">
                                     <summary>Všechny stavy zařízení</summary>
-                                    <pre style={{ 
-                                        fontSize: '10px',
-                                        overflow: 'auto',
-                                        maxHeight: '200px',
-                                        backgroundColor: '#f5f5f5',
-                                        padding: '8px',
-                                        borderRadius: '4px',
-                                        marginTop: '8px'
-                                    }}>
+                                    <div className="debug-content">
                                         {JSON.stringify(device.status, null, 2)}
-                                    </pre>
+                                    </div>
                                 </details>
                             )}
                         </div>
@@ -231,18 +175,11 @@ function App() {
                 })}
             </div>
             
-            <details style={{ marginTop: '20px', fontSize: '12px' }}>
+            <details className="debug-section">
                 <summary>Debug info - Raw data</summary>
-                <pre style={{ 
-                    fontSize: '10px',
-                    overflow: 'auto',
-                    maxHeight: '300px',
-                    backgroundColor: '#f5f5f5',
-                    padding: '16px',
-                    borderRadius: '4px'
-                }}>
+                <div className="debug-content">
                     {JSON.stringify(devicesData, null, 2)}
-                </pre>
+                </div>
             </details>
         </div>
     );

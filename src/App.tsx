@@ -27,10 +27,12 @@ interface TuyaDevice {
 }
 
 function App() {
-  console.log("APP COMPONENT LOADED - VERSION 2.0");
+    console.log("APP LOADED - FINAL VERSION");
+    
     const [devicesData, setDevicesData] = useState<TuyaDevice[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedDevice, setSelectedDevice] = useState<TuyaDevice | null>(null);
 
     useEffect(() => {
         fetch('/.netlify/functions/get-devices-list')
@@ -42,7 +44,6 @@ function App() {
             })
             .then((data) => {
                 console.log('Received data:', data);
-                // Handle different response formats
                 let devices = [];
                 if (data.devices && Array.isArray(data.devices)) {
                     devices = data.devices;
@@ -66,144 +67,224 @@ function App() {
 
     if (isLoading) {
         return (
-            <div className="container">
-                <div className="loading">
-                    <h1>Načítám zařízení...</h1>
-                </div>
+            <div style={{ textAlign: 'center', padding: '50px' }}>
+                <h1>Načítám zařízení...</h1>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="container">
-                <div className="error">
-                    <h1>Chyba</h1>
-                    <p>Nepodařilo se načíst data: {error}</p>
-                </div>
+            <div style={{ textAlign: 'center', padding: '50px' }}>
+                <h1>Chyba</h1>
+                <p>Nepodařilo se načíst data: {error}</p>
             </div>
         );
     }
 
     return (
-        <div className="container">
-            <h1 style={{ color: '#2c3e50', textAlign: 'center' }}>
-                  NOVÁ VERZE - Tuya Smart Zařízení
-              </h1>
-            <p className="device-count">
+        <div style={{ 
+            maxWidth: '1200px', 
+            margin: '0 auto', 
+            padding: '20px',
+            backgroundColor: '#ffffff'
+        }}>
+            <h1 style={{ 
+                textAlign: 'center', 
+                color: '#2c3e50',
+                marginBottom: '10px'
+            }}>
+                FINÁLNÍ VERZE - Tuya Smart Zařízení
+            </h1>
+            
+            <p style={{ 
+                textAlign: 'center', 
+                fontSize: '18px', 
+                color: '#27ae60',
+                marginBottom: '30px'
+            }}>
                 Celkem zařízení: {devicesData?.length || 0}
             </p>
             
-            <div className="devices-grid">
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '20px'
+            }}>
                 {devicesData?.map((device) => {
                     const isOnline = device.online;
                     const switches = device.status?.filter(item => item.code.startsWith('switch_')) || [];
-                    const countdowns = device.status?.filter(item => item.code.startsWith('countdown_')) || [];
                     
                     return (
-                        <div key={device.id} className={`device-card ${isOnline ? 'online' : 'offline'}`}>
-                            <h3 className="device-title">
-                                {device.custom_name || device.name}
-                            </h3>
-                            
-                            <div className="device-info">
-                                <p><strong>ID:</strong> {device.id}</p>
-                                <p><strong>Kategorie:</strong> {device.category}</p>
-                                <p><strong>Produkt:</strong> {device.product_name || 'Neznámý'}</p>
-                                <p>
-                                    <strong>Stav:</strong> 
-                                    <span className={`status-badge ${isOnline ? 'online' : 'offline'}`}>
-                                        {isOnline ? 'ONLINE' : 'OFFLINE'}
-                                    </span>
-                                </p>
-                                <p><strong>Vytvořeno:</strong> {device.create_time ? new Date(device.create_time * 1000).toLocaleString('cs-CZ') : 'Neznámé'}</p>
-                            </div>
+                        <div key={device.id} style={{
+                            border: `2px solid ${isOnline ? '#27ae60' : '#e74c3c'}`,
+                            borderRadius: '8px',
+                            padding: '16px',
+                            backgroundColor: '#f8f9fa',
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}>
+                            <div>
+                                <h3 style={{ 
+                                    margin: '0 0 15px 0',
+                                    color: '#2c3e50',
+                                    fontSize: '18px'
+                                }}>
+                                    {device.custom_name || device.name}
+                                </h3>
+                                
+                                <div style={{ marginBottom: '15px' }}>
+                                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                        <strong>Stav:</strong>
+                                        <span style={{
+                                            marginLeft: '8px',
+                                            padding: '3px 8px',
+                                            borderRadius: '12px',
+                                            backgroundColor: isOnline ? '#27ae60' : '#e74c3c',
+                                            color: 'white',
+                                            fontSize: '12px'
+                                        }}>
+                                            {isOnline ? 'ONLINE' : 'OFFLINE'}
+                                        </span>
+                                    </p>
+                                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                        <strong>Kategorie:</strong> {device.category}
+                                    </p>
+                                    {switches.length > 0 && (
+                                        <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                            <strong>Spínače:</strong> {switches.length}
+                                        </p>
+                                    )}
+                                </div>
 
-                            {/* Zobrazení switchů pokud existují */}
-                            {switches.length > 0 && (
-                                <div className="switches-section">
-                                    <p><strong>Spínače:</strong> {switches.length}</p>
-                                 
-                                    <div className="switches-list">
+                                {/* Kompaktní zobrazení switchů */}
+                                {switches.length > 0 && switches.length <= 3 && (
+                                    <div style={{ marginBottom: '10px' }}>
                                         {switches.map((switchItem) => {
                                             const switchNumber = switchItem.code.replace('switch_', '');
-                                            const countdown = countdowns.find(c => c.code === `countdown_${switchNumber}`);
-                                            
                                             return (
-                                                <div key={switchItem.code} className={`switch-item ${switchItem.value ? 'on' : 'off'}`}>
-                                                    <span className="switch-label">
-                                                        Switch {switchNumber.toUpperCase()}
+                                                <div key={switchItem.code} style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '6px 10px',
+                                                    margin: '4px 0',
+                                                    backgroundColor: switchItem.value ? '#d4edda' : '#f8d7da',
+                                                    borderRadius: '4px',
+                                                    fontSize: '13px'
+                                                }}>
+                                                    <span>{switchNumber.toUpperCase()}</span>
+                                                    <span style={{
+                                                        padding: '2px 8px',
+                                                        borderRadius: '10px',
+                                                        backgroundColor: switchItem.value ? '#28a745' : '#dc3545',
+                                                        color: 'white',
+                                                        fontSize: '11px'
+                                                    }}>
+                                                        {switchItem.value ? 'ZAP' : 'VYP'}
                                                     </span>
-                                                    <div className="switch-controls">
-                                                        <span className={`switch-status ${switchItem.value ? 'on' : 'off'}`}>
-                                                            {switchItem.value ? 'ZAP' : 'VYP'}
-                                                        </span>
-                                                        {countdown && countdown.value > 0 && (
-                                                            <span className="countdown">
-                                                                ({countdown.value}s)
-                                                            </span>
-                                                        )}
-                                                    </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
 
-                            {/* Chyba při načítání stavu */}
-                            {device.statusError && (
-                                <div className="error-section">
-                                    Chyba při načítání stavu: {device.statusError}
-                                </div>
-                            )}
-
-                            {/* Chyba při načítání zařízení */}
-                            {device.error && (
-                                <div className="error-section">
-                                    Chyba: {device.error}
-                                </div>
-                            )}
-
-                            {/* Detailní informace o stavu */}
-                            {device.status && device.status.length > 0 && (
-                                <details className="debug-section">
-                                    <summary>Všechny stavy zařízení</summary>
-                                    <div className="debug-content">
-                                        {JSON.stringify(device.status, null, 2)}
-                                    </div>
-                                </details>
-                            )}
-
-                           <button 
-                                          onClick={() => alert('Klik na ' + device.name)}
-                                          style={{
-                                              backgroundColor: '#007bff',
-                                              color: 'white',
-                                              border: 'none',
-                                              borderRadius: '4px',
-                                              padding: '10px',
-                                              cursor: 'pointer',
-                                              width: '100%',
-                                              marginTop: '10px'
-                                          }}
-                                      >
-                                          DETAILY
-                                      </button>
+                            <button 
+                                onClick={() => setSelectedDevice(device)}
+                                style={{
+                                    backgroundColor: '#007bff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    marginTop: 'auto'
+                                }}
+                            >
+                                ZOBRAZIT DETAILY
+                            </button>
                         </div>
                     );
                 })}
             </div>
-            
-            {/* Skrytý debug pro celková data */}
-            {/* 
-            <details className="debug-section">
-                <summary>Debug info - Raw data</summary>
-                <div className="debug-content">
-                    {JSON.stringify(devicesData, null, 2)}
+
+            {/* Modal pro detaily */}
+            {selectedDevice && (
+                <div style={{
+                    position: 'fixed',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }} onClick={() => setSelectedDevice(null)}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        maxWidth: '600px',
+                        maxHeight: '80vh',
+                        overflow: 'auto',
+                        padding: '20px',
+                        margin: '20px'
+                    }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '20px',
+                            borderBottom: '1px solid #eee',
+                            paddingBottom: '10px'
+                        }}>
+                            <h2 style={{ margin: 0 }}>
+                                {selectedDevice.custom_name || selectedDevice.name}
+                            </h2>
+                            <button 
+                                onClick={() => setSelectedDevice(null)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '24px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div style={{ marginBottom: '20px' }}>
+                            <p><strong>ID:</strong> {selectedDevice.id}</p>
+                            <p><strong>Kategorie:</strong> {selectedDevice.category}</p>
+                            <p><strong>Produkt:</strong> {selectedDevice.product_name || 'Neznámý'}</p>
+                            <p><strong>Online:</strong> {selectedDevice.online ? 'Ano' : 'Ne'}</p>
+                        </div>
+
+                        {selectedDevice.status && (
+                            <div>
+                                <h4>Všechny stavy:</h4>
+                                <pre style={{
+                                    backgroundColor: '#f8f9fa',
+                                    padding: '10px',
+                                    borderRadius: '4px',
+                                    fontSize: '12px',
+                                    overflow: 'auto',
+                                    maxHeight: '300px'
+                                }}>
+                                    {JSON.stringify(selectedDevice.status, null, 2)}
+                                </pre>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </details> 
-            */}
+            )}
         </div>
     );
 }

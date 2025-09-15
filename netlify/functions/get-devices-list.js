@@ -77,8 +77,8 @@ exports.handler = async function (event, context) {
         console.log('Access token obtained successfully');
         
         console.log('Step 2: Getting devices list...');
-        // Endpoint pro získání seznamu zařízení uživatele
-        const url = '/v1.0/users/devices';
+        // Zkusíme jiný endpoint - token-based approach
+        const url = '/v1.0/token/devices';
         
         const headers = {
             'client_id': clientId,

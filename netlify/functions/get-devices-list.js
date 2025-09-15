@@ -85,6 +85,12 @@ exports.handler = async function (event, context) {
             // SAAS/Project specific endpointy
             projectId ? `/v1.0/expand/devices?project_id=${projectId}&page_no=1&page_size=50` : null,
             projectId ? `/v1.0/iot-03/apps/${projectId}/devices` : null,
+            projectId ? `/v1.3/iot-03/devices?project_id=${projectId}` : null,
+            
+            // Funkční endpoint s různými parametry
+            '/v1.3/iot-03/devices',
+            '/v1.3/iot-03/devices?page_size=50',
+            '/v1.3/iot-03/devices?page_no=1&page_size=50',
             
             // Obecné device endpointy
             '/v1.0/devices',
@@ -93,8 +99,7 @@ exports.handler = async function (event, context) {
             '/v1.0/token/devices',
             
             // Fallback endpointy
-            '/v1.0/cloud/thing/device/list',
-            '/v1.3/iot-03/devices'
+            '/v1.0/cloud/thing/device/list'
         ].filter(Boolean);
         
         let successResponse = null;
@@ -125,7 +130,8 @@ exports.handler = async function (event, context) {
                     code: response.data.code,
                     msg: response.data.msg,
                     result_type: typeof response.data.result,
-                    result_length: Array.isArray(response.data.result) ? response.data.result.length : 'not_array'
+                    result_length: Array.isArray(response.data.result) ? response.data.result.length : 'not_array',
+                    result_preview: response.data.result ? JSON.stringify(response.data.result).substring(0, 200) + '...' : 'null'
                 }, null, 2));
                 
                 if (response.data.success && response.data.result) {

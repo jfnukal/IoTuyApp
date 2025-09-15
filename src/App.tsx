@@ -115,8 +115,19 @@ function App() {
 
                             {/* Zobrazení switchů pokud existují */}
                             {switches.length > 0 && (
-                                <div className="switches-section" style={{ marginTop: '16px' }}>
-                                    <h4>Spínače:</h4>
+                                <div className="switches-section" style={{ 
+                                    marginTop: '16px',
+                                    padding: '15px',
+                                    backgroundColor: '#f8f9fa',
+                                    borderRadius: '8px'
+                                }}>
+                                    <h4 style={{ 
+                                        margin: '0 0 10px 0', 
+                                        color: '#2c3e50',
+                                        fontSize: '16px'
+                                    }}>
+                                        Spínače:
+                                    </h4>
                                     <div className="switches-list">
                                         {switches.map((switchItem) => {
                                             const switchNumber = switchItem.code.replace('switch_', '');
@@ -127,26 +138,37 @@ function App() {
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center',
-                                                    padding: '8px',
-                                                    margin: '4px 0',
-                                                    backgroundColor: switchItem.value ? '#e8f5e8' : '#ffe8e8',
-                                                    borderRadius: '4px'
+                                                    padding: '10px',
+                                                    margin: '8px 0',
+                                                    backgroundColor: switchItem.value ? '#d4edda' : '#f8d7da',
+                                                    borderRadius: '6px',
+                                                    border: switchItem.value ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
                                                 }}>
-                                                    <span>Switch {switchNumber.toUpperCase()}</span>
+                                                    <span style={{ 
+                                                        fontWeight: 'bold',
+                                                        color: '#2c3e50'
+                                                    }}>
+                                                        Switch {switchNumber.toUpperCase()}
+                                                    </span>
                                                     <div>
-                                                        <span className={`status-box ${switchItem.value ? 'on' : 'off'}`} style={{
-                                                            padding: '2px 8px',
-                                                            borderRadius: '4px',
+                                                        <span style={{
+                                                            padding: '6px 12px',
+                                                            borderRadius: '15px',
                                                             color: 'white',
-                                                            backgroundColor: switchItem.value ? 'green' : 'red',
-                                                            marginRight: '8px'
+                                                            backgroundColor: switchItem.value ? '#28a745' : '#dc3545',
+                                                            marginRight: '8px',
+                                                            fontSize: '12px',
+                                                            fontWeight: 'bold'
                                                         }}>
                                                             {switchItem.value ? 'ZAP' : 'VYP'}
                                                         </span>
                                                         {countdown && countdown.value > 0 && (
-                                                            <span className="countdown" style={{
+                                                            <span style={{
                                                                 fontSize: '12px',
-                                                                color: '#666'
+                                                                color: '#6c757d',
+                                                                backgroundColor: '#e9ecef',
+                                                                padding: '2px 6px',
+                                                                borderRadius: '10px'
                                                             }}>
                                                                 ({countdown.value}s)
                                                             </span>

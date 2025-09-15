@@ -24,7 +24,7 @@ interface TuyaDevice {
   statusError?: string;
 }
 
-function DevicesList() {
+function App() {
     const [devicesData, setDevicesData] = useState<TuyaDevice[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

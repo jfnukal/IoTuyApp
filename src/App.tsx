@@ -27,6 +27,7 @@ interface TuyaDevice {
 }
 
 function App() {
+  console.log("APP COMPONENT LOADED - VERSION 2.0");
     const [devicesData, setDevicesData] = useState<TuyaDevice[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -86,7 +87,9 @@ function App() {
 
     return (
         <div className="container">
-            <h1 className="page-title">Tuya Smart Zařízení</h1>
+            <h1 style={{ color: '#2c3e50', textAlign: 'center' }}>
+                  NOVÁ VERZE - Tuya Smart Zařízení
+              </h1>
             <p className="device-count">
                 Celkem zařízení: {devicesData?.length || 0}
             </p>

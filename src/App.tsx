@@ -26,13 +26,13 @@ interface TuyaDevice {
   error?: string;
 }
 
-function DevicesList() {
+function App() {
     const [devicesData, setDevicesData] = useState<TuyaDevice[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/.netlify/functions/get-known-devices')
+        fetch('/.netlify/functions/get-devices-list')
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -40,7 +40,20 @@ function DevicesList() {
                 return res.json();
             })
             .then((data) => {
-                setDevicesData(data.devices || data);
+                console.log('Received data:', data);
+                // Handle different response formats
+                let devices = [];
+                if (data.devices && Array.isArray(data.devices)) {
+                    devices = data.devices;
+                } else if (Array.isArray(data)) {
+                    devices = data;
+                } else if (data.result && Array.isArray(data.result)) {
+                    devices = data.result;
+                } else {
+                    console.warn('Unexpected data format:', data);
+                    devices = [];
+                }
+                setDevicesData(devices);
                 setIsLoading(false);
             })
             .catch(err => {
@@ -81,11 +94,11 @@ function DevicesList() {
                             padding: '16px',
                             backgroundColor: isOnline ? '#f9f9f9' : '#ffeeee'
                         }}>
-                            <h3>{device.name}</h3>
+                            <h3>{device.custom_name || device.name}</h3>
                             <div className="device-info">
                                 <p><strong>ID:</strong> {device.id}</p>
                                 <p><strong>Kategorie:</strong> {device.category}</p>
-                                <p><strong>Produkt:</strong> {device.product_name}</p>
+                                <p><strong>Produkt:</strong> {device.product_name || 'Neznámý'}</p>
                                 <p><strong>Stav:</strong> 
                                     <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`} style={{
                                         marginLeft: '8px',
@@ -97,7 +110,7 @@ function DevicesList() {
                                         {isOnline ? 'ONLINE' : 'OFFLINE'}
                                     </span>
                                 </p>
-                                <p><strong>Vytvořeno:</strong> {new Date(device.create_time * 1000).toLocaleString('cs-CZ')}</p>
+                                <p><strong>Vytvořeno:</strong> {device.create_time ? new Date(device.create_time * 1000).toLocaleString('cs-CZ') : 'Neznámé'}</p>
                             </div>
 
                             {/* Zobrazení switchů pokud existují */}
@@ -157,6 +170,20 @@ function DevicesList() {
                                     color: '#d63031'
                                 }}>
                                     Chyba při načítání stavu: {device.statusError}
+                                </div>
+                            )}
+
+                            {/* Chyba při načítání zařízení */}
+                            {device.error && (
+                                <div className="device-error" style={{
+                                    marginTop: '16px',
+                                    padding: '8px',
+                                    backgroundColor: '#ffe6e6',
+                                    borderRadius: '4px',
+                                    fontSize: '12px',
+                                    color: '#d63031'
+                                }}>
+                                    Chyba: {device.error}
                                 </div>
                             )}
 

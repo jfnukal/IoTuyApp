@@ -1,79 +1,91 @@
-const TuyaCloud = require('@tuyapi/cloud');
+const axios = require('axios');
+const crypto = require('crypto');
+
+// Funkce pro vytvoření Tuya API signature
+function createSignature(method, url, headers, body, clientSecret) {
+    const timestamp = Date.now().toString();
+    const nonce = Math.random().toString(36).substring(2, 15);
+    
+    const stringToSign = [
+        method.toUpperCase(),
+        crypto.createHash('sha256').update(body || '').digest('hex'),
+        '',
+        url
+    ].join('\n');
+    
+    const signStr = headers.client_id + headers.access_token + timestamp + nonce + stringToSign;
+    const signature = crypto.createHmac('sha256', clientSecret).update(signStr).digest('hex').toUpperCase();
+    
+    return {
+        timestamp,
+        nonce,
+        signature
+    };
+}
 
 exports.handler = async function (event, context) {
-    // Debug výpis pro kontrolu env variables
     console.log('=== TUYA DEBUG INFO ===');
     console.log('Access ID exists:', !!process.env.TUYA_ACCESS_ID);
     console.log('Access Secret exists:', !!process.env.TUYA_ACCESS_SECRET);
     console.log('Access ID length:', process.env.TUYA_ACCESS_ID?.length);
     console.log('Access Secret length:', process.env.TUYA_ACCESS_SECRET?.length);
-    
-    // Zobraz první a poslední 3 znaky pro identifikaci (bezpečně)
-    if (process.env.TUYA_ACCESS_ID) {
-        const accessId = process.env.TUYA_ACCESS_ID;
-        console.log('Access ID preview:', `${accessId.substring(0, 3)}...${accessId.substring(accessId.length - 3)}`);
-    }
-    
-    if (process.env.TUYA_ACCESS_SECRET) {
-        const secret = process.env.TUYA_ACCESS_SECRET;
-        console.log('Secret preview:', `${secret.substring(0, 3)}...${secret.substring(secret.length - 3)}`);
-    }
 
-    // Kontrola existence env variables
     if (!process.env.TUYA_ACCESS_ID || !process.env.TUYA_ACCESS_SECRET) {
-        console.error('Missing environment variables');
         return {
             statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                error: "Missing environment variables",
-                hasAccessId: !!process.env.TUYA_ACCESS_ID,
-                hasSecret: !!process.env.TUYA_ACCESS_SECRET
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: "Missing environment variables" })
         };
     }
 
     try {
-        console.log('Creating TuyaCloud instance...');
-        const cloud = new TuyaCloud({
-            region: 'eu',
-            auth: {
-                accessKey: process.env.TUYA_ACCESS_ID.trim(),
-                secretKey: process.env.TUYA_ACCESS_SECRET.trim(),
-            },
-        });
-
-        console.log('Fetching device properties...');
+        const clientId = process.env.TUYA_ACCESS_ID.trim();
+        const clientSecret = process.env.TUYA_ACCESS_SECRET.trim();
         const deviceId = '31311065c44f33b75eaf';
-        const result = await cloud.getDeviceProperties(deviceId);
         
-        console.log('Success! Device data received');
+        // Tuya API endpoint pro EU region
+        const baseUrl = 'https://openapi.tuyaeu.com';
+        const url = `/v1.0/devices/${deviceId}/status`;
+        
+        const headers = {
+            'client_id': clientId,
+            'access_token': '', // Pro device status nepotřebujeme access token
+            'sign_method': 'HMAC-SHA256',
+            'Content-Type': 'application/json'
+        };
+        
+        const { timestamp, nonce, signature } = createSignature('GET', url, headers, '', clientSecret);
+        
+        headers.t = timestamp;
+        headers.nonce = nonce;
+        headers.sign = signature;
+        
+        console.log('Making request to Tuya API...');
+        
+        const response = await axios.get(`${baseUrl}${url}`, { headers });
+        
+        console.log('Success! Response:', response.data);
+        
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*', // Pro CORS
+                'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify(result.result),
+            body: JSON.stringify(response.data.result)
         };
+        
     } catch (error) {
         console.error('=== TUYA API ERROR ===');
-        console.error('Error type:', error.constructor.name);
-        console.error('Error message:', error.message);
-        console.error('Full error:', error);
+        console.error('Error:', error.response?.data || error.message);
         
-        return { 
+        return {
             statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                message: "Chyba Tuya API", 
-                error: error.message,
-                errorType: error.constructor.name
-            }) 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                error: 'Tuya API Error',
+                message: error.response?.data || error.message
+            })
         };
     }
 };

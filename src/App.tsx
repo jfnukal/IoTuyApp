@@ -14,13 +14,28 @@ function App() {
     useEffect(() => {
         fetch('/.netlify/functions/get-device-status')
             .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                return res.json();
+                console.log('Response status:', res.status);
+                console.log('Response headers:', [...res.headers.entries()]);
+                
+                // Přečteme response jako text, ne hned jako JSON
+                return res.text().then(text => {
+                    console.log('Raw response text:', text);
+                    
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${text}`);
+                    }
+                    
+                    // Teď zkusíme parsovat jako JSON
+                    try {
+                        return JSON.parse(text);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        throw new Error(`Invalid JSON response: ${text}`);
+                    }
+                });
             })
             .then((data: DeviceStatus[]) => {
-                console.log('Received data:', data);
+                console.log('Parsed data:', data);
                 setDeviceData(data);
                 setIsLoading(false);
             })
@@ -53,7 +68,6 @@ function App() {
                 {switchStatus ? (switchStatus.value ? 'ZAPNUTO' : 'VYPNUTO') : 'Neznámý stav'}
             </div>
             
-            {/* Debug info */}
             <details style={{ marginTop: '20px', fontSize: '12px' }}>
                 <summary>Debug info</summary>
                 <pre>{JSON.stringify(deviceData, null, 2)}</pre>

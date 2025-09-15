@@ -134,7 +134,8 @@ exports.handler = async function (event, context) {
                     result_preview: response.data.result ? JSON.stringify(response.data.result).substring(0, 200) + '...' : 'null'
                 }, null, 2));
                 
-                if (response.data.success && response.data.result) {
+                if (response.data.success && response.data.result !== undefined) {
+                    // Akceptuj i prázdné výsledky jako úspěšné
                     console.log(`✅ SUCCESS with endpoint: ${url}`);
                     successResponse = response.data;
                     usedEndpoint = url;

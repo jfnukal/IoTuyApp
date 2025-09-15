@@ -24,21 +24,21 @@ interface TuyaDevice {
   statusError?: string;
 }
 
-function App() {
+function DevicesList() {
     const [devicesData, setDevicesData] = useState<TuyaDevice[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/.netlify/functions/get-devices-list')
+        fetch('/.netlify/functions/get-known-devices')
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 }
                 return res.json();
             })
-            .then((data: TuyaDevice[]) => {
-                setDevicesData(data);
+            .then((data) => {
+                setDevicesData(data.devices || data);
                 setIsLoading(false);
             })
             .catch(err => {

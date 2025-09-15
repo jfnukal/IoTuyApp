@@ -87,11 +87,12 @@ function App() {
             maxWidth: '1200px', 
             margin: '0 auto', 
             padding: '20px',
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            minHeight: '100vh'
         }}>
             <h1 style={{ 
                 textAlign: 'center', 
-                color: '#2c3e50',
+                color: '#000000',
                 marginBottom: '10px'
             }}>
                 FINÁLNÍ VERZE - Tuya Smart Zařízení
@@ -100,7 +101,7 @@ function App() {
             <p style={{ 
                 textAlign: 'center', 
                 fontSize: '18px', 
-                color: '#27ae60',
+                color: '#000000',
                 marginBottom: '30px'
             }}>
                 Celkem zařízení: {devicesData?.length || 0}
@@ -120,23 +121,24 @@ function App() {
                             border: `2px solid ${isOnline ? '#27ae60' : '#e74c3c'}`,
                             borderRadius: '8px',
                             padding: '16px',
-                            backgroundColor: '#f8f9fa',
+                            backgroundColor: '#ffffff',
                             minHeight: '200px',
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'space-between'
+                            justifyContent: 'space-between',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                         }}>
                             <div>
                                 <h3 style={{ 
                                     margin: '0 0 15px 0',
-                                    color: '#2c3e50',
+                                    color: '#000000',
                                     fontSize: '18px'
                                 }}>
                                     {device.custom_name || device.name}
                                 </h3>
                                 
                                 <div style={{ marginBottom: '15px' }}>
-                                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#000000' }}>
                                         <strong>Stav:</strong>
                                         <span style={{
                                             marginLeft: '8px',
@@ -149,11 +151,11 @@ function App() {
                                             {isOnline ? 'ONLINE' : 'OFFLINE'}
                                         </span>
                                     </p>
-                                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#000000' }}>
                                         <strong>Kategorie:</strong> {device.category}
                                     </p>
                                     {switches.length > 0 && (
-                                        <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                                        <p style={{ margin: '5px 0', fontSize: '14px', color: '#000000' }}>
                                             <strong>Spínače:</strong> {switches.length}
                                         </p>
                                     )}
@@ -173,7 +175,8 @@ function App() {
                                                     margin: '4px 0',
                                                     backgroundColor: switchItem.value ? '#d4edda' : '#f8d7da',
                                                     borderRadius: '4px',
-                                                    fontSize: '13px'
+                                                    fontSize: '13px',
+                                                    color: '#000000'
                                                 }}>
                                                     <span>{switchNumber.toUpperCase()}</span>
                                                     <span style={{

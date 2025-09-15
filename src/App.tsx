@@ -175,12 +175,15 @@ function App() {
                 })}
             </div>
             
+            {/* Skrytý debug pro celková data */}
+            {/* 
             <details className="debug-section">
                 <summary>Debug info - Raw data</summary>
                 <div className="debug-content">
                     {JSON.stringify(devicesData, null, 2)}
                 </div>
-            </details>
+            </details> 
+            */}
         </div>
     );
 }

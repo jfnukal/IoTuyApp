@@ -9,19 +9,21 @@ interface DeviceStatus {
 interface TuyaDevice {
   id: string;
   name: string;
-  local_key: string;
+  local_key?: string;
   category: string;
-  product_id: string;
-  product_name: string;
-  sub: boolean;
-  uuid: string;
+  product_id?: string;
+  product_name?: string;
+  sub?: boolean;
+  uuid?: string;
   online: boolean;
-  active_time: number;
-  create_time: number;
-  update_time: number;
-  time_zone: string;
+  active_time?: number;
+  create_time?: number;
+  update_time?: number;
+  time_zone?: string;
   status: DeviceStatus[] | null;
   statusError?: string;
+  custom_name?: string;
+  error?: string;
 }
 
 function DevicesList() {

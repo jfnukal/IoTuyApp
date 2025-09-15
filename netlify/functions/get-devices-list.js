@@ -56,8 +56,60 @@ function createSignatureWithToken(method, url, headers, body, clientSecret) {
     };
 }
 
+// Funkce pro získání stavu zařízení
+async function getDeviceStatus(deviceId, clientId, clientSecret, accessToken) {
+    const url = `/v1.0/devices/${deviceId}/status`;
+    
+    const headers = {
+        'client_id': clientId,
+        'access_token': accessToken,
+        'sign_method': 'HMAC-SHA256',
+        'Content-Type': 'application/json'
+    };
+    
+    const { timestamp, nonce, signature } = createSignatureWithToken('GET', url, headers, '', clientSecret);
+    
+    headers.t = timestamp;
+    headers.nonce = nonce;
+    headers.sign = signature;
+    
+    const response = await axios.get(`https://openapi.tuyaeu.com${url}`, { headers });
+    
+    if (!response.data.success) {
+        throw new Error(`Failed to get device status: ${response.data.msg}`);
+    }
+    
+    return response.data.result;
+}
+
+// Funkce pro získání informací o zařízení
+async function getDeviceInfo(deviceId, clientId, clientSecret, accessToken) {
+    const url = `/v1.0/devices/${deviceId}`;
+    
+    const headers = {
+        'client_id': clientId,
+        'access_token': accessToken,
+        'sign_method': 'HMAC-SHA256',
+        'Content-Type': 'application/json'
+    };
+    
+    const { timestamp, nonce, signature } = createSignatureWithToken('GET', url, headers, '', clientSecret);
+    
+    headers.t = timestamp;
+    headers.nonce = nonce;
+    headers.sign = signature;
+    
+    const response = await axios.get(`https://openapi.tuyaeu.com${url}`, { headers });
+    
+    if (!response.data.success) {
+        throw new Error(`Failed to get device info: ${response.data.msg}`);
+    }
+    
+    return response.data.result;
+}
+
 exports.handler = async function (event, context) {
-    console.log('=== TUYA SAAS API - TRYING MULTIPLE ENDPOINTS ===');
+    console.log('=== TUYA API - HYBRID APPROACH ===');
     
     try {
         if (!process.env.TUYA_ACCESS_ID || !process.env.TUYA_ACCESS_SECRET) {
@@ -72,43 +124,55 @@ exports.handler = async function (event, context) {
         const clientSecret = process.env.TUYA_ACCESS_SECRET.trim();
         const projectId = process.env.TUYA_PROJECT_ID?.trim();
         
-        console.log('Project ID:', projectId || 'Not set');
+        // Známé informace z konzole
+        const userUID = 'eu1619248628147R93Os';
+        const associationId = 'gg-111788887190429558614';
+        
+        // Tvoje známá device ID jako fallback
+        const knownDeviceIds = [
+            { id: 'bfae2da6e578cdd1b0', name: 'Světlo chodba' },
+            { id: 'bffbfe2dad8680b2a8a9', name: 'Garazove svetlo' },
+            { id: '31311065c44f33b75eaf', name: 'Hl.zásuvka-roz' },
+            { id: 'bf0f8692301eaff1f6', name: 'Temperature and humidity sensor' }
+        ];
         
         console.log('Step 1: Getting access token...');
         const accessToken = await getTuyaAccessToken(clientId, clientSecret);
         console.log('Access token obtained successfully');
         
-        console.log('Step 2: Trying different endpoints...');
+        console.log('Step 2: Trying automatic device discovery...');
         
-        // Seznam endpointů k testování (bez OEM/users endpointů)
+        // Endpointy pro automatické získání seznamu
         const endpointsToTry = [
-            // SAAS/Project specific endpointy
-            projectId ? `/v1.0/expand/devices?project_id=${projectId}&page_no=1&page_size=50` : null,
-            projectId ? `/v1.0/iot-03/apps/${projectId}/devices` : null,
-            projectId ? `/v1.3/iot-03/devices?project_id=${projectId}` : null,
+            // Oficiální Cloud Project endpointy
+            '/v2.0/cloud/thing/device?page_size=50',
+            '/v2.0/cloud/thing/device?page_size=20',
+            '/v2.0/cloud/thing/device',
             
-            // Funkční endpoint s různými parametry
-            '/v1.3/iot-03/devices',
-            '/v1.3/iot-03/devices?page_size=50',
-            '/v1.3/iot-03/devices?page_no=1&page_size=50',
+            // Smart Home Basic Service endpointy s UID
+            `/v1.0/users/${userUID}/devices`,
+            `/v2.0/users/${userUID}/devices`, 
+            `/v1.0/devices?uid=${userUID}`,
+            `/v2.0/devices?uid=${userUID}`,
             
-            // Obecné device endpointy
-            '/v1.0/devices',
-            '/v1.0/iot-03/devices',
-            '/v2.0/cloud/thing/device/list',
-            '/v1.0/token/devices',
+            // Endpointy s Association ID
+            `/v2.0/devices?schema=${associationId}`,
+            `/v1.0/devices?schema=${associationId}`,
+            `/v2.0/devices?source=${associationId}`,
             
-            // Fallback endpointy
-            '/v1.0/cloud/thing/device/list'
-        ].filter(Boolean);
+            // Obecné endpointy
+            '/v2.0/devices?page_size=50',
+            '/v1.0/devices?page_size=50',
+            '/v2.0/devices',
+            '/v1.0/devices'
+        ];
         
-        let successResponse = null;
+        let automaticDevices = [];
         let usedEndpoint = null;
-        const failedEndpoints = [];
         
         for (const url of endpointsToTry) {
             try {
-                console.log(`\n--- Trying endpoint: ${url} ---`);
+                console.log(`Trying: ${url}`);
                 
                 const headers = {
                     'client_id': clientId,
@@ -125,111 +189,88 @@ exports.handler = async function (event, context) {
                 
                 const response = await axios.get(`https://openapi.tuyaeu.com${url}`, { headers });
                 
-                console.log(`Response from ${url}:`, JSON.stringify({
-                    success: response.data.success,
-                    code: response.data.code,
-                    msg: response.data.msg,
-                    result_type: typeof response.data.result,
-                    result_length: Array.isArray(response.data.result) ? response.data.result.length : 'not_array',
-                    result_preview: response.data.result ? JSON.stringify(response.data.result).substring(0, 200) + '...' : 'null'
-                }, null, 2));
+                console.log(`Response: success=${response.data.success}, result_length=${Array.isArray(response.data.result) ? response.data.result.length : 'not_array'}`);
                 
-                if (response.data.success && response.data.result !== undefined) {
-                    // Akceptuj i prázdné výsledky jako úspěšné
-                    console.log(`✅ SUCCESS with endpoint: ${url}`);
-                    successResponse = response.data;
-                    usedEndpoint = url;
-                    break;
+                if (response.data.success && response.data.result) {
+                    let devices = response.data.result;
+                    
+                    // Handle paginated results
+                    if (devices.list && Array.isArray(devices.list)) {
+                        devices = devices.list;
+                    }
+                    
+                    if (Array.isArray(devices) && devices.length > 0) {
+                        console.log(`SUCCESS! Found ${devices.length} devices with ${url}`);
+                        automaticDevices = devices;
+                        usedEndpoint = url;
+                        break;
+                    }
                 }
                 
-                failedEndpoints.push({
-                    endpoint: url,
-                    code: response.data.code,
-                    msg: response.data.msg
-                });
-                
             } catch (endpointError) {
-                console.log(`❌ Failed with endpoint ${url}:`, endpointError.response?.data || endpointError.message);
-                failedEndpoints.push({
-                    endpoint: url,
-                    error: endpointError.response?.data || endpointError.message
-                });
+                console.log(`Failed ${url}: ${endpointError.response?.data?.msg || endpointError.message}`);
             }
         }
         
-        if (!successResponse) {
+        // Pokud automatické získání našlo zařízení, použij je
+        if (automaticDevices.length > 0) {
+            console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
+            
+            // Získej stav pro první 10 zařízení
+            const devicesWithStatus = [];
+            for (let i = 0; i < Math.min(automaticDevices.length, 10); i++) {
+                const device = automaticDevices[i];
+                try {
+                    const deviceId = device.id || device.device_id;
+                    const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
+                    devicesWithStatus.push({ ...device, status });
+                } catch (statusError) {
+                    devicesWithStatus.push({ ...device, status: null, statusError: statusError.message });
+                }
+            }
+            
             return {
-                statusCode: 500,
-                headers: { 'Content-Type': 'application/json' },
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
                 body: JSON.stringify({
-                    error: 'All endpoints failed',
-                    message: 'No endpoint returned device list successfully',
-                    failed_endpoints: failedEndpoints,
-                    suggestion: 'You might need to register for OEM app or check Project ID'
+                    success: true,
+                    method: 'automatic',
+                    endpoint_used: usedEndpoint,
+                    total_devices: automaticDevices.length,
+                    devices: devicesWithStatus
                 })
             };
         }
         
-        // Zpracuj úspěšnou response
-        let devices = successResponse.result;
+        // Fallback: použij známá device ID
+        console.log('Automatic discovery failed, using known device IDs...');
         
-        // Různé endpointy vracejí data v různých strukturách
-        if (devices && devices.list) {
-            devices = devices.list; // pro paginated výsledky
-        }
-        
-        if (!Array.isArray(devices)) {
-            if (devices) {
-                devices = [devices]; // pokud je to single device
-            } else {
-                devices = [];
-            }
-        }
-        
-        console.log(`\n🎉 Found ${devices.length} devices using endpoint: ${usedEndpoint}`);
-        
-        // Získej stav pro první 5 zařízení (kvůli rate limiting)
-        const devicesWithStatus = [];
-        const maxDevicesToProcess = Math.min(devices.length, 5);
-        
-        for (let i = 0; i < maxDevicesToProcess; i++) {
-            const device = devices[i];
+        const devicesData = [];
+        for (const deviceInfo of knownDeviceIds) {
             try {
-                const deviceId = device.id || device.device_id;
-                if (!deviceId) {
-                    console.log(`Skipping device without ID:`, device);
-                    continue;
-                }
+                const deviceDetails = await getDeviceInfo(deviceInfo.id, clientId, clientSecret, accessToken);
+                const deviceStatus = await getDeviceStatus(deviceInfo.id, clientId, clientSecret, accessToken);
                 
-                console.log(`Getting status for device: ${deviceId}`);
-                
-                const statusUrl = `/v1.0/devices/${deviceId}/status`;
-                const statusHeaders = {
-                    'client_id': clientId,
-                    'access_token': accessToken,
-                    'sign_method': 'HMAC-SHA256',
-                    'Content-Type': 'application/json'
-                };
-                
-                const statusSig = createSignatureWithToken('GET', statusUrl, statusHeaders, '', clientSecret);
-                statusHeaders.t = statusSig.timestamp;
-                statusHeaders.nonce = statusSig.nonce;
-                statusHeaders.sign = statusSig.signature;
-                
-                const statusResponse = await axios.get(`https://openapi.tuyaeu.com${statusUrl}`, { headers: statusHeaders });
-                
-                devicesWithStatus.push({
-                    ...device,
-                    status: statusResponse.data.success ? statusResponse.data.result : null,
-                    statusError: !statusResponse.data.success ? statusResponse.data.msg : null
+                devicesData.push({
+                    ...deviceDetails,
+                    status: deviceStatus,
+                    custom_name: deviceInfo.name
                 });
                 
-            } catch (statusError) {
-                console.warn(`Failed to get status for device ${device.id || device.device_id}:`, statusError.message);
-                devicesWithStatus.push({
-                    ...device,
+                console.log(`Got data for: ${deviceInfo.name}`);
+                
+            } catch (deviceError) {
+                console.warn(`Failed to get ${deviceInfo.name}: ${deviceError.message}`);
+                devicesData.push({
+                    id: deviceInfo.id,
+                    name: deviceInfo.name,
+                    custom_name: deviceInfo.name,
                     status: null,
-                    statusError: statusError.message
+                    error: deviceError.message,
+                    online: false
                 });
             }
         }
@@ -242,19 +283,14 @@ exports.handler = async function (event, context) {
             },
             body: JSON.stringify({
                 success: true,
-                endpoint_used: usedEndpoint,
-                total_devices_found: devices.length,
-                processed_devices: devicesWithStatus.length,
-                devices: devicesWithStatus,
-                debug: {
-                    project_id: projectId,
-                    failed_endpoints: failedEndpoints
-                }
+                method: 'fallback_known_ids',
+                total_devices: devicesData.length,
+                devices: devicesData
             })
         };
         
     } catch (error) {
-        console.error('=== MAIN ERROR ===');
+        console.error('=== ERROR ===');
         console.error('Error:', error.message);
         if (error.response) {
             console.error('Response status:', error.response.status);
@@ -265,7 +301,7 @@ exports.handler = async function (event, context) {
             statusCode: 500,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                error: 'Tuya SAAS API Error',
+                error: 'Tuya API Error',
                 message: error.message,
                 details: error.response?.data
             })

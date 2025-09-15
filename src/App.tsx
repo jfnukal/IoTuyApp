@@ -122,7 +122,8 @@ function App() {
                             {/* Zobrazení switchů pokud existují */}
                             {switches.length > 0 && (
                                 <div className="switches-section">
-                                    <h4 className="switches-title">Spínače:</h4>
+                                    <p><strong>Spínače:</strong> {switches.length}</p>
+                                 
                                     <div className="switches-list">
                                         {switches.map((switchItem) => {
                                             const switchNumber = switchItem.code.replace('switch_', '');
@@ -173,6 +174,22 @@ function App() {
                                     </div>
                                 </details>
                             )}
+
+                           <button 
+                                          onClick={() => alert('Klik na ' + device.name)}
+                                          style={{
+                                              backgroundColor: '#007bff',
+                                              color: 'white',
+                                              border: 'none',
+                                              borderRadius: '4px',
+                                              padding: '10px',
+                                              cursor: 'pointer',
+                                              width: '100%',
+                                              marginTop: '10px'
+                                          }}
+                                      >
+                                          DETAILY
+                                      </button>
                         </div>
                     );
                 })}

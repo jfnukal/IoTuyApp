@@ -1,25 +1,20 @@
 import React from 'react';
-import type { CalendarEvent, Holiday, Nameday, FamilyMember } from './types';
+import type { CalendarEvent, FamilyMember } from './types';
 import { useCalendar } from './CalendarProvider';
 
 interface DayViewProps {
   currentDate: Date;
-  events: CalendarEvent[];
-  holidays: Holiday[];
-  namedays: Nameday[];
   onEventClick: (event: CalendarEvent) => void;
   familyMembers: FamilyMember[];
 }
 
 const DayView: React.FC<DayViewProps> = ({
   currentDate,
-  events,
-  holidays,
-  namedays,
   onEventClick,
-  familyMembers
+  familyMembers,
 }) => {
-  const { getEventsByDate, getHolidayByDate, getNamedayByDate, formatDate } = useCalendar();
+  const { getEventsByDate, getHolidayByDate, getNamedayByDate, formatDate } =
+    useCalendar();
 
   // Získej události pro daný den
   const dayEvents = getEventsByDate(currentDate);
@@ -35,8 +30,8 @@ const DayView: React.FC<DayViewProps> = ({
   });
 
   // Rozdělí události podle času a bez času
-  const timedEvents = sortedEvents.filter(event => event.time);
-  const allDayEvents = sortedEvents.filter(event => !event.time);
+  const timedEvents = sortedEvents.filter((event) => event.time);
+  const allDayEvents = sortedEvents.filter((event) => !event.time);
 
   // Získej hodiny pro zobrazení
   const getTimeSlots = () => {
@@ -52,42 +47,45 @@ const DayView: React.FC<DayViewProps> = ({
 
   // Získej barvu pro člena rodiny
   const getFamilyMemberColor = (memberId: string) => {
-    const member = familyMembers.find(m => m.id === memberId);
+    const member = familyMembers.find((m) => m.id === memberId);
     return member?.color || '#667eea';
   };
 
   // Získej události pro časový slot
   const getEventsForTimeSlot = (timeSlot: string) => {
-    return timedEvents.filter(event => {
+    return timedEvents.filter((event) => {
       if (!event.time) return false;
       const eventTime = event.time;
       const slotHour = timeSlot.split(':')[0];
       const slotMinute = timeSlot.split(':')[1];
       const eventHour = eventTime.split(':')[0];
       const eventMinute = eventTime.split(':')[1];
-      
+
       // Zobraz událost ve slotu, kde začína
-      return eventHour === slotHour && Math.abs(parseInt(eventMinute) - parseInt(slotMinute)) < 30;
+      return (
+        eventHour === slotHour &&
+        Math.abs(parseInt(eventMinute) - parseInt(slotMinute)) < 30
+      );
     });
   };
 
   // Renderuj událost
   const renderEvent = (event: CalendarEvent, isAllDay = false) => {
-    const color = event.familyMember 
+    const color = event.familyMember
       ? getFamilyMemberColor(event.familyMember)
-      : (event.color || '#667eea');
-    
-    const memberName = event.familyMember 
-      ? familyMembers.find(m => m.id === event.familyMember)?.name 
+      : event.color || '#667eea';
+
+    const memberName = event.familyMember
+      ? familyMembers.find((m) => m.id === event.familyMember)?.name
       : null;
 
     return (
       <div
         key={event.id}
         className={`day-event ${isAllDay ? 'all-day' : ''}`}
-        style={{ 
+        style={{
           background: `linear-gradient(135deg, ${color}, ${color}dd)`,
-          borderLeft: `4px solid ${color}`
+          borderLeft: `4px solid ${color}`,
         }}
         onClick={() => onEventClick(event)}
       >
@@ -101,12 +99,11 @@ const DayView: React.FC<DayViewProps> = ({
         {event.description && (
           <div className="event-description">{event.description}</div>
         )}
-        {memberName && (
-          <div className="event-member">👤 {memberName}</div>
-        )}
+        {memberName && <div className="event-member">👤 {memberName}</div>}
         {event.attachments && event.attachments.length > 0 && (
           <div className="event-attachments">
-            📎 {event.attachments.length} příloha{event.attachments.length > 1 ? 'y' : ''}
+            📎 {event.attachments.length} příloha
+            {event.attachments.length > 1 ? 'y' : ''}
           </div>
         )}
       </div>
@@ -120,16 +117,12 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="day-view-title">
           {formatDate(currentDate, 'WEEKDAY')}
         </div>
-        <div className="day-view-date">
-          {formatDate(currentDate, 'FULL')}
-        </div>
-        
+        <div className="day-view-date">{formatDate(currentDate, 'FULL')}</div>
+
         {/* Speciální události */}
         <div className="day-special-events">
           {holiday && (
-            <div className="special-event holiday">
-              🎉 {holiday.name}
-            </div>
+            <div className="special-event holiday">🎉 {holiday.name}</div>
           )}
           {nameday && (
             <div className="special-event nameday">
@@ -144,7 +137,7 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="all-day-events">
           <h3 className="section-title">Celodenní události</h3>
           <div className="all-day-events-list">
-            {allDayEvents.map(event => renderEvent(event, true))}
+            {allDayEvents.map((event) => renderEvent(event, true))}
           </div>
         </div>
       )}
@@ -158,13 +151,13 @@ const DayView: React.FC<DayViewProps> = ({
             </div>
           ))}
         </div>
-        
+
         <div className="day-events-column">
           {timeSlots.map((timeSlot) => {
             const slotEvents = getEventsForTimeSlot(timeSlot);
             return (
               <div key={timeSlot} className="time-slot-events">
-                {slotEvents.map(event => renderEvent(event))}
+                {slotEvents.map((event) => renderEvent(event))}
                 {slotEvents.length === 0 && timeSlot.endsWith(':00') && (
                   <div className="empty-slot"></div>
                 )}

@@ -37,7 +37,8 @@ export const fetchCzechHolidays = async (year: number): Promise<Holiday[]> => {
             const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             return {
                 id: `holiday-${year}-${month}-${day}`, name: holiday.name, date: new Date(dateStr),
-                type: 'national', isPublic: true,
+                type: 'national' as const, // Řekneme TS, že toto je konstanta, ne obecný string
+                isPublic: true,
             };
         });
         resolve(holidays);

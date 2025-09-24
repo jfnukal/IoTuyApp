@@ -2,8 +2,8 @@ import React from 'react';
 import type { CalendarEvent, FamilyMember } from './types';
 import { useCalendar } from './CalendarProvider';
 import MonthView from './MonthView.tsx';
-// import WeekView from './WeekView.tsx';
-// import DayView from './DayView.tsx';
+import WeekView from './WeekView.tsx'; // Odkomentujeme
+import DayView from './DayView.tsx';   // Odkomentujeme
 import CalendarHeader from './CalendarHeader.tsx';
 
 interface CalendarWidgetProps {
@@ -32,6 +32,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     }
   };
 
+  // Tato funkce se nyní správně používá pro všechny pohledy
   const renderCurrentView = () => {
     switch (currentView) {
       case 'month':
@@ -39,16 +40,28 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           <MonthView
             currentDate={currentDate}
             onDateClick={handleDateClick}
-            onEventClick={onEditEvent} // Klik na událost rovnou spustí editaci
+            onEventClick={onEditEvent}
             familyMembers={familyMembers}
             onAddEventFor={(date, memberId) => onAddEvent(date, memberId)}
           />
         );
-      // WeekView a DayView zde pro jednoduchost vynecháme, princip je stejný
       case 'week':
-        return <div>Week View Placeholder</div>;
+        return (
+          <WeekView
+            currentDate={currentDate}
+            onDateClick={handleDateClick}
+            onEventClick={onEditEvent}
+            familyMembers={familyMembers}
+          />
+        );
       case 'day':
-        return <div>Day View Placeholder</div>;
+        return (
+          <DayView
+            currentDate={currentDate}
+            onEventClick={onEditEvent}
+            familyMembers={familyMembers}
+          />
+        );
       default:
         return null;
     }
@@ -65,13 +78,13 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           onDateChange={setCurrentDate}
           onViewChange={setCurrentView}
           onAddEvent={() => onAddEvent(currentDate)}
-          />
-          </div>
-          <div className="calendar-content"> {/* Tento kontejner se bude rolovat */}
-            {renderCurrentView()}
-          </div>
-        </div>
-      );
+        />
+      </div>
+      <div className="calendar-content">
+        {renderCurrentView()}
+      </div>
+    </div>
+  );
 };
 
 export default CalendarWidget;

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import type { CalendarEvent, EventType, ReminderType, FamilyMember } from './types';
 
 interface EventFormProps {
-  event?: CalendarEvent | null;
-  date?: Date | null;
+  event: CalendarEvent | null;
+  date: Date | null;
   familyMembers: FamilyMember[];
-  onSave: (event: Partial<CalendarEvent>) => void;
-  onDelete?: () => void;
+  onSave: (eventData: Partial<CalendarEvent>) => void;
+  onDelete?: (eventId: string) => void;
   onClose: () => void;
+  defaultMemberId?: string; // <-- PŘIDEJTE TENTO ŘÁDEK
 }
 
 const EventForm: React.FC<EventFormProps> = ({

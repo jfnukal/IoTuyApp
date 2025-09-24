@@ -99,9 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout
   };
 
+const value: AuthContextType = {
+    currentUser,
+    loading,
+    login,
+    register,
+    loginWithGoogle,
+    logout
+  };
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
+
 };

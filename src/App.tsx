@@ -71,7 +71,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isControlling, setIsControlling] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<number>(0);
+  // const [lastUpdate, setLastUpdate] = useState<number>(0);
   // const [currentView, setCurrentView] = useState<
   //   'all' | 'room' | 'unassigned' | '2d-view'
   // >('room');
@@ -194,7 +194,7 @@ function App() {
     try {
       setIsLoading(true);
       setError(null);
-      setLastUpdate(Date.now());
+     // setLastUpdate(Date.now());
 
       // Tichá notifikace o začátku synchronizace
       setNotification('Synchronizuji zařízení...');

@@ -55,19 +55,7 @@ function App() {
   } = useFirestore();
 
 
-  // Room management hooks
-  // const {
-  //   rooms,
-  //   selectedRoomId,
-  //   selectedRoom,
-  //   getRoomDevices,
-  //   getUnassignedDevices,
-  //   addDeviceToRoom,
-  //   removeDeviceFromRoom,
-  //   loading: roomsLoading,
-  // } = useRooms();
-
-  // DOČASNĚ VYPNUTO PRO LADĚNÍ
+// Room management hooks
   const {
     rooms,
     selectedRoomId,
@@ -77,16 +65,7 @@ function App() {
     addDeviceToRoom,
     removeDeviceFromRoom,
     loading: roomsLoading,
-  } = { 
-    rooms: [], 
-    selectedRoomId: null, 
-    selectedRoom: null, 
-    getRoomDevices: () => [], 
-    getUnassignedDevices: () => [], 
-    addDeviceToRoom: async () => {}, 
-    removeDeviceFromRoom: async () => {}, 
-    loading: false 
-  };
+  } = useRooms();
 
   // Local state
   const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);

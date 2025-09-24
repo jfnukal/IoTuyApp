@@ -9,19 +9,19 @@
 .calendar-header {
   color: white;
   padding: 20px;
-  z-index: 20; /* Vyšší Z-index pro jistotu */
+  z-index: 20;
 }
 .calendar-content {
   flex: 1;
   overflow-y: auto;
   /* KROK 2: Odebrán horní padding pro zmenšení mezery */
-  padding: 0 15px 15px 15px;
+  padding: 0 15px 15px 15px; 
   background-color: #f0f2f5;
 }
 
 /* ==================== RODINNÝ KALENDÁŘ LAYOUT ==================== */
 
-/* Hlavička se jmény - přilepená nahoře */
+/* KROK 1: Hlavička se jmény - přilepená nahoře */
 .new-family-header {
   display: grid;
   grid-template-columns: 160px repeat(4, 1fr);
@@ -35,12 +35,12 @@
 /* KROK 6: Výraznější buňka "Den" */
 .day-info-header-cell {
   padding: 12px 10px;
-  font-weight: 700; /* Tlustší písmo */
+  font-weight: 700;
   text-align: center;
-  font-family: 'Caveat', cursive;
-  font-size: 1.5rem;
-  color: #333; /* Tmavší barva */
-  border-right: 1px solid #eee;
+  font-family: sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
 }
 .member-header-cell {
   padding: 12px 10px;
@@ -48,7 +48,7 @@
   text-align: center;
   font-family: 'Caveat', cursive;
   font-size: 1.5rem;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
 }
 .member-header-cell:last-child {
   border-right: none;
@@ -60,17 +60,15 @@
   border-top: none;
   border-radius: 0 0 12px 12px;
   overflow: hidden;
-  background-color: #ddd; /* Barva pro rámečky */
-  display: flex;
-  flex-direction: column;
-  gap: 1px; /* Vytvoří 1px linky mezi řádky */
 }
 
 .day-row {
   display: grid;
   grid-template-columns: 160px repeat(4, 1fr);
-  background-color: #ccc; /* Barva pro svislé linky */
-  gap: 1px; /* Vytvoří 1px svislé linky */
+  border-bottom: 1px solid #eee; /* Jemné oddělení řádků */
+}
+.day-row:last-child {
+  border-bottom: none;
 }
 
 /* KROK 3: Výraznější zvýraznění dneška */
@@ -82,12 +80,13 @@
 /* Buňka s datem */
 .day-info-cell {
   padding: 8px 12px;
-  background-color: #f9f9f9;
+  background-color: #fdfdfd;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   gap: 4px;
+  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
 }
 .day-date {
   display: flex;
@@ -97,12 +96,12 @@
 /* KROK 3: Viditelnější čísla */
 .day-number {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 600; 
   color: #212529; /* Tmavší barva */
 }
 /* KROK 4: Větší písmo dne */
 .day-name {
-  font-size: 0.85rem;
+  font-size: 0.85rem; 
   color: #6c757d;
 }
 
@@ -112,67 +111,40 @@
   padding: 5px;
   background: white;
   position: relative;
+  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
+}
+.member-day-cell:last-child {
+  border-right: none;
 }
 
-/* Ostatní styly zůstávají stejné... */
-.day-special-events {
-  font-size: 0.75rem;
-  color: #333;
-}
-.special-event.holiday {
-  font-weight: 600;
-}
-.special-event.birthday {
-  color: #e76f51;
-}
+/* Vše ostatní zůstává stejné, jak bylo... */
+.day-special-events { font-size: 0.75rem; color: #333; }
+.special-event.holiday { font-weight: 600; }
+.special-event.birthday { color: #e76f51; }
 .add-event-button-cell {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(0, 0, 0, 0.4);
-  color: white;
-  cursor: pointer;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.2s ease;
-  pointer-events: none;
+  position: absolute; top: 5px; right: 5px; width: 24px; height: 24px;
+  border-radius: 50%; border: none; background-color: rgba(0, 0, 0, 0.4);
+  color: white; cursor: pointer; opacity: 0;
+  transform: scale(0.8); transition: all 0.2s ease; pointer-events: none;
 }
-.add-event-button-cell::before,
-.add-event-button-cell::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
+.add-event-button-cell::before, .add-event-button-cell::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); background-color: white;
 }
-.add-event-button-cell::before {
-  width: 12px;
-  height: 2px;
-}
-.add-event-button-cell::after {
-  width: 2px;
-  height: 12px;
-}
+.add-event-button-cell::before { width: 12px; height: 2px; }
+.add-event-button-cell::after { width: 2px; height: 12px; }
 .member-day-cell:hover .add-event-button-cell {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
+  opacity: 1; transform: scale(1); pointer-events: auto;
 }
 .event-form-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(5px);
   z-index: 9999;
+}
+.event-form {
+  background: white; border-radius: 16px; padding: 30px;
+  max-width: 500px; width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }

@@ -99,15 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout
   };
 
-const value: AuthContextType = {
-    currentUser,
-    loading,
-    login,
-    register,
-    loginWithGoogle,
-    logout
-  };
-
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -115,3 +106,4 @@ const value: AuthContextType = {
   );
 
 };
+

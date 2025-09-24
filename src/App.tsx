@@ -10,7 +10,6 @@ import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
 import RoomVisualization2D from './components/RoomVisualization2D';
 import RoomVisualization3D from './components/RoomVisualization3D';
-// import Dashboard from './components/Dashboard';
 import CalendarMiniWidget from './components/Calendar/CalendarMiniWidget';
 import CalendarProvider from './components/Calendar/CalendarProvider';
 
@@ -36,13 +35,9 @@ declare global {
   }
 }
 
-declare global {
-  interface Window {
-    lastPositionUpdate?: string | null;
-  }
-}
-
 function App() {
+  // VŠECHNY HOOKY MUSÍ BÝT NA ZAČÁTKU - PŘED JAKÝMKOLIV RETURN!
+  
   // Auth hooks
   const { currentUser, logout } = useAuth();
 
@@ -54,8 +49,7 @@ function App() {
     syncDevices,
   } = useFirestore();
 
-
-// Room management hooks
+  // Room management hooks
   const {
     rooms,
     selectedRoomId,
@@ -67,22 +61,18 @@ function App() {
     loading: roomsLoading,
   } = useRooms();
 
-  // Local state
+  // Local state - VŠECHNY useState HOOKY
   const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isControlling, setIsControlling] = useState<string | null>(null);
-  // const [lastUpdate, setLastUpdate] = useState<number>(0);
-  // const [currentView, setCurrentView] = useState<
-  //   'all' | 'room' | 'unassigned' | '2d-view'
-  // >('room');
   const [currentView, setCurrentView] = useState<
     'all' | 'room' | 'unassigned' | '2d-view' | '3d-view'
   >('all');
   const [notification, setNotification] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
 
-  // Theme initialization
+  // Theme initialization - useEffect
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -90,7 +80,75 @@ function App() {
     }
   }, []);
 
-  // Přihlášení required
+  // useEffect pro Firebase integrace
+  useEffect(() => {
+    if (!currentUser) return;
+
+    if (devices && devices.length > 0) {
+      setDevicesData(devices);
+      setIsLoading(false);
+    }
+  }, [currentUser, devices, firebaseLoading]);
+
+  // Handler pro aktualizaci pozice zařízení - useCallback
+  const handleDevicePositionChange = React.useCallback(
+    async (deviceId: string, position: { x: number; y: number }) => {
+      if (!currentUser) {
+        console.error('No current user for position update');
+        return;
+      }
+
+      console.log('=== POSITION UPDATE START ===');
+      console.log('Device ID:', deviceId);
+      console.log('New position:', position);
+      console.log('Current user:', currentUser.uid);
+
+      const updateKey = `${deviceId}-${position.x}-${position.y}`;
+      if (window.lastPositionUpdate === updateKey) {
+        console.log('Duplicate position update prevented');
+        return;
+      }
+      window.lastPositionUpdate = updateKey;
+
+      try {
+        await firestoreService.updateDevicePosition(
+          currentUser.uid,
+          deviceId,
+          position
+        );
+        console.log('Firebase update successful');
+
+        setDevicesData((prevDevices) => {
+          const updated = prevDevices.map((device) =>
+            device.id === deviceId ? { ...device, position } : device
+          );
+          console.log(
+            'Local state updated:',
+            updated.find((d) => d.id === deviceId)?.position
+          );
+          return updated;
+        });
+
+        console.log('=== POSITION UPDATE SUCCESS ===');
+
+        setTimeout(() => {
+          if (window.lastPositionUpdate === updateKey) {
+            window.lastPositionUpdate = null;
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('=== POSITION UPDATE ERROR ===');
+        console.error('Error details:', error);
+        window.lastPositionUpdate = null;
+        alert(`Chyba při ukládání pozice: ${error}`);
+      }
+    },
+    [currentUser]
+  );
+
+  // TEPRVE TEĎKA MŮŽEME DĚLAT PODMÍNĚNÉ RETURN
+  
+  // Přihlášení required - TENTO RETURN JE AŽ PO VŠECH HOOKECH!
   if (!currentUser) {
     return <Login />;
   }
@@ -195,9 +253,7 @@ function App() {
     try {
       setIsLoading(true);
       setError(null);
-      // setLastUpdate(Date.now());
 
-      // Tichá notifikace o začátku synchronizace
       setNotification('Synchronizuji zařízení...');
       setShowNotification(true);
 
@@ -207,10 +263,8 @@ function App() {
       console.log('Saving to Firebase...');
       await syncDevices(tuyaDevices);
 
-      // Tichá notifikace o úspěchu
       setNotification('✓ Synchronizace dokončena');
 
-      // Skryj notifikaci po 3 sekundách
       setTimeout(() => {
         setShowNotification(false);
         setTimeout(() => setNotification(null), 300);
@@ -233,10 +287,8 @@ function App() {
     try {
       console.log('Controlling device:', deviceId, 'Commands:', commands);
 
-      // Mock ovládání - později nahradit skutečným API
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Najdi zařízení a aktualizuj jeho stav
       const updatedDevices = devices.map((device) => {
         if (device.id === deviceId) {
           const updatedStatus =
@@ -254,7 +306,6 @@ function App() {
         return device;
       });
 
-      // Aktualizuj v Firebase
       await firestoreService.saveUserDevices(currentUser.uid, updatedDevices);
 
       const deviceElement = document.querySelector(
@@ -293,18 +344,15 @@ function App() {
 
   const handleRoomChange = async (deviceId: string, roomId: string | null) => {
     try {
-      // Pokud zařízení mělo starou místnost, odeber ho z ní
       const device = devicesData.find((d) => d.id === deviceId);
       if (device?.roomId) {
         await removeDeviceFromRoom(device.roomId, deviceId);
       }
 
-      // Pokud má novou místnost, přidej ho do ní
       if (roomId) {
         await addDeviceToRoom(roomId, deviceId);
       }
 
-      // Aktualizuj lokální data - převeď null na undefined pro kompatibilitu s TuyaDevice
       const updatedDevices = devicesData.map((d) =>
         d.id === deviceId ? { ...d, roomId: roomId || undefined } : d
       );
@@ -316,115 +364,6 @@ function App() {
       alert('Chyba při změně místnosti');
     }
   };
-
-  // Handler pro aktualizaci pozice zařízení s debouncing
-  const handleDevicePositionChange = React.useCallback(
-    async (deviceId: string, position: { x: number; y: number }) => {
-      if (!currentUser) {
-        console.error('No current user for position update');
-        return;
-      }
-
-      console.log('=== POSITION UPDATE START ===');
-      console.log('Device ID:', deviceId);
-      console.log('New position:', position);
-      console.log('Current user:', currentUser.uid);
-
-      // Prevence duplicitních volání
-      const updateKey = `${deviceId}-${position.x}-${position.y}`;
-      if (window.lastPositionUpdate === updateKey) {
-        console.log('Duplicate position update prevented');
-        return;
-      }
-      window.lastPositionUpdate = updateKey;
-
-      try {
-        // Aktualizuj v Firebase
-        await firestoreService.updateDevicePosition(
-          currentUser.uid,
-          deviceId,
-          position
-        );
-        console.log('Firebase update successful');
-
-        // Aktualizace místního stavu
-        setDevicesData((prevDevices) => {
-          const updated = prevDevices.map((device) =>
-            device.id === deviceId ? { ...device, position } : device
-          );
-          console.log(
-            'Local state updated:',
-            updated.find((d) => d.id === deviceId)?.position
-          );
-          return updated;
-        });
-
-        console.log('=== POSITION UPDATE SUCCESS ===');
-
-        // Vyčisti debounce klíč po 1 sekundě
-        setTimeout(() => {
-          if (window.lastPositionUpdate === updateKey) {
-            window.lastPositionUpdate = null;
-          }
-        }, 1000);
-      } catch (error) {
-        console.error('=== POSITION UPDATE ERROR ===');
-        console.error('Error details:', error);
-        window.lastPositionUpdate = null; // Reset při chybě
-        alert(`Chyba při ukládání pozice: ${error}`);
-      }
-    },
-    [currentUser]
-  );
-
-  // useEffect pro Firebase integrace - bez auto-sync
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Pouze nastavit data z Firebase real-time listeneru
-    if (devices && devices.length > 0) {
-      setDevicesData(devices);
-      setIsLoading(false);
-    }
-
-    // První sync pouze pokud uživatel klikne na tlačítko
-    // Bez automatického syncování při každém načtení
-  }, [currentUser, devices, firebaseLoading]);
-
-  // Auto-refresh každých 30 sekund
-  // useEffect(() => {
-  //   if (!currentUser || !userSettings) return;
-
-  //   const interval = setInterval(() => {
-  //     const timeSinceLastSync = Date.now() - lastTuyaSync;
-  //     const autoRefreshTime = (userSettings.preferences?.autoRefreshInterval || 30) * 1000;
-
-  //     if (timeSinceLastSync > autoRefreshTime) {
-  //       console.log('Auto-refreshing devices...');
-  //       syncTuyaWithFirebase();
-  //     }
-  //   }, 10000); // Kontroluj každých 10 sekund
-
-  //   return () => clearInterval(interval);
-  // }, [currentUser, userSettings, lastTuyaSync]);
-
-  // Získej zařízení podle aktuálního zobrazení
-  const getDisplayedDevices = (): TuyaDevice[] => {
-    switch (currentView) {
-      case 'all':
-        return devicesData;
-      case 'room':
-      case '2d-view': // 2D view používá stejná data jako room view
-        if (!selectedRoomId) return [];
-        return getRoomDevices(selectedRoomId, devicesData);
-      case 'unassigned':
-        return getUnassignedDevices(devicesData);
-      default:
-        return devicesData;
-    }
-  };
-
-  const displayedDevices = getDisplayedDevices();
 
   if (roomsLoading) {
     return (
@@ -479,6 +418,24 @@ function App() {
       </div>
     );
   }
+
+  // Získej zařízení podle aktuálního zobrazení
+  const getDisplayedDevices = (): TuyaDevice[] => {
+    switch (currentView) {
+      case 'all':
+        return devicesData;
+      case 'room':
+      case '2d-view':
+        if (!selectedRoomId) return [];
+        return getRoomDevices(selectedRoomId, devicesData);
+      case 'unassigned':
+        return getUnassignedDevices(devicesData);
+      default:
+        return devicesData;
+    }
+  };
+
+  const displayedDevices = getDisplayedDevices();
 
   return (
     <div className="app-layout">
@@ -546,86 +503,84 @@ function App() {
         <RoomSelector onCreateRoom={() => console.log('create room')} />
 
         <div className="dashboard-grid">
-    {/* Weather card */}
-    <div className="dashboard-card weather-card">
-      <div className="card-header">
-        <h3 className="card-title">Počasí</h3>
-        <span className="weather-icon">☀️</span>
-      </div>
-      <div className="weather-info">
-        <div>
-          <h2 className="weather-temp">22°C</h2>
-          <p className="weather-desc">Slunečno</p>
-        </div>
-      </div>
-    </div>
-    
-
-    {/* Devices card */}
-    <div className="dashboard-card">
-      <div className="card-header">
-        <h3 className="card-title">Zařízení v místnosti</h3>
-        <span className="card-icon">🏠</span>
-      </div>
-      <div className="device-tiles">
-        {devices.map(device => (
-          <div key={device.id} className={`device-tile ${device.online ? 'active' : ''}`}>
-            <span className="device-tile-icon">{getDeviceIcon(device)}</span>
-            <h4 className="device-tile-name">{device.name}</h4>
-            <p className="device-tile-status">{device.online ? 'Online' : 'Offline'}</p>
+          {/* Weather card */}
+          <div className="dashboard-card weather-card">
+            <div className="card-header">
+              <h3 className="card-title">Počasí</h3>
+              <span className="weather-icon">☀️</span>
+            </div>
+            <div className="weather-info">
+              <div>
+                <h2 className="weather-temp">22°C</h2>
+                <p className="weather-desc">Slunečno</p>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
 
-    {/* Family info card - placeholder */}
-    <div className="dashboard-card family-card">
-      <div className="card-header">
-        <h3 className="card-title">Rodinné události</h3>
-        <span className="card-icon">👨‍👩‍👧‍👦</span>
-      </div>
-      {/* TODO: Napojení na Google kalendář */}
-      <div className="family-event">
-        <div className="event-info">
-          <h4>Narozeniny - Jana</h4>
-          <p>Zítra</p>
+          {/* Devices card */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h3 className="card-title">Zařízení v místnosti</h3>
+              <span className="card-icon">🏠</span>
+            </div>
+            <div className="device-tiles">
+              {devices.map(device => (
+                <div key={device.id} className={`device-tile ${device.online ? 'active' : ''}`}>
+                  <span className="device-tile-icon">{getDeviceIcon(device)}</span>
+                  <h4 className="device-tile-name">{device.name}</h4>
+                  <p className="device-tile-status">{device.online ? 'Online' : 'Offline'}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Family info card */}
+          <div className="dashboard-card family-card">
+            <div className="card-header">
+              <h3 className="card-title">Rodinné události</h3>
+              <span className="card-icon">👨‍👩‍👧‍👦</span>
+            </div>
+            <div className="family-event">
+              <div className="event-info">
+                <h4>Narozeniny - Jana</h4>
+                <p>Zítra</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Kalendář Widget */}
+          <CalendarProvider>
+            <div className="calendar-section">
+              <CalendarMiniWidget 
+                familyMembers={[
+                  { id: '1', name: 'Mamka', color: '#ff6b6b', icon: '❤️' },
+                  { id: '2', name: 'Taťka', color: '#4ecdc4', icon: '🦸‍♂️' },
+                  { id: '3', name: 'Johanka', color: '#45b7d1', icon: '🎨' },
+                  { id: '4', name: 'Jareček', color: '#96ceb4', icon: '📱' }
+                ]}
+              />
+            </div>
+          </CalendarProvider>
+
+          {/* Cameras card */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h3 className="card-title">Kamery</h3>
+              <span className="card-icon">📹</span>
+            </div>
+            <div className="cameras-grid">
+              <div className="camera-preview">
+                Hlavní vchod
+              </div>
+              <div className="camera-preview">
+                Zahrada
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* Kalendář Widget */}
-      <CalendarProvider>
-        <div className="calendar-section">
-        <CalendarMiniWidget 
-            familyMembers={[
-              { id: '1', name: 'Mamka', color: '#ff6b6b', icon: '❤️' },
-              { id: '2', name: 'Taťka', color: '#4ecdc4', icon: '🦸‍♂️' },
-              { id: '3', name: 'Johanka', color: '#45b7d1', icon: '🎨' },
-              { id: '4', name: 'Jareček', color: '#96ceb4', icon: '📱' }
-            ]}
-          />
-        </div>
-      </CalendarProvider>
-
-    {/* Cameras card - placeholder */}
-    <div className="dashboard-card">
-      <div className="card-header">
-        <h3 className="card-title">Kamery</h3>
-        <span className="card-icon">📹</span>
-      </div>
-      <div className="cameras-grid">
-        <div className="camera-preview">
-          Hlavní vchod
-        </div>
-        <div className="camera-preview">
-          Zahrada
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-      {/* Kompaktní navigace - jen důležité */}
+      {/* Kompaktní navigace */}
       <div className="compact-navigation">
         <div className="nav-quick-tabs">
           <button
@@ -667,49 +622,9 @@ function App() {
         </div>
       </div>
 
-      {/* Page Header
-      <div className="page-header">
-        <p className="page-subtitle">
-          {currentView === '2d-view' && selectedRoom
-            ? `2D pohled na místnost "${selectedRoom.name}" - ${displayedDevices.length} zařízení`
-            : currentView === '3d-view' && selectedRoom
-            ? `3D pohled na místnost "${selectedRoom.name}" - ${displayedDevices.length} zařízení`
-            : `Zobrazeno: ${displayedDevices.length} zařízení${
-                currentView === 'room' && selectedRoom
-                  ? ` v místnosti "${selectedRoom.name}"`
-                  : ''
-              }`}
-        </p>
-
-        <div className="sync-controls">
-          <button
-            onClick={syncTuyaWithFirebase}
-            disabled={isLoading}
-            className="btn btn-primary"
-            style={{ position: 'relative' }}
-          >
-            {isLoading ? (
-              <>
-                <span style={{ opacity: 0.7 }}>🔄 Synchronizuji...</span>
-              </>
-            ) : (
-              '🔄 Synchronizovat'
-            )}
-          </button>
-
-          {lastUpdate > 0 && (
-            <span className="last-update">
-              Poslední aktualizace:{' '}
-              {new Date(lastUpdate).toLocaleTimeString('cs-CZ')}
-            </span>
-          )}
-        </div>
-      </div> */}
-
-      {/* Content Container - Devices Grid or 2D View */}
+      {/* Content Container */}
       <div className="devices-container">
         {currentView === '2d-view' ? (
-          // 2D Vizualizace místnosti
           selectedRoom ? (
             <RoomVisualization2D
               room={selectedRoom}
@@ -728,7 +643,6 @@ function App() {
             </div>
           )
         ) : currentView === '3d-view' ? (
-          // 3D Vizualizace místnosti
           selectedRoom ? (
             <>
               {console.log('=== 3D VIEW DEBUG ===', {
@@ -761,8 +675,7 @@ function App() {
               </p>
             </div>
           )
-        ) : // Původní grid view
-        displayedDevices.length === 0 ? (
+        ) : displayedDevices.length === 0 ? (
           <main className="content-area">
             <div className="empty-state">
               <div className="empty-state-icon">
@@ -770,7 +683,7 @@ function App() {
                   ? selectedRoom.icon || '🏠'
                   : currentView === 'unassigned'
                   ? '📦'
-                  : '🔍'}
+                  : '📋'}
               </div>
               <h3 className="empty-state-title">
                 {currentView === 'room' && selectedRoom
@@ -835,8 +748,7 @@ function App() {
 
             <div className="devices-modern-grid">
               {isLoading
-                ? // Loading skeletons
-                  Array.from({ length: 4 }).map((_, index) => (
+                ? Array.from({ length: 4 }).map((_, index) => (
                     <div key={`skeleton-${index}`} className="device-skeleton">
                       <div className="skeleton-header">
                         <div className="skeleton-badge"></div>

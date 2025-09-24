@@ -1,0 +1,623 @@
+/* ==================== DASHBOARD LAYOUT ==================== */
+
+.dashboard-container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+}
+
+.dashboard-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-1) 0 0 0;
+}
+
+/* ==================== QUICK ACTIONS ==================== */
+
+.dashboard-quick-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-6);
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--color-white);
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--border-radius-lg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.quick-action-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-50);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== DASHBOARD GRID ==================== */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+}
+
+.dashboard-card {
+  background: var(--color-white);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-gray-200);
+  transition: all var(--transition-normal);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.card-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.card-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+}
+
+/* ==================== ROOM TABS ==================== */
+
+.room-tabs-container {
+  margin-bottom: var(--spacing-6);
+  background: var(--color-white);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-gray-200);
+}
+
+.room-tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.room-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.room-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--border-radius-lg);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.room-tab:hover {
+  background: var(--color-gray-50);
+  color: var(--color-text-primary);
+}
+
+.room-tab.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.room-tab-icon {
+  font-size: var(--font-size-base);
+}
+
+.room-device-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  min-width: 20px;
+  text-align: center;
+}
+
+.room-tab.active .room-device-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== WEATHER CARD ==================== */
+
+.weather-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: var(--color-white);
+  border: none;
+}
+
+.weather-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weather-temp {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.weather-desc {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+  margin: var(--spacing-1) 0 0 0;
+}
+
+.weather-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+/* ==================== FAMILY INFO CARD ==================== */
+
+/* TODO: Implementovat napojení na Google kalendář pro rodinné události */
+.family-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: var(--color-white);
+  border: none;
+}
+
+.family-event {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.family-event:last-child {
+  border-bottom: none;
+}
+
+.event-info h4 {
+  margin: 0 0 var(--spacing-1) 0;
+  font-size: var(--font-size-base);
+}
+
+.event-info p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+/* ==================== CAMERAS CARD ==================== */
+
+.cameras-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+}
+
+.camera-preview {
+  aspect-ratio: 16/9;
+  background: var(--color-gray-100);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+}
+
+.camera-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==================== DEVICE TILES ==================== */
+
+.device-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--spacing-3);
+}
+
+.device-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  background: var(--color-gray-50);
+  border: 2px solid transparent;
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.device-tile:hover {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.device-tile.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.device-tile-icon {
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary);
+}
+
+.device-tile.active .device-tile-icon {
+  color: var(--color-white);
+}
+
+.device-tile-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+.device-tile-status {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* ==================== NOTIFICATIONS PLACEHOLDER ==================== */
+
+/* TODO: Implementovat systém rodinných notifikací
+ * - Napojení na Google kalendář
+ * - Možnost psát zprávy rodině
+ * - Zobrazení na dashboard
+ * - Push notifikace
+ */
+
+.notification-system {
+  /* Placeholder pro budoucí implementaci */
+  /* Bude obsahovat: */
+  /* - Rodinné zprávy */
+  /* - Kalendářové události */
+  /* - Narozeniny a svátky */
+  /* - Push notifikace */
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+  
+  .room-tabs {
+    gap: var(--spacing-1);
+  }
+  
+  .room-tab {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
+  }
+  
+  .device-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--spacing-2);
+  }
+  
+  .device-tile {
+    padding: var(--spacing-3);
+  }
+  
+  .cameras-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-quick-actions {
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    text-align: center;
+  }
+  
+  .device-tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ==================== COMPACT NAVIGATION ==================== */
+
+.compact-navigation {
+  max-width: var(--container-max);
+  margin: 0 auto var(--spacing-4) auto;
+  padding: 0 var(--spacing-4);
+}
+
+.nav-quick-tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  background: var(--color-white);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-gray-200);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-quick-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-quick-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-quick-tab:hover {
+  background: var(--color-gray-50);
+  color: var(--color-text-primary);
+  border-color: var(--color-gray-200);
+}
+
+.nav-quick-tab.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.nav-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  min-width: 18px;
+  text-align: center;
+}
+
+.nav-quick-tab.active .nav-badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-3);
+  }
+  
+  .dashboard-quick-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-2);
+  }
+  
+  .quick-action-btn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
+  }
+  
+  .nav-quick-tabs {
+    justify-content: flex-start;
+    padding: var(--spacing-1);
+  }
+  
+  .nav-quick-tab {
+    padding: var(--spacing-2);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ==================== DEVICE STATS ==================== */
+
+.device-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: var(--spacing-4) 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==================== DEVICE TILES ENHANCED ==================== */
+
+.device-tile.offline {
+  opacity: 0.6;
+  background: var(--color-gray-100);
+}
+
+.device-tile.offline .device-tile-icon {
+  color: var(--color-text-secondary);
+}
+
+.view-all-btn {
+  width: 100%;
+  padding: var(--spacing-3);
+  background: var(--color-gray-50);
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--border-radius);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-3);
+}
+
+.view-all-btn:hover {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ==================== ENERGY CARD ==================== */
+
+.energy-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: var(--color-white);
+  border: none;
+}
+
+.energy-info {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--spacing-4) 0;
+}
+
+.energy-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.energy-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-1);
+}
+
+.energy-label {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+/* ==================== NOTES AND PLACEHOLDERS ==================== */
+
+.weather-note,
+.family-note,
+.camera-note,
+.energy-note {
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+  text-align: center;
+}
+
+.weather-card .weather-note {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.family-events {
+  margin: var(--spacing-3) 0;
+}
+
+.camera-placeholder {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gray-100);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
+/* ==================== RESPONSIVE DASHBOARD ==================== */
+
+@media (max-width: 768px) {
+  .device-stats {
+    flex-direction: row;
+    gap: var(--spacing-2);
+  }
+  
+  .stat-item {
+    flex: 1;
+  }
+  
+  .stat-value {
+    font-size: var(--font-size-xl);
+  }
+  
+  .energy-info {
+    flex-direction: column;
+    gap: var(--spacing-3);
+    text-align: center;
+  }
+}

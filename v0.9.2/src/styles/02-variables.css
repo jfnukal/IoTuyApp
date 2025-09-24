@@ -1,0 +1,267 @@
+/* ==================== CSS VARIABLES ==================== */
+
+:root {
+  /* ==================== COLOR SYSTEM ==================== */
+
+  /* Primary colors */
+  --color-primary: #007bff;
+  --color-primary-50: #e7f3ff;
+  --color-primary-100: #cfe7ff;
+  --color-primary-200: #9fd3ff;
+  --color-primary-300: #6fbfff;
+  --color-primary-400: #3fabff;
+  --color-primary-500: #007bff;
+  --color-primary-600: #0062cc;
+  --color-primary-700: #004999;
+  --color-primary-800: #003066;
+  --color-primary-900: #001833;
+
+  /* Semantic colors */
+  --color-success: #28a745;
+  --color-success-light: #d4edda;
+  --color-success-dark: #155724;
+
+  --color-warning: #ffc107;
+  --color-warning-light: #fff3cd;
+  --color-warning-dark: #856404;
+
+  --color-danger: #dc3545;
+  --color-danger-light: #f8d7da;
+  --color-danger-dark: #721c24;
+
+  --color-info: #17a2b8;
+  --color-info-light: #d1ecf1;
+  --color-info-dark: #0c5460;
+
+  /* Neutral colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-gray-50: #f8f9fa;
+  --color-gray-100: #f1f3f4;
+  --color-gray-200: #e9ecef;
+  --color-gray-300: #dee2e6;
+  --color-gray-400: #ced4da;
+  --color-gray-500: #adb5bd;
+  --color-gray-600: #6c757d;
+  --color-gray-700: #495057;
+  --color-gray-800: #343a40;
+  --color-gray-900: #212529;
+
+  /* Background colors */
+  --color-background: #f8f9fa;
+  --color-card-background: #ffffff;
+  --color-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text colors */
+  --color-text-primary: #212529;
+  --color-text-secondary: #6c757d;
+  --color-text-muted: #adb5bd;
+  --color-text-inverse: #ffffff;
+
+  /* Device category colors */
+  --color-category-switch: #007bff;
+  --color-category-light: #ffc107;
+  --color-category-sensor: #28a745;
+  --color-category-climate: #17a2b8;
+  --color-category-security: #dc3545;
+  --color-category-cover: #6f42c1;
+  --color-category-garden: #20c997;
+  --color-category-other: #6c757d;
+
+  /* ==================== TYPOGRAPHY ==================== */
+
+  --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'SF Mono', Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  /* Font sizes */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+  --font-size-5xl: 3rem; /* 48px */
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* ==================== SPACING SYSTEM ==================== */
+
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.5rem; /* Zmenšeno z 0.75rem */
+  --spacing-4: 0.75rem; /* Zmenšeno z 1rem */
+  --spacing-5: 1rem; /* Zmenšeno z 1.25rem */
+  --spacing-6: 1.25rem; /* Zmenšeno z 1.5rem */
+  --spacing-8: 1rem; /* 32px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-16: 4rem; /* 64px */
+  --spacing-20: 5rem; /* 80px */
+
+  /* ==================== LAYOUT ==================== */
+
+  /* Container sizes */
+  --container-xs: 480px;
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  --container-max: 1400px;
+
+  /* Grid & Layout */
+  --grid-gap: var(--spacing-6);
+  --grid-gap-sm: var(--spacing-4);
+  --grid-gap-lg: var(--spacing-8);
+
+  /* Device card dimensions */
+  --device-card-min-width: 300px;
+  --device-card-min-height: 280px;
+  --device-card-padding: var(--spacing-4);
+
+  /* Room dimensions (pro budoucí 2D/3D view) */
+  --room-grid-size: 20px;
+  --room-min-width: 400px;
+  --room-min-height: 300px;
+
+  /* ==================== BORDERS & RADIUS ==================== */
+
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  --border-radius-none: 0;
+  --border-radius-sm: 0.125rem;
+  --border-radius: 0.375rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-xl: 1rem;
+  --border-radius-full: 9999px;
+
+  /* ==================== SHADOWS ==================== */
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* ==================== TRANSITIONS & ANIMATIONS ==================== */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  /* ==================== Z-INDEX SCALE ==================== */
+
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ==================== FORM ELEMENTS ==================== */
+
+  --input-height: 2.5rem;
+  --input-padding: var(--spacing-3) var(--spacing-4);
+  --input-border: var(--border-width) solid var(--color-gray-300);
+  --input-border-radius: var(--border-radius-md);
+
+  --button-height: 2.5rem;
+  --button-padding: var(--spacing-3) var(--spacing-4);
+  --button-border-radius: var(--border-radius-md);
+
+  /* ==================== DEVICE STATES ==================== */
+
+  --device-state-online: var(--color-success);
+  --device-state-offline: var(--color-danger);
+  --device-state-unknown: var(--color-gray-400);
+
+  /* ==================== BREAKPOINTS (for JS) ==================== */
+
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ==================== DRAG & DROP (budoucí funkce) ==================== */
+
+  --drag-ghost-opacity: 0.5;
+  --drop-zone-border: 2px dashed var(--color-primary);
+  --drop-zone-background: var(--color-primary-50);
+
+  /* ==================== 3D VIEW (budoucí funkce) ==================== */
+
+  --room-3d-perspective: 1000px;
+  --room-3d-rotation-speed: 0.5s;
+
+  /* ==================== MOBILE OPTIMIZATIONS ==================== */
+
+  --touch-target-min: 44px;
+  --mobile-padding: var(--spacing-4);
+  --mobile-font-scale: 1.1;
+}
+
+/* ==================== DARK THEME VARIABLES ==================== */
+
+[data-theme='dark'] html[data-theme='dark'],
+:root[data-theme='dark'] {
+  --color-background: #1a1a1a;
+  --color-card-background: #2d2d2d;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b3b3b3;
+  --color-text-muted: #888888;
+
+  --color-gray-50: #2d2d2d;
+  --color-gray-100: #3d3d3d;
+  --color-gray-200: #4d4d4d;
+  --color-gray-300: #5d5d5d;
+  --color-gray-400: #6d6d6d;
+  --color-gray-500: #7d7d7d;
+  --color-gray-600: #8d8d8d;
+  --color-gray-700: #9d9d9d;
+  --color-gray-800: #adadad;
+  --color-gray-900: #bdbdbd;
+}
+
+/* ==================== HIGH CONTRAST THEME ==================== */
+
+[data-theme='high-contrast'] {
+  --color-primary: #0000ff;
+  --color-success: #008000;
+  --color-danger: #ff0000;
+  --color-warning: #ff8000;
+  --color-text-primary: #000000;
+  --color-background: #ffffff;
+  --color-card-background: #ffffff;
+}

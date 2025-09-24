@@ -1,0 +1,502 @@
+/* ==================== ROOM SELECTOR ==================== */
+
+.room-selector {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.room-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.room-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  position: relative;
+}
+
+.room-tab:hover {
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.room-tab.active {
+  border-color: #007bff;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.room-tab.create-room {
+  border-style: dashed;
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.room-tab.create-room:hover {
+  border-color: #28a745;
+  background: #28a745;
+  color: white;
+}
+
+.room-tab.delete-room {
+  border-style: dashed;
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.room-tab.delete-room:hover {
+  border-color: #dc3545;
+  background: #dc3545;
+  color: white;
+}
+
+.room-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.room-name {
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.room-tab.active .device-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Create Room Form */
+.create-room-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  background: white;
+  min-width: 200px;
+}
+
+.create-room-form input {
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.form-buttons .btn {
+  padding: 0.25rem 0.5rem;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading & Error States */
+.room-selector.loading,
+.room-selector.error {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.room-selector.error {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+/* ==================== DEVICE CARDS ==================== */
+
+.device-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.device-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.device-card.offline {
+  opacity: 0.7;
+  background: #f8f9fa;
+}
+
+.device-card.offline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #dc3545;
+}
+
+/* Device Header */
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.device-category {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.category-icon {
+  font-size: 1.1em;
+}
+
+.category-name {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator.online {
+  background: #28a745;
+}
+
+.status-indicator.offline {
+  background: #dc3545;
+}
+
+.offline-text {
+  font-size: 0.75rem;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Device Name */
+.device-name {
+  margin-bottom: 1rem;
+}
+
+.device-name h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.original-name {
+  color: #6c757d;
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Main Control */
+.device-main-control {
+  margin-bottom: 1rem;
+}
+
+.main-switch {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+}
+
+.main-switch:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.main-switch.on {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.main-switch.off {
+  border: 2px solid #e9ecef;
+}
+
+.switch-icon {
+  font-size: 1.1em;
+}
+
+.switch-text {
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  color: inherit;
+}
+
+.main-switch.on .switch-text {
+  color: white;
+}
+
+.main-switch.off .switch-text {
+  color: #2c3e50;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Device Details */
+.device-details {
+  margin-bottom: 1rem;
+  min-height: 60px;
+}
+
+.sensor-data {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.sensor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.sensor-icon {
+  opacity: 0.7;
+}
+
+.sensor-value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.brightness-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #fff3cd;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.control-value {
+  font-weight: 600;
+  color: #856404;
+}
+
+.additional-states {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.5rem;
+}
+
+.status-item {
+  padding: 0.25rem 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.status-code {
+  display: block;
+  font-size: 0.7rem;
+  color: #6c757d;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-value {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Device Footer */
+.device-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e9ecef;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.device-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.device-id {
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+}
+
+.device-notes {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: #e7f3ff;
+  border-left: 3px solid #007bff;
+  border-radius: 0 3px 3px 0;
+  font-size: 0.75rem;
+  color: #495057;
+}
+
+/* Device Room Selector */
+.device-room-selector {
+  margin: 0.5rem 0;
+  padding: 0 0.75rem;
+}
+
+.device-room-selector .form-select {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  width: 100%;
+}
+
+.device-room-selector .form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+.device-room-selector .form-select option {
+  padding: 0.25rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .room-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .room-tab {
+    flex-shrink: 0;
+    min-width: 120px;
+  }
+
+  .room-name {
+    max-width: 80px;
+  }
+
+  .device-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sensor-data {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .device-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .room-selector {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .device-card {
+    padding: 0.75rem;
+  }
+
+  .additional-states {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+

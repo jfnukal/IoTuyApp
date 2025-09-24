@@ -197,7 +197,9 @@ export const RoomSelector: React.FC<RoomSelectorProps> = ({ onCreateRoom }) => {
                 className="btn-modal-delete"
                 onClick={async () => {
                   try {
-                    await deleteRoom(selectedRoomId);
+                    if (selectedRoomId) {
+                      await deleteRoom(selectedRoomId);
+                    }
                     setShowDeleteModal(false);
                   } catch (error) {
                     console.error('Error deleting room:', error);

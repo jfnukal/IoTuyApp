@@ -10,193 +10,258 @@ export const useRooms = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-// Načítání místností s real-time aktualizacemi
-useEffect(() => {
-  if (!currentUser) {
-    setRooms([]);
-    setSelectedRoomId(null);
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  let unsubscribe: (() => void) | null = null;
-
-  const setupSubscription = async () => {
-    try {
-      unsubscribe = await firestoreService.subscribeToUserRooms(
-        currentUser.uid,
-        (updatedRooms) => {
-          setRooms(updatedRooms);
-          
-          // Nastav první místnost jako vybranou, pokud žádná není vybrána
-          setSelectedRoomId(prevId => {
-            if (!prevId && updatedRooms.length > 0) {
-              const defaultRoom = updatedRooms.find(room => room.isDefault) || updatedRooms[0];
-              return defaultRoom.id;
-            }
-            return prevId;
-          });
-          
-          setLoading(false);
-        }
-      );
-    } catch (err) {
-      console.error('Error setting up rooms subscription:', err);
-      setError('Nepodařilo se načíst místnosti');
-      setLoading(false);
+  useEffect(() => {
+    if (!currentUser) {
+      setRooms([]);
+      setSelectedRoomId(null);
+      return;
     }
-  };
 
-  setupSubscription();
+    // Definujeme si proměnnou pro odhlašovací funkci
+    let unsubscribe: (() => void) | null = null;
 
-  // Cleanup funkce
-  return () => {
-    if (unsubscribe) {
-      unsubscribe();
-    }
-  };
-}, [currentUser]); 
-
-  // Vytvoření nové místnosti
-  const createRoom = useCallback(async (roomData: Omit<Room, 'id' | 'owner' | 'createdAt' | 'updatedAt'>) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
-  
-    try {
+    // Vytvoříme si vnitřní async funkci, kterou hned zavoláme
+    const setupSubscription = async () => {
+      setLoading(true);
       setError(null);
-      const newRoomId = await firestoreService.createRoom(currentUser.uid, {
-        ...roomData,
-        owner: currentUser.uid,
-        devices: roomData.devices || [],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      });
-      
-      console.log('Room created successfully:', newRoomId);
-      return newRoomId;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se vytvořit místnost';
-      setError(errorMessage);
-      throw err;
-    }
+
+      try {
+        // Tady si POČKÁME (await), až nám Promise vrátí skutečnou funkci
+        unsubscribe = await firestoreService.subscribeToUserRooms(
+          currentUser.uid,
+          (updatedRooms) => {
+            setRooms(updatedRooms);
+
+            setSelectedRoomId((prevId) => {
+              const roomExists = updatedRooms.some(
+                (room) => room.id === prevId
+              );
+              if (prevId && roomExists) {
+                return prevId;
+              }
+              if (updatedRooms.length > 0) {
+                const defaultRoom =
+                  updatedRooms.find((room) => room.isDefault) ||
+                  updatedRooms[0];
+                return defaultRoom.id;
+              }
+              return null;
+            });
+
+            setLoading(false);
+          }
+        );
+      } catch (err) {
+        if (err instanceof Error) {
+          console.error('Error in rooms subscription:', err);
+          setError('Nepodařilo se načíst místnosti: ' + err.message);
+        } else {
+          setError('Nepodařilo se načíst místnosti');
+        }
+        setLoading(false);
+      }
+    };
+
+    setupSubscription();
+
+    // Úklidová funkce zůstává stejná, ale teď už bude `unsubscribe` správná funkce
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [currentUser]);
+
+  const createRoom = useCallback(
+    async (
+      roomData: Omit<Room, 'id' | 'owner' | 'createdAt' | 'updatedAt'>
+    ) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
+
+      try {
+        setError(null);
+        const newRoomId = await firestoreService.createRoom(currentUser.uid, {
+          ...roomData,
+          owner: currentUser.uid,
+          devices: roomData.devices || [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        console.log('Room created successfully:', newRoomId);
+        return newRoomId;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Nepodařilo se vytvořit místnost';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
 
   // Aktualizace místnosti
-  const updateRoom = useCallback(async (roomId: string, updates: Partial<Room>) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
+  const updateRoom = useCallback(
+    async (roomId: string, updates: Partial<Room>) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
 
-    try {
-      setError(null);
-      await firestoreService.updateRoom(currentUser.uid, roomId, {
-        ...updates,
-        updatedAt: Date.now()
-      });
-      
-      console.log('Room updated successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se aktualizovat místnost';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [currentUser]);
+      try {
+        setError(null);
+        // OPRAVA: Voláme novou obecnou metodu. Cesta k dokumentu je 'users/uid/rooms/roomId'
+        const roomPath = `users/${currentUser.uid}/rooms`;
+        await firestoreService.updateDocument(roomPath, roomId, updates);
+
+        console.log('Room updated successfully');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Nepodařilo se aktualizovat místnost';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
 
   // Smazání místnosti
-  const deleteRoom = useCallback(async (roomId: string) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
-    
-    try {
-      setError(null);
-      await firestoreService.deleteRoom(currentUser.uid, roomId);
-      
-      // Pokud byla smazána aktuálně vybraná místnost, vyber jinou
-      if (selectedRoomId === roomId) {
-        const remainingRooms = rooms.filter(room => room.id !== roomId);
-        setSelectedRoomId(remainingRooms.length > 0 ? remainingRooms[0].id : null);
+  const deleteRoom = useCallback(
+    async (roomId: string) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
+
+      try {
+        setError(null);
+        await firestoreService.deleteRoom(currentUser.uid, roomId);
+
+        // Pokud byla smazána aktuálně vybraná místnost, vyber jinou
+        if (selectedRoomId === roomId) {
+          const remainingRooms = rooms.filter((room) => room.id !== roomId);
+          setSelectedRoomId(
+            remainingRooms.length > 0 ? remainingRooms[0].id : null
+          );
+        }
+
+        console.log('Room deleted successfully');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Nepodařilo se smazat místnost';
+        setError(errorMessage);
+        throw err;
       }
-      
-      console.log('Room deleted successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se smazat místnost';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [currentUser, selectedRoomId, rooms]);
+    },
+    [currentUser, selectedRoomId, rooms]
+  );
 
   // Přidání zařízení do místnosti
-  const addDeviceToRoom = useCallback(async (roomId: string, deviceId: string) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
+  const addDeviceToRoom = useCallback(
+    async (roomId: string, deviceId: string) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
 
-    try {
-      setError(null);
-      await firestoreService.addDeviceToRoom(currentUser.uid, roomId, deviceId);
-      console.log('Device added to room successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se přidat zařízení do místnosti';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [currentUser]);
+      try {
+        setError(null);
+        await firestoreService.addDeviceToRoom(
+          currentUser.uid,
+          roomId,
+          deviceId
+        );
+        console.log('Device added to room successfully');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Nepodařilo se přidat zařízení do místnosti';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
 
   // Odebrání zařízení z místnosti
-  const removeDeviceFromRoom = useCallback(async (roomId: string, deviceId: string) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
+  const removeDeviceFromRoom = useCallback(
+    async (roomId: string, deviceId: string) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
 
-    try {
-      setError(null);
-      await firestoreService.removeDeviceFromRoom(currentUser.uid, roomId, deviceId);
-      console.log('Device removed from room successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se odebrat zařízení z místnosti';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [currentUser]);
+      try {
+        setError(null);
+        await firestoreService.removeDeviceFromRoom(
+          currentUser.uid,
+          roomId,
+          deviceId
+        );
+        console.log('Device removed from room successfully');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Nepodařilo se odebrat zařízení z místnosti';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
 
   // Přesun zařízení mezi místnostmi
-  const moveDeviceBetweenRooms = useCallback(async (deviceId: string, fromRoomId: string | null, toRoomId: string) => {
-    if (!currentUser) throw new Error('Uživatel není přihlášen');
+  const moveDeviceBetweenRooms = useCallback(
+    async (deviceId: string, fromRoomId: string | null, toRoomId: string) => {
+      if (!currentUser) throw new Error('Uživatel není přihlášen');
 
-    try {
-      setError(null);
-      
-      // Odeber z původní místnosti (pokud existuje)
-      if (fromRoomId) {
-        await removeDeviceFromRoom(fromRoomId, deviceId);
+      try {
+        setError(null);
+
+        // Odeber z původní místnosti (pokud existuje)
+        if (fromRoomId) {
+          await removeDeviceFromRoom(fromRoomId, deviceId);
+        }
+
+        // Přidej do nové místnosti
+        await addDeviceToRoom(toRoomId, deviceId);
+
+        // Aktualizuj roomId u zařízení
+        await firestoreService.updateDevice(currentUser.uid, deviceId, {
+          roomId: toRoomId,
+        });
+
+        console.log('Device moved between rooms successfully');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Nepodařilo se přesunout zařízení';
+        setError(errorMessage);
+        throw err;
       }
-      
-      // Přidej do nové místnosti
-      await addDeviceToRoom(toRoomId, deviceId);
-      
-      // Aktualizuj roomId u zařízení
-      await firestoreService.updateDevicePosition(currentUser.uid, deviceId, { x: 0, y: 0 }, toRoomId);
-      
-      console.log('Device moved between rooms successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nepodařilo se přesunout zařízení';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [currentUser, addDeviceToRoom, removeDeviceFromRoom]);
+    },
+    [currentUser, addDeviceToRoom, removeDeviceFromRoom]
+  );
 
   // Pomocné funkce
-  const selectedRoom = rooms.find(room => room.id === selectedRoomId) || null;
-  
-  const getRoomDevices = useCallback((roomId: string, allDevices: TuyaDevice[]) => {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room) return [];
-    
-    return allDevices.filter(device => 
-      room.devices.includes(device.id) || device.roomId === roomId
-    );
-  }, [rooms]);
+  const selectedRoom = rooms.find((room) => room.id === selectedRoomId) || null;
 
-  const getUnassignedDevices = useCallback((allDevices: TuyaDevice[]) => {
-    const allAssignedDeviceIds = rooms.flatMap(room => room.devices);
-    return allDevices.filter(device => 
-      !allAssignedDeviceIds.includes(device.id) && !device.roomId
-    );
-  }, [rooms]);
+  const getRoomDevices = useCallback(
+    (roomId: string, allDevices: TuyaDevice[]) => {
+      const room = rooms.find((r) => r.id === roomId);
+      if (!room) return [];
+
+      return allDevices.filter(
+        (device) => room.devices.includes(device.id) || device.roomId === roomId
+      );
+    },
+    [rooms]
+  );
+
+  const getUnassignedDevices = useCallback(
+    (allDevices: TuyaDevice[]) => {
+      const allAssignedDeviceIds = rooms.flatMap((room) => room.devices);
+      return allDevices.filter(
+        (device) => !allAssignedDeviceIds.includes(device.id) && !device.roomId
+      );
+    },
+    [rooms]
+  );
 
   return {
     // State
@@ -205,7 +270,7 @@ useEffect(() => {
     selectedRoom,
     loading,
     error,
-    
+
     // Actions
     setSelectedRoomId,
     createRoom,
@@ -214,13 +279,13 @@ useEffect(() => {
     addDeviceToRoom,
     removeDeviceFromRoom,
     moveDeviceBetweenRooms,
-    
+
     // Helpers
     getRoomDevices,
     getUnassignedDevices,
-    
+
     // Computed values
     roomsCount: rooms.length,
-    hasRooms: rooms.length > 0
+    hasRooms: rooms.length > 0,
   };
 };

@@ -6,7 +6,7 @@ interface EventFormProps {
   date: Date | null;
   familyMembers: FamilyMember[];
   onSave: (eventData: Partial<CalendarEvent>) => void;
-  onDelete?: (eventId: string) => void;
+  onDelete?: () => void;
   onClose: () => void;
   defaultMemberId?: string; // <-- PŘIDEJTE TENTO ŘÁDEK
 }
@@ -17,7 +17,8 @@ const EventForm: React.FC<EventFormProps> = ({
   familyMembers,
   onSave,
   onDelete,
-  onClose
+  onClose,
+  defaultMemberId
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -49,6 +50,17 @@ const EventForm: React.FC<EventFormProps> = ({
       });
     }
   }, [event]);
+
+ // Efekt pro nastavení výchozího člena při vytváření nové události
+ useEffect(() => {
+  // Spustí se jen když vytváříme novou událost (event je null) a máme defaultMemberId
+  if (!event && defaultMemberId) {
+    setFormData(prev => ({
+      ...prev,
+      familyMember: defaultMemberId
+    }));
+  }
+}, [event, defaultMemberId]); 
 
   // Typy událostí
   const eventTypes = [

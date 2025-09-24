@@ -21,18 +21,18 @@ interface Device3D {
 const RoomVisualization3D: React.FC<RoomVisualization3DProps> = ({
   room,
   devices,
-  onDevicePositionChange,
   onDeviceSelect,
-  readonly = false
+  // Removed unused props 'onDevicePositionChange' and 'readonly' from destructuring
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene>();
-  const rendererRef = useRef<THREE.WebGLRenderer>();
-  const cameraRef = useRef<THREE.PerspectiveCamera>();
+  // FIX: All useRef hooks must be initialized with a value, in this case `null`
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const devicesRef = useRef<Device3D[]>([]);
-  const raycasterRef = useRef<THREE.Raycaster>();
-  const mouseRef = useRef<THREE.Vector2>();
-  const animationFrameRef = useRef<number>();
+  const raycasterRef = useRef<THREE.Raycaster | null>(null);
+  const mouseRef = useRef<THREE.Vector2 | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [cameraControls, setCameraControls] = useState({
@@ -187,14 +187,13 @@ const RoomVisualization3D: React.FC<RoomVisualization3DProps> = ({
       const label = createDeviceLabel(device, position);
       if (label) {
         sceneRef.current?.add(label);
+        devicesRef.current.push({
+          id: device.id,
+          mesh,
+          label: label,
+          device
+        });
       }
-
-      devicesRef.current.push({
-        id: device.id,
-        mesh,
-        label: label!,
-        device
-      });
     });
 
     console.log(`Created ${devicesRef.current.length} 3D devices`);
@@ -222,7 +221,8 @@ const RoomVisualization3D: React.FC<RoomVisualization3DProps> = ({
     }
   }, [isDragging]);
 
-  const handleMouseDown = useCallback((event: MouseEvent) => {
+  // FIX: Unused 'event' parameter is renamed to '_event' to satisfy TypeScript
+  const handleMouseDown = useCallback((_event: MouseEvent) => {
     if (!raycasterRef.current || !mouseRef.current || !cameraRef.current) return;
 
     raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
@@ -350,7 +350,7 @@ const RoomVisualization3D: React.FC<RoomVisualization3DProps> = ({
         canvas.removeEventListener('mouseup', handleMouseUp);
       }
     };
-  }, []);
+  }, [createRoom, createDevices, animate, handleMouseMove, handleMouseDown, handleMouseUp]);
 
   // Aktualizuj zařízení při změně dat
   useEffect(() => {

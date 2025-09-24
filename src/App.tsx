@@ -194,7 +194,7 @@ function App() {
     try {
       setIsLoading(true);
       setError(null);
-     // setLastUpdate(Date.now());
+      // setLastUpdate(Date.now());
 
       // Tichá notifikace o začátku synchronizace
       setNotification('Synchronizuji zařízení...');

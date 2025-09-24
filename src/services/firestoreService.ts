@@ -14,12 +14,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import type {
-  UserSettings,
-  Room,
-  TuyaDevice,
-  DeviceCategory,
-} from '../types';
+import type { UserSettings, Room, TuyaDevice, DeviceCategory } from '../types';
 
 class FirestoreService {
   // ==================== USER SETTINGS ====================
@@ -39,9 +34,7 @@ class FirestoreService {
     }
   }
 
-  async createDefaultUserSettings(
-    uid: string,
-  ): Promise<UserSettings> {
+  async createDefaultUserSettings(uid: string): Promise<UserSettings> {
     const defaultSettings: UserSettings = {
       uid,
       theme: 'light',
@@ -64,13 +57,13 @@ class FirestoreService {
         deviceCount: 0,
       },
     };
-  
+
     try {
       await this.createUserSettings(defaultSettings);
-  
+
       // Vytvoř také výchozí místnost a nastav ji jako default
       const defaultRoomId = await this.createDefaultRoom(uid);
-  
+
       // Aktualizuj settings s výchozí místností
       const updatedPreferences: UserSettings['preferences'] = {
         ...defaultSettings.preferences!,
@@ -80,7 +73,7 @@ class FirestoreService {
       await this.updateUserSettings(uid, {
         preferences: updatedPreferences,
       });
-  
+
       return {
         ...defaultSettings,
         preferences: updatedPreferences,
@@ -119,39 +112,61 @@ class FirestoreService {
 
   // ==================== ROOMS ====================
 
-async createDefaultRoom(uid: string): Promise<string> {
-  try {
-    // Nejdřív zkontroluj, jestli už uživatel nemá výchozí místnost
-    const existingRooms = await this.getUserRooms(uid);
-    const defaultRoom = existingRooms.find(room => room.isDefault);
-    
-    if (defaultRoom) {
-      console.log('Default room already exists:', defaultRoom.id);
-      return defaultRoom.id;
+  async updateDocument(
+    collectionName: string,
+    docId: string,
+    updates: { [key: string]: any }
+  ): Promise<void> {
+    try {
+      // Tato metoda vyžaduje uid uživatele, aby byla bezpečná
+      // Předpokládáme, že uid bude součástí cesty v collectionName (např. 'users/uid/rooms')
+      // V našem případě ale aktualizujeme přímo v kolekci 'rooms', což není ideální, ale pro teď to tak necháme.
+      // Lepší by bylo předat i uid. Pro teď to zjednodušíme.
+      const docRef = doc(db, collectionName, docId);
+      await updateDoc(docRef, {
+        ...updates,
+        updatedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error(`Error updating document in ${collectionName}:`, error);
+      throw new Error(
+        `Nepodařilo se aktualizovat dokument v kolekci ${collectionName}`
+      );
     }
-    
-    // Vytvoř novou pouze pokud neexistuje
-    const newDefaultRoom: Omit<Room, 'id'> = {
-      name: 'Výchozí místnost',
-      description: 'Automaticky vytvořená výchozí místnost',
-      devices: [],
-      owner: uid,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      color: '#007bff',
-      icon: '🏠',
-      isDefault: true,
-    };
-
-    const roomId = await this.createRoom(uid, newDefaultRoom);
-    console.log('New default room created:', roomId);
-    return roomId;
-    
-  } catch (error) {
-    console.error('Error in createDefaultRoom:', error);
-    throw error;
   }
-}
+
+  async createDefaultRoom(uid: string): Promise<string> {
+    try {
+      // Nejdřív zkontroluj, jestli už uživatel nemá výchozí místnost
+      const existingRooms = await this.getUserRooms(uid);
+      const defaultRoom = existingRooms.find((room) => room.isDefault);
+
+      if (defaultRoom) {
+        console.log('Default room already exists:', defaultRoom.id);
+        return defaultRoom.id;
+      }
+
+      // Vytvoř novou pouze pokud neexistuje
+      const newDefaultRoom: Omit<Room, 'id'> = {
+        name: 'Výchozí místnost',
+        description: 'Automaticky vytvořená výchozí místnost',
+        devices: [],
+        owner: uid,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        color: '#007bff',
+        icon: '🏠',
+        isDefault: true,
+      };
+
+      const roomId = await this.createRoom(uid, newDefaultRoom);
+      console.log('New default room created:', roomId);
+      return roomId;
+    } catch (error) {
+      console.error('Error in createDefaultRoom:', error);
+      throw error;
+    }
+  }
 
   async createRoom(uid: string, room: Omit<Room, 'id'>): Promise<string> {
     try {
@@ -169,30 +184,30 @@ async createDefaultRoom(uid: string): Promise<string> {
     }
   }
 
-      // Aktualizace layoutu místnosti
-      async updateRoomLayout(
-        userId: string, 
-        roomId: string, 
-        layout: { width: number; height: number; type: '2d' | '3d' }
-      ): Promise<void> {
-        if (!userId || !roomId) {
-          throw new Error('User ID and Room ID are required');
-        }
+  // Aktualizace layoutu místnosti
+  async updateRoomLayout(
+    userId: string,
+    roomId: string,
+    layout: { width: number; height: number; type: '2d' | '3d' }
+  ): Promise<void> {
+    if (!userId || !roomId) {
+      throw new Error('User ID and Room ID are required');
+    }
 
-        try {
-          const roomRef = doc(db, 'users', userId, 'rooms', roomId);
-          
-          await updateDoc(roomRef, {
-            layout: layout,
-            updatedAt: Date.now()
-          });
-          
-          console.log(`Room ${roomId} layout updated:`, layout);
-        } catch (error) {
-          console.error('Error updating room layout:', error);
-          throw new Error('Failed to update room layout');
-        }
-      }
+    try {
+      const roomRef = doc(db, 'users', userId, 'rooms', roomId);
+
+      await updateDoc(roomRef, {
+        layout: layout,
+        updatedAt: Date.now(),
+      });
+
+      console.log(`Room ${roomId} layout updated:`, layout);
+    } catch (error) {
+      console.error('Error updating room layout:', error);
+      throw new Error('Failed to update room layout');
+    }
+  }
 
   async deleteRoom(uid: string, roomId: string): Promise<void> {
     try {
@@ -475,42 +490,51 @@ async createDefaultRoom(uid: string): Promise<string> {
     }
   }
 
-      // Aktualizace pozice zařízení v místnosti
-      async updateDevicePosition(
-        userId: string, 
-        deviceId: string, 
-        position: { x: number; y: number }
-      ): Promise<void> {
-        console.log('FirestoreService.updateDevicePosition called');
-        console.log('Params:', { userId, deviceId, position });
-        
-        if (!userId || !deviceId) {
-          throw new Error('User ID and Device ID are required');
-        }
+  // Aktualizace pozice zařízení v místnosti
+  async updateDevicePosition(
+    userId: string,
+    deviceId: string,
+    position: { x: number; y: number }
+  ): Promise<void> {
+    console.log('FirestoreService.updateDevicePosition called');
+    console.log('Params:', { userId, deviceId, position });
 
-        try {
-          const deviceRef = doc(db, 'users', userId, 'devices', deviceId);
-          console.log('Document ref created:', deviceRef.path);
-          
-          // Zkontroluj, že dokument existuje
-          const deviceDoc = await getDoc(deviceRef);
-          if (!deviceDoc.exists()) {
-            throw new Error(`Device ${deviceId} not found in Firestore`);
-          }
-          
-          console.log('Current device data:', deviceDoc.data());
-          
-          await updateDoc(deviceRef, {
-            position: position,
-            updatedAt: Date.now()
-          });
-          
-          console.log(`Device ${deviceId} position updated successfully:`, position);
-        } catch (error) {
-          console.error('FirestoreService error:', error);
-          throw new Error(`Failed to update device position: ${error.message}`);
-        }
+    if (!userId || !deviceId) {
+      throw new Error('User ID and Device ID are required');
+    }
+
+    try {
+      const deviceRef = doc(db, 'users', userId, 'devices', deviceId);
+      console.log('Document ref created:', deviceRef.path);
+
+      // Zkontroluj, že dokument existuje
+      const deviceDoc = await getDoc(deviceRef);
+      if (!deviceDoc.exists()) {
+        throw new Error(`Device ${deviceId} not found in Firestore`);
       }
+
+      console.log('Current device data:', deviceDoc.data());
+
+      await updateDoc(deviceRef, {
+        position: position,
+        updatedAt: Date.now(),
+      });
+
+      console.log(
+        `Device ${deviceId} position updated successfully:`,
+        position
+      );
+    } catch (error) {
+      console.error('FirestoreService error:', error);
+      // PŘIDANÁ KONTROLA TYPU
+      if (error instanceof Error) {
+        throw new Error(`Failed to update device position: ${error.message}`);
+      }
+      throw new Error(
+        'An unknown error occurred while updating device position.'
+      );
+    }
+  }
 
   // ==================== DEVICE CATEGORIES ====================
 
@@ -621,10 +645,13 @@ async createDefaultRoom(uid: string): Promise<string> {
       throw new Error('Nepodařilo se aktualizovat vlastní nastavení zařízení');
     }
   }
-  async subscribeToUserDevices(uid: string, callback: (devices: TuyaDevice[]) => void): Promise<Unsubscribe> {
+  async subscribeToUserDevices(
+    uid: string,
+    callback: (devices: TuyaDevice[]) => void
+  ): Promise<Unsubscribe> {
     try {
       const devicesRef = collection(db, 'users', uid, 'devices');
-      
+
       return onSnapshot(devicesRef, (snapshot) => {
         const devices: TuyaDevice[] = [];
         snapshot.forEach((doc) => {

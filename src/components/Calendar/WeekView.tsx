@@ -4,7 +4,7 @@ import { useCalendar } from './CalendarProvider';
 
 interface WeekViewProps {
   currentDate: Date;
-  events: CalendarEvent[];
+  // events je pryč
   onDateClick: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
   familyMembers: FamilyMember[];

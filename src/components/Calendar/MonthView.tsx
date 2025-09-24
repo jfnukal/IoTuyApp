@@ -102,7 +102,7 @@ const MonthView: React.FC<MonthViewProps> = ({
               key={date.toISOString()} 
               className={`day-row ${isToday(date) ? 'today' : ''}`}
               // Uložíme si referenci na tento DOM element
-              ref={(el) => dayRefs.current.set(dateKey, el)}
+              ref={(el) => { dayRefs.current.set(dateKey, el); }}
             >
               <div className="day-info-cell">
                 <div className="day-date">

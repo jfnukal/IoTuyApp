@@ -2,8 +2,8 @@ import React from 'react';
 import type { CalendarEvent, FamilyMember } from './types';
 import { useCalendar } from './CalendarProvider';
 import MonthView from './MonthView.tsx';
-import WeekView from './WeekView.tsx';
-import DayView from './DayView.tsx';
+// import WeekView from './WeekView.tsx';
+// import DayView from './DayView.tsx';
 import CalendarHeader from './CalendarHeader.tsx';
 
 interface CalendarWidgetProps {

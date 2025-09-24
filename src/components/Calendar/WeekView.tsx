@@ -12,12 +12,11 @@ interface WeekViewProps {
 
 const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
-  events,
   onDateClick,
   onEventClick,
   familyMembers
 }) => {
-  const { isToday, isSameDay, getEventsByDate } = useCalendar();
+  const { isToday, getEventsByDate } = useCalendar();
 
   // Získej dny týdnu (pondělí - neděle)
   const getWeekDays = () => {

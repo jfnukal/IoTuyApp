@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
@@ -10,7 +10,7 @@ import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
 import RoomVisualization2D from './components/RoomVisualization2D';
 import RoomVisualization3D from './components/RoomVisualization3D';
-import Dashboard from './components/Dashboard';
+// import Dashboard from './components/Dashboard';
 import CalendarMiniWidget from './components/Calendar/CalendarMiniWidget';
 import CalendarProvider from './components/Calendar/CalendarProvider';
 

@@ -1,22 +1,35 @@
 /* === Finální a vyladěné styly pro Kalendář === */
 
-/* --- Struktura modálního okna a rolování --- */
+/* Hlavní kontejner nyní drží obrázek a stará se o jeho zobrazení */
 .calendar-widget {
   height: 100%;
   display: flex;
   flex-direction: column;
+  
+  /* Tyto vlastnosti zajistí, že se obrázek vždy roztáhne správně */
+  background-size: cover;
+  background-position: center center;
 }
+
+/* Hlavička je nyní jen průhledná vrstva pro ovládací prvky */
 .calendar-header {
-  color: white;
-  padding: 20px;
-  z-index: 20;
+  /* Přidáme jemný tmavý přechod shora, aby byl text VŽDY čitelný */
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+  color: white; /* Text by měl být vždy bílý pro kontrast */
+  padding: 0px;
+  z-index: 2; /* Důležité, aby byla nad obsahem */
 }
+
 .calendar-content {
   flex: 1;
   overflow-y: auto;
   /* KROK 2: Odebrán horní padding pro zmenšení mezery */
-  padding: 0 15px 15px 15px; 
-  background-color: #f0f2f5;
+  padding: 0 15px 15px 15px;
+  /* Nastaví pozadí na lehce průhlednou bílou */
+  background-color: rgba(255, 255, 255, 0.55);
+  /* background-color: #f0f2f5; */
+  -webkit-backdrop-filter: blur(10px); /* Pro Safari */
+  backdrop-filter: blur(10px); /* Rozostření pozadí */
 }
 
 /* ==================== RODINNÝ KALENDÁŘ LAYOUT ==================== */
@@ -28,19 +41,22 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Jemný stín pro oddělení */
+  /* Místo bílé použijeme lehce průhledné pozadí s rozmazáním */
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* KROK 6: Výraznější buňka "Den" */
+/* Nápis "DEN" */
 .day-info-header-cell {
   padding: 12px 10px;
   font-weight: 700;
   text-align: center;
-  font-family: sans-serif;
-  font-size: 0.9rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
   color: #333;
-  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
+  border-right: 1px solid #eee; 
 }
 .member-header-cell {
   padding: 12px 10px;
@@ -48,7 +64,7 @@
   text-align: center;
   font-family: 'Caveat', cursive;
   font-size: 1.5rem;
-  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
+  border-right: 1px solid #eee; 
 }
 .member-header-cell:last-child {
   border-right: none;
@@ -71,22 +87,28 @@
   border-bottom: none;
 }
 
-/* KROK 3: Výraznější zvýraznění dneška */
 .day-row.today .day-info-cell,
 .day-row.today .member-day-cell {
-  background-color: #e3f2fd; /* Výraznější modrá */
+  /* Původní modrá #e3f2fd, ale s 85% průhledností */
+  background-color: rgba(227, 242, 253, 0.85); 
 }
+/* 
+.day-row.today .day-info-cell,
+.day-row.today .member-day-cell {
+  background-color: #e3f2fd; 
+} */
 
-/* Buňka s datem */
+/* Buňka s datem - pozadí je nyní plně průhledné */
 .day-info-cell {
   padding: 8px 12px;
-  background-color: #fdfdfd;
+  background-color: transparent; /* <- ZMĚNA ZDE */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   gap: 4px;
-  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
+  /* Zvýrazníme ohraničení pro lepší čitelnost */
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 .day-date {
   display: flex;
@@ -96,12 +118,12 @@
 /* KROK 3: Viditelnější čísla */
 .day-number {
   font-size: 1.1rem;
-  font-weight: 600; 
+  font-weight: 600;
   color: #212529; /* Tmavší barva */
 }
 /* KROK 4: Větší písmo dne */
 .day-name {
-  font-size: 0.85rem; 
+  font-size: 0.85rem;
   color: #6c757d;
 }
 
@@ -109,42 +131,89 @@
 .member-day-cell {
   min-height: 90px;
   padding: 5px;
-  background: white;
+  background-color: transparent; /* <- ZMĚNA ZDE */
   position: relative;
-  border-right: 1px solid #eee; /* KROK 1: Svislá čára */
+  /* Zvýrazníme ohraničení pro lepší čitelnost */
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 .member-day-cell:last-child {
   border-right: none;
 }
 
 /* Vše ostatní zůstává stejné, jak bylo... */
-.day-special-events { font-size: 0.75rem; color: #333; }
-.special-event.holiday { font-weight: 600; }
-.special-event.birthday { color: #e76f51; }
+.day-special-events {
+  font-size: 0.75rem;
+  color: #333;
+}
+.special-event.holiday {
+  font-weight: 600;
+}
+.special-event.birthday {
+  color: #e76f51;
+}
 .add-event-button-cell {
-  position: absolute; top: 5px; right: 5px; width: 24px; height: 24px;
-  border-radius: 50%; border: none; background-color: rgba(0, 0, 0, 0.4);
-  color: white; cursor: pointer; opacity: 0;
-  transform: scale(0.8); transition: all 0.2s ease; pointer-events: none;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+  pointer-events: none;
 }
-.add-event-button-cell::before, .add-event-button-cell::after {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%); background-color: white;
+.add-event-button-cell::before,
+.add-event-button-cell::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
 }
-.add-event-button-cell::before { width: 12px; height: 2px; }
-.add-event-button-cell::after { width: 2px; height: 12px; }
+.add-event-button-cell::before {
+  width: 12px;
+  height: 2px;
+}
+.add-event-button-cell::after {
+  width: 2px;
+  height: 12px;
+}
 .member-day-cell:hover .add-event-button-cell {
-  opacity: 1; transform: scale(1); pointer-events: auto;
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
 }
 .event-form-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   backdrop-filter: blur(5px);
   z-index: 9999;
 }
 .event-form {
-  background: white; border-radius: 16px; padding: 30px;
-  max-width: 500px; width: 90%;
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Zvýraznění řádku při najetí myší (kromě dnešního dne) */
+.day-row:not(.today) .day-info-cell:hover,
+.day-row:not(.today) .member-day-cell:hover {
+  background-color: rgba(0, 0, 0, 0.04); /* Velmi jemné ztmavení */
+  cursor: pointer; /* Naznačí, že se dá na buňku kliknout */
 }

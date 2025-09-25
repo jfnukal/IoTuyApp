@@ -21,6 +21,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     currentDate,
     setCurrentDate,
     currentView,
+    headerImage,
     setCurrentView,
     getCurrentMonthTheme
   } = useCalendar();
@@ -67,11 +68,22 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     }
   };
 
-  const monthTheme = getCurrentMonthTheme();
+  // getCurrentMonthTheme stále můžeme používat pro barvy atd.
+  const monthTheme = getCurrentMonthTheme(); 
   
   return (
-    <div className="calendar-widget">
-      <div className="calendar-header" style={{ backgroundImage: monthTheme.backgroundImage }}>
+    <div 
+      className="calendar-widget"
+      style={{ 
+        backgroundImage: `url('${headerImage}')`,
+      }}
+    >
+      <div 
+        className="calendar-header"
+        style={{ 
+          color: monthTheme.textColor 
+        }}
+      >
         <CalendarHeader
           currentDate={currentDate}
           currentView={currentView}

@@ -17,16 +17,13 @@ export const useRooms = () => {
       return;
     }
 
-    // Definujeme si proměnnou pro odhlašovací funkci
     let unsubscribe: (() => void) | null = null;
 
-    // Vytvoříme si vnitřní async funkci, kterou hned zavoláme
     const setupSubscription = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Tady si POČKÁME (await), až nám Promise vrátí skutečnou funkci
         unsubscribe = await firestoreService.subscribeToUserRooms(
           currentUser.uid,
           (updatedRooms) => {
@@ -64,7 +61,6 @@ export const useRooms = () => {
 
     setupSubscription();
 
-    // Úklidová funkce zůstává stejná, ale teď už bude `unsubscribe` správná funkce
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -102,17 +98,14 @@ export const useRooms = () => {
     [currentUser]
   );
 
-  // Aktualizace místnosti
   const updateRoom = useCallback(
     async (roomId: string, updates: Partial<Room>) => {
       if (!currentUser) throw new Error('Uživatel není přihlášen');
 
       try {
         setError(null);
-        // OPRAVA: Voláme novou obecnou metodu. Cesta k dokumentu je 'users/uid/rooms/roomId'
         const roomPath = `users/${currentUser.uid}/rooms`;
         await firestoreService.updateDocument(roomPath, roomId, updates);
-
         console.log('Room updated successfully');
       } catch (err) {
         const errorMessage =
@@ -126,7 +119,6 @@ export const useRooms = () => {
     [currentUser]
   );
 
-  // Smazání místnosti
   const deleteRoom = useCallback(
     async (roomId: string) => {
       if (!currentUser) throw new Error('Uživatel není přihlášen');
@@ -135,13 +127,15 @@ export const useRooms = () => {
         setError(null);
         await firestoreService.deleteRoom(currentUser.uid, roomId);
 
-        // Pokud byla smazána aktuálně vybraná místnost, vyber jinou
-        if (selectedRoomId === roomId) {
-          const remainingRooms = rooms.filter((room) => room.id !== roomId);
-          setSelectedRoomId(
-            remainingRooms.length > 0 ? remainingRooms[0].id : null
-          );
-        }
+        // Fix: Use functional update to avoid stale closure
+        setSelectedRoomId((currentSelectedId) => {
+          if (currentSelectedId === roomId) {
+            // We need to get fresh rooms data, but we can't access it here
+            // So we'll set to null and let the effect handle it
+            return null;
+          }
+          return currentSelectedId;
+        });
 
         console.log('Room deleted successfully');
       } catch (err) {
@@ -151,10 +145,9 @@ export const useRooms = () => {
         throw err;
       }
     },
-    [currentUser, selectedRoomId, rooms]
+    [currentUser] // Removed rooms and selectedRoomId dependencies
   );
 
-  // Přidání zařízení do místnosti
   const addDeviceToRoom = useCallback(
     async (roomId: string, deviceId: string) => {
       if (!currentUser) throw new Error('Uživatel není přihlášen');
@@ -179,7 +172,6 @@ export const useRooms = () => {
     [currentUser]
   );
 
-  // Odebrání zařízení z místnosti
   const removeDeviceFromRoom = useCallback(
     async (roomId: string, deviceId: string) => {
       if (!currentUser) throw new Error('Uživatel není přihlášen');
@@ -204,7 +196,6 @@ export const useRooms = () => {
     [currentUser]
   );
 
-  // Přesun zařízení mezi místnostmi
   const moveDeviceBetweenRooms = useCallback(
     async (deviceId: string, fromRoomId: string | null, toRoomId: string) => {
       if (!currentUser) throw new Error('Uživatel není přihlášen');
@@ -212,15 +203,20 @@ export const useRooms = () => {
       try {
         setError(null);
 
-        // Odeber z původní místnosti (pokud existuje)
         if (fromRoomId) {
-          await removeDeviceFromRoom(fromRoomId, deviceId);
+          await firestoreService.removeDeviceFromRoom(
+            currentUser.uid,
+            fromRoomId,
+            deviceId
+          );
         }
 
-        // Přidej do nové místnosti
-        await addDeviceToRoom(toRoomId, deviceId);
+        await firestoreService.addDeviceToRoom(
+          currentUser.uid,
+          toRoomId,
+          deviceId
+        );
 
-        // Aktualizuj roomId u zařízení
         await firestoreService.updateDevice(currentUser.uid, deviceId, {
           roomId: toRoomId,
         });
@@ -235,10 +231,10 @@ export const useRooms = () => {
         throw err;
       }
     },
-    [currentUser, addDeviceToRoom, removeDeviceFromRoom]
+    [currentUser] // Removed addDeviceToRoom and removeDeviceFromRoom dependencies
   );
 
-  // Pomocné funkce
+  // Helper functions - these should be stable
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) || null;
 
   const getRoomDevices = useCallback(

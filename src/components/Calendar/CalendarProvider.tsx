@@ -14,6 +14,7 @@ import type {
   MonthTheme,
 } from './types';
 import { fetchCzechHolidays, fetchCzechNamedays } from './data/czechData';
+import { fetchImageForQuery } from '../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 
 interface CalendarContextType {
@@ -43,6 +44,7 @@ interface CalendarContextType {
   // Témata
   monthThemes: MonthTheme[];
   getCurrentMonthTheme: () => MonthTheme;
+  headerImage: string | null;
 
   // Utility
   isToday: (date: Date) => boolean;
@@ -78,6 +80,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [namedays, setNamedays] = useState<Nameday[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+  const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [settings, setSettings] = useState<CalendarSettings>({
     theme: 'light',
     firstDayOfWeek: 1,
@@ -93,6 +96,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     },
     familyView: true,
   });
+  
 
   // Načtení nastavení z localStorage při inicializaci
   useEffect(() => {
@@ -225,6 +229,28 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     }
   };
 
+    // <-- Nový useEffect, který se stará o načtení obrázku
+    useEffect(() => {
+      const loadHeaderImage = async () => {
+        const month = currentDate.getMonth();
+        const currentTheme = monthThemes[month];
+        
+        // Vytvoříme dotaz pro vyhledávání, např. "Winter quiet" pro "Zimní klid"
+        const query = `${currentTheme.name} ${currentTheme.month}`; 
+  
+        const imageUrl = await fetchImageForQuery(query);
+        if (imageUrl) {
+          setHeaderImage(imageUrl);
+        } else {
+          // Fallback: Pokud se obrázek nenačte, použijeme gradient z původního souboru
+          setHeaderImage(currentTheme.backgroundImage);
+        }
+      };
+  
+      loadHeaderImage();
+      // Tento efekt se spustí znovu, kdykoliv se změní měsíc
+    }, [currentDate.getMonth()]);
+
   const value: CalendarContextType = {
     currentDate,
     setCurrentDate,
@@ -239,6 +265,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     namedays,
     getHolidayByDate,
     getNamedayByDate,
+    headerImage,
     settings,
     updateSettings,
     monthThemes,

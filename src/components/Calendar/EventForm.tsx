@@ -8,7 +8,7 @@ interface EventFormProps {
   onSave: (eventData: Partial<CalendarEvent>) => void;
   onDelete?: () => void;
   onClose: () => void;
-  defaultMemberId?: string; // <-- PŘIDEJTE TENTO ŘÁDEK
+  defaultMemberId?: string;
 }
 
 const EventForm: React.FC<EventFormProps> = ({

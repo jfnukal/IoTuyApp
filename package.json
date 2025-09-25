@@ -17,7 +17,8 @@
     "firebase": "^10.8.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "unsplash-js": "^7.0.20"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

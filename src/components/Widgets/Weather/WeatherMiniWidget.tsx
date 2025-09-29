@@ -5,6 +5,7 @@ import { WeatherUtils } from './utils/weatherUtils';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import './WeatherMiniWidget.css';
 import WeatherModal from './WeatherModal';
+// import WeatherModalMobile from './WeatherModalMobile.css';
 import './WeatherModalMobile.css';
 
 interface WeatherMiniWidgetProps {
@@ -141,18 +142,19 @@ const isMobile = window.innerWidth <= 768;
 
   return (
     <>
-      <div 
-        className={`weather-mini-widget ${className}`}
-        onClick={handleClick}
-        style={{
-          background: backgroundImage 
-            ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${backgroundImage})`
-            : gradientStyle,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Header */}
+     <div 
+          className={`weather-mini-widget ${className}`}
+          onClick={handleClick}
+          style={{
+            backgroundImage: backgroundImage 
+              ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${backgroundImage})`
+              : gradientStyle,
+            backgroundColor: gradient[0], // Záložní barva z gradientu
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+                {/* Header */}
         <div className="weather-mini-header">
           <div className="widget-title-section">
             <h3 className="widget-title">
@@ -268,7 +270,7 @@ const isMobile = window.innerWidth <= 768;
 
         {/* Weather Modal - nahraď stávající modal tímto: */}
         {isMobile ? (
-          <WeatherModalMobile 
+          <WeatherModal 
             isOpen={showModal}
             onClose={() => setShowModal(false)}
           />

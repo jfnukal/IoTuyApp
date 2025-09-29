@@ -44,7 +44,7 @@ export class WeatherUtils {
   }
 
   // Získání gradientu pro pozadí
-  static getWeatherGradient(code: number, timeOfDay: 'day' | 'night' = 'day'): string[] {
+  static getWeatherGradient(code: number, timeOfDay: 'day' | 'night' = 'day'): readonly string[] {
     const condition = this.getWeatherCondition(code);
     
     if (timeOfDay === 'night') {
@@ -239,8 +239,7 @@ export class WeatherUtils {
     activity: string;
     reason: string;
   } {
-    const condition = this.getWeatherCondition(conditionCode);
-    
+        
     // Bouře nebo silný déšť
     if (conditionCode >= 1273 || conditionCode === 1186) {
       return {

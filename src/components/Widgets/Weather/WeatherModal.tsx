@@ -5,7 +5,6 @@ import { WeatherUtils } from './utils/weatherUtils';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import type { WeatherView } from './types';
 import './WeatherModal.css';
-import { geoAPI } from '../../../api/geoAPI';
 import { translateWeatherCondition } from './utils/weatherUtils';
 
 interface WeatherModalProps {
@@ -154,17 +153,18 @@ if (searchQuery !== lastLoggedQuery) {
 
   return (
     <div className="weather-modal-overlay" onClick={onClose}>
-      <div 
-        className="weather-modal" 
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: backgroundImage 
-            ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`
-            : gradientStyle,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+          <div 
+            className="weather-modal" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundImage: backgroundImage 
+                ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`
+                : gradientStyle,
+              backgroundColor: gradient[0], // Záložní barva z gradientu
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
         {/* Zavírací tlačítko - 3/4 venku, 1/4 uvnitř */}
         <button className="weather-modal-close" onClick={onClose} title="Zavřít">
           <span className="close-icon">✕</span>

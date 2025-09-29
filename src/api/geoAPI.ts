@@ -3,7 +3,7 @@
 /**
  * Definice čistého datového formátu pro jednu geografickou lokaci.
  */
- export interface LocationData {
+export interface LocationData {
   name: string;
   country: string;
   lat: number;
@@ -17,7 +17,9 @@ class GeoAPI {
 
   constructor() {
     if (!this.API_KEY) {
-      console.warn('VITE_WEATHER_API_KEY nebyl nalezen. Vyhledávání měst nebude fungovat.');
+      console.warn(
+        'VITE_WEATHER_API_KEY nebyl nalezen. Vyhledávání měst nebude fungovat.'
+      );
     }
   }
 
@@ -35,7 +37,9 @@ class GeoAPI {
     try {
       // Sestavení a odeslání dotazu na API
       const response = await fetch(
-        `${this.BASE_URL}/search.json?key=${this.API_KEY}&q=${encodeURIComponent(query)}`
+        `${this.BASE_URL}/search.json?key=${
+          this.API_KEY
+        }&q=${encodeURIComponent(query)}`
       );
 
       // Kontrola, zda odpověď z API byla úspěšná
@@ -47,7 +51,10 @@ class GeoAPI {
 
       // Pojistka pro případ, že API nevrátí pole (např. při chybě klíče)
       if (!Array.isArray(locations)) {
-        console.error('API pro vyhledávání měst nevrátilo platná data:', locations);
+        console.error(
+          'API pro vyhledávání měst nevrátilo platná data:',
+          locations
+        );
         return [];
       }
 
@@ -62,12 +69,11 @@ class GeoAPI {
       console.error('Došlo k chybě ve funkci searchLocations:', error);
       return []; // V případě jakékoliv chyby vrátíme prázdné pole, aby aplikace nespadla.
     }
-  }
+  };
 }
 
 /**
  * Exportujeme jednu sdílenou instanci třídy GeoAPI,
  * kterou budeme používat v celé aplikaci.
  */
-
 export const geoAPI = new GeoAPI();

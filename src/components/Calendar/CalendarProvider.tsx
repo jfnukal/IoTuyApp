@@ -125,24 +125,27 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   }, []);
 
   // Načtení svátků a jmenin z API
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const holidaysData = await fetchCzechHolidays(
-          currentDate.getFullYear()
-        );
-        const namedaysData = await fetchCzechNamedays(
-          currentDate.getFullYear()
-        );
-        setHolidays(holidaysData);
-        setNamedays(namedaysData);
-      } catch (error) {
-        console.error('Chyba při načítání dat:', error);
-      }
-    };
+// Načtení svátků a jmenin z API
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1; // 1-12
+      
+      console.log(`[CalendarProvider] Načítám data pro ${month}/${year}`);
+      
+      const holidaysData = await fetchCzechHolidays(year);
+      const namedaysData = await fetchCzechNamedays(year, month);
+      
+      setHolidays(holidaysData);
+      setNamedays(namedaysData);
+    } catch (error) {
+      console.error('Chyba při načítání dat:', error);
+    }
+  };
 
-    loadData();
-  }, [currentDate.getFullYear()]);
+  loadData();
+}, [currentDate.getFullYear(), currentDate.getMonth()]); // Přidej měsíc do dependencies
 
   // Uložení událostí do localStorage
   useEffect(() => {

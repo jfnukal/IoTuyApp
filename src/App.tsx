@@ -12,12 +12,13 @@ import RoomVisualization2D from './components/RoomVisualization2D';
 import RoomVisualization3D from './components/RoomVisualization3D';
 import CalendarMiniWidget from './components/Calendar/CalendarMiniWidget';
 import CalendarProvider from './components/Calendar/CalendarProvider';
+import WeatherMiniWidget from './components/Widgets/Weather/WeatherMiniWidget';
 
 // Přidej tuto funkci zde
 const getDeviceIcon = (device: TuyaDevice): string => {
   const categoryIcons: Record<string, string> = {
     switch: '🔌',
-    light: '💡', 
+    light: '💡',
     sensor: '📱',
     garden: '🌱',
     thermostat: '🌡️',
@@ -37,7 +38,7 @@ declare global {
 
 function App() {
   // VŠECHNY HOOKY MUSÍ BÝT NA ZAČÁTKU - PŘED JAKÝMKOLIV RETURN!
-  
+
   // Auth hooks
   const { currentUser, logout } = useAuth();
 
@@ -147,7 +148,7 @@ function App() {
   );
 
   // TEPRVE TEĎKA MŮŽEME DĚLAT PODMÍNĚNÉ RETURN
-  
+
   // Přihlášení required - TENTO RETURN JE AŽ PO VŠECH HOOKECH!
   if (!currentUser) {
     return <Login />;
@@ -499,23 +500,18 @@ function App() {
             </button>
           </div>
         </div>
-        
+
         <RoomSelector onCreateRoom={() => console.log('create room')} />
 
         <div className="dashboard-grid">
           {/* Weather card */}
-          <div className="dashboard-card weather-card">
-            <div className="card-header">
-              <h3 className="card-title">Počasí</h3>
-              <span className="weather-icon">☀️</span>
-            </div>
-            <div className="weather-info">
-              <div>
-                <h2 className="weather-temp">22°C</h2>
-                <p className="weather-desc">Slunečno</p>
-              </div>
-            </div>
-          </div>
+          <WeatherMiniWidget
+            className="dashboard-weather-widget"
+            onExpand={() => {
+              // TODO: Otevřít weather modal
+              console.log('Expanding weather widget...');
+            }}
+          />
 
           {/* Devices card */}
           <div className="dashboard-card">
@@ -524,20 +520,26 @@ function App() {
               <span className="card-icon">🏠</span>
             </div>
             <div className="device-tiles">
-              {devices.map(device => (
-                <div key={device.id} className={`device-tile ${device.online ? 'active' : ''}`}>
-                  <span className="device-tile-icon">{getDeviceIcon(device)}</span>
+              {devices.map((device) => (
+                <div
+                  key={device.id}
+                  className={`device-tile ${device.online ? 'active' : ''}`}
+                >
+                  <span className="device-tile-icon">
+                    {getDeviceIcon(device)}
+                  </span>
                   <h4 className="device-tile-name">{device.name}</h4>
-                  <p className="device-tile-status">{device.online ? 'Online' : 'Offline'}</p>
+                  <p className="device-tile-status">
+                    {device.online ? 'Online' : 'Offline'}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Family info card */}
+          {/* Family info card
           <div className="dashboard-card family-card">
             <div className="card-header">
-              <h3 className="card-title">Rodinné události</h3>
               <span className="card-icon">👨‍👩‍👧‍👦</span>
             </div>
             <div className="family-event">
@@ -546,17 +548,17 @@ function App() {
                 <p>Zítra</p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Kalendář Widget */}
           <CalendarProvider>
             <div className="calendar-section">
-              <CalendarMiniWidget 
+              <CalendarMiniWidget
                 familyMembers={[
                   { id: '1', name: 'Mamka', color: '#ff6b6b', icon: '❤️' },
                   { id: '2', name: 'Taťka', color: '#4ecdc4', icon: '🦸‍♂️' },
                   { id: '3', name: 'Johanka', color: '#45b7d1', icon: '🎨' },
-                  { id: '4', name: 'Jareček', color: '#96ceb4', icon: '📱' }
+                  { id: '4', name: 'Jareček', color: '#96ceb4', icon: '📱' },
                 ]}
               />
             </div>
@@ -569,12 +571,8 @@ function App() {
               <span className="card-icon">📹</span>
             </div>
             <div className="cameras-grid">
-              <div className="camera-preview">
-                Hlavní vchod
-              </div>
-              <div className="camera-preview">
-                Zahrada
-              </div>
+              <div className="camera-preview">Hlavní vchod</div>
+              <div className="camera-preview">Zahrada</div>
             </div>
           </div>
         </div>

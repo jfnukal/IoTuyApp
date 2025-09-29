@@ -321,14 +321,14 @@
  * - Push notifikace
  */
 
-.notification-system {
+/* .notification-system { */
   /* Placeholder pro budoucí implementaci */
   /* Bude obsahovat: */
   /* - Rodinné zprávy */
   /* - Kalendářové události */
   /* - Narozeniny a svátky */
   /* - Push notifikace */
-}
+/* } */
 
 /* ==================== RESPONSIVE ==================== */
 
@@ -620,4 +620,38 @@
     gap: var(--spacing-3);
     text-align: center;
   }
+}
+
+/* ==================== WEATHER WIDGET INTEGRATION ==================== */
+.dashboard-weather-widget {
+  grid-column: span 1;
+  min-height: 280px;
+  max-width: 100%;
+}
+
+/* Responzivní úpravy pro weather widget v dashboard */
+@media (min-width: 1200px) {
+  .dashboard-weather-widget {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-weather-widget {
+    grid-column: span 2;
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-weather-widget {
+    grid-column: span 1;
+    min-height: 240px;
+  }
+}
+
+/* Odstranění starého weather card stylu */
+.dashboard-card.weather-card {
+  /* Nyní se nepoužívá - weather je jako samostatný widget */
+  display: none;
 }

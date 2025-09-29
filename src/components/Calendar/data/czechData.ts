@@ -1,71 +1,65 @@
 // src/components/Widgets/Calendar/data/czechData.ts
 import type { Holiday, Nameday } from '../types';
 
-/**
- * Načte české státní svátky pro aktuální rok z svatkyapi.cz.
- * @param year - Rok, pro který se mají svátky vytvořit (API ho nebere, ale my ho potřebujeme pro vytvoření Date objektu).
- * @returns Pole objektů Holiday.
- */
-export const fetchCzechHolidays = async (year: number): Promise<Holiday[]> => {
-  try {
-    const response = await fetch(`https://svatkyapi.cz/api/holidays`);
-    if (!response.ok) {
-      throw new Error(`API pro svátky vrátilo chybu: ${response.status}`);
-    }
-    const data: { date: string, name: string }[] = await response.json();
-
-    // Převedeme data z API na náš interní formát 'Holiday'
-    return data.map(holiday => {
-      // API vrací datum ve formátu "D.M."
-      const [day, month] = holiday.date.split('.').map(Number);
-      const date = new Date(year, month - 1, day);
-
-      return {
-        id: `holiday-${year}-${month}-${day}`,
-        name: holiday.name,
-        date: date,
-        type: 'national',
-        isPublic: true,
-      };
-    });
-  } catch (error) {
-    console.error("Nepodařilo se načíst státní svátky z svatkyapi.cz:", error);
-    return []; // V případě chyby vrátíme prázdné pole
-  }
-};
+interface YearlyData {
+  holidays: Holiday[];
+  namedays: Nameday[];
+}
 
 /**
- * Načte jmeniny pro celý rok z svatkyapi.cz.
- * @param year - Rok, pro který se mají jmeniny zpracovat.
- * @returns Pole objektů Nameday.
+ * Načte svátky a jmeniny pro celý zadaný rok pomocí jednoho API volání.
+ * @param year - Rok, pro který se mají data načíst.
+ * @returns Objekt obsahující pole svátků a pole jmenin.
  */
-export const fetchCzechNamedays = async (year: number): Promise<Nameday[]> => {
+export const fetchCalendarDataForYear = async (year: number): Promise<YearlyData> => {
+  // Zjistíme, jestli je rok přestupný, abychom načetli správný počet dní
+  const isLeap = new Date(year, 1, 29).getMonth() === 1;
+  const daysInYear = isLeap ? 366 : 365;
+  
+  const url = `https://svatkyapi.cz/api/day/${year}-01-01/interval/${daysInYear}`;
+
   try {
-    const response = await fetch(`https://svatkyapi.cz/api/names`);
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`API pro jmeniny vrátilo chybu: ${response.status}`);
+      throw new Error(`API svatkyapi.cz vrátilo chybu: ${response.status}`);
     }
-    const data: { date: string, name: string }[] = await response.json();
-    
-    // Převedeme data z API na náš interní formát 'Nameday'
-    return data.map(item => {
-      // API vrací datum ve formátu "DDMM", musíme z něj vytvořit platné datum
-      const day = parseInt(item.date.substring(0, 2), 10);
-      const month = parseInt(item.date.substring(2, 4), 10);
-      const date = new Date(year, month - 1, day);
+    const data: any[] = await response.json();
 
-      // Některé dny mají více jmen (např. "Adam a Eva"), rozdělíme je
-      const names = item.name.split(/, | a /);
+    const holidays: Holiday[] = [];
+    const namedays: Nameday[] = [];
 
-      return {
-        id: `nameday-${year}-${month}-${day}`,
-        name: item.name,
-        date: date,
-        names: names,
-      };
+    // Projdeme data pro každý den v roce
+    data.forEach(day => {
+      const currentDate = new Date(day.date);
+      
+      // Pokud je den svátek, přidáme ho do pole svátků
+      if (day.isHoliday && day.holidayName) {
+        holidays.push({
+          id: `holiday-${day.date}`,
+          name: day.holidayName,
+          date: currentDate,
+          type: 'national',
+          isPublic: true,
+        });
+      }
+
+      // Pro každý den přidáme jmeniny do pole jmenin
+      if (day.name) {
+        const names = day.name.split(/, | a /);
+        namedays.push({
+          id: `nameday-${day.date}`,
+          name: day.name,
+          date: currentDate,
+          names: names,
+        });
+      }
     });
+
+    return { holidays, namedays };
+
   } catch (error) {
-    console.error("Nepodařilo se načíst jmeniny z svatkyapi.cz:", error);
-    return []; // V případě chyby vrátíme prázdné pole
+    console.error("Nepodařilo se načíst data z svatkyapi.cz:", error);
+    // V případě chyby vrátíme prázdné objekty
+    return { holidays: [], namedays: [] };
   }
 };

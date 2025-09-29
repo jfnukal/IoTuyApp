@@ -26,7 +26,7 @@ class GeoAPI {
    * @param query - Hledaný název města (např. "Brno")
    * @returns Pole nalezených lokací ve formátu LocationData[]
    */
-  async searchLocations(query: string): Promise<LocationData[]> {
+  searchLocations = async (query: string): Promise<LocationData[]> => {
     // Pokud je dotaz příliš krátký nebo prázdný, nebudeme API zatěžovat.
     if (!query || query.length < 2) {
       return [];
@@ -69,4 +69,5 @@ class GeoAPI {
  * Exportujeme jednu sdílenou instanci třídy GeoAPI,
  * kterou budeme používat v celé aplikaci.
  */
+
 export const geoAPI = new GeoAPI();

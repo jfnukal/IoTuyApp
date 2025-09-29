@@ -10,8 +10,8 @@ import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
 import RoomVisualization2D from './components/RoomVisualization2D';
 import RoomVisualization3D from './components/RoomVisualization3D';
-import CalendarMiniWidget from './components/Calendar/CalendarMiniWidget';
-import CalendarProvider from './components/Calendar/CalendarProvider';
+import CalendarMiniWidget from './components/Widgets/Calendar/CalendarMiniWidget';
+import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import WeatherMiniWidget from './components/Widgets/Weather/WeatherMiniWidget';
 
 // Přidej tuto funkci zde

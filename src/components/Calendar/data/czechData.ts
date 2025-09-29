@@ -1,151 +1,69 @@
 // src/components/Widgets/Calendar/data/czechData.ts
 import type { Holiday, Nameday } from '../types';
 
-// Cache klíče
-const CACHE_KEY_PREFIX = 'namedays_cache_';
-const CACHE_EXPIRY_KEY = 'namedays_cache_expiry';
-
 /**
- * Načte jmeniny pro daný měsíc a rok.
- * Používá localStorage jako cache - pokud už máme data pro tento měsíc, nebudeme volat API.
+ * Načte české státní svátky pro aktuální den z API.
+ * API vrací pouze svátek pro daný den, pokud nějaký je.
+ * @returns {Promise<Holiday | null>} Vrátí svátek nebo null.
  */
-// src/components/Widgets/Calendar/data/czechData.ts
-export const fetchCzechNamedays = async (
-  year: number,
-  month: number
-): Promise<Nameday[]> => {
-  console.log(`[Namedays] Načítám jmeniny pro ${month}/${year}`);
-
-  const cacheKey = `${CACHE_KEY_PREFIX}${year}_${month}`;
-
-  // Zkus cache
+export const fetchCzechHolidays = async (): Promise<Holiday[]> => {
   try {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const data = JSON.parse(cached);
-      const namedays = data.map((item: any) => ({
-        ...item,
-        date: new Date(item.date),
+    const response = await fetch(`https://svatky.dcerny.cz/api/v1/holiday`);
+    if (!response.ok) {
+      console.warn(`API pro svátky vrátilo chybu: ${response.status}`);
+      return [];
+    }
+    const data = await response.json();
+
+    // API vrací svátky pro celý rok v poli 'holidays'
+    if (data && Array.isArray(data.holidays)) {
+      return data.holidays.map((h: { date: string; name: string }) => ({
+        id: `holiday-${h.date}`,
+        name: h.name,
+        date: new Date(h.date),
+        type: 'national' as const,
+        isPublic: true,
       }));
-      console.log(`[Namedays] Z cache: ${namedays.length} jmenin`);
-      return namedays;
     }
-  } catch (e) {
-    console.warn('[Namedays] Cache failed:', e);
-  }
-
-  // Načti z API
-  try {
-    const namedays: Nameday[] = [];
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    console.log(`[Namedays] Načítám z svatky.dcerny.cz API`);
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      try {
-        // Formát: https://svatky.dcerny.cz/api/?date=DDMM
-        const dateStr = `${day.toString().padStart(2, '0')}${month.toString().padStart(2, '0')}`;
-        const url = `https://svatky.dcerny.cz/api/?date=${dateStr}`;
-        
-        const response = await fetch(url);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`[Namedays] Den ${day}: `, data);
-
-          // API vrací: { "date": "0109", "name": "Linda, Drahoslava" }
-          if (data.name) {
-            const date = new Date(year, month - 1, day);
-            const names = data.name.split(', ');
-
-            namedays.push({
-              id: `nameday-${year}-${month}-${day}`,
-              name: data.name,
-              date: date,
-              names: names,
-            });
-          }
-        }
-      } catch (dayError) {
-        console.error(`[Namedays] Den ${day} selhal:`, dayError);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    // Ulož do cache
-    if (namedays.length > 0) {
-      const cacheData = namedays.map((item) => ({
-        ...item,
-        date: item.date.toISOString(),
-      }));
-      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      console.log(`[Namedays] Uloženo do cache: ${namedays.length} jmenin`);
-    }
-
-    return namedays;
+    return [];
   } catch (error) {
-    console.error('[Namedays] API selhalo:', error);
+    console.error("Nepodařilo se načíst státní svátky z API:", error);
     return [];
   }
 };
 
 /**
- * Vymaže cache pro daný rok (voláme na začátku nového roku)
+ * Načte jmeniny pro celý rok z API.
+ * @returns {Promise<Nameday[]>} Vrátí pole jmenin pro celý rok.
  */
-export const clearNamedaysCache = (year: number) => {
-  console.log(`[Namedays] Mažu cache pro rok ${year}`);
-  for (let month = 1; month <= 12; month++) {
-    const cacheKey = `${CACHE_KEY_PREFIX}${year}_${month}`;
-    localStorage.removeItem(cacheKey);
-  }
-};
-
-/**
- * Zkontroluje, jestli je nový rok a vymaže starou cache
- */
-export const checkAndClearOldCache = () => {
-  const currentYear = new Date().getFullYear();
-  const lastCacheYear = localStorage.getItem(CACHE_EXPIRY_KEY);
-
-  if (lastCacheYear !== String(currentYear)) {
-    console.log('[Namedays] Nový rok - mažu starou cache');
-    // Vymažeme cache pro všechny roky
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith(CACHE_KEY_PREFIX)) {
-        localStorage.removeItem(key);
-      }
-    });
-    localStorage.setItem(CACHE_EXPIRY_KEY, String(currentYear));
-  }
-};
-
-export const fetchCzechHolidays = async (year: number): Promise<Holiday[]> => {
+export const fetchCzechNamedays = async (): Promise<Nameday[]> => {
   try {
-    const url = `https://date.nager.at/api/v3/PublicHolidays/${year}/CZ`;
-    const response = await fetch(url);
+    // API vrací jmeniny pro celý rok na tomto endpointu
+    const response = await fetch(`https://svatky.dcerny.cz/api/v1/namedays`);
+    if (!response.ok) {
+      throw new Error(`API pro jmeniny vrátilo chybu: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Zpracujeme data do našeho formátu
+    if (data && Array.isArray(data.namedays)) {
+      const year = new Date().getFullYear(); // Použijeme aktuální rok
+      return data.namedays.map((item: { date: string; name: string }) => {
+        const [day, month] = item.date.split('.');
+        const date = new Date(year, parseInt(month) - 1, parseInt(day));
+        const names = item.name.split(', ');
 
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-    const data: any[] = await response.json();
-
-    return data.map((holiday) => ({
-      id: `holiday-${holiday.date}`,
-      name: holiday.localName,
-      date: new Date(holiday.date),
-      type: 'national' as const,
-      isPublic: true,
-    }));
+        return {
+          id: `nameday-${year}-${month}-${day}`,
+          name: item.name,
+          date: date,
+          names: names,
+        };
+      });
+    }
+    return [];
   } catch (error) {
-    console.error('[Holidays] CHYBA:', error);
+    console.error("Nepodařilo se načíst jmeniny z API:", error);
     return [];
   }
 };
-
-const getFallbackForMonth = (_year: number, _month: number): Nameday[] => {
-  // Základní fallback data pro daný měsíc
-  return [];
-};
-
-
-

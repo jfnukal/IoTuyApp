@@ -99,30 +99,54 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   
 
   // Načtení nastavení z localStorage při inicializaci
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('calendar-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettings((prev) => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Chyba při načítání nastavení kalendáře:', error);
-      }
+// CalendarProvider.tsx
+useEffect(() => {
+  // Načítání nastavení (zůstává stejné)
+  const savedSettings = localStorage.getItem('calendar-settings');
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings);
+      setSettings((prev) => ({ ...prev, ...parsed }));
+    } catch (error) {
+      console.error('Chyba při načítání nastavení kalendáře:', error);
     }
+  }
 
-    const savedEvents = localStorage.getItem('calendar-events');
-    if (savedEvents) {
-      try {
-        const parsed = JSON.parse(savedEvents).map((event: any) => ({
-          ...event,
-          date: new Date(event.date),
-        }));
-        setEvents(parsed);
-      } catch (error) {
-        console.error('Chyba při načítání událostí kalendáře:', error);
+  // Bezpečné načítání událostí
+  const savedEvents = localStorage.getItem('calendar-events');
+  if (savedEvents) {
+    try {
+      const parsedEvents = JSON.parse(savedEvents);
+      
+      if (Array.isArray(parsedEvents)) {
+        const validatedEvents: CalendarEvent[] = parsedEvents.map((event: any) => {
+          // Pro každou událost zkontrolujeme a doplníme chybějící povinné vlastnosti
+          return {
+            id: event.id || `event-${Date.now()}`,
+            title: event.title || 'Neznámá událost',
+            date: event.date ? new Date(event.date) : new Date(),
+            type: event.type || 'personal', // Důležitý fallback!
+            // Ostatní volitelné vlastnosti
+            description: event.description,
+            time: event.time,
+            endTime: event.endTime,
+            familyMember: event.familyMember,
+            color: event.color,
+            reminder: event.reminder,
+            attachments: event.attachments,
+            isAllDay: event.isAllDay,
+            recurring: event.recurring,
+          };
+        });
+        setEvents(validatedEvents);
       }
+    } catch (error) {
+      console.error('Chyba při načítání událostí kalendáře:', error);
+      // Pokud dojde k chybě, vyčistíme stará neplatná data
+      localStorage.removeItem('calendar-events');
     }
-  }, []);
+  }
+}, []);
 
   // Načtení svátků a jmenin z API
 useEffect(() => {
@@ -282,4 +306,5 @@ useEffect(() => {
 };
 
 export default CalendarProvider;
+
 

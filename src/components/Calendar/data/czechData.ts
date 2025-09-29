@@ -9,6 +9,7 @@ const CACHE_EXPIRY_KEY = 'namedays_cache_expiry';
  * Načte jmeniny pro daný měsíc a rok.
  * Používá localStorage jako cache - pokud už máme data pro tento měsíc, nebudeme volat API.
  */
+// src/components/Widgets/Calendar/data/czechData.ts
 export const fetchCzechNamedays = async (
   year: number,
   month: number
@@ -17,7 +18,7 @@ export const fetchCzechNamedays = async (
 
   const cacheKey = `${CACHE_KEY_PREFIX}${year}_${month}`;
 
-  // Zkusíme načíst z cache
+  // Zkus cache
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -26,39 +27,40 @@ export const fetchCzechNamedays = async (
         ...item,
         date: new Date(item.date),
       }));
-      console.log(`[Namedays] Načteno z cache: ${namedays.length} jmenin`);
+      console.log(`[Namedays] Z cache: ${namedays.length} jmenin`);
       return namedays;
     }
   } catch (e) {
-    console.warn('[Namedays] Cache read failed:', e);
+    console.warn('[Namedays] Cache failed:', e);
   }
 
-  // Nemáme v cache, načteme z API přes CORS proxy
+  // Načti z API
   try {
     const namedays: Nameday[] = [];
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    console.log(`[Namedays] Načítám z API přes CORS proxy`);
+    console.log(`[Namedays] Načítám z svatky.dcerny.cz API`);
 
     for (let day = 1; day <= daysInMonth; day++) {
       try {
-        const apiUrl = `https://nameday.abalin.net/api/V1/getdate?country=cz&month=${month}&day=${day}`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+        // Formát: https://svatky.dcerny.cz/api/?date=DDMM
+        const dateStr = `${day.toString().padStart(2, '0')}${month.toString().padStart(2, '0')}`;
+        const url = `https://svatky.dcerny.cz/api/?date=${dateStr}`;
         
-        console.log(`[Namedays] Volám přes proxy: den ${day}`);
-        const response = await fetch(proxyUrl);
+        const response = await fetch(url);
 
         if (response.ok) {
           const data = await response.json();
+          console.log(`[Namedays] Den ${day}: `, data);
 
-          if (data.nameday && data.nameday.cz) {
+          // API vrací: { "date": "0109", "name": "Linda, Drahoslava" }
+          if (data.name) {
             const date = new Date(year, month - 1, day);
-            const name = data.nameday.cz;
-            const names = name.split(/, | a /);
+            const names = data.name.split(', ');
 
             namedays.push({
               id: `nameday-${year}-${month}-${day}`,
-              name: name,
+              name: data.name,
               date: date,
               names: names,
             });
@@ -68,27 +70,23 @@ export const fetchCzechNamedays = async (
         console.error(`[Namedays] Den ${day} selhal:`, dayError);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
-    // Uložíme do cache
+    // Ulož do cache
     if (namedays.length > 0) {
-      try {
-        const cacheData = namedays.map((item) => ({
-          ...item,
-          date: item.date.toISOString(),
-        }));
-        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        console.log(`[Namedays] Uloženo do cache: ${namedays.length} jmenin`);
-      } catch (e) {
-        console.warn('[Namedays] Cache write failed:', e);
-      }
+      const cacheData = namedays.map((item) => ({
+        ...item,
+        date: item.date.toISOString(),
+      }));
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      console.log(`[Namedays] Uloženo do cache: ${namedays.length} jmenin`);
     }
 
     return namedays;
   } catch (error) {
-    console.error('[Namedays] API selhalo kompletně:', error);
-    return getFallbackForMonth(year, month);
+    console.error('[Namedays] API selhalo:', error);
+    return [];
   }
 };
 
@@ -148,5 +146,6 @@ const getFallbackForMonth = (_year: number, _month: number): Nameday[] => {
   // Základní fallback data pro daný měsíc
   return [];
 };
+
 
 

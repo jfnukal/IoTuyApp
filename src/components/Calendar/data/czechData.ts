@@ -22,7 +22,6 @@ export const fetchCzechNamedays = async (
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const data = JSON.parse(cached);
-      // Převedeme string datumy zpět na Date objekty
       const namedays = data.map((item: any) => ({
         ...item,
         date: new Date(item.date),
@@ -34,31 +33,28 @@ export const fetchCzechNamedays = async (
     console.warn('[Namedays] Cache read failed:', e);
   }
 
-  // Nemáme v cache, načteme z API
+  // Nemáme v cache, načteme z API přes CORS proxy
   try {
     const namedays: Nameday[] = [];
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    console.log(`[Namedays] Načítám z API - měsíc má ${daysInMonth} dní`);
+    console.log(`[Namedays] Načítám z API přes CORS proxy`);
 
     for (let day = 1; day <= daysInMonth; day++) {
       try {
-        const url = `https://nameday.abalin.net/api/V1/getdate?country=cz&month=${month}&day=${day}`;
-        console.log(`[Namedays] Volám: ${url}`);
-        const response = await fetch(url);
-
-        console.log(`[Namedays] Den ${day}: status ${response.status}`);
+        const apiUrl = `https://nameday.abalin.net/api/V1/getdate?country=cz&month=${month}&day=${day}`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+        
+        console.log(`[Namedays] Volám přes proxy: den ${day}`);
+        const response = await fetch(proxyUrl);
 
         if (response.ok) {
           const data = await response.json();
-          console.log(`[Namedays] Den ${day} data:`, data);
 
           if (data.nameday && data.nameday.cz) {
             const date = new Date(year, month - 1, day);
             const name = data.nameday.cz;
             const names = name.split(/, | a /);
-
-            console.log(`[Namedays] Den ${day}: ${name}`);
 
             namedays.push({
               id: `nameday-${year}-${month}-${day}`,
@@ -66,32 +62,32 @@ export const fetchCzechNamedays = async (
               date: date,
               names: names,
             });
-          } else {
-            console.warn(`[Namedays] Den ${day}: Chybí data.nameday.cz`, data);
           }
         }
       } catch (dayError) {
-        console.error(`[Namedays] Den ${day}.${month}. selhal:`, dayError);
+        console.error(`[Namedays] Den ${day} selhal:`, dayError);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     // Uložíme do cache
-    try {
-      const cacheData = namedays.map((item) => ({
-        ...item,
-        date: item.date.toISOString(), // Převedeme Date na string pro localStorage
-      }));
-      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      console.log(`[Namedays] Uloženo do cache: ${namedays.length} jmenin`);
-    } catch (e) {
-      console.warn('[Namedays] Cache write failed:', e);
+    if (namedays.length > 0) {
+      try {
+        const cacheData = namedays.map((item) => ({
+          ...item,
+          date: item.date.toISOString(),
+        }));
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        console.log(`[Namedays] Uloženo do cache: ${namedays.length} jmenin`);
+      } catch (e) {
+        console.warn('[Namedays] Cache write failed:', e);
+      }
     }
 
     return namedays;
   } catch (error) {
-    console.error('[Namedays] CHYBA při načítání:', error);
+    console.error('[Namedays] API selhalo kompletně:', error);
     return getFallbackForMonth(year, month);
   }
 };
@@ -152,3 +148,4 @@ const getFallbackForMonth = (year: number, month: number): Nameday[] => {
   // Základní fallback data pro daný měsíc
   return [];
 };
+

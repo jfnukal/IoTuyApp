@@ -144,8 +144,9 @@ export const fetchCzechHolidays = async (year: number): Promise<Holiday[]> => {
   }
 };
 
-const getFallbackForMonth = (year: number, month: number): Nameday[] => {
+const getFallbackForMonth = (_year: number, _month: number): Nameday[] => {
   // Základní fallback data pro daný měsíc
   return [];
 };
+
 

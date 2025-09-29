@@ -13,7 +13,7 @@ import type {
   CalendarSettings,
   MonthTheme,
 } from './types';
-import { fetchCzechHolidays, fetchCzechNamedays } from './data/czechData';
+import { fetchCalendarDataForYear } from './data/czechData';
 import { fetchImageForQuery } from '../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 
@@ -113,48 +113,51 @@ useEffect(() => {
   }
 
   // Bezpečné načítání událostí
-  const savedEvents = localStorage.getItem('calendar-events');
-  if (savedEvents) {
-    try {
-      const parsedEvents = JSON.parse(savedEvents);
-      
-      if (Array.isArray(parsedEvents)) {
-        const validatedEvents: CalendarEvent[] = parsedEvents.map((event: any) => {
-          // Pro každou událost zkontrolujeme a doplníme chybějící povinné vlastnosti
-          return {
-            id: event.id || `event-${Date.now()}`,
-            title: event.title || 'Neznámá událost',
-            date: event.date ? new Date(event.date) : new Date(),
-            type: event.type || 'personal', // Důležitý fallback!
-            // Ostatní volitelné vlastnosti
-            description: event.description,
-            time: event.time,
-            endTime: event.endTime,
-            familyMember: event.familyMember,
-            color: event.color,
-            reminder: event.reminder,
-            attachments: event.attachments,
-            isAllDay: event.isAllDay,
-            recurring: event.recurring,
-          };
-        });
-        setEvents(validatedEvents);
+      const savedEvents = localStorage.getItem('calendar-events');
+      if (savedEvents) {
+        try {
+          const parsedEvents = JSON.parse(savedEvents);
+          
+          if (Array.isArray(parsedEvents)) {
+            const validatedEvents: CalendarEvent[] = parsedEvents.map((event: any) => {
+              // Pro každou událost zkontrolujeme a doplníme chybějící povinné vlastnosti
+              return {
+                id: event.id || `event-${Date.now()}`,
+                title: event.title || 'Neznámá událost',
+                date: event.date ? new Date(event.date) : new Date(),
+                type: event.type || 'personal', // Důležitý fallback!
+                // Ostatní volitelné vlastnosti
+                description: event.description,
+                time: event.time,
+                endTime: event.endTime,
+                familyMember: event.familyMember,
+                color: event.color,
+                reminder: event.reminder,
+                attachments: event.attachments,
+                isAllDay: event.isAllDay,
+                recurring: event.recurring,
+              };
+            });
+            setEvents(validatedEvents);
+          }
+        } catch (error) {
+          console.error('Chyba při načítání událostí kalendáře:', error);
+          // Pokud dojde k chybě, vyčistíme stará neplatná data
+          localStorage.removeItem('calendar-events');
+        }
       }
-    } catch (error) {
-      console.error('Chyba při načítání událostí kalendáře:', error);
-      // Pokud dojde k chybě, vyčistíme stará neplatná data
-      localStorage.removeItem('calendar-events');
-    }
-  }
-}, []);
+    }, []);
 
-  // Načtení svátků a jmenin z API
+// Načtení svátků a jmenin z API pro aktuální rok
 useEffect(() => {
   const loadData = async () => {
     try {
-      // Nové funkce už nepotřebují rok jako parametr
-      const holidaysData = await fetchCzechHolidays();
-      const namedaysData = await fetchCzechNamedays();
+      const year = currentDate.getFullYear();
+      console.log(`[CalendarProvider] Načítám data pro rok ${year}`);
+      
+      const { holidays: holidaysData, namedays: namedaysData } = await fetchCalendarDataForYear(year);
+      
+      console.log(`[CalendarProvider] Načteno ${holidaysData.length} svátků a ${namedaysData.length} jmenin`);
       
       setHolidays(holidaysData);
       setNamedays(namedaysData);
@@ -164,8 +167,7 @@ useEffect(() => {
   };
 
   loadData();
-  // Tento efekt se nyní spustí pouze jednou při načtení komponenty.
-}, []);
+}, [currentDate.getFullYear()]); // Reload když se změní rok
 
   // Uložení událostí do localStorage
   useEffect(() => {
@@ -306,5 +308,3 @@ useEffect(() => {
 };
 
 export default CalendarProvider;
-
-

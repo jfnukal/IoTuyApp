@@ -24,7 +24,6 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     currentView,
     headerImage,
     setCurrentView,
-    getCurrentMonthTheme
   } = useCalendar();
 
   const handleDateClick = (date: Date) => {
@@ -95,4 +94,5 @@ return (
 
 
 export default CalendarWidget;
+
 

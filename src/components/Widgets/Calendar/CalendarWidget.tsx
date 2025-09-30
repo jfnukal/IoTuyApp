@@ -70,7 +70,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   };
 
   // getCurrentMonthTheme stále můžeme používat pro barvy atd.
-  const monthTheme = getCurrentMonthTheme(); 
+  //const monthTheme = getCurrentMonthTheme(); 
   
 return (
   <div 
@@ -95,3 +95,4 @@ return (
 
 
 export default CalendarWidget;
+

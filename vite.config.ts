@@ -1,9 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  
+  // Přidáno pro správné fungování cest jako '@/components/...'
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  
+  // Ponecháno vaše původní nastavení pro proxy
   server: {
     proxy: {
       // Všechny požadavky na /api přesměrujeme na svatky.adresa.info

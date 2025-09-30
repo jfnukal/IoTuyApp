@@ -15,6 +15,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    // --- KLÍČOVÉ PŘIDANÉ ŘÁDKY PRO ALIAS ---
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    // --- KONEC PŘIDANÝCH ŘÁDKŮ ---
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

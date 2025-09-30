@@ -76,7 +76,7 @@ return (
   <div 
     className="calendar-widget"
     style={{ 
-      backgroundImage: `url('${headerImage}')`,
+      backgroundImage: headerImage && headerImage.startsWith('http') ? `url('${headerImage}')` : headerImage || '', 
     }}
   >
     <CalendarHeader
@@ -92,5 +92,6 @@ return (
   </div>
 );
 };
+
 
 export default CalendarWidget;

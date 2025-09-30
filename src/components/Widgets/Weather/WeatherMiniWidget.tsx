@@ -5,8 +5,7 @@ import { WeatherUtils } from './utils/weatherUtils';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import './WeatherMiniWidget.css';
 import WeatherModal from './WeatherModal';
-// import WeatherModalMobile from './WeatherModalMobile.css';
-import './WeatherModalMobile.css';
+import WeatherModalMobile from './WeatherModalMobile';
 
 interface WeatherMiniWidgetProps {
   className?: string;
@@ -32,6 +31,18 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
 
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Sledování změn velikosti okna
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Získání počasí pro primární lokaci
   const primaryWeather = primaryLocation ? currentWeather[primaryLocation.id] : null;
@@ -136,9 +147,6 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   // Získání gradient barvy podle počasí
   const gradient = WeatherUtils.getWeatherGradient(primaryWeather.current.conditionCode);
   const gradientStyle = `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
-
-  // Detekce mobilního zařízení
-const isMobile = window.innerWidth <= 768;
 
   return (
     <>
@@ -270,7 +278,7 @@ const isMobile = window.innerWidth <= 768;
 
         {/* Weather Modal - nahraď stávající modal tímto: */}
         {isMobile ? (
-          <WeatherModal 
+          <WeatherModalMobile 
             isOpen={showModal}
             onClose={() => setShowModal(false)}
           />

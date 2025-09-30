@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
 } from 'react';
 import type { ReactNode } from 'react'; 
 import type {
@@ -148,14 +149,33 @@ useEffect(() => {
       }
     }, []);
 
+// Cache pro svátky a jmeniny (aby se nenačítaly opakovaně)
+const calendarDataCache = useRef<Map<number, { holidays: Holiday[], namedays: Nameday[] }>>(new Map());
+
 // Načtení svátků a jmenin z API pro aktuální rok
 useEffect(() => {
   const loadData = async () => {
     try {
       const year = currentDate.getFullYear();
-      console.log(`[CalendarProvider] Načítám data pro rok ${year}`);
+      
+      // Zkontroluj cache
+      if (calendarDataCache.current.has(year)) {
+        const cached = calendarDataCache.current.get(year)!;
+        setHolidays(cached.holidays);
+        setNamedays(cached.namedays);
+        console.log(`[CalendarProvider] Data pro rok ${year} načtena z cache`);
+        return;
+      }
+      
+      console.log(`[CalendarProvider] Načítám data pro rok ${year} z API`);
       
       const { holidays: holidaysData, namedays: namedaysData } = await fetchCalendarDataForYear(year);
+      
+      // Ulož do cache
+      calendarDataCache.current.set(year, {
+        holidays: holidaysData,
+        namedays: namedaysData
+      });
       
       console.log(`[CalendarProvider] Načteno ${holidaysData.length} svátků a ${namedaysData.length} jmenin`);
       
@@ -167,7 +187,7 @@ useEffect(() => {
   };
 
   loadData();
-}, [currentDate.getFullYear()]); // Reload když se změní rok
+}, [currentDate.getFullYear()]);
 
   // Uložení událostí do localStorage
   useEffect(() => {

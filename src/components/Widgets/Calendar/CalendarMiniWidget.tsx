@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../../styles/Calendar.css';
+import './styles/CalendarMini.css';
 import { useCalendar } from './CalendarProvider';
 import CalendarModal from './CalendarModal';
 import type { FamilyMember, CalendarEvent } from './types';

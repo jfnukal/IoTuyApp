@@ -42,7 +42,7 @@
 
 /* Kalendář: */
 /* @import './Calendar.css'; */
-@import './calendar_test.css'; 
+/* @import '../../../src/components/Widgets/Calendar/CalendarShared.css';  */
 
 /* ==================== CUSTOM PROPERTIES OVERRIDE ==================== */
 /* Místo pro override CSS variables pro různé konfigurace */

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import CalendarWidget from './CalendarWidget.tsx';
+import CalendarMobile from './CalendarMobile.tsx';
 import EventForm from './EventForm.tsx';
 import { useCalendar } from './CalendarProvider.tsx';
+import { useIsMobile } from './utils/deviceDetection';
 import type { FamilyMember, CalendarEvent } from './types';
+import './styles/CalendarShared.css';
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -16,6 +19,8 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
   familyMembers = [] 
 }) => {
   const { addEvent, updateEvent, deleteEvent } = useCalendar();
+
+  const isMobile = useIsMobile(768);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -77,18 +82,24 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
   return (
     <div className="calendar-modal-overlay" onClick={onClose}>
       <div 
-        className="calendar-modal-content"
+        className={`calendar-modal-content ${isMobile ? 'mobile' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <CalendarWidget 
-          familyMembers={familyMembers}
-          onAddEvent={handleShowAddForm}
-          onEditEvent={handleShowEditForm}
-        />
+        {isMobile ? (
+          <CalendarMobile 
+            familyMembers={familyMembers}
+          />
+        ) : (
+          <CalendarWidget 
+            familyMembers={familyMembers}
+            onAddEvent={handleShowAddForm}
+            onEditEvent={handleShowEditForm}
+          />
+        )}
       </div>
-
-      {/* Formulář je nyní sourozenec obsahu modálu, ne jeho dítě */}
-      {isFormOpen && (
+  
+      {/* Formulář - na mobilu se zobrazuje z CalendarMobile komponenty */}
+      {!isMobile && isFormOpen && (
         <EventForm
           event={selectedEvent}
           date={selectedDate}

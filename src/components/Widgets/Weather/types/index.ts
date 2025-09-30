@@ -132,4 +132,4 @@ export const DEFAULT_WEATHER_SETTINGS: WeatherWidgetSettings = {
   backgroundEffects: true,
 };
 
-export type WeatherView = 'today' | 'hourly' | 'weekly' | 'details';
+export type WeatherView = 'today' | 'current' | 'weekly' | 'details';

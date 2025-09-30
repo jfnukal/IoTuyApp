@@ -5,6 +5,7 @@ import MonthView from './MonthView.tsx';
 import WeekView from './WeekView.tsx'; 
 import DayView from './DayView.tsx';   
 import CalendarHeader from './CalendarHeader.tsx';
+import './styles/CalendarWidget.css';
 
 interface CalendarWidgetProps {
   familyMembers?: FamilyMember[];
@@ -71,32 +72,25 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   // getCurrentMonthTheme stále můžeme používat pro barvy atd.
   const monthTheme = getCurrentMonthTheme(); 
   
-  return (
-    <div 
-      className="calendar-widget"
-      style={{ 
-        backgroundImage: `url('${headerImage}')`,
-      }}
-    >
-      <div 
-        className="calendar-header"
-        style={{ 
-          color: monthTheme.textColor 
-        }}
-      >
-        <CalendarHeader
-          currentDate={currentDate}
-          currentView={currentView}
-          onDateChange={setCurrentDate}
-          onViewChange={setCurrentView}
-          onAddEvent={() => onAddEvent(currentDate)}
-        />
-      </div>
-      <div className="calendar-content">
-        {renderCurrentView()}
-      </div>
+return (
+  <div 
+    className="calendar-widget"
+    style={{ 
+      backgroundImage: `url('${headerImage}')`,
+    }}
+  >
+    <CalendarHeader
+      currentDate={currentDate}
+      currentView={currentView}
+      onDateChange={setCurrentDate}
+      onViewChange={setCurrentView}
+      onAddEvent={() => onAddEvent(currentDate)}
+    />
+    <div className="calendar-content">
+      {renderCurrentView()}
     </div>
-  );
+  </div>
+);
 };
 
 export default CalendarWidget;

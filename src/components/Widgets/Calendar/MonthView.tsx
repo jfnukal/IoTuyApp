@@ -1,7 +1,10 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import type { CalendarEvent, FamilyMember } from './types';
 import { useCalendar } from './CalendarProvider';
-import { markNameday, isNamedayMarked } from 'src/components/Widgets/Calendar/utils/namedayState';
+import {
+  markNameday,
+  isNamedayMarked,
+} from '@/components/Widgets/Calendar/utils/namedayState';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -209,4 +212,5 @@ const MonthView: React.FC<MonthViewProps> = ({
 };
 
 export default MonthView;
+
 

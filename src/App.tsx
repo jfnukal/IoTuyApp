@@ -1,35 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
 import { useRooms } from './hooks/useRooms';
 import Login from './components/Login';
 // import RoomSelector from './components/RoomSelector';
-import DeviceCard from './components/DeviceCard';
-import { firestoreService } from './services/firestoreService';
+// import DeviceCard from './components/DeviceCard';
+// import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
-import RoomVisualization2D from './components/RoomVisualization2D';
-import RoomVisualization3D from './components/RoomVisualization3D';
-// import CalendarMiniWidget from './components/Widgets/Calendar/CalendarMiniWidget';
+// import RoomVisualization2D from './components/RoomVisualization2D';
+// import RoomVisualization3D from './components/RoomVisualization3D';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
-// import WeatherMiniWidget from './components/Widgets/Weather/WeatherMiniWidget';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
 
-// Přidej tuto funkci zde
-const getDeviceIcon = (device: TuyaDevice): string => {
-  const categoryIcons: Record<string, string> = {
-    switch: '🔌',
-    light: '💡',
-    sensor: '📱',
-    garden: '🌱',
-    thermostat: '🌡️',
-    camera: '📷',
-    assistant: '🏠',
-    default: '📱',
-  };
 
-  return categoryIcons[device.category] || categoryIcons.default;
-};
+// const getDeviceIcon = (device: TuyaDevice): string => {
+//   const categoryIcons: Record<string, string> = {
+//     switch: '🔌',
+//     light: '💡',
+//     sensor: '📱',
+//     garden: '🌱',
+//     thermostat: '🌡️',
+//     camera: '📷',
+//     assistant: '🏠',
+//     default: '📱',
+//   };
+
+//   return categoryIcons[device.category] || categoryIcons.default;
+// };
 
 declare global {
   interface Window {
@@ -41,7 +39,7 @@ function App() {
   // VŠECHNY HOOKY MUSÍ BÝT NA ZAČÁTKU - PŘED JAKÝMKOLIV RETURN!
 
   // Auth hooks
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
 
   // Firestore hooks
   const {
@@ -53,26 +51,40 @@ function App() {
 
   // Room management hooks
   const {
-    rooms,
-    selectedRoomId,
-    selectedRoom,
-    getRoomDevices,
-    getUnassignedDevices,
-    addDeviceToRoom,
-    removeDeviceFromRoom,
+    // rooms,
+    // selectedRoomId,
+    // selectedRoom,
+    // getRoomDevices,
+    // getUnassignedDevices,
+    // addDeviceToRoom,
+    // removeDeviceFromRoom,
     loading: roomsLoading,
   } = useRooms();
+  
 
   // Local state - VŠECHNY useState HOOKY
-  const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);
+  // const [setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isControlling, setIsControlling] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<
-    'all' | 'room' | 'unassigned' | '2d-view' | '3d-view'
-  >('all');
+  // const [setIsControlling] = useState<string | null>(null);
+  // const [currentView] = useState<
+  //   'all' | 'room' | 'unassigned' | '2d-view' | '3d-view'
+  // >('all');
   const [notification, setNotification] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+
+  
+  // // Local state - VŠECHNY useState HOOKY
+  // const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
+  // const [isControlling, setIsControlling] = useState<string | null>(null);
+  // const [currentView, setCurrentView] = useState<
+  //   'all' | 'room' | 'unassigned' | '2d-view' | '3d-view'
+  // >('all');
+  // const [notification, setNotification] = useState<string | null>(null);
+  // const [showNotification, setShowNotification] = useState(false);
+
 
   // Theme initialization - useEffect
   useEffect(() => {
@@ -108,66 +120,66 @@ useEffect(() => {
     if (!currentUser) return;
 
     if (devices && devices.length > 0) {
-      setDevicesData(devices);
-      setIsLoading(false);
+      // setDevicesData(devices);
+      // setIsLoading(false);
     }
   }, [currentUser, devices, firebaseLoading]);
 
   // Handler pro aktualizaci pozice zařízení - useCallback
-  const handleDevicePositionChange = React.useCallback(
-    async (deviceId: string, position: { x: number; y: number }) => {
-      if (!currentUser) {
-        console.error('No current user for position update');
-        return;
-      }
+  // const handleDevicePositionChange = React.useCallback(
+  //   async (deviceId: string, position: { x: number; y: number }) => {
+  //     if (!currentUser) {
+  //       console.error('No current user for position update');
+  //       return;
+  //     }
 
-      console.log('=== POSITION UPDATE START ===');
-      console.log('Device ID:', deviceId);
-      console.log('New position:', position);
-      console.log('Current user:', currentUser.uid);
+  //     console.log('=== POSITION UPDATE START ===');
+  //     console.log('Device ID:', deviceId);
+  //     console.log('New position:', position);
+  //     console.log('Current user:', currentUser.uid);
 
-      const updateKey = `${deviceId}-${position.x}-${position.y}`;
-      if (window.lastPositionUpdate === updateKey) {
-        console.log('Duplicate position update prevented');
-        return;
-      }
-      window.lastPositionUpdate = updateKey;
+  //     const updateKey = `${deviceId}-${position.x}-${position.y}`;
+  //     if (window.lastPositionUpdate === updateKey) {
+  //       console.log('Duplicate position update prevented');
+  //       return;
+  //     }
+  //     window.lastPositionUpdate = updateKey;
 
-      try {
-        await firestoreService.updateDevicePosition(
-          currentUser.uid,
-          deviceId,
-          position
-        );
-        console.log('Firebase update successful');
+  //     try {
+  //       await firestoreService.updateDevicePosition(
+  //         currentUser.uid,
+  //         deviceId,
+  //         position
+  //       );
+  //       console.log('Firebase update successful');
 
-        setDevicesData((prevDevices) => {
-          const updated = prevDevices.map((device) =>
-            device.id === deviceId ? { ...device, position } : device
-          );
-          console.log(
-            'Local state updated:',
-            updated.find((d) => d.id === deviceId)?.position
-          );
-          return updated;
-        });
+  //       setDevicesData((prevDevices) => {
+  //         const updated = prevDevices.map((device) =>
+  //           device.id === deviceId ? { ...device, position } : device
+  //         );
+  //         console.log(
+  //           'Local state updated:',
+  //           updated.find((d) => d.id === deviceId)?.position
+  //         );
+  //         return updated;
+  //       });
 
-        console.log('=== POSITION UPDATE SUCCESS ===');
+  //       console.log('=== POSITION UPDATE SUCCESS ===');
 
-        setTimeout(() => {
-          if (window.lastPositionUpdate === updateKey) {
-            window.lastPositionUpdate = null;
-          }
-        }, 1000);
-      } catch (error) {
-        console.error('=== POSITION UPDATE ERROR ===');
-        console.error('Error details:', error);
-        window.lastPositionUpdate = null;
-        alert(`Chyba při ukládání pozice: ${error}`);
-      }
-    },
-    [currentUser]
-  );
+  //       setTimeout(() => {
+  //         if (window.lastPositionUpdate === updateKey) {
+  //           window.lastPositionUpdate = null;
+  //         }
+  //       }, 1000);
+  //     } catch (error) {
+  //       console.error('=== POSITION UPDATE ERROR ===');
+  //       console.error('Error details:', error);
+  //       window.lastPositionUpdate = null;
+  //       alert(`Chyba při ukládání pozice: ${error}`);
+  //     }
+  //   },
+  //   [currentUser]
+  // );
 
   // TEPRVE TEĎKA MŮŽEME DĚLAT PODMÍNĚNÉ RETURN
 
@@ -274,7 +286,7 @@ useEffect(() => {
     if (!currentUser) return;
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       setError(null);
 
       setNotification('Synchronizuji zařízení...');
@@ -297,96 +309,96 @@ useEffect(() => {
       setError(err.message || 'Nepodařilo se synchronizovat data');
       setNotification('✗ Chyba při synchronizaci');
       setTimeout(() => setShowNotification(false), 5000);
-    } finally {
-      setIsLoading(false);
-    }
+    // } finally {
+    //   setIsLoading(false);
+   }
   };
 
   // Ovládání zařízení s Firebase aktualizací
-  const controlDevice = async (deviceId: string, commands: any[]) => {
-    if (!currentUser) return;
+  // const controlDevice = async (deviceId: string, commands: any[]) => {
+  //   if (!currentUser) return;
 
-    setIsControlling(deviceId);
-    try {
-      console.log('Controlling device:', deviceId, 'Commands:', commands);
+  //   setIsControlling(deviceId);
+  //   try {
+  //     console.log('Controlling device:', deviceId, 'Commands:', commands);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const updatedDevices = devices.map((device) => {
-        if (device.id === deviceId) {
-          const updatedStatus =
-            device.status?.map((status) => {
-              const command = commands.find((cmd) => cmd.code === status.code);
-              return command ? { ...status, value: command.value } : status;
-            }) || null;
+  //     const updatedDevices = devices.map((device) => {
+  //       if (device.id === deviceId) {
+  //         const updatedStatus =
+  //           device.status?.map((status) => {
+  //             const command = commands.find((cmd) => cmd.code === status.code);
+  //             return command ? { ...status, value: command.value } : status;
+  //           }) || null;
 
-          return {
-            ...device,
-            status: updatedStatus,
-            lastUpdated: Date.now(),
-          };
-        }
-        return device;
-      });
+  //         return {
+  //           ...device,
+  //           status: updatedStatus,
+  //           lastUpdated: Date.now(),
+  //         };
+  //       }
+  //       return device;
+  //     });
 
-      await firestoreService.saveUserDevices(currentUser.uid, updatedDevices);
+  //     await firestoreService.saveUserDevices(currentUser.uid, updatedDevices);
 
-      const deviceElement = document.querySelector(
-        `[data-device-id="${deviceId}"]`
-      );
-      if (deviceElement) {
-        deviceElement.classList.add('action-success');
-        setTimeout(() => deviceElement.classList.remove('action-success'), 600);
-      }
+  //     const deviceElement = document.querySelector(
+  //       `[data-device-id="${deviceId}"]`
+  //     );
+  //     if (deviceElement) {
+  //       deviceElement.classList.add('action-success');
+  //       setTimeout(() => deviceElement.classList.remove('action-success'), 600);
+  //     }
 
-      console.log('Device controlled successfully');
-    } catch (error) {
-      console.error('Error controlling device:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      alert(`Chyba při ovládání zařízení: ${errorMessage}`);
-    } finally {
-      setIsControlling(null);
-    }
-  };
+  //     console.log('Device controlled successfully');
+  //   } catch (error) {
+  //     console.error('Error controlling device:', error);
+  //     const errorMessage =
+  //       error instanceof Error ? error.message : String(error);
+  //     alert(`Chyba při ovládání zařízení: ${errorMessage}`);
+  //   } finally {
+  //     setIsControlling(null);
+  //   }
+  // };
 
   // Funkce pro přepnutí switch
-  const toggleSwitch = async (
-    deviceId: string,
-    switchCode: string,
-    currentValue: boolean
-  ) => {
-    const commands = [
-      {
-        code: switchCode,
-        value: !currentValue,
-      },
-    ];
-    await controlDevice(deviceId, commands);
-  };
+  // const toggleSwitch = async (
+  //   deviceId: string,
+  //   switchCode: string,
+  //   currentValue: boolean
+  // ) => {
+  //   const commands = [
+  //     {
+  //       code: switchCode,
+  //       value: !currentValue,
+  //     },
+  //   ];
+  //   await controlDevice(deviceId, commands);
+  // };
 
-  const handleRoomChange = async (deviceId: string, roomId: string | null) => {
-    try {
-      const device = devicesData.find((d) => d.id === deviceId);
-      if (device?.roomId) {
-        await removeDeviceFromRoom(device.roomId, deviceId);
-      }
+  // const handleRoomChange = async (deviceId: string, roomId: string | null) => {
+  //   try {
+  //     const device = devicesData.find((d) => d.id === deviceId);
+  //     if (device?.roomId) {
+  //       await removeDeviceFromRoom(device.roomId, deviceId);
+  //     }
 
-      if (roomId) {
-        await addDeviceToRoom(roomId, deviceId);
-      }
+  //     if (roomId) {
+  //       await addDeviceToRoom(roomId, deviceId);
+  //     }
 
-      const updatedDevices = devicesData.map((d) =>
-        d.id === deviceId ? { ...d, roomId: roomId || undefined } : d
-      );
-      setDevicesData(updatedDevices);
+  //     const updatedDevices = devicesData.map((d) =>
+  //       d.id === deviceId ? { ...d, roomId: roomId || undefined } : d
+  //     );
+  //     setDevicesData(updatedDevices);
 
-      console.log('Device room changed successfully');
-    } catch (error) {
-      console.error('Error changing device room:', error);
-      alert('Chyba při změně místnosti');
-    }
-  };
+  //     console.log('Device room changed successfully');
+  //   } catch (error) {
+  //     console.error('Error changing device room:', error);
+  //     alert('Chyba při změně místnosti');
+  //   }
+  // };
 
   if (roomsLoading) {
     return (
@@ -443,22 +455,22 @@ useEffect(() => {
   }
 
   // Získej zařízení podle aktuálního zobrazení
-  const getDisplayedDevices = (): TuyaDevice[] => {
-    switch (currentView) {
-      case 'all':
-        return devicesData;
-      case 'room':
-      case '2d-view':
-        if (!selectedRoomId) return [];
-        return getRoomDevices(selectedRoomId, devicesData);
-      case 'unassigned':
-        return getUnassignedDevices(devicesData);
-      default:
-        return devicesData;
-    }
-  };
+  // const getDisplayedDevices = (): TuyaDevice[] => {
+  //   switch (currentView) {
+  //     case 'all':
+  //       return devicesData;
+  //     case 'room':
+  //     case '2d-view':
+  //       if (!selectedRoomId) return [];
+  //       return getRoomDevices(selectedRoomId, devicesData);
+  //     case 'unassigned':
+  //       return getUnassignedDevices(devicesData);
+  //     default:
+  //       return devicesData;
+  //   }
+  // };
 
-  const displayedDevices = getDisplayedDevices();
+  // const displayedDevices = getDisplayedDevices();
 
   return (
     <div className="app-layout">

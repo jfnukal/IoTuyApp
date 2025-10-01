@@ -4,8 +4,7 @@ import { MOCK_TIMETABLE, MOCK_LUNCH_MENU } from './bakalariMockData';
 // Konfigurace
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 const BAKALARI_SERVER_URL = import.meta.env.VITE_BAKALARI_SERVER || 'https://zszator.bakalari.cz';
-const PROXY_URL = 'https://corsproxy.io/?';
-const BAKALARI_BASE_URL = `${PROXY_URL}${encodeURIComponent(BAKALARI_SERVER_URL)}/api/3`;
+const BAKALARI_BASE_URL = `${BAKALARI_SERVER_URL}/api/3`;
 
 const BAKALARI_USERNAME = import.meta.env.VITE_BAKALARI_USERNAME;
 const BAKALARI_PASSWORD = import.meta.env.VITE_BAKALARI_PASSWORD;
@@ -217,5 +216,6 @@ async getLunchMenu(): Promise<LunchMenu[]> {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 
 

@@ -6,6 +6,8 @@ import { useCalendar } from './CalendarProvider.tsx';
 import { useIsMobile } from './utils/deviceDetection';
 import type { FamilyMember, CalendarEvent } from './types';
 import './styles/CalendarShared.css';
+import { createPortal } from 'react-dom';
+
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -79,7 +81,12 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     setIsFormOpen(false);
   };
   
-  return (
+  const modalRoot = document.getElementById('modal-root');
+  
+  // Pokud není portál připraven, nic nerenderujeme
+  if (!isOpen || !modalRoot) return null;
+
+  return createPortal(
     <div className="calendar-modal-overlay" onClick={onClose}>
       <div 
         className={`calendar-modal-content ${isMobile ? 'mobile' : ''}`}
@@ -110,7 +117,8 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
           defaultMemberId={defaultMemberId}
         />
       )}
-    </div>
+    </div>,
+    modalRoot
   );
 };
 

@@ -159,17 +159,25 @@ const MonthView: React.FC<MonthViewProps> = ({
                     {formatDate(date, 'WEEKDAY')}
                   </span>
                 </div>
-                <div className={`day-special-events ${nameday && isNamedayMarked(date) ? 'has-marked-nameday' : ''}`}>
+                <div
+                  className={`day-special-events ${
+                    nameday && isNamedayMarked(date) ? 'has-marked-nameday' : ''
+                  }`}
+                >
                   {/* Zobrazení jmenin a svátků bez prefixu */}
                   {nameday && (
-                        <div
-                          className={`special-event nameday ${isNamedayMarked(date) ? 'marked' : ''}`}
-                          onClick={(e) => handleNamedayClick(date, e)}
-                          title={`Svátek: ${nameday.names.join(', ')} - Klikni pro označení`}
-                        >
-                          {nameday.name}
-                        </div>
-                      )}
+                    <div
+                      className={`special-event nameday ${
+                        isNamedayMarked(date) ? 'marked' : ''
+                      }`}
+                      onClick={(e) => handleNamedayClick(date, e)}
+                      title={`Svátek: ${nameday.names.join(
+                        ', '
+                      )} - Klikni pro označení`}
+                    >
+                      {nameday.name}
+                    </div>
+                  )}
                   {holiday && (
                     <div className="special-event holiday" title={holiday.name}>
                       {holiday.name}
@@ -212,5 +220,3 @@ const MonthView: React.FC<MonthViewProps> = ({
 };
 
 export default MonthView;
-
-

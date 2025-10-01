@@ -6,6 +6,7 @@ import { fetchImageForQuery } from '../../../api/unsplash';
 import './WeatherMiniWidget.css';
 import WeatherModal from './WeatherModal';
 import WeatherModalMobile from './WeatherModalMobile';
+import { createPortal } from 'react-dom';
 
 interface WeatherMiniWidgetProps {
   className?: string;
@@ -148,11 +149,13 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   const gradient = WeatherUtils.getWeatherGradient(primaryWeather.current.conditionCode);
   const gradientStyle = `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
 
+  const modalRoot = document.getElementById('modal-root');
+
   return (
     <>
-     <div 
-          className={`weather-mini-widget ${className}`}
-          onClick={handleClick}
+      <div 
+        className={`weather-mini-widget ${className}`}
+        onClick={handleClick}
           style={{
             backgroundImage: backgroundImage 
               ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${backgroundImage})`
@@ -276,8 +279,8 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
         </div>
       </div>
 
-        {/* Weather Modal - nahraď stávající modal tímto: */}
-        {isMobile ? (
+      {showModal && modalRoot && createPortal(
+        isMobile ? (
           <WeatherModalMobile 
             isOpen={showModal}
             onClose={() => setShowModal(false)}
@@ -287,6 +290,8 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
             isOpen={showModal}
             onClose={() => setShowModal(false)}
           />
+          ),
+        modalRoot
         )}
 
       {/* Weather Animations */}

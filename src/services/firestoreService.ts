@@ -665,6 +665,91 @@ class FirestoreService {
     }
   }
 }
+// ==================== CALENDAR EVENTS ====================
+
+export interface CalendarEventData {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // ISO format: "2025-10-01T14:30:00.000Z"
+  time?: string;
+  endTime?: string;
+  type: 'personal' | 'work' | 'family' | 'birthday' | 'holiday' | 'nameday' | 'reminder';
+  familyMemberId?: string;
+  color?: string;
+  reminder?: string;
+  isAllDay?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const calendarFirebaseService = {
+  // Přidat událost
+  async addEvent(
+    userId: string,
+    event: Omit<CalendarEventData, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<string> {
+    const eventsRef = collection(db, `users/${userId}/calendarEvents`);
+    const newEvent = {
+      ...event,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const docRef = await addDoc(eventsRef, newEvent);
+    return docRef.id;
+  },
+
+  // Načíst všechny události
+  async getEvents(userId: string): Promise<CalendarEventData[]> {
+    const eventsRef = collection(db, `users/${userId}/calendarEvents`);
+    const snapshot = await getDocs(eventsRef);
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as CalendarEventData)
+    );
+  },
+
+  // Aktualizovat událost
+  async updateEvent(
+    userId: string,
+    eventId: string,
+    updates: Partial<CalendarEventData>
+  ): Promise<void> {
+    const eventRef = doc(db, `users/${userId}/calendarEvents/${eventId}`);
+    await updateDoc(eventRef, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+  },
+
+  // Smazat událost
+  async deleteEvent(userId: string, eventId: string): Promise<void> {
+    const eventRef = doc(db, `users/${userId}/calendarEvents/${eventId}`);
+    await deleteDoc(eventRef);
+  },
+
+  // Real-time listener - sleduje změny v reálném čase
+  subscribeToEvents(
+    userId: string,
+    callback: (events: CalendarEventData[]) => void
+  ): () => void {
+    const eventsRef = collection(db, `users/${userId}/calendarEvents`);
+    const unsubscribe = onSnapshot(eventsRef, (snapshot) => {
+      const events = snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as CalendarEventData)
+      );
+      callback(events);
+    });
+    return unsubscribe;
+  },
+};
 
 // Export singleton instance
 export const firestoreService = new FirestoreService();

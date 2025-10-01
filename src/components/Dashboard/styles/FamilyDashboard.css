@@ -1,0 +1,312 @@
+/* src/components/Dashboard/styles/FamilyDashboard.css */
+
+/* ==================== FAMILY DASHBOARD ==================== */
+.family-dashboard {
+  position: relative;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== WIDGETS GRID ==================== */
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Každý widget má animaci při načtení */
+.widget-container {
+  animation: widgetAppear 0.6s ease both;
+}
+
+/* Postupné zobrazení widgetů */
+.widget-container:nth-child(1) { animation-delay: 0.1s; }
+.widget-container:nth-child(2) { animation-delay: 0.2s; }
+.widget-container:nth-child(3) { animation-delay: 0.3s; }
+.widget-container:nth-child(4) { animation-delay: 0.4s; }
+.widget-container:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes widgetAppear {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==================== WIDGET CONTAINERS ==================== */
+.widget-container {
+  background: transparent;
+  border-radius: 24px;
+  padding: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: visible;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.widget-container:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Efekt před kliknutím */
+.widget-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.widget-container:hover::before {
+  opacity: 1;
+}
+
+/* ==================== WEATHER CONTAINER ==================== */
+.weather-container {
+  grid-column: span 1;
+  min-height: 280px;
+}
+
+.family-weather-widget {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+}
+
+/* ==================== CALENDAR CONTAINER ==================== */
+.calendar-container {
+  grid-column: span 1;
+  min-height: 280px;
+}
+
+.family-calendar-widget {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+}
+
+/* ==================== STICKY NOTES CONTAINER ==================== */
+.stickynotes-container {
+  grid-column: span 1;
+  min-height: 300px;
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+}
+
+/* ==================== SCHOOL SCHEDULE CONTAINER ==================== */
+.schedule-container {
+  grid-column: span 1;
+  min-height: 280px;
+  background: linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%);
+}
+
+/* ==================== ADD WIDGET PLACEHOLDER ==================== */
+.add-widget-container {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px dashed rgba(102, 126, 234, 0.3);
+  cursor: pointer;
+}
+
+.add-widget-container:hover {
+  border-color: rgba(102, 126, 234, 0.6);
+  background: white;
+}
+
+.add-widget-placeholder {
+  text-align: center;
+  padding: 30px;
+}
+
+.add-widget-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.add-widget-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.add-widget-hint {
+  font-size: 0.9rem;
+  color: #999;
+  margin: 0;
+}
+
+/* ==================== MEMBER INFO PANEL ==================== */
+.member-info-panel {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 15px 25px;
+  border-radius: 50px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  z-index: 100;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.member-info-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.member-info-text strong {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.clear-filter-btn {
+  padding: 8px 15px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-filter-btn:hover {
+  background: #5568d3;
+  transform: scale(1.05);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1200px) {
+  .widgets-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .widgets-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .widget-container {
+    min-height: auto !important;
+  }
+
+  .weather-container,
+  .calendar-container,
+  .stickynotes-container,
+  .schedule-container {
+    min-height: 250px;
+  }
+
+  .member-info-panel {
+    bottom: 20px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    flex-direction: column;
+    padding: 12px 20px;
+    gap: 10px;
+  }
+
+  .clear-filter-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .widgets-grid {
+    gap: 12px;
+  }
+
+  .widget-container {
+    border-radius: 18px;
+  }
+
+  .add-widget-icon {
+    font-size: 2.5rem;
+  }
+
+  .add-widget-text {
+    font-size: 1rem;
+  }
+}
+
+/* ==================== GRID LAYOUTS PRO RŮZNÉ POČTY WIDGETŮ ==================== */
+
+/* Pokud jsou 4 widgety - 2x2 grid */
+.widgets-grid:has(.widget-container:nth-child(4):last-child) {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Pokud jsou 3 widgety - 2 nahoře, 1 dole */
+.widgets-grid:has(.widget-container:nth-child(3):last-child) {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.widgets-grid:has(.widget-container:nth-child(3):last-child) .widget-container:nth-child(3) {
+  grid-column: span 2;
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.widget-container:focus-within {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+.add-widget-container:focus {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}

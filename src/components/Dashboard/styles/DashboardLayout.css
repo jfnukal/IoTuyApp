@@ -1,0 +1,288 @@
+/* src/components/Dashboard/styles/DashboardLayout.css */
+
+/* ==================== MAIN LAYOUT ==================== */
+.dashboard-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ==================== HEADER ==================== */
+.dashboard-layout-header {
+  padding: 30px 20px;
+  text-align: center;
+  animation: slideDown 0.6s ease;
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-main-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-greeting {
+  font-size: 1.2rem;
+  color: white;
+  opacity: 0.9;
+  margin: 0 0 20px 0;
+}
+
+/* ==================== FAMILY AVATARS ==================== */
+.family-avatars {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  padding: 8px;
+}
+
+.avatar:hover {
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.avatar.selected {
+  background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+  transform: scale(1.2);
+  box-shadow: 0 8px 30px rgba(253, 203, 110, 0.5);
+}
+
+.avatar-emoji {
+  font-size: 2rem;
+  margin-bottom: 2px;
+}
+
+.avatar-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+}
+
+.avatar.selected .avatar-name {
+  color: #d63031;
+}
+
+/* Bounce animace pro avatary */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.avatar:hover {
+  animation: bounce 0.6s ease;
+}
+
+/* ==================== MODE SWITCHER ==================== */
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 25px 0 20px 0;
+}
+
+.mode-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 2px solid transparent;
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.mode-btn.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.mode-icon {
+  font-size: 1.3rem;
+}
+
+.mode-label {
+  font-weight: 700;
+}
+
+/* ==================== SETTINGS ICON ==================== */
+.settings-icon-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0.6;
+}
+
+.settings-icon-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== DASHBOARD CONTENT ==================== */
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px 40px 20px;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .dashboard-main-title {
+    font-size: 1.8rem;
+  }
+
+  .dashboard-greeting {
+    font-size: 1rem;
+  }
+
+  .family-avatars {
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatar-emoji {
+    font-size: 1.5rem;
+  }
+
+  .avatar-name {
+    font-size: 0.65rem;
+  }
+
+  .mode-switcher {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mode-btn {
+    width: 100%;
+    max-width: 250px;
+    justify-content: center;
+  }
+
+  .settings-icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .dashboard-content {
+    padding: 0 15px 30px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-layout-header {
+    padding: 20px 15px;
+  }
+
+  .dashboard-main-title {
+    font-size: 1.5rem;
+  }
+
+  .family-avatars {
+    gap: 8px;
+  }
+
+  .avatar {
+    width: 55px;
+    height: 55px;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.mode-btn:focus,
+.avatar:focus,
+.settings-icon-btn:focus {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+/* ==================== DARK MODE SUPPORT (pro budoucnost) ==================== */
+@media (prefers-color-scheme: dark) {
+  /* Zatím ponecháme světlý vzhled, ale připraveno pro budoucnost */
+}

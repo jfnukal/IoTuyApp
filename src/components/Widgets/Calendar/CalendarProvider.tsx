@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import type { ReactNode } from 'react'; 
+import type { ReactNode } from 'react';
 import type {
   CalendarEvent,
   CalendarView,
@@ -17,6 +17,8 @@ import type {
 import { fetchCalendarDataForYear } from './data/czechData';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
+import { useAuth } from '../../../contexts/AuthContext';
+import { calendarFirebaseService } from '../../../services/firestoreService';
 
 interface CalendarContextType {
   // Stav kalendáře
@@ -76,6 +78,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   initialEvents = [],
   onEventsChange,
 }) => {
+  const { currentUser } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<CalendarView>('month');
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -97,30 +100,29 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     },
     familyView: true,
   });
-  
 
   // Načtení nastavení z localStorage při inicializaci
-// CalendarProvider.tsx
-useEffect(() => {
-  // Načítání nastavení (zůstává stejné)
-  const savedSettings = localStorage.getItem('calendar-settings');
-  if (savedSettings) {
-    try {
-      const parsed = JSON.parse(savedSettings);
-      setSettings((prev) => ({ ...prev, ...parsed }));
-    } catch (error) {
-      console.error('Chyba při načítání nastavení kalendáře:', error);
+  useEffect(() => {
+    // Načítání nastavení (zůstává stejné)
+    const savedSettings = localStorage.getItem('calendar-settings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Chyba při načítání nastavení kalendáře:', error);
+      }
     }
-  }
 
-  // Bezpečné načítání událostí
-      const savedEvents = localStorage.getItem('calendar-events');
-      if (savedEvents) {
-        try {
-          const parsedEvents = JSON.parse(savedEvents);
-          
-          if (Array.isArray(parsedEvents)) {
-            const validatedEvents: CalendarEvent[] = parsedEvents.map((event: any) => {
+    // Bezpečné načítání událostí
+    const savedEvents = localStorage.getItem('calendar-events');
+    if (savedEvents) {
+      try {
+        const parsedEvents = JSON.parse(savedEvents);
+
+        if (Array.isArray(parsedEvents)) {
+          const validatedEvents: CalendarEvent[] = parsedEvents.map(
+            (event: any) => {
               // Pro každou událost zkontrolujeme a doplníme chybějící povinné vlastnosti
               return {
                 id: event.id || `event-${Date.now()}`,
@@ -138,56 +140,64 @@ useEffect(() => {
                 isAllDay: event.isAllDay,
                 recurring: event.recurring,
               };
-            });
-            setEvents(validatedEvents);
-          }
-        } catch (error) {
-          console.error('Chyba při načítání událostí kalendáře:', error);
-          // Pokud dojde k chybě, vyčistíme stará neplatná data
-          localStorage.removeItem('calendar-events');
+            }
+          );
+          setEvents(validatedEvents);
         }
+      } catch (error) {
+        console.error('Chyba při načítání událostí kalendáře:', error);
+        // Pokud dojde k chybě, vyčistíme stará neplatná data
+        localStorage.removeItem('calendar-events');
       }
-    }, []);
-
-// Cache pro svátky a jmeniny (aby se nenačítaly opakovaně)
-const calendarDataCache = useRef<Map<number, { holidays: Holiday[], namedays: Nameday[] }>>(new Map());
-
-// Načtení svátků a jmenin z API pro aktuální rok
-useEffect(() => {
-  const loadData = async () => {
-    try {
-      const year = currentDate.getFullYear();
-      
-      // Zkontroluj cache
-      if (calendarDataCache.current.has(year)) {
-        const cached = calendarDataCache.current.get(year)!;
-        setHolidays(cached.holidays);
-        setNamedays(cached.namedays);
-        console.log(`[CalendarProvider] Data pro rok ${year} načtena z cache`);
-        return;
-      }
-      
-      console.log(`[CalendarProvider] Načítám data pro rok ${year} z API`);
-      
-      const { holidays: holidaysData, namedays: namedaysData } = await fetchCalendarDataForYear(year);
-      
-      // Ulož do cache
-      calendarDataCache.current.set(year, {
-        holidays: holidaysData,
-        namedays: namedaysData
-      });
-      
-      console.log(`[CalendarProvider] Načteno ${holidaysData.length} svátků a ${namedaysData.length} jmenin`);
-      
-      setHolidays(holidaysData);
-      setNamedays(namedaysData);
-    } catch (error) {
-      console.error('Chyba při načítání dat svátků a jmenin:', error);
     }
-  };
+  }, []);
 
-  loadData();
-}, [currentDate.getFullYear()]);
+  // Cache pro svátky a jmeniny (aby se nenačítaly opakovaně)
+  const calendarDataCache = useRef<
+    Map<number, { holidays: Holiday[]; namedays: Nameday[] }>
+  >(new Map());
+
+  // Načtení svátků a jmenin z API pro aktuální rok
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const year = currentDate.getFullYear();
+
+        // Zkontroluj cache
+        if (calendarDataCache.current.has(year)) {
+          const cached = calendarDataCache.current.get(year)!;
+          setHolidays(cached.holidays);
+          setNamedays(cached.namedays);
+          console.log(
+            `[CalendarProvider] Data pro rok ${year} načtena z cache`
+          );
+          return;
+        }
+
+        console.log(`[CalendarProvider] Načítám data pro rok ${year} z API`);
+
+        const { holidays: holidaysData, namedays: namedaysData } =
+          await fetchCalendarDataForYear(year);
+
+        // Ulož do cache
+        calendarDataCache.current.set(year, {
+          holidays: holidaysData,
+          namedays: namedaysData,
+        });
+
+        console.log(
+          `[CalendarProvider] Načteno ${holidaysData.length} svátků a ${namedaysData.length} jmenin`
+        );
+
+        setHolidays(holidaysData);
+        setNamedays(namedaysData);
+      } catch (error) {
+        console.error('Chyba při načítání dat svátků a jmenin:', error);
+      }
+    };
+
+    loadData();
+  }, [currentDate.getFullYear()]);
 
   // Uložení událostí do localStorage
   useEffect(() => {
@@ -200,18 +210,66 @@ useEffect(() => {
     localStorage.setItem('calendar-settings', JSON.stringify(settings));
   }, [settings]);
 
-  const addEvent = (event: CalendarEvent) => {
-    setEvents((prev) => [...prev, event]);
+  const addEvent = async (calendarEvent: CalendarEvent) => {
+    if (!currentUser) return;
+
+    try {
+      const eventId = await calendarFirebaseService.addEvent(currentUser.uid, {
+        title: calendarEvent.title,
+        description: calendarEvent.description,
+        date: calendarEvent.date.toISOString(),
+        time: calendarEvent.time,
+        endTime: calendarEvent.endTime,
+        type: calendarEvent.type,
+        familyMemberId: calendarEvent.familyMember,
+        color: calendarEvent.color,
+        isAllDay: calendarEvent.isAllDay,
+      });
+
+      setEvents((prev) => [...prev, { ...calendarEvent, id: eventId }]);
+    } catch (error) {
+      console.error('Error adding event:', error);
+    }
   };
 
-  const updateEvent = (id: string, updates: Partial<CalendarEvent>) => {
-    setEvents((prev) =>
-      prev.map((event) => (event.id === id ? { ...event, ...updates } : event))
-    );
+  const updateEvent = async (id: string, updates: Partial<CalendarEvent>) => {
+    try {
+      const user = currentUser;
+      if (!user) return;
+
+      // Update v Firebase
+      await calendarFirebaseService.updateEvent(user.uid, id, {
+        title: updates.title,
+        description: updates.description,
+        date: updates.date?.toISOString(),
+        time: updates.time,
+        endTime: updates.endTime,
+        type: updates.type,
+        familyMemberId: updates.familyMember,
+        color: updates.color,
+      });
+
+      // Update lokálně
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === id ? { ...event, ...updates } : event
+        )
+      );
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
   };
 
-  const deleteEvent = (id: string) => {
-    setEvents((prev) => prev.filter((event) => event.id !== id));
+  const deleteEvent = async (id: string) => {
+    try {
+      const user = currentUser;
+      if (!user) return;
+
+      await calendarFirebaseService.deleteEvent(user.uid, id);
+      setEvents((prev) => prev.filter((event) => event.id !== id));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
   };
 
   const getEventsByDate = (date: Date) => {
@@ -220,16 +278,12 @@ useEffect(() => {
 
   const getHolidayByDate = (date: Date) => {
     // Použijte 'holidays' místo 'czechHolidays'
-    return (
-      holidays.find((holiday) => isSameDay(holiday.date, date)) || null
-    );
+    return holidays.find((holiday) => isSameDay(holiday.date, date)) || null;
   };
-  
+
   const getNamedayByDate = (date: Date) => {
     // Použijte 'namedays' místo 'czechNamedays'
-    return (
-      namedays.find((nameday) => isSameDay(nameday.date, date)) || null
-    );
+    return namedays.find((nameday) => isSameDay(nameday.date, date)) || null;
   };
 
   const updateSettings = (updates: Partial<CalendarSettings>) => {
@@ -274,27 +328,97 @@ useEffect(() => {
     }
   };
 
-    // <-- Nový useEffect, který se stará o načtení obrázku
-    useEffect(() => {
-      const loadHeaderImage = async () => {
-        const month = currentDate.getMonth();
-        const currentTheme = monthThemes[month];
-        
-        // Vytvoříme dotaz pro vyhledávání, např. "Winter quiet" pro "Zimní klid"
-        const query = `${currentTheme.name} ${currentTheme.month}`; 
-  
-        const imageUrl = await fetchImageForQuery(query);
-        if (imageUrl) {
-          setHeaderImage(imageUrl);
-        } else {
-          // Fallback: Pokud se obrázek nenačte, použijeme gradient z původního souboru
-          setHeaderImage(currentTheme.backgroundImage);
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const loadEvents = async () => {
+      try {
+        const firebaseEvents = await calendarFirebaseService.getEvents(
+          currentUser.uid
+        );
+        const parsedEvents = firebaseEvents.map((e: any) => ({
+          ...e,
+          date: new Date(e.date),
+        }));
+        setEvents(parsedEvents);
+      } catch (error) {
+        console.error('Error loading events:', error);
+      }
+    };
+
+    loadEvents();
+
+      // Real-time listener
+      const unsubscribe = calendarFirebaseService.subscribeToEvents(
+        currentUser.uid,
+        (firebaseEvents: any[]) => {
+          const parsedEvents = firebaseEvents.map((e: any) => ({
+            ...e,
+            date: new Date(e.date),
+          }));
+          setEvents(parsedEvents);
         }
-      };
+      );
   
-      loadHeaderImage();
-      // Tento efekt se spustí znovu, kdykoliv se změní měsíc
-    }, [currentDate.getMonth()]);
+      return () => unsubscribe();
+    }, [currentUser]);
+
+    // Automatické čištění starých událostí (starších než 3 měsíce)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const cleanOldEvents = async () => {
+      try {
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+        // Najdi staré události
+        const oldEvents = events.filter(event => 
+          event.date < threeMonthsAgo && 
+          event.type !== 'birthday' // Ponechat narozeniny
+        );
+
+        // Smaž je z Firebase
+        for (const event of oldEvents) {
+          await calendarFirebaseService.deleteEvent(currentUser.uid, event.id);
+        }
+
+        if (oldEvents.length > 0) {
+          console.log(`Vyčištěno ${oldEvents.length} starých událostí`);
+        }
+      } catch (error) {
+        console.error('Chyba při čištění starých událostí:', error);
+      }
+    };
+
+    // Spustit čištění při načtení a pak každý den
+    cleanOldEvents();
+    const interval = setInterval(cleanOldEvents, 24 * 60 * 60 * 1000); // 24 hodin
+
+    return () => clearInterval(interval);
+  }, [currentUser, events]);
+
+  // <-- Nový useEffect, který se stará o načtení obrázku
+  useEffect(() => {
+    const loadHeaderImage = async () => {
+      const month = currentDate.getMonth();
+      const currentTheme = monthThemes[month];
+
+      // Vytvoříme dotaz pro vyhledávání, např. "Winter quiet" pro "Zimní klid"
+      const query = `${currentTheme.name} ${currentTheme.month}`;
+
+      const imageUrl = await fetchImageForQuery(query);
+      if (imageUrl) {
+        setHeaderImage(imageUrl);
+      } else {
+        // Fallback: Pokud se obrázek nenačte, použijeme gradient z původního souboru
+        setHeaderImage(currentTheme.backgroundImage);
+      }
+    };
+
+    loadHeaderImage();
+    // Tento efekt se spustí znovu, kdykoliv se změní měsíc
+  }, [currentDate.getMonth()]);
 
   const value: CalendarContextType = {
     currentDate,

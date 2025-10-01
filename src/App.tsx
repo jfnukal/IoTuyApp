@@ -4,15 +4,16 @@ import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
 import { useRooms } from './hooks/useRooms';
 import Login from './components/Login';
-import RoomSelector from './components/RoomSelector';
+// import RoomSelector from './components/RoomSelector';
 import DeviceCard from './components/DeviceCard';
 import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
 import RoomVisualization2D from './components/RoomVisualization2D';
 import RoomVisualization3D from './components/RoomVisualization3D';
-import CalendarMiniWidget from './components/Widgets/Calendar/CalendarMiniWidget';
+// import CalendarMiniWidget from './components/Widgets/Calendar/CalendarMiniWidget';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
-import WeatherMiniWidget from './components/Widgets/Weather/WeatherMiniWidget';
+// import WeatherMiniWidget from './components/Widgets/Weather/WeatherMiniWidget';
+import DashboardLayout from './components/Dashboard/DashboardLayout';
 
 // Přidej tuto funkci zde
 const getDeviceIcon = (device: TuyaDevice): string => {
@@ -80,6 +81,27 @@ function App() {
       document.documentElement.classList.add('dark-theme');
     }
   }, []);
+
+  // TEST BAKALÁŘI API
+useEffect(() => {
+  const testBakalari = async () => {
+    console.log('🔍 Testování Bakaláři API...');
+    
+    try {
+      const { bakalariAPI } = await import('./api/bakalariAPI');
+      
+      const timetable = await bakalariAPI.getTimetable();
+      console.log('✅ Rozvrh:', timetable);
+      
+      const lunch = await bakalariAPI.getLunchMenu();
+      console.log('✅ Obědy:', lunch);
+    } catch (error) {
+      console.error('❌ Bakaláři API Chyba:', error);
+    }
+  };
+  
+  testBakalari();
+}, []); // Spustí se jen jednou při načtení
 
   // useEffect pro Firebase integrace
   useEffect(() => {
@@ -440,340 +462,17 @@ function App() {
 
   return (
     <div className="app-layout">
-      <header className="app-header modern-header">
-        <div className="header-brand">
-          <div className="brand-logo">
-            <span className="logo-icon">🏠</span>
-            <h1 className="brand-title">IoTuyApp</h1>
-          </div>
-          <p className="brand-subtitle">Smart Home Dashboard</p>
-        </div>
 
-        <div className="header-actions">
-          <div className="user-info">
-            <div className="user-avatar">
-              <span className="avatar-icon">👤</span>
-            </div>
-            <div className="user-details">
-              <span className="user-name">
-                {currentUser.displayName || 'Uživatel'}
-              </span>
-              <span className="user-email">{currentUser.email}</span>
-            </div>
-          </div>
+      <CalendarProvider>
+        <DashboardLayout 
+          onNavigateToSettings={() => {
+            console.log('Navigate to settings...');
+            // TODO: Přidáme navigaci na settings později
+          }}
+        />
+      </CalendarProvider>
 
-          <button
-            onClick={() => {
-              document.documentElement.classList.toggle('dark-theme');
-              const isDark =
-                document.documentElement.classList.contains('dark-theme');
-              localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            }}
-            className="btn btn-modern btn-theme-toggle"
-            title="Přepnout tmavý/světlý režim"
-          >
-            <span className="btn-icon">🌙</span>
-          </button>
-
-          <button onClick={logout} className="btn btn-modern btn-logout">
-            <span className="btn-icon">↗</span>
-            Odhlásit
-          </button>
-        </div>
-      </header>
-
-      {/* Dashboard Header */}
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <div>
-            <h1 className="dashboard-title">Smart Home Dashboard</h1>
-            <p className="dashboard-subtitle">Ovládejte svůj chytrý domov</p>
-          </div>
-          <div className="dashboard-quick-actions">
-            <button className="quick-action-btn" title="Přidat zařízení">
-              <span>➕</span>
-              Přidat zařízení
-            </button>
-            <button className="quick-action-btn" title="Synchronizovat">
-              <span>🔄</span>
-              Synchronizovat
-            </button>
-          </div>
-        </div>
-
-        <RoomSelector onCreateRoom={() => console.log('create room')} />
-
-        <div className="dashboard-grid">
-          {/* Weather card */}
-          <WeatherMiniWidget
-            className="dashboard-weather-widget"
-            onExpand={() => {
-              // TODO: Otevřít weather modal
-              console.log('Expanding weather widget...');
-            }}
-          />
-
-          {/* Devices card */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h3 className="card-title">Zařízení v místnosti</h3>
-              <span className="card-icon">🏠</span>
-            </div>
-            <div className="device-tiles">
-              {devices.map((device) => (
-                <div
-                  key={device.id}
-                  className={`device-tile ${device.online ? 'active' : ''}`}
-                >
-                  <span className="device-tile-icon">
-                    {getDeviceIcon(device)}
-                  </span>
-                  <h4 className="device-tile-name">{device.name}</h4>
-                  <p className="device-tile-status">
-                    {device.online ? 'Online' : 'Offline'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Family info card
-          <div className="dashboard-card family-card">
-            <div className="card-header">
-              <span className="card-icon">👨‍👩‍👧‍👦</span>
-            </div>
-            <div className="family-event">
-              <div className="event-info">
-                <h4>Narozeniny - Jana</h4>
-                <p>Zítra</p>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Kalendář Widget */}
-          <CalendarProvider>
-            <div className="calendar-section">
-              <CalendarMiniWidget
-                familyMembers={[
-                  { id: '1', name: 'Mamka', color: '#ff6b6b', icon: '❤️' },
-                  { id: '2', name: 'Taťka', color: '#4ecdc4', icon: '🦸‍♂️' },
-                  { id: '3', name: 'Johanka', color: '#45b7d1', icon: '🎨' },
-                  { id: '4', name: 'Jareček', color: '#96ceb4', icon: '📱' },
-                ]}
-              />
-            </div>
-          </CalendarProvider>
-
-          {/* Cameras card */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h3 className="card-title">Kamery</h3>
-              <span className="card-icon">📹</span>
-            </div>
-            <div className="cameras-grid">
-              <div className="camera-preview">Hlavní vchod</div>
-              <div className="camera-preview">Zahrada</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Kompaktní navigace */}
-      <div className="compact-navigation">
-        <div className="nav-quick-tabs">
-          <button
-            onClick={() => setCurrentView('all')}
-            className={`nav-quick-tab ${currentView === 'all' ? 'active' : ''}`}
-          >
-            <span>📋</span>
-            Všechna zařízení
-            <span className="nav-badge">{devicesData.length}</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('unassigned')}
-            className={`nav-quick-tab ${
-              currentView === 'unassigned' ? 'active' : ''
-            }`}
-          >
-            <span>📦</span>
-            Nepřiřazená
-            <span className="nav-badge">
-              {getUnassignedDevices(devicesData).length}
-            </span>
-          </button>
-
-          {selectedRoom && (
-            <button
-              onClick={() => setCurrentView('room')}
-              className={`nav-quick-tab ${
-                currentView === 'room' ? 'active' : ''
-              }`}
-            >
-              <span>🏠</span>
-              {selectedRoom.name}
-              <span className="nav-badge">
-                {getRoomDevices(selectedRoom.id, devicesData).length}
-              </span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Content Container */}
-      <div className="devices-container">
-        {currentView === '2d-view' ? (
-          selectedRoom ? (
-            <RoomVisualization2D
-              room={selectedRoom}
-              devices={devicesData}
-              onDevicePositionChange={handleDevicePositionChange}
-              onDeviceSelect={(device: TuyaDevice | null) => {
-                console.log('Device selected:', device);
-              }}
-            />
-          ) : (
-            <div className="no-devices">
-              <h3>Vyberte místnost pro 2D pohled</h3>
-              <p>
-                Pro zobrazení 2D vizualizace vyberte místnost v levém panelu.
-              </p>
-            </div>
-          )
-        ) : currentView === '3d-view' ? (
-          selectedRoom ? (
-            <>
-              {console.log('=== 3D VIEW DEBUG ===', {
-                selectedRoom: selectedRoom,
-                allDevices: devicesData.length,
-                roomDevices: getRoomDevices(selectedRoom.id, devicesData),
-                devicesWithRoomId: devicesData.filter(
-                  (d) => d.roomId === selectedRoom.id
-                ),
-              })}
-              <RoomVisualization3D
-                room={selectedRoom}
-                devices={devicesData}
-                onDevicePositionChange={(deviceId, position) =>
-                  handleDevicePositionChange(deviceId, {
-                    x: position.x,
-                    y: position.z,
-                  })
-                }
-                onDeviceSelect={(device: TuyaDevice | null) => {
-                  console.log('3D Device selected:', device);
-                }}
-              />
-            </>
-          ) : (
-            <div className="no-devices">
-              <h3>Vyberte místnost pro 3D pohled</h3>
-              <p>
-                Pro zobrazení 3D vizualizace vyberte místnost v levém panelu.
-              </p>
-            </div>
-          )
-        ) : displayedDevices.length === 0 ? (
-          <main className="content-area">
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                {currentView === 'room' && selectedRoom
-                  ? selectedRoom.icon || '🏠'
-                  : currentView === 'unassigned'
-                  ? '📦'
-                  : '📋'}
-              </div>
-              <h3 className="empty-state-title">
-                {currentView === 'room' && selectedRoom
-                  ? 'Místnost je prázdná'
-                  : currentView === 'unassigned'
-                  ? 'Vše je organizované'
-                  : 'Žádná zařízení'}
-              </h3>
-              <p className="empty-state-description">
-                {currentView === 'room' && selectedRoom
-                  ? `V místnosti "${selectedRoom.name}" nejsou žádná zařízení. Přidejte zařízení pomocí správy místností.`
-                  : currentView === 'unassigned'
-                  ? 'Všechna zařízení jsou přiřazená do místností. Skvělá práce s organizací!'
-                  : 'Proveďte synchronizaci nebo zkontrolujte připojení k Tuya Cloud.'}
-              </p>
-              <div className="empty-state-actions">
-                {currentView === 'room' ? (
-                  <button
-                    onClick={() => setCurrentView('all')}
-                    className="btn btn-modern btn-primary"
-                  >
-                    <span className="btn-icon">📋</span>
-                    Zobrazit všechna zařízení
-                  </button>
-                ) : (
-                  <button
-                    onClick={syncTuyaWithFirebase}
-                    className="btn btn-modern btn-primary"
-                  >
-                    <span className="btn-icon">🔄</span>
-                    Synchronizovat
-                  </button>
-                )}
-              </div>
-            </div>
-          </main>
-        ) : (
-          <main className="content-area">
-            <div className="content-header">
-              <h2 className="content-title">
-                {currentView === 'room' && selectedRoom
-                  ? `${selectedRoom.icon} ${selectedRoom.name}`
-                  : currentView === 'unassigned'
-                  ? '📦 Nepřiřazená zařízení'
-                  : currentView === 'all'
-                  ? '📋 Všechna zařízení'
-                  : 'Zařízení'}
-              </h2>
-              <div className="content-stats">
-                <span className="stats-item">
-                  <span className="stats-value">{displayedDevices.length}</span>
-                  <span className="stats-label">zařízení</span>
-                </span>
-                <span className="stats-item">
-                  <span className="stats-value">
-                    {displayedDevices.filter((d) => d.online).length}
-                  </span>
-                  <span className="stats-label">online</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="devices-modern-grid">
-              {isLoading
-                ? Array.from({ length: 4 }).map((_, index) => (
-                    <div key={`skeleton-${index}`} className="device-skeleton">
-                      <div className="skeleton-header">
-                        <div className="skeleton-badge"></div>
-                        <div className="skeleton-status"></div>
-                      </div>
-                      <div className="skeleton-title"></div>
-                      <div className="skeleton-select"></div>
-                      <div className="skeleton-button"></div>
-                      <div className="skeleton-footer"></div>
-                    </div>
-                  ))
-                : displayedDevices.map((device) => (
-                    <DeviceCard
-                      key={device.id}
-                      device={device}
-                      isControlling={isControlling === device.id}
-                      onControl={controlDevice}
-                      onToggleSwitch={toggleSwitch}
-                      className="device-modern-card"
-                      rooms={rooms}
-                      onRoomChange={handleRoomChange}
-                    />
-                  ))}
-            </div>
-          </main>
-        )}
-      </div>
+      <div id="modal-root"></div>
 
       {/* Modern Notification */}
       {notification && (

@@ -2,7 +2,6 @@
 import { MOCK_TIMETABLE, MOCK_LUNCH_MENU } from './bakalariMockData';
 
 // Konfigurace
-// Konfigurace
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 const BAKALARI_SERVER_URL = import.meta.env.VITE_BAKALARI_SERVER || 'https://zszator.bakalari.cz';
 const BAKALARI_USERNAME = import.meta.env.VITE_BAKALARI_USERNAME;
@@ -38,10 +37,8 @@ interface LunchMenu {
 
 class BakalariAPI {
   private accessToken: string | null = null;
-//  private refreshToken: string | null = null;
   private tokenExpiry: number = 0;
 
-  // Získání access tokenu
   async login(): Promise<boolean> {
     try {
       const params = new URLSearchParams({
@@ -50,12 +47,9 @@ class BakalariAPI {
         username: BAKALARI_USERNAME || '',
         password: BAKALARI_PASSWORD || '',
       });
-  
+
       console.log('🔐 Pokus o přihlášení do Bakalářů...');
-      console.log('URL:', `${BAKALARI_BASE_URL}/login`);
-      console.log('Username nastaven:', !!BAKALARI_USERNAME);
-      console.log('Password nastaven:', !!BAKALARI_PASSWORD);
-  
+
       const response = await fetch(`${BAKALARI_SERVER_URL}/api/login`, {
         method: 'POST',
         headers: {
@@ -63,27 +57,24 @@ class BakalariAPI {
         },
         body: params.toString(),
       });
-  
+
       console.log('Response status:', response.status);
-  
-      // PŘIDÁNO: Zobraz, co server vrací
+
       const responseText = await response.text();
-      console.log('📄 Response text:', responseText.substring(0, 500)); // První 500 znaků
-  
+      console.log('📄 Response text:', responseText.substring(0, 500));
+
       if (!response.ok) {
         console.error('Bakaláři login failed:', response.status, responseText);
         return false;
       }
-  
-      // Zkus parsovat JSON
+
       try {
         const data = JSON.parse(responseText);
         console.log('✅ JSON parsed successfully:', data);
         
         this.accessToken = data.access_token;
-     //   this.refreshToken = data.refresh_token;
         this.tokenExpiry = Date.now() + data.expires_in * 1000;
-  
+
         console.log('✅ Bakaláři login successful');
         return true;
       } catch (parseError) {
@@ -97,7 +88,6 @@ class BakalariAPI {
     }
   }
 
-  // Kontrola a refresh tokenu
   private async ensureValidToken(): Promise<boolean> {
     if (this.accessToken && Date.now() < this.tokenExpiry - 60000) {
       return true;
@@ -105,77 +95,68 @@ class BakalariAPI {
     return await this.login();
   }
 
-  // Získání rozvrhu
-// Získání rozvrhu
-async getTimetable(): Promise<TimetableDay[]> {
-  // Pokud používáme mock data, vrať je okamžitě
-  if (USE_MOCK_DATA) {
-    console.log('📦 Používám MOCK data pro rozvrh');
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(MOCK_TIMETABLE), 500); // Simulace zpoždění
-    });
-  }
+  async getTimetable(): Promise<TimetableDay[]> {
+    if (USE_MOCK_DATA) {
+      console.log('📦 Používám MOCK data pro rozvrh');
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(MOCK_TIMETABLE), 500);
+      });
+    }
 
-  // Reálné API volání
-  const hasToken = await this.ensureValidToken();
-  if (!hasToken) throw new Error('Login failed');
+    const hasToken = await this.ensureValidToken();
+    if (!hasToken) throw new Error('Login failed');
 
-  try {
+    try {
       const response = await fetch(`${BAKALARI_SERVER_URL}/api/3/timetable/actual`, {
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
         },
       });
 
-    if (!response.ok) {
-      console.error('Timetable fetch failed:', response.status);
+      if (!response.ok) {
+        console.error('Timetable fetch failed:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      return this.parseTimetable(data);
+    } catch (error) {
+      console.error('Bakaláři timetable error:', error);
       return [];
     }
-
-    const data = await response.json();
-    return this.parseTimetable(data);
-  } catch (error) {
-    console.error('Bakaláři timetable error:', error);
-    return [];
-  }
-}
-
-// Získání jídelníčku
-async getLunchMenu(): Promise<LunchMenu[]> {
-  // Pokud používáme mock data, vrať je okamžitě
-  if (USE_MOCK_DATA) {
-    console.log('📦 Používám MOCK data pro jídelníček');
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(MOCK_LUNCH_MENU), 500); // Simulace zpoždění
-    });
   }
 
-  // Reálné API volání
-  const hasToken = await this.ensureValidToken();
-  if (!hasToken) throw new Error('Login failed');
-
-  try {
-    const response = await fetch(`${BAKALARI_BASE_URL}/komens`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('Lunch menu fetch failed:', response.status);
-      return [];
+  async getLunchMenu(): Promise<LunchMenu[]> {
+    if (USE_MOCK_DATA) {
+      console.log('📦 Používám MOCK data pro jídelníček');
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(MOCK_LUNCH_MENU), 500);
+      });
     }
 
-    const data = await response.json();
-    return this.parseLunchMenu(data);
-  } catch (error) {
-    console.error('Bakaláři lunch menu error:', error);
-    return [];
-  }
-}
+    const hasToken = await this.ensureValidToken();
+    if (!hasToken) throw new Error('Login failed');
 
-  // Parsování rozvrhu
+    try {
+      const response = await fetch(`${BAKALARI_SERVER_URL}/api/3/komens`, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Lunch menu fetch failed:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      return this.parseLunchMenu(data);
+    } catch (error) {
+      console.error('Bakaláři lunch menu error:', error);
+      return [];
+    }
+  }
+
   private parseTimetable(data: any): TimetableDay[] {
     if (!data || !data.Days) return [];
 
@@ -184,7 +165,7 @@ async getLunchMenu(): Promise<LunchMenu[]> {
       dayOfWeek: day.DayOfWeek,
       dayDescription: day.DayDescription,
       lessons: (day.Atoms || [])
-        .filter((atom: any) => atom.SubjectText) // Jen hodiny s předmětem
+        .filter((atom: any) => atom.SubjectText)
         .map((atom: any) => ({
           subjecttext: atom.SubjectText || '',
           teacher: atom.TeacherAbbrev || '',
@@ -198,7 +179,6 @@ async getLunchMenu(): Promise<LunchMenu[]> {
     }));
   }
 
-  // Parsování jídelníčku
   private parseLunchMenu(data: any): LunchMenu[] {
     if (!data || !data.Menus) return [];
 
@@ -214,7 +194,3 @@ async getLunchMenu(): Promise<LunchMenu[]> {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
-
-
-
-

@@ -2,10 +2,9 @@
 import { MOCK_TIMETABLE, MOCK_LUNCH_MENU } from './bakalariMockData';
 
 // Konfigurace
+// Konfigurace
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 const BAKALARI_SERVER_URL = import.meta.env.VITE_BAKALARI_SERVER || 'https://zszator.bakalari.cz';
-const BAKALARI_BASE_URL = `${BAKALARI_SERVER_URL}/api/3`;
-
 const BAKALARI_USERNAME = import.meta.env.VITE_BAKALARI_USERNAME;
 const BAKALARI_PASSWORD = import.meta.env.VITE_BAKALARI_PASSWORD;
 
@@ -57,7 +56,7 @@ class BakalariAPI {
       console.log('Username nastaven:', !!BAKALARI_USERNAME);
       console.log('Password nastaven:', !!BAKALARI_PASSWORD);
   
-      const response = await fetch(`${BAKALARI_BASE_URL}/login`, {
+      const response = await fetch(`${BAKALARI_SERVER_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -122,12 +121,11 @@ async getTimetable(): Promise<TimetableDay[]> {
   if (!hasToken) throw new Error('Login failed');
 
   try {
-    const response = await fetch(`${BAKALARI_BASE_URL}/timetable/actual`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+      const response = await fetch(`${BAKALARI_SERVER_URL}/api/3/timetable/actual`, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
 
     if (!response.ok) {
       console.error('Timetable fetch failed:', response.status);
@@ -216,6 +214,7 @@ async getLunchMenu(): Promise<LunchMenu[]> {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 
 
 

@@ -164,8 +164,7 @@ class BakalariAPI {
   }
 
  private parseTimetable(data: any): TimetableDay[] {
-  console.log('🔍 RAW timetable data:', JSON.stringify(data, null, 2));
-  
+ 
   if (!data || !data.Days) return [];
 
   // Mapa času z Hours
@@ -176,16 +175,22 @@ class BakalariAPI {
     ])
   );
 
+// ✅ MAPA PŘEDMĚTŮ - Id → Name
+const subjectsMap = new Map<string, string>(
+  (data.Subjects || []).map((subject: any) => [
+    subject.Id,
+    subject.Name || subject.Abbrev || subject.Id
+  ])
+);
+
   // Mapa názvů dnů
   const dayNames = ['', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
 
   return data.Days.map((day: any, dayIndex: number) => {
-    // Získej datum z prvního Atomu (pokud existuje Change)
     let dayDate = '';
     if (day.Atoms.length > 0 && day.Atoms[0].Change?.Day) {
       dayDate = day.Atoms[0].Change.Day;
     } else {
-      // Vypočítej datum - aktuální pondělí + dayIndex
       const today = new Date();
       const currentDay = today.getDay();
       const monday = new Date(today);
@@ -202,8 +207,11 @@ class BakalariAPI {
           const hourInfo = hoursMap.get(atom.HourId);
           if (!hourInfo) return null;
 
+          // ✅ PŘEKLAD SubjectID → SubjectName
+          const subjectName = subjectsMap.get(atom.SubjectId) || atom.SubjectId || 'Neznámý předmět';
+
           return {
-            subjecttext: atom.Theme || atom.SubjectId || 'Neznámý předmět',
+            subjecttext: subjectName,
             teacher: atom.TeacherId || '',
             room: atom.RoomId || '',
             begintime: hourInfo.beginTime,
@@ -234,7 +242,6 @@ class BakalariAPI {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
-
 
 
 

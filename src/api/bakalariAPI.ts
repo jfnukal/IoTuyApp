@@ -40,7 +40,7 @@ interface LunchMenu {
 
 class BakalariAPI {
   private accessToken: string | null = null;
-  private refreshToken: string | null = null;
+//  private refreshToken: string | null = null;
   private tokenExpiry: number = 0;
 
   // Získání access tokenu
@@ -217,3 +217,4 @@ async getLunchMenu(): Promise<LunchMenu[]> {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+

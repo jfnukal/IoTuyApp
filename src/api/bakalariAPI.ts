@@ -158,6 +158,7 @@ class BakalariAPI {
   }
 
   private parseTimetable(data: any): TimetableDay[] {
+      console.log('🔍 RAW timetable data:', JSON.stringify(data, null, 2));
     if (!data || !data.Days) return [];
 
     return data.Days.map((day: any) => ({
@@ -194,3 +195,4 @@ class BakalariAPI {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+

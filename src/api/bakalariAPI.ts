@@ -35,6 +35,12 @@ interface LunchMenu {
   }[];
 }
 
+interface HourInfo {
+  beginTime: string;
+  endTime: string;
+  caption: string;
+}
+
 class BakalariAPI {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
@@ -163,7 +169,7 @@ class BakalariAPI {
   if (!data || !data.Days) return [];
 
   // Mapa času z Hours
-  const hoursMap = new Map(
+  const hoursMap = new Map<number, HourInfo>(
     data.Hours.map((hour: any) => [
       hour.Id,
       { beginTime: hour.BeginTime, endTime: hour.EndTime, caption: hour.Caption }
@@ -228,6 +234,7 @@ class BakalariAPI {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 
 
 

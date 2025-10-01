@@ -157,42 +157,62 @@ class BakalariAPI {
     }
   }
 
-  private parseTimetable(data: any): TimetableDay[] {
-      console.log('🔍 RAW timetable data:', JSON.stringify(data, null, 2));
-    if (!data || !data.Days) return [];
+ private parseTimetable(data: any): TimetableDay[] {
+  console.log('🔍 RAW timetable data:', JSON.stringify(data, null, 2));
+  
+  if (!data || !data.Days) return [];
 
-    return data.Days.map((day: any) => ({
-      date: day.Date,
-      dayOfWeek: day.DayOfWeek,
-      dayDescription: day.DayDescription,
+  // Mapa času z Hours
+  const hoursMap = new Map(
+    data.Hours.map((hour: any) => [
+      hour.Id,
+      { beginTime: hour.BeginTime, endTime: hour.EndTime, caption: hour.Caption }
+    ])
+  );
+
+  // Mapa názvů dnů
+  const dayNames = ['', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+
+  return data.Days.map((day: any, dayIndex: number) => {
+    // Získej datum z prvního Atomu (pokud existuje Change)
+    let dayDate = '';
+    if (day.Atoms.length > 0 && day.Atoms[0].Change?.Day) {
+      dayDate = day.Atoms[0].Change.Day;
+    } else {
+      // Vypočítej datum - aktuální pondělí + dayIndex
+      const today = new Date();
+      const currentDay = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - currentDay + 1 + dayIndex);
+      dayDate = monday.toISOString();
+    }
+
+    return {
+      date: dayDate,
+      dayOfWeek: dayIndex + 1,
+      dayDescription: dayNames[dayIndex + 1] || '',
       lessons: (day.Atoms || [])
-        .filter((atom: any) => atom.SubjectText)
-        .map((atom: any) => ({
-          subjecttext: atom.SubjectText || '',
-          teacher: atom.TeacherAbbrev || '',
-          room: atom.RoomAbbrev || '',
-          begintime: atom.BeginTime || '',
-          endtime: atom.EndTime || '',
-          theme: atom.Theme || '',
-          notice: atom.Notice || '',
-          change: atom.Change?.ChangeType || '',
-        })),
-    }));
-  }
+        .map((atom: any) => {
+          const hourInfo = hoursMap.get(atom.HourId);
+          if (!hourInfo) return null;
 
-  private parseLunchMenu(data: any): LunchMenu[] {
-    if (!data || !data.Menus) return [];
-
-    return data.Menus.map((menu: any) => ({
-      date: menu.Date,
-      meals: (menu.Meals || []).map((meal: any) => ({
-        name: meal.Name || '',
-        allergens: meal.Allergens || [],
-      })),
-    }));
-  }
+          return {
+            subjecttext: atom.Theme || atom.SubjectId || 'Neznámý předmět',
+            teacher: atom.TeacherId || '',
+            room: atom.RoomId || '',
+            begintime: hourInfo.beginTime,
+            endtime: hourInfo.endTime,
+            theme: atom.Theme || '',
+            notice: atom.Notice || '',
+            change: atom.Change?.ChangeType || '',
+          };
+        })
+        .filter((lesson: any) => lesson !== null),
+    };
+  });
 }
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 

@@ -212,7 +212,22 @@ class BakalariAPI {
   });
 }
 
+    // Parsování jídelníčku
+  private parseLunchMenu(data: any): LunchMenu[] {
+    if (!data || !data.Menus) return [];
+
+    return data.Menus.map((menu: any) => ({
+      date: menu.Date,
+      meals: (menu.Meals || []).map((meal: any) => ({
+        name: meal.Name || '',
+        allergens: meal.Allergens || [],
+      })),
+    }));
+  }
+}
+
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 
 

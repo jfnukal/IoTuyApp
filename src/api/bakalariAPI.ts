@@ -83,7 +83,7 @@ class BakalariAPI {
         console.log('✅ JSON parsed successfully:', data);
         
         this.accessToken = data.access_token;
-        this.refreshToken = data.refresh_token;
+     //   this.refreshToken = data.refresh_token;
         this.tokenExpiry = Date.now() + data.expires_in * 1000;
   
         console.log('✅ Bakaláři login successful');
@@ -217,4 +217,5 @@ async getLunchMenu(): Promise<LunchMenu[]> {
 
 export const bakalariAPI = new BakalariAPI();
 export type { TimetableLesson, TimetableDay, LunchMenu };
+
 

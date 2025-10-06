@@ -31,6 +31,16 @@ export const handler = async (event, context) => {
     console.log('🚀 Spouštím Puppeteer...');
     
     // Optimalizace pro Netlify
+    let executablePath;
+    try {
+      executablePath = await chromium.executablePath();
+      console.log('✅ Chromium path:', executablePath);
+    } catch (error) {
+      console.error('❌ Chromium path error:', error);
+      // Fallback - zkus najít chromium jinde
+      executablePath = '/opt/chromium' || process.env.CHROME_EXECUTABLE_PATH;
+    }
+    
     browser = await puppeteer.launch({
       args: [
         ...chromium.args,
@@ -38,10 +48,13 @@ export const handler = async (event, context) => {
         '--disable-dev-shm-usage',
         '--disable-setuid-sandbox',
         '--no-sandbox',
+        '--single-process',
+        '--no-zygote',
       ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      executablePath: executablePath,
+      headless: true,
+      ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();

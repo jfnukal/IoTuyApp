@@ -82,10 +82,8 @@ class FamilyMessagingService {
       };
 
       const docRef = await addDoc(messagesRef, newMessage);
-      console.log('Message sent:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error sending message:', error);
       throw new Error('Nepodařilo se poslat zprávu');
     }
   }
@@ -120,7 +118,6 @@ class FamilyMessagingService {
     try {
       const messageRef = doc(db, 'familyMessages', messageId);
       await deleteDoc(messageRef);
-      console.log('Message deleted:', messageId);
     } catch (error) {
       console.error('Error deleting message:', error);
       throw new Error('Nepodařilo se smazat zprávu');
@@ -138,13 +135,13 @@ class FamilyMessagingService {
       );
 
       const snapshot = await getDocs(q);
-      
+
       if (snapshot.empty) {
         return 0;
       }
 
       // Filtruj přečtené zprávy
-      const readMessages = snapshot.docs.filter(doc => {
+      const readMessages = snapshot.docs.filter((doc) => {
         const data = doc.data() as FamilyMessage;
         return data.readBy.includes(userId);
       });
@@ -155,12 +152,11 @@ class FamilyMessagingService {
 
       // Smazat v batch
       const batch = writeBatch(db);
-      readMessages.forEach(doc => {
+      readMessages.forEach((doc) => {
         batch.delete(doc.ref);
       });
-      
+
       await batch.commit();
-      console.log(`Deleted ${readMessages.length} read messages`);
       return readMessages.length;
     } catch (error) {
       console.error('Error deleting read messages:', error);
@@ -274,7 +270,6 @@ class FamilyMessagingService {
       });
 
       await batch.commit();
-      console.log(`Deleted ${snapshot.docs.length} old messages`);
       return snapshot.docs.length;
     } catch (error) {
       console.error('Error deleting old messages:', error);
@@ -284,8 +279,6 @@ class FamilyMessagingService {
 
   // Spustit cleanup job (volat pravidelně)
   async runCleanup(daysToKeep: number = 7): Promise<void> {
-    console.log(`Running message cleanup (keeping last ${daysToKeep} days)...`);
-
     let totalDeleted = 0;
     let batchDeleted = 0;
 
@@ -293,8 +286,6 @@ class FamilyMessagingService {
       batchDeleted = await this.deleteOldMessages(daysToKeep);
       totalDeleted += batchDeleted;
     } while (batchDeleted > 0);
-
-    console.log(`Cleanup complete. Deleted ${totalDeleted} messages.`);
   }
 }
 

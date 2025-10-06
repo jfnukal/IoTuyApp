@@ -2,7 +2,8 @@
  * @file Obsahuje funkce pro komunikaci s API pro dopravní spojení.
  */
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_TRANSPORT === 'true';
+/** const USE_MOCK = import.meta.env.VITE_USE_MOCK_TRANSPORT === 'true';
+const USE_MOCK = true; */
 
 /**
  * Reprezentuje jedno nalezené dopravní spojení.
@@ -57,3 +58,4 @@ export async function findConnection(
     throw error;
   }
 }
+

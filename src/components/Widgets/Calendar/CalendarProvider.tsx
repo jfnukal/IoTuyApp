@@ -339,6 +339,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
         const parsedEvents = firebaseEvents.map((e: any) => ({
           ...e,
           date: new Date(e.date),
+          familyMember: e.familyMemberId || e.familyMember, // Oprava názvu pole
         }));
         setEvents(parsedEvents);
       } catch (error) {
@@ -352,10 +353,13 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
       const unsubscribe = calendarFirebaseService.subscribeToEvents(
         currentUser.uid,
         (firebaseEvents: any[]) => {
+          console.log('[CalendarProvider] Firebase listener received:', firebaseEvents.length, 'events');
           const parsedEvents = firebaseEvents.map((e: any) => ({
             ...e,
             date: new Date(e.date),
+            familyMember: e.familyMemberId || e.familyMember, // Oprava názvu pole
           }));
+          console.log('[CalendarProvider] Setting events:', parsedEvents);
           setEvents(parsedEvents);
         }
       );

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { CalendarEvent, EventType, ReminderType, FamilyMember } from './types';
+import type {
+  CalendarEvent,
+  EventType,
+  ReminderType,
+  FamilyMember,
+} from './types';
 
 interface EventFormProps {
   event: CalendarEvent | null;
@@ -18,24 +23,63 @@ const EventForm: React.FC<EventFormProps> = ({
   onSave,
   onDelete,
   onClose,
-  defaultMemberId
+  defaultMemberId,
 }) => {
+  // DEBUG
+  console.log('[EventForm] Props:', {
+    event: event?.title,
+    date,
+    isToday: date?.toDateString() === new Date().toDateString(),
+  });
+  // Funkce pro zaokrouhlení času nahoru na nejbližších 15 minut
+  const getRoundedTime = () => {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 15) * 15;
+
+    if (roundedMinutes >= 60) {
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+    } else {
+      now.setMinutes(roundedMinutes);
+    }
+
+    return `${now.getHours().toString().padStart(2, '0')}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+  };
+
+  // Funkce pro čas +30 minut od zaokrouhleného času
+  const getEndTime = (startTime: string) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes + 30);
+    return `${date.getHours().toString().padStart(2, '0')}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+  };
+
+  const roundedTime = getRoundedTime();
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: date || new Date(),
-    time: '',
-    endTime: '',
+    date: new Date(), // VŽDY dnešní datum v lokálním čase
+    time: roundedTime, // Zaokrouhlený čas
+    endTime: getEndTime(roundedTime), // +30 minut
     type: 'personal' as EventType,
-    familyMember: '',
+    familyMember: defaultMemberId || '',
     color: '#667eea',
     reminder: 'none' as ReminderType,
-    isAllDay: false
+    isAllDay: false,
   });
 
-  // Naplň formulář při editaci
+  // Naplň formulář při editaci NEBO nastav dnešní datum při vytváření
   useEffect(() => {
     if (event) {
+      // EDITACE - naplň data z existující události
       setFormData({
         title: event.title,
         description: event.description || '',
@@ -46,21 +90,34 @@ const EventForm: React.FC<EventFormProps> = ({
         familyMember: event.familyMember || '',
         color: event.color || '#667eea',
         reminder: event.reminder || 'none',
-        isAllDay: event.isAllDay || false
+        isAllDay: event.isAllDay || false,
       });
-    }
-  }, [event]);
+    } else {
+      // NOVÁ UDÁLOST - nastav aktuální datum a čas
+      const now = new Date();
+      const roundedStartTime = getRoundedTime();
+      const calculatedEndTime = getEndTime(roundedStartTime);
 
- // Efekt pro nastavení výchozího člena při vytváření nové události
- useEffect(() => {
-  // Spustí se jen když vytváříme novou událost (event je null) a máme defaultMemberId
-  if (!event && defaultMemberId) {
-    setFormData(prev => ({
-      ...prev,
-      familyMember: defaultMemberId
-    }));
-  }
-}, [event, defaultMemberId]); 
+      setFormData((prev) => ({
+        ...prev,
+        date: now, // Dnešní datum v lokálním čase
+        time: roundedStartTime, // Zaokrouhlený čas
+        endTime: calculatedEndTime, // +30 minut
+        familyMember: defaultMemberId || '',
+      }));
+    }
+  }, [event, date, defaultMemberId]);
+
+  // Efekt pro nastavení výchozího člena při vytváření nové události
+  useEffect(() => {
+    // Spustí se jen když vytváříme novou událost (event je null) a máme defaultMemberId
+    if (!event && defaultMemberId) {
+      setFormData((prev) => ({
+        ...prev,
+        familyMember: defaultMemberId,
+      }));
+    }
+  }, [event, defaultMemberId]);
 
   // Typy událostí
   const eventTypes = [
@@ -68,7 +125,7 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: 'work', label: 'Pracovní', icon: '💼' },
     { value: 'family', label: 'Rodina', icon: '👨‍👩‍👧‍👦' },
     { value: 'birthday', label: 'Narozeniny', icon: '🎂' },
-    { value: 'reminder', label: 'Připomínka', icon: '⏰' }
+    { value: 'reminder', label: 'Připomínka', icon: '⏰' },
   ];
 
   // Možnosti připomenutí
@@ -81,15 +138,27 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: '1day', label: '1 den před' },
     { value: '1week', label: '1 týden před' },
     { value: 'email', label: 'Email' },
-    { value: 'push', label: 'Push notifikace' }
+    { value: 'push', label: 'Push notifikace' },
   ];
 
   // Předefinované barvy
   const colorOptions = [
-    '#667eea', '#764ba2', '#ff6b6b', '#4ecdc4',
-    '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3',
-    '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
-    '#8395a7', '#10ac84', '#ee5a24', '#0abde3'
+    '#667eea',
+    '#764ba2',
+    '#ff6b6b',
+    '#4ecdc4',
+    '#45b7d1',
+    '#96ceb4',
+    '#feca57',
+    '#ff9ff3',
+    '#54a0ff',
+    '#5f27cd',
+    '#00d2d3',
+    '#ff9f43',
+    '#8395a7',
+    '#10ac84',
+    '#ee5a24',
+    '#0abde3',
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -100,14 +169,14 @@ const EventForm: React.FC<EventFormProps> = ({
       ...formData,
       date: formData.date,
       time: formData.isAllDay ? undefined : formData.time,
-      endTime: formData.isAllDay ? undefined : formData.endTime
+      endTime: formData.isAllDay ? undefined : formData.endTime,
     });
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -156,7 +225,9 @@ const EventForm: React.FC<EventFormProps> = ({
               type="date"
               className="form-input"
               value={formData.date.toISOString().split('T')[0]}
-              onChange={(e) => handleInputChange('date', new Date(e.target.value))}
+              onChange={(e) =>
+                handleInputChange('date', new Date(e.target.value))
+              }
             />
           </div>
 
@@ -166,7 +237,9 @@ const EventForm: React.FC<EventFormProps> = ({
               <input
                 type="checkbox"
                 checked={formData.isAllDay}
-                onChange={(e) => handleInputChange('isAllDay', e.target.checked)}
+                onChange={(e) =>
+                  handleInputChange('isAllDay', e.target.checked)
+                }
                 style={{ marginRight: '8px' }}
               />
               Celodenní událost
@@ -203,9 +276,11 @@ const EventForm: React.FC<EventFormProps> = ({
             <select
               className="form-select"
               value={formData.type}
-              onChange={(e) => handleInputChange('type', e.target.value as EventType)}
+              onChange={(e) =>
+                handleInputChange('type', e.target.value as EventType)
+              }
             >
-              {eventTypes.map(type => (
+              {eventTypes.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.icon} {type.label}
                 </option>
@@ -220,20 +295,30 @@ const EventForm: React.FC<EventFormProps> = ({
               <div className="family-member-selector">
                 <button
                   type="button"
-                  className={`family-member-option ${!formData.familyMember ? 'selected' : ''}`}
+                  className={`family-member-option ${
+                    !formData.familyMember ? 'selected' : ''
+                  }`}
                   onClick={() => handleInputChange('familyMember', '')}
                 >
                   Nikdo
                 </button>
-                {familyMembers.map(member => (
+                {familyMembers.map((member) => (
                   <button
                     key={member.id}
                     type="button"
-                    className={`family-member-option ${formData.familyMember === member.id ? 'selected' : ''}`}
-                    style={{ 
-                      backgroundColor: formData.familyMember === member.id ? member.color : 'transparent',
+                    className={`family-member-option ${
+                      formData.familyMember === member.id ? 'selected' : ''
+                    }`}
+                    style={{
+                      backgroundColor:
+                        formData.familyMember === member.id
+                          ? member.color
+                          : 'transparent',
                       borderColor: member.color,
-                      color: formData.familyMember === member.id ? 'white' : member.color
+                      color:
+                        formData.familyMember === member.id
+                          ? 'white'
+                          : member.color,
                     }}
                     onClick={() => handleInputChange('familyMember', member.id)}
                   >
@@ -248,11 +333,13 @@ const EventForm: React.FC<EventFormProps> = ({
           <div className="form-group">
             <label className="form-label">Barva</label>
             <div className="color-picker">
-              {colorOptions.map(color => (
+              {colorOptions.map((color) => (
                 <button
                   key={color}
                   type="button"
-                  className={`color-option ${formData.color === color ? 'selected' : ''}`}
+                  className={`color-option ${
+                    formData.color === color ? 'selected' : ''
+                  }`}
                   style={{ backgroundColor: color }}
                   onClick={() => handleInputChange('color', color)}
                   title={color}
@@ -265,12 +352,16 @@ const EventForm: React.FC<EventFormProps> = ({
           <div className="form-group">
             <label className="form-label">Připomínka</label>
             <div className="reminder-options">
-              {reminderOptions.map(option => (
+              {reminderOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  className={`reminder-option ${formData.reminder === option.value ? 'selected' : ''}`}
-                  onClick={() => handleInputChange('reminder', option.value as ReminderType)}
+                  className={`reminder-option ${
+                    formData.reminder === option.value ? 'selected' : ''
+                  }`}
+                  onClick={() =>
+                    handleInputChange('reminder', option.value as ReminderType)
+                  }
                 >
                   {option.label}
                 </button>
@@ -289,17 +380,10 @@ const EventForm: React.FC<EventFormProps> = ({
                 🗑️ Smazat
               </button>
             )}
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={onClose}
-            >
+            <button type="button" className="btn btn-outline" onClick={onClose}>
               Zrušit
             </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-            >
+            <button type="submit" className="btn btn-primary">
               💾 {event ? 'Uložit' : 'Vytvořit'}
             </button>
           </div>

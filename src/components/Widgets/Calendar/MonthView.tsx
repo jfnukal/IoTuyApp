@@ -10,6 +10,7 @@ interface MonthViewProps {
   currentDate: Date;
   onDateClick: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
+  onDeleteEvent: (eventId: string) => void;
   familyMembers: FamilyMember[];
   onAddEventFor: (date: Date, memberId: string) => void;
 }
@@ -18,6 +19,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   currentDate,
   onDateClick,
   onEventClick,
+  onDeleteEvent,
   familyMembers,
   onAddEventFor,
 }) => {
@@ -28,6 +30,13 @@ const MonthView: React.FC<MonthViewProps> = ({
     getNamedayByDate,
     formatDate,
   } = useCalendar();
+
+  // DEBUG
+  console.log('[MonthView] Rendered with currentDate:', currentDate);
+  
+  const testDate = new Date();
+  const testEvents = getEventsByDate(testDate);
+  console.log('[MonthView] Events for today:', testEvents);
 
   const [, forceUpdate] = React.useState({});
 
@@ -86,29 +95,52 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   const renderEventsInCell = useCallback(
     (date: Date, member: FamilyMember) => {
-      const dayEvents = getEventsByDate(date).filter(
+      const allDayEvents = getEventsByDate(date);
+      const dayEvents = allDayEvents.filter(
         (event) => event.familyMember === member.id
       );
+      
+      // DEBUG
+      if (allDayEvents.length > 0) {
+        console.log(`[renderEventsInCell] Datum: ${date.toLocaleDateString()}, Člen: ${member.name}`);
+        console.log('  Všechny události:', allDayEvents);
+        console.log('  Po filtrování:', dayEvents);
+        console.log('  FamilyMember IDs:', allDayEvents.map(e => e.familyMember));
+      }
+      
       return (
         <div className="events-in-cell">
           {dayEvents.map((event) => (
-            <div
-              key={event.id}
-              className="family-event-item"
-              style={{ backgroundColor: member.color }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEventClick(event);
-              }}
-              title={event.title}
-            >
-              {event.title}
+            <div key={event.id} className="event-wrapper">
+              <div
+                className="family-event-item"
+                style={{ backgroundColor: member.color }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEventClick(event);
+                }}
+                title={event.title}
+              >
+                {event.title}
+              </div>
+              <button
+                className="quick-delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+                    onDeleteEvent(event.id);
+                  }
+                }}
+                title="Smazat událost"
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
       );
     },
-    [getEventsByDate, onEventClick]
+    [getEventsByDate, onEventClick, onDeleteEvent]
   );
 
   return (

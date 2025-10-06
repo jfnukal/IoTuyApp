@@ -62,10 +62,6 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
 
         {/* Dnešní události */}
         <div className="mini-section">
-          <h3 className="mini-section-title">
-            Dnes ({formatDate(today, 'DD.MM')})
-          </h3>
-
           {holiday && (
             <div className="mini-event holiday-event">
               <span className="event-icon">🎉</span>
@@ -73,19 +69,19 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
             </div>
           )}
 
-          {nameday && (
+        {nameday && (
             <div className="mini-event nameday-event">
-              <span className="event-icon">🎂</span>
+              <span className="event-icon">💐</span>
               <span className="event-text">
                 Svátek: {nameday.names.join(', ')}
               </span>
             </div>
           )}
 
-          {todayEvents.length > 0 ? (
-            todayEvents.slice(0, 2).map((event) => (
+        {todayEvents.length > 0 ? (
+            todayEvents.slice(0, 3).map((event) => (
               <div key={event.id} className="mini-event user-event">
-                <span className="event-icon">📝</span>
+                <span className="event-icon">📌</span>
                 <div className="event-details">
                   <span className="event-text">{event.title}</span>
                   {event.time && (
@@ -101,20 +97,20 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
             </div>
           )}
 
-          {todayEvents.length > 2 && (
+          {todayEvents.length > 3 && (
             <div className="mini-event more-events">
               <span className="event-text">
-                +{todayEvents.length - 2} dalších událostí
+                +{todayEvents.length - 3} v kalendáři
               </span>
             </div>
           )}
         </div>
 
-        {/* Nadcházející události */}
-        {upcomingEvents.length > 0 && (
+{/* Nadcházející události */}
+{upcomingEvents.length > 0 && (
           <div className="mini-section">
             <h3 className="mini-section-title">Nadcházející</h3>
-            {upcomingEvents.map((event) => (
+            {upcomingEvents.slice(0, 2).map((event) => (
               <div
                 key={`${event.id}-${event.displayDate}`}
                 className="mini-event upcoming-event"
@@ -128,16 +124,23 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
                 </div>
               </div>
             ))}
+            {upcomingEvents.length > 2 && (
+              <div className="mini-event more-events">
+                <span className="event-text">
+                  +{upcomingEvents.length - 2} v kalendáři
+                </span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Narozeniny tento měsíc */}
-        {birthdaysThisMonth.length > 0 && (
+      {/* Narozeniny tento měsíc */}
+      {birthdaysThisMonth.length > 0 && (
           <div className="mini-section">
             <h3 className="mini-section-title">
               Narozeniny v {formatDate(today, 'MONTH')}
             </h3>
-            {birthdaysThisMonth.map((member) => (
+            {birthdaysThisMonth.slice(0, 2).map((member) => (
               <div key={member.id} className="mini-event birthday-event">
                 <span className="event-icon">🎈</span>
                 <div className="event-details">
@@ -149,6 +152,13 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
                 </div>
               </div>
             ))}
+            {birthdaysThisMonth.length > 2 && (
+              <div className="mini-event more-events">
+                <span className="event-text">
+                  +{birthdaysThisMonth.length - 2} v kalendáři
+                </span>
+              </div>
+            )}
           </div>
         )}
 

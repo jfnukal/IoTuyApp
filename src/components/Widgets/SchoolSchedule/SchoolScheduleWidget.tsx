@@ -1,36 +1,48 @@
 // src/components/Widgets/SchoolSchedule/SchoolScheduleWidget.tsx
 import React, { useState, useEffect } from 'react';
 import { bakalariAPI } from '../../../api/bakalariAPI';
-import type { TimetableDay, LunchMenu } from '../../../api/bakalariAPI';
+import type { TimetableDay } from '../../../api/bakalariAPI';
 import './SchoolSchedule.css';
+import { SchoolScheduleModal } from './SchoolScheduleModal';
 
 const SchoolScheduleWidget: React.FC = () => {
   const [selectedKid, setSelectedKid] = useState<'jarecek' | 'johanka'>('jarecek');
   const [selectedDay, setSelectedDay] = useState(0);
   const [timetable, setTimetable] = useState<TimetableDay[]>([]);
-  const [lunchMenu, setLunchMenu] = useState<LunchMenu[]>([]);
+  const [jarecekSchedule, setJarecekSchedule] = useState<TimetableDay[]>(() => {
+    const saved = localStorage.getItem('jarecek_schedule');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Načtení dat z API
   useEffect(() => {
     const fetchData = async () => {
+      // Načti Jarečkův rozvrh z localStorage
+      const savedJarecek = localStorage.getItem('jarecek_schedule');
+      if (savedJarecek) {
+        setJarecekSchedule(JSON.parse(savedJarecek));
+      }
+  
+      // Johanka - API
       setLoading(true);
       try {
-        const [timetableData, lunchData] = await Promise.all([
-          bakalariAPI.getTimetable(),
-          bakalariAPI.getLunchMenu(),
-        ]);
-        setTimetable(timetableData);
-        setLunchMenu(lunchData);
+        const timetableData = await bakalariAPI.getTimetable();
+        setTimetable(timetableData); // Johanka
       } catch (error) {
         console.error('Chyba při načítání dat:', error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
+
+  const handleSaveSchedule = (newSchedule: TimetableDay[]) => {
+    setJarecekSchedule(newSchedule);
+    localStorage.setItem('jarecek_schedule', JSON.stringify(newSchedule));
+  };
 
   // Mapování emoji pro předměty
   const getSubjectEmoji = (subject: string): string => {
@@ -59,11 +71,6 @@ const SchoolScheduleWidget: React.FC = () => {
     return emojiMap[subject] || '📚';
   };
 
-  // Najdi jídlo pro konkrétní den
-  const getLunchForDay = (date: string): LunchMenu | undefined => {
-    return lunchMenu.find(menu => menu.date === date);
-  };
-
   if (loading) {
     return (
       <div className="school-schedule-widget">
@@ -72,96 +79,117 @@ const SchoolScheduleWidget: React.FC = () => {
     );
   }
 
-  if (timetable.length === 0) {
-    return (
-      <div className="school-schedule-widget">
-        <div className="schedule-error">Rozvrh není k dispozici</div>
-      </div>
-    );
-  }
+// Vyber rozvrh podle vybraného dítěte
+const currentTimetable = selectedKid === 'johanka' ? timetable : jarecekSchedule;
 
-  const today = timetable[selectedDay];
-  const todayLunch = today ? getLunchForDay(today.date) : undefined;
-
+// První return - prázdný rozvrh (s modálem)
+if (currentTimetable.length === 0) {
   return (
-    <div className="school-schedule-widget">
-      <div className="schedule-header">
-        <div className="schedule-title">
-          <span className="schedule-icon">🎒</span>
-          <span>Školní rozvrh</span>
-        </div>
-        <div className="schedule-kids-tabs">
-          <button
-            className={`kid-tab ${selectedKid === 'jarecek' ? 'active' : ''}`}
-            onClick={() => setSelectedKid('jarecek')}
-          >
-            👦 Jareček
-          </button>
-          <button
-            className={`kid-tab ${selectedKid === 'johanka' ? 'active' : ''}`}
-            onClick={() => setSelectedKid('johanka')}
-          >
-            👧 Johanka
-          </button>
-        </div>
-      </div>
-
-      <div className="schedule-days-nav">
-        {timetable.map((day, index) => (
-          <button
-            key={index}
-            className={`day-nav-btn ${selectedDay === index ? 'active' : ''}`}
-            onClick={() => setSelectedDay(index)}
-          >
-            {day.dayDescription}
-          </button>
-        ))}
-      </div>
-
-      <div className="schedule-content">
-        <h3 className="schedule-day-title">{today.dayDescription}</h3>
-
-        {/* JÍDELNÍČEK NAD ROZVRHEM */}
-        {todayLunch && todayLunch.meals.length > 0 && (
-          <div className="lunch-menu-section">
-            <div className="lunch-menu-title">
-              <span className="lunch-icon">🍽️</span>
-              <span>Oběd</span>
-            </div>
-            <div className="lunch-menu-list">
-              {todayLunch.meals.map((meal, index) => (
-                <div key={index} className="lunch-menu-item">
-                  <span className="meal-number">{index + 1}.</span>
-                  <span className="meal-name">{meal.name}</span>
-                  {meal.allergens && meal.allergens.length > 0 && (
-                    <span className="meal-allergens">
-                      ({meal.allergens.join(', ')})
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ROZVRH HODIN */}
-        <div className="lessons-list">
-          {today.lessons.map((lesson, index) => (
-            <div
-              key={index}
-              className="lesson-item"
-            >
-              <div className="lesson-time">{lesson.begintime}</div>
-              <div className="lesson-details">
-                <span className="lesson-emoji">{getSubjectEmoji(lesson.subjecttext)}</span>
-                <span className="lesson-subject">{lesson.subjecttext}</span>
+    <>
+      <div className="school-schedule-widget">
+        <div className="schedule-error">
+          {selectedKid === 'jarecek' 
+            ? (
+              <div>
+                <p>Nastavte rozvrh pro Jarečka</p>
+                <button 
+                  className="setup-button"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  ⚙️ Nastavit rozvrh
+                </button>
               </div>
-            </div>
-          ))}
+            )
+            : 'Rozvrh není k dispozici'}
         </div>
+      </div>
+
+      {/* Modal i tady */}
+      {isModalOpen && (
+        <SchoolScheduleModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveSchedule}
+          initialSchedule={jarecekSchedule}
+        />
+      )}
+    </>
+  );
+}
+
+const today = currentTimetable[selectedDay];
+
+// Druhý return - normální zobrazení
+return (
+  <div className="school-schedule-widget">
+    <div className="schedule-header">
+      {selectedKid === 'jarecek' && (
+        <button 
+          className="edit-schedule-btn"
+          onClick={() => setIsModalOpen(true)}
+        >
+          ✏️ Upravit rozvrh
+        </button>
+      )}
+      <div className="schedule-title">
+        <span className="schedule-icon">🎒</span>
+        <span>Školní rozvrh</span>
+      </div>
+      <div className="schedule-kids-tabs">
+        <button
+          className={`kid-tab ${selectedKid === 'jarecek' ? 'active' : ''}`}
+          onClick={() => setSelectedKid('jarecek')}
+        >
+          Jareček
+        </button>
+        <button
+          className={`kid-tab ${selectedKid === 'johanka' ? 'active' : ''}`}
+          onClick={() => setSelectedKid('johanka')}
+        >
+          Johanka
+        </button>
       </div>
     </div>
-  );
+
+    <div className="schedule-days-nav">
+      {currentTimetable.map((day, index) => (
+        <button
+          key={index}
+          className={`day-nav-btn ${selectedDay === index ? 'active' : ''}`}
+          onClick={() => setSelectedDay(index)}
+        >
+          {day.dayDescription}
+        </button>
+      ))}
+    </div>
+
+    <div className="schedule-content">
+      <h3 className="schedule-day-title">{today.dayDescription}</h3>
+
+      <div className="lessons-list">
+        {today.lessons.map((lesson, index) => (
+          <div key={index} className="lesson-item">
+            <div className="lesson-time">{lesson.begintime}</div>
+            <div className="lesson-details">
+              <span className="lesson-emoji">{getSubjectEmoji(lesson.subjecttext)}</span>
+              <span className="lesson-subject">{lesson.subjecttext}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Modal i tady */}
+    {isModalOpen && (
+      <SchoolScheduleModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSchedule}
+        initialSchedule={jarecekSchedule}
+      />
+    )}
+  </div>
+);
 };
 
 export default SchoolScheduleWidget;

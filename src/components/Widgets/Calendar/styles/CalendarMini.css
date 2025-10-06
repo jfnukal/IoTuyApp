@@ -1,43 +1,71 @@
 /* === CalendarMini.css === */
 /* Styly pro mini widget na dashboardu */
-
 .calendar-mini-widget {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
-  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 16px;
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-  min-height: 300px;
-  max-width: 320px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  min-height: auto;
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar pro widget */
+.calendar-mini-widget::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-mini-widget::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.calendar-mini-widget::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.calendar-mini-widget::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .calendar-mini-widget:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .mini-widget-header {
-  text-align: center;
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1px;
+  padding-bottom: 2px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 15px;
 }
 
 .widget-title {
   font-size: 1.3rem;
   font-weight: 700;
-  margin-bottom: 5px;
 }
 
 .current-date {
-  font-size: 0.9rem;
+  font-size: 1.25rem;
   opacity: 0.9;
 }
 
 .mini-section {
-  margin-bottom: 20px;
+  margin-bottom: 46px;
+}
+
+.mini-section .mini-event:nth-child(n+4) {
+  display: none;
 }
 
 .mini-section-title {
@@ -98,13 +126,9 @@
 }
 
 .mini-widget-footer {
-  text-align: center;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: none;
 }
 
 .click-hint {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  display: none;
 }

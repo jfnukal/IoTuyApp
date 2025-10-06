@@ -8,6 +8,8 @@ export interface FamilyMember {
   id: string;
   name: string;
   color: string;
+  emoji: string;
+  role: 'parent' | 'child';
   icon?: string; 
   avatar?: string;
   birthday?: Date;

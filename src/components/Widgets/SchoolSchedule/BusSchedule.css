@@ -1,0 +1,170 @@
+/* Základní styl pro celý widget */
+.bus-schedule-widget {
+  background-color: #2c2c2e; /* Tmavě šedé pozadí */
+  color: #f5f5f7; /* Světlý text */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  border-radius: 16px;
+  padding: 16px;
+  max-width: 350px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Mezera mezi hlavičkou a obsahem */
+}
+
+/* Hlavička widgetu */
+.bus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #444;
+}
+
+.bus-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.bus-icon {
+  font-size: 1.5rem;
+}
+
+/* Přepínání mezi dětmi */
+.bus-kids-tabs {
+  display: flex;
+  background-color: #3a3a3c;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.bus-kid-tab {
+  border: none;
+  background-color: transparent;
+  color: #c7c7cc;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.bus-kid-tab.active {
+  background-color: #5856d6; /* Fialová pro aktivní tab */
+  color: white;
+}
+
+/* Hlavní obsah widgetu */
+.bus-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Stavy načítání a chyby */
+.bus-loading,
+.bus-error {
+  text-align: center;
+  padding: 24px;
+  font-size: 1rem;
+  color: #9a9a9e;
+}
+.bus-error {
+  color: #ff453a; /* Červená pro chybu */
+  font-weight: 500;
+}
+
+/* Karta s nejbližším spojením */
+.next-bus-card {
+  background-color: #3a3a3c;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.next-bus-badge {
+  align-self: flex-start;
+  background-color: #5856d6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Sekce s časem odjezdu a odpočtem */
+.bus-time-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bus-departure-time {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.bus-countdown {
+  font-size: 1rem;
+  color: #a9a9b0;
+  font-weight: 500;
+}
+
+/* Trasa (odkud - kam) */
+.bus-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #1c1c1e;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.bus-stop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stop-name {
+  font-size: 0.9rem;
+}
+
+.bus-arrow {
+  color: #777;
+}
+
+/* Informace o lince */
+.bus-info {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.8rem;
+  color: #9a9a9e;
+}
+
+/* Odkaz na IDOS */
+.idos-link-section {
+  margin-top: auto; /* Posune odkaz na konec */
+  text-align: center;
+}
+
+.idos-link-btn {
+  display: inline-block;
+  background-color: #007aff; /* Modrá barva */
+  color: white;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.idos-link-btn:hover {
+  background-color: #005ecb;
+}

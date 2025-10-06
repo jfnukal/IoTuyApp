@@ -1,20 +1,24 @@
 // src/components/Dashboard/FamilyDashboard.tsx
 import React from 'react';
 import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
-import CalendarMiniWidget from '../Widgets/Calendar/CalendarMiniWidget';
 import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
 import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
-import BusScheduleWidget from '../Widgets/BusSchedule/BusScheduleWidget';
+import BusScheduleWidget from '../Widgets/SchoolSchedule/BusScheduleWidget';
+import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
+import type { FamilyMember } from '../Widgets/Calendar/types';
 import './styles/FamilyDashboard.css';
+import MessageHistoryWidget from '../Notifications/MessageHistoryWidget';
 
 interface FamilyDashboardProps {
   selectedMember: string | null;
   onClearFilter: () => void;
+  familyMembers: FamilyMember[];
 }
 
 const FamilyDashboard: React.FC<FamilyDashboardProps> = ({ 
   selectedMember, 
-  onClearFilter 
+  onClearFilter,
+  familyMembers
 }) => {
   return (
     <div className="family-dashboard">
@@ -24,17 +28,11 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           <WeatherMiniWidget isVisible={true} />
         </div>
 
-        {/* Kalendář Widget - HOTOVÝ */}
-        <div className="widget-container calendar-container">
-          <CalendarMiniWidget
-            familyMembers={[
-              { id: '1', name: 'Táta', color: '#4ecdc4', icon: '👨' },
-              { id: '2', name: 'Máma', color: '#ff6b6b', icon: '👩' },
-              { id: '3', name: 'Jareček', color: '#96ceb4', icon: '👦' },
-              { id: '4', name: 'Johanka', color: '#45b7d1', icon: '👧' },
-            ]}
-          />
-        </div>
+              {/* Nadcházející události Widget - NOVÝ */}
+              <div className="widget-container upcoming-events-container">
+                    <UpcomingEventsWidget familyMembers={familyMembers} />
+                  </div>
+                  
 
         {/* Sticky Notes Widget - NOVÝ */}
         <div className="widget-container stickynotes-container">
@@ -49,6 +47,11 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         <div className="widget-card">
             <BusScheduleWidget />
           </div>
+
+      {/* Message History Widget - NOVÝ */}
+      <div className="widget-container messages-container">
+          <MessageHistoryWidget />
+        </div>
 
         {/* Placeholder pro budoucí widgety */}
         <div className="widget-container add-widget-container">

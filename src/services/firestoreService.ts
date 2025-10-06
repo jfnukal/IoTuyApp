@@ -37,6 +37,7 @@ class FirestoreService {
   async createDefaultUserSettings(uid: string): Promise<UserSettings> {
     const defaultSettings: UserSettings = {
       uid,
+      familyMemberId: undefined, // Nastavíme později v profile
       theme: 'light',
       language: 'cs',
       notifications: true,

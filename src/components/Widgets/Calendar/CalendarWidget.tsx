@@ -24,6 +24,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     currentView,
     headerImage,
     setCurrentView,
+    deleteEvent,
   } = useCalendar();
 
   const handleDateClick = (date: Date) => {
@@ -42,6 +43,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             currentDate={currentDate}
             onDateClick={handleDateClick}
             onEventClick={onEditEvent}
+            onDeleteEvent={deleteEvent}
             familyMembers={familyMembers}
             onAddEventFor={(date, memberId) => onAddEvent(date, memberId)}
           />

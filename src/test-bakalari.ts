@@ -8,8 +8,6 @@ export const testBakalariAPI = async () => {
     const timetable = await bakalariAPI.getTimetable();
     console.log('✅ Rozvrh:', timetable);
 
-    const lunch = await bakalariAPI.getLunchMenu();
-    console.log('✅ Obědy:', lunch);
   } catch (error) {
     console.error('❌ Chyba:', error);
   }

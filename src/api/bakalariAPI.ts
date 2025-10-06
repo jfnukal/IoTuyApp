@@ -1,5 +1,5 @@
 // src/api/bakalariAPI.ts
-import { MOCK_TIMETABLE, MOCK_LUNCH_MENU } from './bakalariMockData';
+import { MOCK_TIMETABLE } from './bakalariMockData';
 
 // Konfigurace
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
@@ -27,18 +27,15 @@ interface TimetableDay {
   lessons: TimetableLesson[];
 }
 
-interface LunchMenu {
-  date: string;
-  meals: {
-    name: string;
-    allergens?: string[];
-  }[];
-}
-
 interface HourInfo {
   beginTime: string;
   endTime: string;
   caption: string;
+}
+
+interface CachedTimetable {
+  data: TimetableDay[];
+  cachedAt: string;
 }
 
 class BakalariAPI {
@@ -64,28 +61,21 @@ class BakalariAPI {
         body: params.toString(),
       });
 
-      console.log('Response status:', response.status);
-
       const responseText = await response.text();
-      console.log('📄 Response text:', responseText.substring(0, 500));
 
       if (!response.ok) {
-        console.error('Bakaláři login failed:', response.status, responseText);
+        console.error('Bakaláři login failed:', response.status);
         return false;
       }
 
       try {
         const data = JSON.parse(responseText);
-        console.log('✅ JSON parsed successfully:', data);
-        
         this.accessToken = data.access_token;
         this.tokenExpiry = Date.now() + data.expires_in * 1000;
-
         console.log('✅ Bakaláři login successful');
         return true;
       } catch (parseError) {
         console.error('❌ JSON parse error:', parseError);
-        console.error('Server vrátil:', responseText.substring(0, 1000));
         return false;
       }
     } catch (error) {
@@ -101,6 +91,40 @@ class BakalariAPI {
     return await this.login();
   }
 
+  private getCachedTimetable(): TimetableDay[] | null {
+    try {
+      const cached = localStorage.getItem('bakalari_timetable');
+      if (!cached) return null;
+
+      const { data, cachedAt }: CachedTimetable = JSON.parse(cached);
+      const today = new Date().toISOString().split('T')[0];
+
+      if (cachedAt === today) {
+        console.log('✅ Používám cached rozvrh');
+        return data;
+      }
+
+      console.log('❌ Cache je stará, načítám nová data');
+      return null;
+    } catch (error) {
+      console.error('Chyba při čtení cache:', error);
+      return null;
+    }
+  }
+
+  private cacheTimetable(data: TimetableDay[]): void {
+    try {
+      const cached: CachedTimetable = {
+        data,
+        cachedAt: new Date().toISOString().split('T')[0],
+      };
+      localStorage.setItem('bakalari_timetable', JSON.stringify(cached));
+      console.log('💾 Rozvrh uložen do cache');
+    } catch (error) {
+      console.error('Chyba při ukládání cache:', error);
+    }
+  }
+
   async getTimetable(): Promise<TimetableDay[]> {
     if (USE_MOCK_DATA) {
       console.log('📦 Používám MOCK data pro rozvrh');
@@ -108,6 +132,9 @@ class BakalariAPI {
         setTimeout(() => resolve(MOCK_TIMETABLE), 500);
       });
     }
+
+    const cached = this.getCachedTimetable();
+    if (cached) return cached;
 
     const hasToken = await this.ensureValidToken();
     if (!hasToken) throw new Error('Login failed');
@@ -125,123 +152,75 @@ class BakalariAPI {
       }
 
       const data = await response.json();
-      return this.parseTimetable(data);
+      const timetable = this.parseTimetable(data);
+      
+      this.cacheTimetable(timetable);
+      
+      return timetable;
     } catch (error) {
       console.error('Bakaláři timetable error:', error);
       return [];
     }
   }
 
-  async getLunchMenu(): Promise<LunchMenu[]> {
-    if (USE_MOCK_DATA) {
-      console.log('📦 Používám MOCK data pro jídelníček');
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(MOCK_LUNCH_MENU), 500);
-      });
-    }
+  private parseTimetable(data: any): TimetableDay[] {
+    if (!data || !data.Days) return [];
 
-    const hasToken = await this.ensureValidToken();
-    if (!hasToken) throw new Error('Login failed');
+    const hoursMap = new Map<number, HourInfo>(
+      data.Hours.map((hour: any) => [
+        hour.Id,
+        { beginTime: hour.BeginTime, endTime: hour.EndTime, caption: hour.Caption }
+      ])
+    );
 
-    try {
-      const response = await fetch(`${BAKALARI_SERVER_URL}/api/3/komens`, {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-        },
-      });
+    const subjectsMap = new Map<string, string>(
+      (data.Subjects || []).map((subject: any) => [
+        subject.Id,
+        subject.Name || subject.Abbrev || subject.Id
+      ])
+    );
 
-      if (!response.ok) {
-        console.error('Lunch menu fetch failed:', response.status);
-        return [];
+    const dayNames = ['', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+
+    return data.Days.map((day: any, dayIndex: number) => {
+      let dayDate = '';
+      if (day.Atoms.length > 0 && day.Atoms[0].Change?.Day) {
+        dayDate = day.Atoms[0].Change.Day;
+      } else {
+        const today = new Date();
+        const currentDay = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - currentDay + 1 + dayIndex);
+        dayDate = monday.toISOString();
       }
 
-      const data = await response.json();
-      return this.parseLunchMenu(data);
-    } catch (error) {
-      console.error('Bakaláři lunch menu error:', error);
-      return [];
-    }
-  }
+      return {
+        date: dayDate,
+        dayOfWeek: dayIndex + 1,
+        dayDescription: dayNames[dayIndex + 1] || '',
+        lessons: (day.Atoms || [])
+          .map((atom: any) => {
+            const hourInfo = hoursMap.get(atom.HourId);
+            if (!hourInfo) return null;
 
- private parseTimetable(data: any): TimetableDay[] {
- 
-  if (!data || !data.Days) return [];
+            const subjectName = subjectsMap.get(atom.SubjectId) || atom.SubjectId || 'Neznámý předmět';
 
-  // Mapa času z Hours
-  const hoursMap = new Map<number, HourInfo>(
-    data.Hours.map((hour: any) => [
-      hour.Id,
-      { beginTime: hour.BeginTime, endTime: hour.EndTime, caption: hour.Caption }
-    ])
-  );
-
-// ✅ MAPA PŘEDMĚTŮ - Id → Name
-const subjectsMap = new Map<string, string>(
-  (data.Subjects || []).map((subject: any) => [
-    subject.Id,
-    subject.Name || subject.Abbrev || subject.Id
-  ])
-);
-
-  // Mapa názvů dnů
-  const dayNames = ['', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
-
-  return data.Days.map((day: any, dayIndex: number) => {
-    let dayDate = '';
-    if (day.Atoms.length > 0 && day.Atoms[0].Change?.Day) {
-      dayDate = day.Atoms[0].Change.Day;
-    } else {
-      const today = new Date();
-      const currentDay = today.getDay();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - currentDay + 1 + dayIndex);
-      dayDate = monday.toISOString();
-    }
-
-    return {
-      date: dayDate,
-      dayOfWeek: dayIndex + 1,
-      dayDescription: dayNames[dayIndex + 1] || '',
-      lessons: (day.Atoms || [])
-        .map((atom: any) => {
-          const hourInfo = hoursMap.get(atom.HourId);
-          if (!hourInfo) return null;
-
-          // ✅ PŘEKLAD SubjectID → SubjectName
-          const subjectName = subjectsMap.get(atom.SubjectId) || atom.SubjectId || 'Neznámý předmět';
-
-          return {
-            subjecttext: subjectName,
-            teacher: atom.TeacherId || '',
-            room: atom.RoomId || '',
-            begintime: hourInfo.beginTime,
-            endtime: hourInfo.endTime,
-            theme: atom.Theme || '',
-            notice: atom.Notice || '',
-            change: atom.Change?.ChangeType || '',
-          };
-        })
-        .filter((lesson: any) => lesson !== null),
-    };
-  });
-}
-
-    // Parsování jídelníčku
-  private parseLunchMenu(data: any): LunchMenu[] {
-    if (!data || !data.Menus) return [];
-
-    return data.Menus.map((menu: any) => ({
-      date: menu.Date,
-      meals: (menu.Meals || []).map((meal: any) => ({
-        name: meal.Name || '',
-        allergens: meal.Allergens || [],
-      })),
-    }));
+            return {
+              subjecttext: subjectName,
+              teacher: atom.TeacherId || '',
+              room: atom.RoomId || '',
+              begintime: hourInfo.beginTime,
+              endtime: hourInfo.endTime,
+              theme: atom.Theme || '',
+              notice: atom.Notice || '',
+              change: atom.Change?.ChangeType || '',
+            };
+          })
+          .filter((lesson: any) => lesson !== null),
+      };
+    });
   }
 }
 
 export const bakalariAPI = new BakalariAPI();
-export type { TimetableLesson, TimetableDay, LunchMenu };
-
-
-
+export type { TimetableLesson, TimetableDay };

@@ -67,6 +67,7 @@ export interface DeviceCategory {
 export interface UserSettings {
   id?: string;
   uid: string;
+  familyMemberId?: string; // 'dad', 'mom', 'jarecek', 'johanka'
   theme: 'light' | 'dark' | 'auto';
   language: 'cs' | 'en';
   notifications: boolean;

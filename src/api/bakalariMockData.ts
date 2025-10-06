@@ -1,6 +1,6 @@
 // src/api/bakalariMockData.ts
 
-import type { TimetableDay, LunchMenu } from './bakalariAPI';
+import type { TimetableDay } from './bakalariAPI';
 
 // Mock rozvrh pro celý týden (Pondělí - Pátek)
 export const MOCK_TIMETABLE: TimetableDay[] = [

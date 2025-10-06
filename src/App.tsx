@@ -6,12 +6,15 @@ import { useRooms } from './hooks/useRooms';
 import Login from './components/Login';
 // import RoomSelector from './components/RoomSelector';
 // import DeviceCard from './components/DeviceCard';
-// import { firestoreService } from './services/firestoreService';
+import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
 // import RoomVisualization2D from './components/RoomVisualization2D';
 // import RoomVisualization3D from './components/RoomVisualization3D';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
+import { NotificationProvider } from './components/Notifications/NotificationProvider';
+import FamilyMemberSelector from './components/Dashboard/FamilyMemberSelector';
+
 
 
 // const getDeviceIcon = (device: TuyaDevice): string => {
@@ -72,8 +75,9 @@ function App() {
   // >('all');
   const [notification, setNotification] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [familyMemberId, setFamilyMemberId] = useState<string | undefined>(undefined);
 
-  
+
   // // Local state - VŠECHNY useState HOOKY
   // const [devicesData, setDevicesData] = useState<TuyaDevice[]>([]);
   // const [isLoading, setIsLoading] = useState(false);
@@ -104,9 +108,6 @@ useEffect(() => {
       
       const timetable = await bakalariAPI.getTimetable();
       console.log('✅ Rozvrh:', timetable);
-      
-      const lunch = await bakalariAPI.getLunchMenu();
-      console.log('✅ Obědy:', lunch);
     } catch (error) {
       console.error('❌ Bakaláři API Chyba:', error);
     }
@@ -115,9 +116,48 @@ useEffect(() => {
   testBakalari();
 }, []); // Spustí se jen jednou při načtení
 
-  // useEffect pro Firebase integrace
+// Automatické mazání starých zpráv - 1x denně
+useEffect(() => {
+  if (!currentUser) return;
+
+  const runDailyCleanup = async () => {
+    try {
+      const { familyMessagingService } = await import('./services/familyMessagingService');
+      
+      // TODO: Toto bude konfigurovatelné v nastavení
+      const daysToKeep = 7; // Zatím hardcoded, později z settings
+      
+      await familyMessagingService.runCleanup(daysToKeep);
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
+  };
+
+  // Spustit cleanup při startu
+  runDailyCleanup();
+
+  // Spustit každých 24 hodin
+  const intervalId = setInterval(runDailyCleanup, 24 * 60 * 60 * 1000);
+
+  return () => clearInterval(intervalId);
+}, [currentUser]);
+
+  // useEffect pro Firebase integrace a načtení rodinného člena
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setFamilyMemberId(undefined);
+      return;
+    }
+
+    const loadFamilyMember = async () => {
+      const settings = await firestoreService.getUserSettings(currentUser.uid);
+      if (settings?.familyMemberId) {
+       setFamilyMemberId(settings.familyMemberId);
+      } else {
+      }
+    };
+
+    loadFamilyMember();
 
     if (devices && devices.length > 0) {
       // setDevicesData(devices);
@@ -475,13 +515,22 @@ useEffect(() => {
   return (
     <div className="app-layout">
 
-      <CalendarProvider>
-        <DashboardLayout 
-          onNavigateToSettings={() => {
-            console.log('Navigate to settings...');
-            // TODO: Přidáme navigaci na settings později
-          }}
-        />
+<CalendarProvider>
+        <NotificationProvider userId={familyMemberId || null}>
+          {!familyMemberId && currentUser && (
+            <FamilyMemberSelector
+              userId={currentUser.uid}
+              currentMemberId={familyMemberId}
+              onSelect={setFamilyMemberId}
+            />
+          )}
+          <DashboardLayout 
+            onNavigateToSettings={() => {
+              console.log('Navigate to settings...');
+              // TODO: Přidáme navigaci na settings později
+            }}
+          />
+        </NotificationProvider>
       </CalendarProvider>
 
       <div id="modal-root"></div>

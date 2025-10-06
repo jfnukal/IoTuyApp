@@ -13,8 +13,6 @@
   "dependencies": {
     "@tuyapi/cloud": "^0.6.2",
     "@types/three": "^0.180.0",
-    "@sparticuz/chromium": "^119.0.2",
-    "puppeteer-core": "^21.5.2",
     "axios": "^1.5.0",
     "firebase": "^10.8.0",
     "react": "^19.1.1",

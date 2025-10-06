@@ -1,13 +1,26 @@
-const chromium = require('@sparticuz/chromium');
-const puppeteer = require('puppeteer-core');
+// netlify/functions/search-connection.js
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 
-exports.handler = async function (event, context) {
-  const { from, to } = event.queryStringParameters;
+export const handler = async (event, context) => {
+  // CORS headers
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
+  const { from, to } = event.queryStringParameters || {};
 
   if (!from || !to) {
     return {
       statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ error: 'Chybí parametry "from" a "to"' }),
     };
   }
@@ -15,23 +28,45 @@ exports.handler = async function (event, context) {
   let browser = null;
 
   try {
+    console.log('🚀 Spouštím Puppeteer...');
+    
+    // Optimalizace pro Netlify
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
 
     const page = await browser.newPage();
+    
+    // Blokujeme obrázky a CSS pro rychlejší načítání
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     const searchUrl = `https://idos.idnes.cz/vlakyautobusymhd/spojeni/vysledky/?f=${encodeURIComponent(from)}&t=${encodeURIComponent(to)}`;
+    
+    console.log('🔍 Načítám:', searchUrl);
     
     await page.goto(searchUrl, { 
       waitUntil: 'domcontentloaded', 
-      timeout: 30000 
+      timeout: 25000 
     });
 
     // Počkej na načtení spojení
-    await page.waitForSelector('.connection, .result', { timeout: 10000 }).catch(() => null);
+    await page.waitForSelector('.connection, .result', { timeout: 8000 }).catch(() => null);
 
     const firstConnection = await page.evaluate(() => {
       const connElement = document.querySelector('.connection') || 
@@ -51,33 +86,39 @@ exports.handler = async function (event, context) {
       };
     });
 
+    await browser.close();
+    browser = null;
+
     if (!firstConnection) {
       return { 
         statusCode: 404,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ error: 'Spojení nenalezeno' }) 
       };
     }
 
+    console.log('✅ Spojení nalezeno:', firstConnection);
+
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(firstConnection),
     };
 
   } catch (error) {
-    console.error('Scraper error:', error);
+    console.error('❌ Scraper error:', error);
+    
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+    
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ 
         error: 'Chyba při scrapingu',
         details: error.message 
       }),
     };
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 };

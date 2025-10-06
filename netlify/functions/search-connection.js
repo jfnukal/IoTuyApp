@@ -1,26 +1,13 @@
-// netlify/functions/search-connection.js
-import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
+const chromium = require('@sparticuz/chromium');
+const puppeteer = require('puppeteer-core');
 
-export const handler = async (event, context) => {
-  // CORS headers
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-
-  // Handle preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-
-  const { from, to } = event.queryStringParameters || {};
+exports.handler = async function (event, context) {
+  const { from, to } = event.queryStringParameters;
 
   if (!from || !to) {
     return {
       statusCode: 400,
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Chybí parametry "from" a "to"' }),
     };
   }
@@ -28,58 +15,23 @@ export const handler = async (event, context) => {
   let browser = null;
 
   try {
-    console.log('🚀 Spouštím Puppeteer...');
-    
-    // Optimalizace pro Netlify
-    let executablePath;
-    try {
-      executablePath = await chromium.executablePath();
-      console.log('✅ Chromium path:', executablePath);
-    } catch (error) {
-      console.error('❌ Chromium path error:', error);
-      // Fallback - zkus najít chromium jinde
-      executablePath = '/opt/chromium' || process.env.CHROME_EXECUTABLE_PATH;
-    }
-    
     browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-sandbox',
-        '--single-process',
-        '--no-zygote',
-      ],
+      args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
-    
-    // Blokujeme obrázky a CSS pro rychlejší načítání
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-      if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
-        req.abort();
-      } else {
-        req.continue();
-      }
-    });
-
     const searchUrl = `https://idos.idnes.cz/vlakyautobusymhd/spojeni/vysledky/?f=${encodeURIComponent(from)}&t=${encodeURIComponent(to)}`;
-    
-    console.log('🔍 Načítám:', searchUrl);
     
     await page.goto(searchUrl, { 
       waitUntil: 'domcontentloaded', 
-      timeout: 25000 
+      timeout: 30000 
     });
 
     // Počkej na načtení spojení
-    await page.waitForSelector('.connection, .result', { timeout: 8000 }).catch(() => null);
+    await page.waitForSelector('.connection, .result', { timeout: 10000 }).catch(() => null);
 
     const firstConnection = await page.evaluate(() => {
       const connElement = document.querySelector('.connection') || 
@@ -99,39 +51,33 @@ export const handler = async (event, context) => {
       };
     });
 
-    await browser.close();
-    browser = null;
-
     if (!firstConnection) {
       return { 
         statusCode: 404,
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'Spojení nenalezeno' }) 
       };
     }
 
-    console.log('✅ Spojení nalezeno:', firstConnection);
-
     return {
       statusCode: 200,
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(firstConnection),
     };
 
   } catch (error) {
-    console.error('❌ Scraper error:', error);
-    
-    if (browser) {
-      await browser.close().catch(() => {});
-    }
-    
+    console.error('Scraper error:', error);
     return {
       statusCode: 500,
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         error: 'Chyba při scrapingu',
         details: error.message 
       }),
     };
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };

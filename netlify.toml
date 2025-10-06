@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[functions]
+  node_bundler = "esbuild"
+  # Zvětšíme timeout pro puppeteer
+  
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

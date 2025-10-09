@@ -21,7 +21,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const { logout } = useAuth();
   const { familyMembers } = useFirestore();
-console.log('KROK 2: Data členů dostupná v DashboardLayout:', familyMembers); // <-- PŘIDAT TENTO ŘÁDEK
   const [mode, setMode] = useState<DashboardMode>('family');
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [isFabOpen, setIsFabOpen] = useState(false);

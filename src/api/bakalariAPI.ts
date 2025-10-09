@@ -2,11 +2,9 @@
 
 import { configService } from '../services/configService';
 import { MOCK_TIMETABLE } from './bakalariMockData';
-// ZMĚNA: Správný import typů z centrálního souboru
 import type { TimetableDay, TimetableLesson } from '../types/index';
 
-// SMAZÁNO: Lokální definice typů jsou pryč, protože je importujeme.
-
+// Pomocné typy pro parsování
 interface HourInfo {
   beginTime: string;
   endTime: string;
@@ -22,6 +20,10 @@ interface TeacherInfo {
 interface RoomInfo {
   name: string;
   abbrev: string;
+}
+interface CachedTimetable {
+    data: TimetableDay[];
+    cachedAt: string;
 }
 
 class BakalariAPI {
@@ -43,10 +45,7 @@ class BakalariAPI {
       this.username = config.apiKeys.bakalari_username;
       this.password = config.apiKeys.bakalari_password;
       this.useMockData = config.features.useMockData;
-      console.log(
-        '🔧 Bakaláři API konfigurace:',
-        this.useMockData ? 'MOCK DATA' : 'REAL API'
-      );
+      console.log('🔧 Bakaláři API konfigurace:', this.useMockData ? 'MOCK DATA' : 'REAL API');
     } catch (error) {
       console.error('❌ Nepodařilo se načíst Bakaláři konfiguraci:', error);
       this.useMockData = true;
@@ -99,25 +98,69 @@ class BakalariAPI {
     return await this.login();
   }
 
-  async getTimetable(): Promise<TimetableDay[]> {
+  private getCachedTimetable(): TimetableDay[] | null {
+    try {
+      const cached = localStorage.getItem('bakalari_timetable');
+      if (!cached) return null;
+
+      const { data, cachedAt }: CachedTimetable = JSON.parse(cached);
+      const today = new Date().toISOString().split('T')[0];
+
+      if (cachedAt === today) {
+        console.log('✅ Používám cached rozvrh z localStorage');
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Chyba při čtení cache:', error);
+      return null;
+    }
+  }
+
+  private cacheTimetable(data: TimetableDay[]): void {
+    try {
+      const cached: CachedTimetable = {
+        data,
+        cachedAt: new Date().toISOString().split('T')[0],
+      };
+      localStorage.setItem('bakalari_timetable', JSON.stringify(cached));
+      console.log('💾 Rozvrh uložen do localStorage cache');
+    } catch (error) {
+      console.error('Chyba při ukládání cache:', error);
+    }
+  }
+  
+  public async getTimetable(forceRefresh = false): Promise<TimetableDay[]> {
     await this.ensureConfig();
+  
     if (this.useMockData) {
       console.log('📦 Používám MOCK data pro rozvrh');
       return Promise.resolve(MOCK_TIMETABLE);
     }
+  
+    if (!forceRefresh) {
+      const cached = this.getCachedTimetable();
+      if (cached) return cached;
+    }
+  
     const hasToken = await this.ensureValidToken();
     if (!hasToken) throw new Error('Login failed');
-
+  
     try {
       const response = await fetch(`${this.serverUrl}/api/3/timetable/actual`, {
         headers: { Authorization: `Bearer ${this.accessToken}` },
       });
+  
       if (!response.ok) {
         console.error('Timetable fetch failed:', response.status);
         return [];
       }
+  
       const data = await response.json();
       const timetable = this.parseTimetable(data);
+      
+      this.cacheTimetable(timetable);
+      
       return timetable;
     } catch (error) {
       console.error('Bakaláři timetable error:', error);
@@ -163,13 +206,20 @@ class BakalariAPI {
         });
       });
 
+      const sortedLessons = lessons.sort((a, b) => {
+          const timeA = parseInt(a.begintime.replace(':', ''), 10);
+          const timeB = parseInt(b.begintime.replace(':', ''), 10);
+          return timeA - timeB;
+      });
+
       days.push({
         date: day.Date,
         dayOfWeek: day.DayOfWeek,
         dayDescription: day.DayDescription,
-        lessons: lessons.sort((a, b) => a.begintime.localeCompare(b.begintime)),
+        lessons: sortedLessons,
       });
     });
+    
     return days;
   }
 }

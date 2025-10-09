@@ -52,10 +52,6 @@ function App() {
         );
         await remoteConfigService.initialize();
         console.log('✅ Remote Config inicializován');
-
-        // Pro debugging - zobraz všechny načtené hodnoty (maskované)
-        const allValues = remoteConfigService.getAllValues();
-        console.log('📦 Načtené konfigurace:', allValues);
       } catch (error) {
         console.error('❌ Chyba při inicializaci Remote Config:', error);
       }

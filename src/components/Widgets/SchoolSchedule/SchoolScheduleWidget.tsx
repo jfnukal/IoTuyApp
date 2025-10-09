@@ -18,7 +18,7 @@ const DAYS_OF_WEEK = [
 
 const SchoolScheduleWidget: React.FC = () => {
   const [selectedKid, setSelectedKid] = useState<'jarecek' | 'johanka'>(
-    'jarecek'
+    'johanka'
   );
   const [selectedDay, setSelectedDay] = useState(new Date().getDay() - 1); // Nastaví aktuální den v týdnu
   const [johankaSchedule, setJohankaSchedule] = useState<TimetableDay[]>([]);
@@ -28,8 +28,17 @@ const SchoolScheduleWidget: React.FC = () => {
 
   const handleSaveSchedule = async (newSchedule: TimetableDay[]) => {
     try {
-      await firestoreService.saveSchedule('jarecek', newSchedule);
-      setJarecekSchedule(newSchedule);
+      const sortedSchedule = newSchedule.map((day) => ({
+        ...day,
+        lessons: day.lessons.sort((a, b) => {
+          const timeA = parseInt(a.begintime.replace(':', ''), 10);
+          const timeB = parseInt(b.begintime.replace(':', ''), 10);
+          return timeA - timeB;
+        }),
+      }));
+
+      await firestoreService.saveSchedule('jarecek', sortedSchedule);
+      setJarecekSchedule(sortedSchedule); // Uložíme seřazenou verzi
       setIsModalOpen(false);
     } catch (error) {
       console.error('Nepodařilo se uložit Jarečkův rozvrh:', error);
@@ -47,8 +56,9 @@ const SchoolScheduleWidget: React.FC = () => {
     }
     setLoading(true);
     try {
-      const freshData = await bakalariAPI.getTimetable();
+      const freshData = await bakalariAPI.getTimetable(true);
       if (freshData && freshData.length > 0) {
+        // Řazení už proběhlo uvnitř getTimetable(), není třeba ho dělat znovu
         await firestoreService.saveSchedule('johanka', freshData);
         setJohankaSchedule(freshData);
         alert('Rozvrh pro Johanku byl úspěšně aktualizován.');
@@ -71,6 +81,11 @@ const SchoolScheduleWidget: React.FC = () => {
           firestoreService.getSchedule('johanka'),
           firestoreService.getSchedule('jarecek'),
         ]);
+        console.log('LADĚNÍ 1: Data přímo z Firebase', {
+          johankaData,
+          jarecekData,
+        });
+
         setJohankaSchedule(johankaData);
         setJarecekSchedule(jarecekData);
 
@@ -127,6 +142,10 @@ const SchoolScheduleWidget: React.FC = () => {
 
   const currentTimetable =
     selectedKid === 'johanka' ? johankaSchedule : jarecekSchedule;
+  console.log(
+    'LADĚNÍ 2: `currentTimetable` před vykreslením',
+    currentTimetable
+  );
 
   // Zobrazení pro prázdný rozvrh
   if (currentTimetable.length === 0) {
@@ -190,6 +209,7 @@ const SchoolScheduleWidget: React.FC = () => {
   }
 
   const today = currentTimetable[selectedDay];
+  console.log('LADĚNÍ 3: Objekt `today` před vykreslením lekcí', today);
 
   // Plné zobrazení s daty
   return (

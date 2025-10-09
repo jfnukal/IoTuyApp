@@ -96,5 +96,4 @@ export const SchoolScheduleModal: React.FC<SchoolScheduleModalProps> = ({
     </div>,
     document.body
   );
-
 };

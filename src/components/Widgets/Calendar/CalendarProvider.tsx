@@ -19,7 +19,7 @@ import { fetchCalendarDataForYear } from './data/czechData';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 import { useAuth } from '../../../contexts/AuthContext';
-import { calendarFirebaseService } from '../../../services/firestoreService';
+import { firestoreService } from '../../../services/firestoreService';
 
 interface CalendarContextType {
   currentDate: Date;
@@ -129,7 +129,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     let unsubscribe = () => {};
     const setupListener = async () => {
       try {
-        unsubscribe = await calendarFirebaseService.subscribeToEvents(
+        unsubscribe = await firestoreService.subscribeToEvents(
           currentUser.uid,
           (firebaseEvents) => {
             setEvents(firebaseEvents);
@@ -167,7 +167,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     ) => {
       if (!currentUser) return;
       try {
-        await calendarFirebaseService.addEvent(currentUser.uid, eventData);
+        await firestoreService.addEvent(currentUser.uid, eventData);
       } catch (error) {
         console.error('Error adding event:', error);
       }
@@ -179,7 +179,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     async (id: string, updates: Partial<CalendarEventData>) => {
       if (!currentUser) return;
       try {
-        await calendarFirebaseService.updateEvent(id, updates);
+        await firestoreService.updateEvent(id, updates);
       } catch (error) {
         console.error('Error updating event:', error);
       }
@@ -191,7 +191,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     async (id: string) => {
       if (!currentUser) return;
       try {
-        await calendarFirebaseService.deleteEvent(id);
+        await firestoreService.deleteEvent(id);
       } catch (error) {
         console.error('Error deleting event:', error);
       }

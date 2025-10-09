@@ -136,27 +136,10 @@ export interface FamilyMember {
   icon?: string;
   avatar?: string;
   birthday?: string;
-  // Pole pro budoucí zobrazení v hlavičce
   headerPosition?: 'left' | 'right';
   headerIcon?: string;
   createdAt?: number;
 }
-
-// export interface CalendarEvent {
-//   id: string;
-//   title: string;
-//   description?: string;
-//   date: Date;
-//   time?: string;
-//   endTime?: string;
-//   type: EventType;
-//   familyMember?: string; // ID člena rodiny
-//   color?: string;
-//   reminder?: ReminderType;
-//   attachments?: FileAttachment[];
-//   isAllDay?: boolean;
-//   recurring?: RecurringPattern;
-// }
 
 export interface CalendarEventData {
   id: string;
@@ -284,4 +267,22 @@ export interface MonthTheme {
   primaryColor: string;
   secondaryColor: string;
   textColor: string;
+}
+
+export interface TimetableLesson {
+  subjecttext: string;
+  teacher: string;
+  room: string;
+  begintime: string;
+  endtime: string;
+  theme?: string;
+  notice?: string;
+  change?: string;
+}
+
+export interface TimetableDay {
+  date: string;
+  dayOfWeek: number;
+  dayDescription: string;
+  lessons: TimetableLesson[];
 }

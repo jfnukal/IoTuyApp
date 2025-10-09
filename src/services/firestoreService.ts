@@ -22,6 +22,7 @@ import type {
   DeviceCategory,
   CalendarEventData,
   FamilyMember,
+  TimetableDay, // Přidaný import
 } from '../types/index';
 
 class FirestoreService {
@@ -76,7 +77,7 @@ class FirestoreService {
       const q = query(
         roomsCollection,
         where('userId', '==', uid),
-        orderBy('createddAt', 'desc')
+        orderBy('createdAt', 'desc') 
       );
       return onSnapshot(q, (snapshot) => {
         const rooms = snapshot.docs.map(
@@ -198,7 +199,6 @@ class FirestoreService {
   }
 
   // ==================== DEVICES ====================
-
   async subscribeToUserDevices(
     uid: string,
     callback: (devices: TuyaDevice[]) => void
@@ -311,7 +311,6 @@ class FirestoreService {
   }
 
   // ==================== DEVICE CATEGORIES ====================
-
   getDeviceCategories(): DeviceCategory[] {
     return [
       {
@@ -389,7 +388,7 @@ class FirestoreService {
     ];
   }
 
-  // ==================== FAMILY MEMBERS (SPRÁVNĚ UVNITŘ TŘÍDY) ====================
+  // ==================== FAMILY MEMBERS ====================
   async subscribeToFamilyMembers(
     uid: string,
     callback: (members: FamilyMember[]) => void
@@ -401,7 +400,6 @@ class FirestoreService {
         where('userId', '==', uid),
         orderBy('createdAt', 'asc')
       );
-
       return onSnapshot(q, (snapshot) => {
         const members = snapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as FamilyMember)
@@ -454,66 +452,8 @@ class FirestoreService {
       throw new Error('Nepodařilo se smazat člena rodiny');
     }
   }
-}
 
-// TENTO CELÝ BLOK VLOŽ NA KONEC SOUBORU firestoreService.ts
-// ==================== SCHEDULES SERVICE ====================
-
-// Ujisti se, že tyto importy máš na začátku souboru
-// import { doc, getDoc, setDoc } from 'firebase/firestore';
-// import { db } from '../config/firebase';
-// import type { TimetableDay } from '../types/index';
-
-class ScheduleService {
-  /**
-   * Načte konkrétní rozvrh z Firestore.
-   * @param scheduleId 'johanka' nebo 'jarecek'
-   */
-  async getSchedule(scheduleId: string): Promise<TimetableDay[]> {
-    try {
-      const docRef = doc(db, 'schedules', scheduleId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        // Vracíme pole 'days' z dokumentu
-        return docSnap.data().days as TimetableDay[];
-      } else {
-        console.warn(`Rozvrh s ID "${scheduleId}" nebyl v databázi nalezen.`);
-        return [];
-      }
-    } catch (error) {
-      console.error(`Chyba při načítání rozvrhu "${scheduleId}":`, error);
-      throw new Error('Nepodařilo se načíst rozvrh.');
-    }
-  }
-
-  /**
-   * Uloží/přepíše kompletní rozvrh do Firestore.
-   * @param scheduleId 'johanka' nebo 'jarecek'
-   * @param scheduleData Pole dnů s hodinami
-   */
-  async saveSchedule(scheduleId: string, scheduleData: TimetableDay[]): Promise<void> {
-    try {
-      const scheduleRef = doc(db, 'schedules', scheduleId);
-      await setDoc(scheduleRef, {
-        days: scheduleData,
-        lastUpdated: new Date(),
-      });
-      console.log(`✅ Rozvrh "${scheduleId}" byl úspěšně uložen do Firestore.`);
-    } catch (error) {
-      console.error(`❌ Chyba při ukládání rozvrhu "${scheduleId}":`, error);
-      throw new Error('Nepodařilo se uložit rozvrh.');
-    }
-  }
-}
-
-export const scheduleService = new ScheduleService();
-
-export const firestoreService = new FirestoreService();
-
-// ==================== CALENDAR EVENTS SERVICE ====================
-
-export const calendarFirebaseService = {
+  // ==================== CALENDAR EVENTS ====================
   async subscribeToEvents(
     userId: string,
     callback: (events: CalendarEventData[]) => void
@@ -531,7 +471,7 @@ export const calendarFirebaseService = {
       console.error('Error subscribing to events:', error);
       throw error;
     }
-  },
+  }
 
   async getEvents(userId: string): Promise<CalendarEventData[]> {
     const eventsRef = collection(db, 'calendarEvents');
@@ -540,7 +480,7 @@ export const calendarFirebaseService = {
     return snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
     );
-  },
+  }
 
   async addEvent(
     userId: string,
@@ -555,7 +495,7 @@ export const calendarFirebaseService = {
     };
     const docRef = await addDoc(eventsRef, newEvent);
     return docRef.id;
-  },
+  }
 
   async updateEvent(
     eventId: string,
@@ -566,10 +506,46 @@ export const calendarFirebaseService = {
       ...updates,
       updatedAt: Date.now(),
     });
-  },
+  }
 
   async deleteEvent(eventId: string): Promise<void> {
     const eventRef = doc(db, 'calendarEvents', eventId);
     await deleteDoc(eventRef);
-  },
-};
+  }
+
+  // ==================== SCHEDULES (ROZVRHY) ====================
+  async getSchedule(scheduleId: string): Promise<TimetableDay[]> {
+    try {
+      const docRef = doc(db, 'schedules', scheduleId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data().days as TimetableDay[];
+      } else {
+        console.warn(`Rozvrh s ID "${scheduleId}" nebyl v databázi nalezen.`);
+        return [];
+      }
+    } catch (error) {
+      console.error(`Chyba při načítání rozvrhu "${scheduleId}":`, error);
+      throw new Error('Nepodařilo se načíst rozvrh.');
+    }
+  }
+
+  async saveSchedule(
+    scheduleId: string,
+    scheduleData: TimetableDay[]
+  ): Promise<void> {
+    try {
+      const scheduleRef = doc(db, 'schedules', scheduleId);
+      await setDoc(scheduleRef, {
+        days: scheduleData,
+        lastUpdated: new Date(),
+      });
+      console.log(`✅ Rozvrh "${scheduleId}" byl úspěšně uložen do Firestore.`);
+    } catch (error) {
+      console.error(`❌ Chyba při ukládání rozvrhu "${scheduleId}":`, error);
+      throw new Error('Nepodařilo se uložit rozvrh.');
+    }
+  }
+}
+
+export const firestoreService = new FirestoreService();

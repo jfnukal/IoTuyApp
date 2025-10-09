@@ -1,6 +1,6 @@
 // src/api/bakalariMockData.ts
 
-import type { TimetableDay } from './bakalariAPI';
+import type { TimetableDay } from '../types/index';
 
 // Mock rozvrh pro celý týden (Pondělí - Pátek)
 export const MOCK_TIMETABLE: TimetableDay[] = [
@@ -60,4 +60,5 @@ export const MOCK_TIMETABLE: TimetableDay[] = [
       { subjecttext: 'Občanská výchova', teacher: 'Čer', room: 'U14', begintime: '11:00', endtime: '11:45', theme: 'Demokracie' },
     ],
   },
+
 ];

@@ -1,12 +1,12 @@
 import React from 'react';
-import type { CalendarEvent, FamilyMember } from './types';
+import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
 
 interface WeekViewProps {
   currentDate: Date;
   // events je pryč
   onDateClick: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEventData) => void;
   familyMembers: FamilyMember[];
 }
 
@@ -14,7 +14,7 @@ const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
   onDateClick,
   onEventClick,
-  familyMembers
+  familyMembers,
 }) => {
   const { isToday, getEventsByDate } = useCalendar();
 
@@ -24,14 +24,14 @@ const WeekView: React.FC<WeekViewProps> = ({
     const dayOfWeek = startOfWeek.getDay();
     const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Pondělí jako první den
     startOfWeek.setDate(startOfWeek.getDate() + diff);
-    
+
     const weekDays: Date[] = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
       weekDays.push(day);
     }
-    
+
     return weekDays;
   };
 
@@ -47,16 +47,10 @@ const WeekView: React.FC<WeekViewProps> = ({
   const weekDays = getWeekDays();
   const hours = getHours();
 
-  // Získej barvu pro člena rodiny
-  const getFamilyMemberColor = (memberId: string) => {
-    const member = familyMembers.find(m => m.id === memberId);
-    return member?.color || '#667eea';
-  };
-
   // Získej události pro hodinu
   const getEventsForHour = (date: Date, hour: string) => {
     const dayEvents = getEventsByDate(date);
-    return dayEvents.filter(event => {
+    return dayEvents.filter((event) => {
       if (!event.time) return false;
       const eventHour = event.time.split(':')[0];
       return eventHour === hour.split(':')[0];
@@ -64,24 +58,25 @@ const WeekView: React.FC<WeekViewProps> = ({
   };
 
   // Renderuj událost
-  const renderEvent = (event: CalendarEvent) => {
-    const color = event.familyMember 
-      ? getFamilyMemberColor(event.familyMember)
-      : (event.color || '#667eea');
-    
+  const renderEvent = (event: CalendarEventData) => {
+    const member = familyMembers.find((m) => m.id === event.familyMemberId);
+    const color = member ? member.color : event.color || '#667eea';
+
     return (
       <div
         key={event.id}
         className="week-event"
-        style={{ 
+        style={{
           background: color,
-          color: 'white'
+          color: 'white',
         }}
         onClick={(e) => {
           e.stopPropagation();
           onEventClick(event);
         }}
-        title={`${event.title}${event.description ? `\n${event.description}` : ''}`}
+        title={`${event.title}${
+          event.description ? `\n${event.description}` : ''
+        }`}
       >
         <div className="event-time">{event.time}</div>
         <div className="event-title">{event.title}</div>
@@ -95,17 +90,15 @@ const WeekView: React.FC<WeekViewProps> = ({
       <div className="week-header">
         <div className="time-column"></div>
         {weekDays.map((day) => (
-          <div 
-            key={day.toISOString()} 
+          <div
+            key={day.toISOString()}
             className={`week-day-header ${isToday(day) ? 'today' : ''}`}
             onClick={() => onDateClick(day)}
           >
             <div className="week-day-name">
               {day.toLocaleDateString('cs-CZ', { weekday: 'short' })}
             </div>
-            <div className="week-day-number">
-              {day.getDate()}
-            </div>
+            <div className="week-day-number">{day.getDate()}</div>
           </div>
         ))}
       </div>

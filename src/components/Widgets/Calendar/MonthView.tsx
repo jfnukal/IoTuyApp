@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import type { CalendarEvent, FamilyMember } from './types';
+import type { CalendarEventData, FamilyMember } from '@/types/index';
 import { useCalendar } from './CalendarProvider';
 import {
   markNameday,
@@ -9,7 +9,7 @@ import {
 interface MonthViewProps {
   currentDate: Date;
   onDateClick: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEventData) => void;
   onDeleteEvent: (eventId: string) => void;
   familyMembers: FamilyMember[];
   onAddEventFor: (date: Date, memberId: string) => void;
@@ -30,7 +30,7 @@ const MonthView: React.FC<MonthViewProps> = ({
     getNamedayByDate,
     formatDate,
   } = useCalendar();
-  
+
   const [, forceUpdate] = React.useState({});
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
@@ -90,17 +90,23 @@ const MonthView: React.FC<MonthViewProps> = ({
     (date: Date, member: FamilyMember) => {
       const allDayEvents = getEventsByDate(date);
       const dayEvents = allDayEvents.filter(
-        (event) => event.familyMember === member.id
+        (event) => event.familyMemberId === member.id
       );
-      
-      // DEBUG
+
       if (allDayEvents.length > 0) {
-        console.log(`[renderEventsInCell] Datum: ${date.toLocaleDateString()}, Člen: ${member.name}`);
+        console.log(
+          `[renderEventsInCell] Datum: ${date.toLocaleDateString()}, Člen: ${
+            member.name
+          }`
+        );
         console.log('  Všechny události:', allDayEvents);
         console.log('  Po filtrování:', dayEvents);
-        console.log('  FamilyMember IDs:', allDayEvents.map(e => e.familyMember));
+        console.log(
+          '  FamilyMember IDs:',
+          allDayEvents.map((e) => e.familyMemberId)
+        );
       }
-      
+
       return (
         <div className="events-in-cell">
           {dayEvents.map((event) => (
@@ -160,8 +166,9 @@ const MonthView: React.FC<MonthViewProps> = ({
           const nameday = getNamedayByDate(date);
           const birthdays = familyMembers.filter(
             (member) =>
-              member.birthday?.getDate() === date.getDate() &&
-              member.birthday?.getMonth() === date.getMonth()
+              member.birthday &&
+              new Date(member.birthday).getDate() === date.getDate() &&
+              new Date(member.birthday).getMonth() === date.getMonth()
           );
 
           // Jednodušší klíč pro ref mapu (rok-měsíc-den)

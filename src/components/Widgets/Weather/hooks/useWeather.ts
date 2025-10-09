@@ -1,7 +1,7 @@
 // src/components/Widgets/Weather/hooks/useWeather.ts
 import { useState, useEffect, useCallback } from 'react';
 import { weatherAPI, type WeatherData } from '../api/weatherAPI';
-import type { WeatherWidgetSettings, WeatherState, WeatherLocation } from '../types';
+import type { WeatherWidgetSettings, WeatherState, WeatherLocation } from '../types/index';
 import { DEFAULT_WEATHER_SETTINGS } from '../types';
 import { geoAPI } from '../../../../api/geoAPI';
 

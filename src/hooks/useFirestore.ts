@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestoreService } from '../services/firestoreService';
-import type { TuyaDevice, UserSettings, FamilyMember } from '@/types/index'; 
+import type { TuyaDevice, UserSettings, FamilyMember } from '../types/index'; 
 
 export const useFirestore = () => {
   const { currentUser } = useAuth();
@@ -38,12 +38,13 @@ export const useFirestore = () => {
           setDevices
         );
 
-        // <-- NOVÁ ČÁST: Nastav real-time listener pro family members -->
         familyUnsubscribe = await firestoreService.subscribeToFamilyMembers(
           currentUser.uid,
-          setFamilyMembers
+          (membersFromDB) => { // Přejmenoval jsem proměnnou pro jasnost
+            console.log('KROK 1: Data členů přímo z Firestore:', membersFromDB); // <-- PŘIDAT TENTO ŘÁDEK
+            setFamilyMembers(membersFromDB);
+          }
         );
-        // <-- KONEC NOVÉ ČÁSTI -->
 
         setLoading(false);
       } catch (err: any) {
@@ -98,5 +99,4 @@ export const useFirestore = () => {
 };
 
 // Export také jako useUserData pro zpětnou kompatibilitu
-
 export const useUserData = useFirestore;

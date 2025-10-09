@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useCalendar } from './CalendarProvider';
-import type { CalendarEvent, FamilyMember } from './types';
+import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import EventForm from './EventForm';
-import './styles/CalendarMobile.css'; 
+import './styles/CalendarMobile.css';
 
 interface CalendarMobileProps {
   familyMembers?: FamilyMember[];
@@ -19,12 +19,12 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
     addEvent,
     updateEvent,
     deleteEvent,
-    getCurrentMonthTheme
+    getCurrentMonthTheme,
   } = useCalendar();
 
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
 
   const theme = getCurrentMonthTheme();
   const today = new Date();
@@ -64,23 +64,32 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
     setIsFormOpen(true);
   };
 
-  const handleEditEvent = (event: CalendarEvent) => {
+  const handleEditEvent = (event: CalendarEventData) => {
     setSelectedEvent(event);
-    setSelectedDate(event.date);
+    setSelectedDate(new Date(event.date));
     setIsFormOpen(true);
   };
 
-  const handleSaveEvent = (eventData: Partial<CalendarEvent>) => {
+  const handleSaveEvent = (eventData: Partial<CalendarEventData>) => {
     if (selectedEvent) {
       updateEvent(selectedEvent.id, eventData);
     } else {
-      addEvent({
+      const eventDate = eventData.date 
+        ? new Date(eventData.date) 
+        : selectedDate || new Date();
+
+      const newEvent: CalendarEventData = {
         id: Date.now().toString(),
-        title: eventData.title || '',
-        date: eventData.date || selectedDate || new Date(),
-        type: 'personal',
+        userId: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        title: eventData.title || 'Nová událost',
+        date: eventDate.toISOString().split('T')[0],
+        type: eventData.type || 'personal',
         ...eventData,
-      });
+      };
+      
+      addEvent(newEvent);
     }
     setIsFormOpen(false);
   };
@@ -125,27 +134,22 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
 
       {/* Kalendářní mřížka */}
       <div className="calendar-mobile-grid">
-        {/* Dny v týdnu */}
         <div className="mobile-weekdays">
           {['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map((day) => (
             <div key={day} className="mobile-weekday">{day}</div>
           ))}
         </div>
-
-        {/* Dny měsíce */}
         <div className="mobile-days">
           {days.map((date, index) => {
             if (!date) {
               return <div key={`empty-${index}`} className="mobile-day empty" />;
             }
-
             const dayEvents = getEventsByDate(date);
             const hasEvents = dayEvents.length > 0;
             const holiday = getHolidayByDate(date);
             const isSelected = selectedDate && 
               date.getDate() === selectedDate.getDate() &&
               date.getMonth() === selectedDate.getMonth();
-
             return (
               <div
                 key={date.toISOString()}
@@ -169,23 +173,16 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
               + Přidat
             </button>
           </div>
-
           {selectedHoliday && (
-            <div className="mobile-special-event holiday">
-              🎉 {selectedHoliday.name}
-            </div>
+            <div className="mobile-special-event holiday">🎉 {selectedHoliday.name}</div>
           )}
-
           {selectedNameday && (
-            <div className="mobile-special-event nameday">
-              🎂 Svátek: {selectedNameday.names.join(', ')}
-            </div>
+            <div className="mobile-special-event nameday">🎂 Svátek: {selectedNameday.names.join(', ')}</div>
           )}
-
           <div className="mobile-events-list">
             {selectedDateEvents.length > 0 ? (
               selectedDateEvents.map((event) => {
-                const member = familyMembers.find(m => m.id === event.familyMember);
+                const member = familyMembers.find(m => m.id === event.familyMemberId);
                 return (
                   <div
                     key={event.id}

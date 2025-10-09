@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import CalendarWidget from './CalendarWidget.tsx';
-import CalendarMobile from './CalendarMobile.tsx';
-import EventForm from './EventForm.tsx';
-import { useCalendar } from './CalendarProvider.tsx';
+import CalendarWidget from './CalendarWidget';
+import CalendarMobile from './CalendarMobile';
+import EventForm from './EventForm';
+import { useCalendar } from './CalendarProvider';
 import { useIsMobile } from './utils/deviceDetection';
-import type { FamilyMember, CalendarEvent } from './types';
+// Opravený import, který se dívá na správné místo a používá správný název
+import type { FamilyMember, CalendarEventData } from '../../../types/index';
 import './styles/CalendarShared.css';
 import { createPortal } from 'react-dom';
-
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -15,19 +15,22 @@ interface CalendarModalProps {
   familyMembers?: FamilyMember[];
 }
 
-const CalendarModal: React.FC<CalendarModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  familyMembers = [] 
+const CalendarModal: React.FC<CalendarModalProps> = ({
+  isOpen,
+  onClose,
+  familyMembers = [],
 }) => {
   const { addEvent, updateEvent, deleteEvent } = useCalendar();
-
   const isMobile = useIsMobile(768);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(
+    null
+  );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [defaultMemberId, setDefaultMemberId] = useState<string | undefined>(undefined);
+  const [defaultMemberId, setDefaultMemberId] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -54,24 +57,27 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     setIsFormOpen(true);
   };
 
-  const handleShowEditForm = (event: CalendarEvent) => {
+  const handleShowEditForm = (event: CalendarEventData) => {
     setSelectedEvent(event);
-    setSelectedDate(event.date);
-    setDefaultMemberId(event.familyMember);
+    setSelectedDate(new Date(event.date));
+    setDefaultMemberId(event.familyMemberId);
     setIsFormOpen(true);
   };
 
-  const handleSaveEvent = (eventData: Partial<CalendarEvent>) => {
+  const handleSaveEvent = (eventData: Partial<CalendarEventData>) => {
     if (selectedEvent) {
       updateEvent(selectedEvent.id, eventData);
     } else {
-      addEvent({
-        id: Date.now().toString(),
-        title: eventData.title || '',
-        date: eventData.date || selectedDate || new Date(),
-        type: 'personal',
+      const finalDateObject = eventData.date
+        ? new Date(eventData.date)
+        : selectedDate || new Date();
+      const newEventPayload = {
+        title: eventData.title || 'Nová událost',
+        date: finalDateObject.toISOString().split('T')[0],
+        type: 'personal' as const, // Používáme 'as const' pro typovou jistotu
         ...eventData,
-      });
+      };
+      addEvent(newEventPayload);
     }
     setIsFormOpen(false);
   };
@@ -80,39 +86,38 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     deleteEvent(eventId);
     setIsFormOpen(false);
   };
-  
+
   const modalRoot = document.getElementById('modal-root');
-  
-  // Pokud není portál připraven, nic nerenderujeme
   if (!isOpen || !modalRoot) return null;
 
   return createPortal(
     <div className="calendar-modal-overlay" onClick={onClose}>
-      <div 
+      <div
         className={`calendar-modal-content ${isMobile ? 'mobile' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
         {isMobile ? (
-          <CalendarMobile 
-            familyMembers={familyMembers}
-          />
+          <CalendarMobile familyMembers={familyMembers} />
         ) : (
-          <CalendarWidget 
+          <CalendarWidget
             familyMembers={familyMembers}
             onAddEvent={handleShowAddForm}
             onEditEvent={handleShowEditForm}
           />
         )}
       </div>
-  
-      {/* Formulář - na mobilu se zobrazuje z CalendarMobile komponenty */}
+
       {!isMobile && isFormOpen && (
         <EventForm
           event={selectedEvent}
           date={selectedDate}
           familyMembers={familyMembers}
           onSave={handleSaveEvent}
-          onDelete={selectedEvent ? () => handleDeleteEvent(selectedEvent.id) : undefined}
+          onDelete={
+            selectedEvent
+              ? () => handleDeleteEvent(selectedEvent.id)
+              : undefined
+          }
           onClose={() => setIsFormOpen(false)}
           defaultMemberId={defaultMemberId}
         />

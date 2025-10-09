@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import './styles/CalendarMini.css';
 import { useCalendar } from './CalendarProvider';
 import CalendarModal from './CalendarModal';
-import type { FamilyMember, CalendarEvent } from './types';
+import type { FamilyMember, CalendarEventData } from '../../../types/index';
 
-type UpcomingEvent = CalendarEvent & { displayDate: Date };
+type UpcomingEvent = CalendarEventData & { displayDate: Date };
 
 interface CalendarMiniWidgetProps {
   familyMembers?: FamilyMember[];
@@ -42,7 +42,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
   const getBirthdaysThisMonth = () => {
     return familyMembers.filter((member) => {
       if (!member.birthday) return false;
-      return member.birthday.getMonth() === today.getMonth();
+      return new Date(member.birthday).getMonth() === today.getMonth();
     });
   };
 
@@ -69,7 +69,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
             </div>
           )}
 
-        {nameday && (
+          {nameday && (
             <div className="mini-event nameday-event">
               <span className="event-icon">💐</span>
               <span className="event-text">
@@ -78,7 +78,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
             </div>
           )}
 
-        {todayEvents.length > 0 ? (
+          {todayEvents.length > 0 ? (
             todayEvents.slice(0, 3).map((event) => (
               <div key={event.id} className="mini-event user-event">
                 <span className="event-icon">📌</span>
@@ -106,8 +106,8 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
           )}
         </div>
 
-{/* Nadcházející události */}
-{upcomingEvents.length > 0 && (
+        {/* Nadcházející události */}
+        {upcomingEvents.length > 0 && (
           <div className="mini-section">
             <h3 className="mini-section-title">Nadcházející</h3>
             {upcomingEvents.slice(0, 2).map((event) => (
@@ -134,8 +134,8 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
           </div>
         )}
 
-      {/* Narozeniny tento měsíc */}
-      {birthdaysThisMonth.length > 0 && (
+        {/* Narozeniny tento měsíc */}
+        {birthdaysThisMonth.length > 0 && (
           <div className="mini-section">
             <h3 className="mini-section-title">
               Narozeniny v {formatDate(today, 'MONTH')}
@@ -146,8 +146,12 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
                 <div className="event-details">
                   <span className="event-text">{member.name}</span>
                   <span className="event-date">
-                    {member.birthday?.getDate()}.
-                    {(member.birthday?.getMonth() || 0) + 1}.
+                    {member.birthday && (
+                      <>
+                        {new Date(member.birthday).getDate()}.
+                        {new Date(member.birthday).getMonth() + 1}.
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

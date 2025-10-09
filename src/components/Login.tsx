@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import '../styles/login.css';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -27,7 +28,14 @@ const Login: React.FC = () => {
         await login(email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'Došlo k chybě při přihlašování');
+      const firebaseError = err.code || '';
+      if (firebaseError.includes('auth/invalid-credential')) {
+        setError('Nesprávné přihlašovací údaje.');
+      } else if (firebaseError.includes('auth/email-already-in-use')) {
+        setError('Tento email je již registrován.');
+      } else {
+        setError('Došlo k chybě. Zkuste to prosím znovu.');
+      }
     } finally {
       setLoading(false);
     }
@@ -39,226 +47,65 @@ const Login: React.FC = () => {
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      setError(err.message || 'Došlo k chybě při přihlašování přes Google');
+      setError('Došlo k chybě při přihlašování přes Google.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '20px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-          maxWidth: '450px',
-          padding: '50px 40px',
-          textAlign: 'center',
-        }}
-      >
-        {/* Logo/Název aplikace */}
-        <div
-          style={{
-            marginBottom: '40px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '32px',
-              fontWeight: '700',
-              color: '#2d3748',
-              margin: '0 0 10px 0',
-            }}
-          >
-            IoTuyApp
-          </h1>
-          <p
-            style={{
-              fontSize: '16px',
-              color: '#718096',
-              margin: 0,
-            }}
-          >
-            Správa vašich chytrých zařízení
-          </p>
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <h1 className="login-title">IoTuyApp</h1>
+          <p className="login-subtitle">Správa vašich chytrých zařízení</p>
         </div>
 
-        {/* Přepínač přihlášení/registrace */}
-        <div
-          style={{
-            display: 'flex',
-            backgroundColor: '#f7fafc',
-            borderRadius: '12px',
-            padding: '4px',
-            marginBottom: '30px',
-          }}
-        >
+        <div className="login-toggle">
           <button
             type="button"
             onClick={() => setIsRegistering(false)}
-            style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: !isRegistering ? 'white' : 'transparent',
-              color: !isRegistering ? '#2d3748' : '#718096',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              boxShadow: !isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.2s ease',
-            }}
+            className={`toggle-btn ${!isRegistering ? 'active' : ''}`}
           >
             Přihlášení
           </button>
           <button
             type="button"
             onClick={() => setIsRegistering(true)}
-            style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: isRegistering ? 'white' : 'transparent',
-              color: isRegistering ? '#2d3748' : '#718096',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              boxShadow: isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.2s ease',
-            }}
+            className={`toggle-btn ${isRegistering ? 'active' : ''}`}
           >
             Registrace
           </button>
         </div>
 
-        {/* Chybová hláška */}
-        {error && (
-          <div
-            style={{
-              backgroundColor: '#fed7d7',
-              color: '#c53030',
-              padding: '15px',
-              borderRadius: '12px',
-              marginBottom: '25px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
-        {/* Formulář */}
-        <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
-          <div style={{ marginBottom: '25px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#2d3748',
-                fontSize: '14px',
-              }}
-            >
-              Email
-            </label>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label className="form-label">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vas@email.com"
               required
-              style={{
-                width: '100%',
-                padding: '16px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
-                fontSize: '16px',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s ease',
-                outline: 'none',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#667eea')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+              className="form-input"
             />
           </div>
 
-          <div style={{ marginBottom: '30px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#2d3748',
-                fontSize: '14px',
-              }}
-            >
-              Heslo
-            </label>
+          <div className="form-group">
+            <label className="form-label">Heslo</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              style={{
-                width: '100%',
-                padding: '16px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
-                fontSize: '16px',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s ease',
-                outline: 'none',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#667eea')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+              className="form-input"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '16px',
-              background: loading
-                ? '#a0aec0'
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '20px',
-              transition: 'all 0.2s ease',
-              transform: loading ? 'none' : 'translateY(0)',
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }
-            }}
-          >
+          <button type="submit" disabled={loading} className="submit-btn">
             {loading
               ? 'Zpracovávám...'
               : isRegistering
@@ -267,57 +114,16 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        {/* Oddělovač */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '25px 0',
-            color: '#718096',
-            fontSize: '14px',
-          }}
-        >
-          <div
-            style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }}
-          ></div>
-          <span style={{ padding: '0 15px' }}>nebo</span>
-          <div
-            style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }}
-          ></div>
+        <div className="separator">
+          <div className="separator-line"></div>
+          <span className="separator-text">nebo</span>
+          <div className="separator-line"></div>
         </div>
 
-        {/* Google přihlášení */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '16px',
-            backgroundColor: 'white',
-            border: '2px solid #e2e8f0',
-            borderRadius: '12px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '12px',
-            color: '#2d3748',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            if (!loading) {
-              e.currentTarget.style.borderColor = '#667eea';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) {
-              e.currentTarget.style.borderColor = '#e2e8f0';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }
-          }}
+          className="google-btn"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCalendar } from '../Calendar/CalendarProvider';
 import CalendarModal from '../Calendar/CalendarModal';
-import type { CalendarEvent, FamilyMember } from '../Calendar/types';
+import type { CalendarEventData, FamilyMember } from '../../../types';
 import './UpcomingEventsWidget.css';
 
 interface UpcomingEventsWidgetProps {
@@ -17,14 +17,14 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 }) => {
   const { getEventsByDate, formatDate, isToday } = useCalendar();
   const [upcomingEvents, setUpcomingEvents] = useState<
-    Array<CalendarEvent & { displayDate: Date }>
+    Array<CalendarEventData & { displayDate: Date }>
   >([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const loadEvents = () => {
       const today = new Date();
-      const events: Array<CalendarEvent & { displayDate: Date }> = [];
+      const events: Array<CalendarEventData & { displayDate: Date }> = [];
 
       // Načti dnešní události
       const todayEvents = getEventsByDate(today);

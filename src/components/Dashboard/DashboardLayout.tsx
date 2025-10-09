@@ -8,6 +8,7 @@ import HeaderInfo from './HeaderInfo';
 import './styles/DashboardLayout.css';
 import SendMessagePanel from '../Notifications/SendMessagePanel';
 import { useNotificationContext } from '../Notifications/NotificationProvider';
+import { useAuth } from '../../contexts/AuthContext';
 
 type DashboardMode = 'family' | 'tech';
 
@@ -18,7 +19,9 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onNavigateToSettings,
 }) => {
-  const { familyMembers, loading } = useFirestore();
+  const { logout } = useAuth();
+  const { familyMembers } = useFirestore();
+console.log('KROK 2: Data členů dostupná v DashboardLayout:', familyMembers); // <-- PŘIDAT TENTO ŘÁDEK
   const [mode, setMode] = useState<DashboardMode>('family');
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [isFabOpen, setIsFabOpen] = useState(false);
@@ -54,9 +57,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {/* Levé ikony */}
             <div className="family-grid-left">
               {familyMembers
-                .filter((m) => m.id === 'dad' || m.id === 'jarecek')
+                .filter((member) => member.headerPosition === 'left') // <-- Filtrujeme podle pozice z DB
                 .map((member) => {
-                  const memberIcons = { dad: '🥃', jarecek: '🧱' };
                   return (
                     <div
                       key={member.id}
@@ -67,7 +69,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                       title={member.name}
                     >
                       <div className="member-icon-bg">
-                        {memberIcons[member.id as keyof typeof memberIcons]}
+                        {member.headerIcon} {/* <-- Používáme ikonu z DB */}
                       </div>
                       <div className="member-emoji">{member.emoji}</div>
                       <div className="member-name">{member.name}</div>
@@ -82,9 +84,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {/* Pravé ikony */}
             <div className="family-grid-right">
               {familyMembers
-                .filter((m) => m.id === 'mom' || m.id === 'johanka')
+                .filter((member) => member.headerPosition === 'right') // <-- Filtrujeme podle pozice z DB
                 .map((member) => {
-                  const memberIcons = { mom: '👟', johanka: '🎨' };
                   return (
                     <div
                       key={member.id}
@@ -95,7 +96,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                       title={member.name}
                     >
                       <div className="member-icon-bg">
-                        {memberIcons[member.id as keyof typeof memberIcons]}
+                        {member.headerIcon} {/* <-- Používáme ikonu z DB */}
                       </div>
                       <div className="member-emoji">{member.emoji}</div>
                       <div className="member-name">{member.name}</div>
@@ -145,6 +146,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               >
                 <span className="mode-icon">🔧</span>
                 <span className="mode-label">Technický</span>
+              </button>
+              <button
+                className="btn-icon-only" // Můžete použít existující třídu nebo si vytvořit novou
+                onClick={logout}
+                title="Odhlásit se"
+              >
+                🚪
               </button>
             </div>
           </div>
@@ -244,6 +252,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <SendMessagePanel
             senderName={getCurrentMember().name}
             onClose={() => setIsMessagePanelOpen(false)}
+            familyMembers={familyMembers}
           />
         </>
       )}

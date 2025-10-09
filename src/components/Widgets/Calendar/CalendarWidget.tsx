@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CalendarEvent, FamilyMember } from './types';
+import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
 import MonthView from './MonthView.tsx';
 import WeekView from './WeekView.tsx';
@@ -10,7 +10,7 @@ import './styles/CalendarWidget.css';
 interface CalendarWidgetProps {
   familyMembers?: FamilyMember[];
   onAddEvent: (date: Date, memberId?: string) => void;
-  onEditEvent: (event: CalendarEvent) => void;
+  onEditEvent: (event: CalendarEventData) => void;
 }
 
 const CalendarWidget: React.FC<CalendarWidgetProps> = ({

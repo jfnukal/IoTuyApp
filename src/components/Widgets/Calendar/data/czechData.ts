@@ -1,5 +1,5 @@
 // src/components/Widgets/Calendar/data/czechData.ts
-import type { Holiday, Nameday } from '../types';
+import type { Holiday, Nameday } from '../../../../types/index';
 
 interface YearlyData {
   holidays: Holiday[];
@@ -11,11 +11,13 @@ interface YearlyData {
  * @param year - Rok, pro který se mají data načíst.
  * @returns Objekt obsahující pole svátků a pole jmenin.
  */
-export const fetchCalendarDataForYear = async (year: number): Promise<YearlyData> => {
+export const fetchCalendarDataForYear = async (
+  year: number
+): Promise<YearlyData> => {
   // Zjistíme, jestli je rok přestupný, abychom načetli správný počet dní
   const isLeap = new Date(year, 1, 29).getMonth() === 1;
   const daysInYear = isLeap ? 366 : 365;
-  
+
   const url = `https://svatkyapi.cz/api/day/${year}-01-01/interval/${daysInYear}`;
 
   try {
@@ -29,9 +31,9 @@ export const fetchCalendarDataForYear = async (year: number): Promise<YearlyData
     const namedays: Nameday[] = [];
 
     // Projdeme data pro každý den v roce
-    data.forEach(day => {
+    data.forEach((day) => {
       const currentDate = new Date(day.date);
-      
+
       // Pokud je den svátek, přidáme ho do pole svátků
       if (day.isHoliday && day.holidayName) {
         holidays.push({
@@ -56,9 +58,8 @@ export const fetchCalendarDataForYear = async (year: number): Promise<YearlyData
     });
 
     return { holidays, namedays };
-
   } catch (error) {
-    console.error("Nepodařilo se načíst data z svatkyapi.cz:", error);
+    console.error('Nepodařilo se načíst data z svatkyapi.cz:', error);
     // V případě chyby vrátíme prázdné objekty
     return { holidays: [], namedays: [] };
   }

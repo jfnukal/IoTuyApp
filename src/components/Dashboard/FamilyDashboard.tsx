@@ -5,7 +5,7 @@ import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
 import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
 import BusScheduleWidget from '../Widgets/SchoolSchedule/BusScheduleWidget';
 import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
-import type { FamilyMember } from '../Widgets/Calendar/types';
+import type { FamilyMember } from '../../types/index';
 import './styles/FamilyDashboard.css';
 import MessageHistoryWidget from '../Notifications/MessageHistoryWidget';
 
@@ -15,10 +15,10 @@ interface FamilyDashboardProps {
   familyMembers: FamilyMember[];
 }
 
-const FamilyDashboard: React.FC<FamilyDashboardProps> = ({ 
-  selectedMember, 
+const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
+  selectedMember,
   onClearFilter,
-  familyMembers
+  familyMembers,
 }) => {
   return (
     <div className="family-dashboard">
@@ -28,11 +28,10 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           <WeatherMiniWidget isVisible={true} />
         </div>
 
-              {/* Nadcházející události Widget - NOVÝ */}
-              <div className="widget-container upcoming-events-container">
-                    <UpcomingEventsWidget familyMembers={familyMembers} />
-                  </div>
-                  
+        {/* Nadcházející události Widget - NOVÝ */}
+        <div className="widget-container upcoming-events-container">
+          <UpcomingEventsWidget familyMembers={familyMembers} />
+        </div>
 
         {/* Sticky Notes Widget - NOVÝ */}
         <div className="widget-container stickynotes-container">
@@ -45,11 +44,11 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         </div>
 
         <div className="widget-card">
-            <BusScheduleWidget />
-          </div>
+          <BusScheduleWidget />
+        </div>
 
-      {/* Message History Widget - NOVÝ */}
-      <div className="widget-container messages-container">
+        {/* Message History Widget - NOVÝ */}
+        <div className="widget-container messages-container">
           <MessageHistoryWidget />
         </div>
 
@@ -69,10 +68,7 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           <p className="member-info-text">
             📊 Zobrazuji aktivitu pro: <strong>{selectedMember}</strong>
           </p>
-          <button
-            className="clear-filter-btn"
-            onClick={onClearFilter}
-          >
+          <button className="clear-filter-btn" onClick={onClearFilter}>
             ✕ Zobrazit vše
           </button>
         </div>

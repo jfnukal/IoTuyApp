@@ -1,4 +1,4 @@
-import type { MonthTheme } from '../types';
+import type { MonthTheme } from '../../../../types/index';
 
 export const monthThemes: MonthTheme[] = [
   {
@@ -7,7 +7,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     primaryColor: '#667eea',
     secondaryColor: '#764ba2',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 2,
@@ -15,7 +15,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
     primaryColor: '#f093fb',
     secondaryColor: '#f5576c',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 3,
@@ -23,7 +23,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     primaryColor: '#4facfe',
     secondaryColor: '#00f2fe',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 4,
@@ -31,7 +31,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
     primaryColor: '#43e97b',
     secondaryColor: '#38f9d7',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 5,
@@ -39,7 +39,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     primaryColor: '#fa709a',
     secondaryColor: '#fee140',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 6,
@@ -47,7 +47,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
     primaryColor: '#a8edea',
     secondaryColor: '#fed6e3',
-    textColor: '#333333'
+    textColor: '#333333',
   },
   {
     month: 7,
@@ -55,7 +55,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)',
     primaryColor: '#ffd89b',
     secondaryColor: '#19547b',
-    textColor: '#333333'
+    textColor: '#333333',
   },
   {
     month: 8,
@@ -63,7 +63,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     primaryColor: '#667eea',
     secondaryColor: '#764ba2',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 9,
@@ -71,7 +71,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
     primaryColor: '#f093fb',
     secondaryColor: '#f5576c',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 10,
@@ -79,7 +79,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     primaryColor: '#4facfe',
     secondaryColor: '#00f2fe',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 11,
@@ -87,7 +87,7 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
     primaryColor: '#43e97b',
     secondaryColor: '#38f9d7',
-    textColor: '#ffffff'
+    textColor: '#ffffff',
   },
   {
     month: 12,
@@ -95,6 +95,6 @@ export const monthThemes: MonthTheme[] = [
     backgroundImage: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     primaryColor: '#fa709a',
     secondaryColor: '#fee140',
-    textColor: '#ffffff'
-  }
+    textColor: '#ffffff',
+  },
 ];

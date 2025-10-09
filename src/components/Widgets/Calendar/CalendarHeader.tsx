@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CalendarView } from './types';
+import type { CalendarView } from '../../../types/index';
 
 interface CalendarHeaderProps {
   currentDate: Date;

@@ -6,15 +6,18 @@ import RecipientSelector from './RecipientSelector';
 import { MESSAGE_TEMPLATES } from '../../services/familyMessagingService';
 import type { MessageTemplate } from '../../types/notifications';
 import './styles/Notifications.css';
+import type { FamilyMember } from '../../types';
 
 interface SendMessagePanelProps {
   senderName: string;
   onClose: () => void;
+  familyMembers: FamilyMember[]; 
 }
 
 const SendMessagePanel: React.FC<SendMessagePanelProps> = ({
   senderName,
   onClose,
+  familyMembers,
 }) => {
   const { sendMessage, permission, requestPermission } =
     useNotificationContext();
@@ -96,6 +99,7 @@ const SendMessagePanel: React.FC<SendMessagePanelProps> = ({
           <RecipientSelector
             selectedRecipients={selectedRecipients}
             onChange={setSelectedRecipients}
+            familyMembers={familyMembers}
           />
         </div>
 

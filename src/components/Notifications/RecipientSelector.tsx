@@ -3,22 +3,18 @@
 import React from 'react';
 import { FAMILY_GROUPS } from '../../services/familyMessagingService';
 import './styles/Notifications.css';
+import type { FamilyMember } from '../../types';
 
 interface RecipientSelectorProps {
   selectedRecipients: string[];
   onChange: (recipients: string[]) => void;
+  familyMembers: FamilyMember[];
 }
-
-const FAMILY_MEMBERS = [
-  { id: 'dad', name: 'Táta', emoji: '👨' },
-  { id: 'mom', name: 'Máma', emoji: '👩' },
-  { id: 'jarecek', name: 'Jareček', emoji: '👦' },
-  { id: 'johanka', name: 'Johanka', emoji: '👧' },
-];
 
 const RecipientSelector: React.FC<RecipientSelectorProps> = ({
   selectedRecipients,
   onChange,
+  familyMembers,
 }) => {
   const toggleRecipient = (id: string) => {
     if (selectedRecipients.includes(id)) {
@@ -75,7 +71,7 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
       <div className="recipient-section">
         <div className="section-label">Jednotlivci:</div>
         <div className="recipient-chips">
-          {FAMILY_MEMBERS.map((member) => (
+          {familyMembers.map((member: FamilyMember) => (
             <button
               key={member.id}
               className={`recipient-chip individual ${

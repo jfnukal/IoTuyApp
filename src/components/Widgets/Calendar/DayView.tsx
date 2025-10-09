@@ -1,10 +1,10 @@
 import React from 'react';
-import type { CalendarEvent, FamilyMember } from './types';
+import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
 
 interface DayViewProps {
   currentDate: Date;
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEventData) => void;
   familyMembers: FamilyMember[];
 }
 
@@ -45,12 +45,6 @@ const DayView: React.FC<DayViewProps> = ({
 
   const timeSlots = getTimeSlots();
 
-  // Získej barvu pro člena rodiny
-  const getFamilyMemberColor = (memberId: string) => {
-    const member = familyMembers.find((m) => m.id === memberId);
-    return member?.color || '#667eea';
-  };
-
   // Získej události pro časový slot
   const getEventsForTimeSlot = (timeSlot: string) => {
     return timedEvents.filter((event) => {
@@ -70,14 +64,10 @@ const DayView: React.FC<DayViewProps> = ({
   };
 
   // Renderuj událost
-  const renderEvent = (event: CalendarEvent, isAllDay = false) => {
-    const color = event.familyMember
-      ? getFamilyMemberColor(event.familyMember)
-      : event.color || '#667eea';
-
-    const memberName = event.familyMember
-      ? familyMembers.find((m) => m.id === event.familyMember)?.name
-      : null;
+  const renderEvent = (event: CalendarEventData, isAllDay = false) => {
+    const member = familyMembers.find(m => m.id === event.familyMemberId);
+    const color = member ? member.color : (event.color || '#667eea');
+    const memberName = member ? member.name : null;
 
     return (
       <div

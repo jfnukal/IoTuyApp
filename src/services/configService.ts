@@ -19,7 +19,6 @@ export interface AppConfig {
 
 class ConfigService {
   private config: AppConfig | null = null;
-  private loading: boolean = false;
   private loadPromise: Promise<AppConfig> | null = null;
 
   /**
@@ -38,14 +37,12 @@ class ConfigService {
     }
 
     // Spustíme nové načítání
-    this.loading = true;
     this.loadPromise = this._fetchConfig();
 
     try {
       this.config = await this.loadPromise;
       return this.config;
     } finally {
-      this.loading = false;
       this.loadPromise = null;
     }
   }

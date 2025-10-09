@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import type {
-  CalendarEvent,
+  CalendarEventData,
   EventType,
   ReminderType,
   FamilyMember,
-} from './types';
+} from '../../../types/index';
 
 interface EventFormProps {
-  event: CalendarEvent | null;
+  event: CalendarEventData | null;
   date: Date | null;
   familyMembers: FamilyMember[];
-  onSave: (eventData: Partial<CalendarEvent>) => void;
+  onSave: (eventData: Partial<CalendarEventData>) => void;
   onDelete?: () => void;
   onClose: () => void;
   defaultMemberId?: string;
@@ -70,7 +70,7 @@ const EventForm: React.FC<EventFormProps> = ({
     time: roundedTime, // Zaokrouhlený čas
     endTime: getEndTime(roundedTime), // +30 minut
     type: 'personal' as EventType,
-    familyMember: defaultMemberId || '',
+    familyMemberId: defaultMemberId || '',
     color: '#667eea',
     reminder: 'none' as ReminderType,
     isAllDay: false,
@@ -83,11 +83,11 @@ const EventForm: React.FC<EventFormProps> = ({
       setFormData({
         title: event.title,
         description: event.description || '',
-        date: event.date,
+        date: new Date(event.date), // Oprava č. 2: Převedeme string z DB na Date pro formulář
         time: event.time || '',
         endTime: event.endTime || '',
         type: event.type,
-        familyMember: event.familyMember || '',
+        familyMemberId: event.familyMemberId || '', // Oprava č. 1: Používáme familyMemberId
         color: event.color || '#667eea',
         reminder: event.reminder || 'none',
         isAllDay: event.isAllDay || false,
@@ -103,7 +103,7 @@ const EventForm: React.FC<EventFormProps> = ({
         date: now, // Dnešní datum v lokálním čase
         time: roundedStartTime, // Zaokrouhlený čas
         endTime: calculatedEndTime, // +30 minut
-        familyMember: defaultMemberId || '',
+        familyMemberId: defaultMemberId || '',
       }));
     }
   }, [event, date, defaultMemberId]);
@@ -114,7 +114,7 @@ const EventForm: React.FC<EventFormProps> = ({
     if (!event && defaultMemberId) {
       setFormData((prev) => ({
         ...prev,
-        familyMember: defaultMemberId,
+        familyMemberId: defaultMemberId,
       }));
     }
   }, [event, defaultMemberId]);
@@ -167,7 +167,7 @@ const EventForm: React.FC<EventFormProps> = ({
 
     onSave({
       ...formData,
-      date: formData.date,
+      date: formData.date.toISOString().split('T')[0],
       time: formData.isAllDay ? undefined : formData.time,
       endTime: formData.isAllDay ? undefined : formData.endTime,
     });
@@ -296,9 +296,9 @@ const EventForm: React.FC<EventFormProps> = ({
                 <button
                   type="button"
                   className={`family-member-option ${
-                    !formData.familyMember ? 'selected' : ''
+                    !formData.familyMemberId ? 'selected' : ''
                   }`}
-                  onClick={() => handleInputChange('familyMember', '')}
+                  onClick={() => handleInputChange('familyMemberId', '')}
                 >
                   Nikdo
                 </button>
@@ -307,20 +307,22 @@ const EventForm: React.FC<EventFormProps> = ({
                     key={member.id}
                     type="button"
                     className={`family-member-option ${
-                      formData.familyMember === member.id ? 'selected' : ''
+                      formData.familyMemberId === member.id ? 'selected' : ''
                     }`}
                     style={{
                       backgroundColor:
-                        formData.familyMember === member.id
+                        formData.familyMemberId === member.id
                           ? member.color
                           : 'transparent',
                       borderColor: member.color,
                       color:
-                        formData.familyMember === member.id
+                        formData.familyMemberId === member.id
                           ? 'white'
                           : member.color,
                     }}
-                    onClick={() => handleInputChange('familyMember', member.id)}
+                    onClick={() =>
+                      handleInputChange('familyMemberId', member.id)
+                    }
                   >
                     {member.name}
                   </button>

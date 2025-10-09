@@ -22,7 +22,7 @@ import type {
   DeviceCategory,
   CalendarEventData,
   FamilyMember,
-} from '@/types/index';
+} from '../types/index';
 
 class FirestoreService {
   // ==================== USER SETTINGS ====================
@@ -76,7 +76,7 @@ class FirestoreService {
       const q = query(
         roomsCollection,
         where('userId', '==', uid),
-        orderBy('createdAt', 'desc')
+        orderBy('createddAt', 'desc')
       );
       return onSnapshot(q, (snapshot) => {
         const rooms = snapshot.docs.map(
@@ -290,7 +290,6 @@ class FirestoreService {
   }
 
   async updateDeviceCustomization(
-    uid: string,
     deviceId: string,
     customization: {
       customName?: string;
@@ -402,6 +401,7 @@ class FirestoreService {
         where('userId', '==', uid),
         orderBy('createdAt', 'asc')
       );
+
       return onSnapshot(q, (snapshot) => {
         const members = snapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as FamilyMember)
@@ -520,4 +520,3 @@ export const calendarFirebaseService = {
     await deleteDoc(eventRef);
   },
 };
-

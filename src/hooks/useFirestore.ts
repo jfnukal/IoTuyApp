@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestoreService } from '../services/firestoreService';
-import type { TuyaDevice, UserSettings, FamilyMember } from '../types'; 
+import type { TuyaDevice, UserSettings, FamilyMember } from '@/types/index'; 
 
 export const useFirestore = () => {
   const { currentUser } = useAuth();
@@ -98,4 +98,5 @@ export const useFirestore = () => {
 };
 
 // Export také jako useUserData pro zpětnou kompatibilitu
+
 export const useUserData = useFirestore;

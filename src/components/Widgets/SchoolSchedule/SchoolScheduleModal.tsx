@@ -1,6 +1,6 @@
 // src/components/Widgets/SchoolSchedule/SchoolScheduleModal.tsx
 import React, { useState } from 'react';
-import type { TimetableDay } from '../../../api/bakalariAPI';
+import type { TimetableDay } from '../../../types/index';
 import './SchoolScheduleModal.css';
 import { createPortal } from 'react-dom';
 
@@ -96,4 +96,5 @@ export const SchoolScheduleModal: React.FC<SchoolScheduleModalProps> = ({
     </div>,
     document.body
   );
+
 };

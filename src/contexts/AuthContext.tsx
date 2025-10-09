@@ -9,7 +9,7 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import type { User } from '../types';
+import type { User } from '@/types/index';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -104,4 +104,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
+
 };

@@ -456,6 +456,59 @@ class FirestoreService {
   }
 }
 
+// TENTO CELÝ BLOK VLOŽ NA KONEC SOUBORU firestoreService.ts
+// ==================== SCHEDULES SERVICE ====================
+
+// Ujisti se, že tyto importy máš na začátku souboru
+// import { doc, getDoc, setDoc } from 'firebase/firestore';
+// import { db } from '../config/firebase';
+// import type { TimetableDay } from '../types/index';
+
+class ScheduleService {
+  /**
+   * Načte konkrétní rozvrh z Firestore.
+   * @param scheduleId 'johanka' nebo 'jarecek'
+   */
+  async getSchedule(scheduleId: string): Promise<TimetableDay[]> {
+    try {
+      const docRef = doc(db, 'schedules', scheduleId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // Vracíme pole 'days' z dokumentu
+        return docSnap.data().days as TimetableDay[];
+      } else {
+        console.warn(`Rozvrh s ID "${scheduleId}" nebyl v databázi nalezen.`);
+        return [];
+      }
+    } catch (error) {
+      console.error(`Chyba při načítání rozvrhu "${scheduleId}":`, error);
+      throw new Error('Nepodařilo se načíst rozvrh.');
+    }
+  }
+
+  /**
+   * Uloží/přepíše kompletní rozvrh do Firestore.
+   * @param scheduleId 'johanka' nebo 'jarecek'
+   * @param scheduleData Pole dnů s hodinami
+   */
+  async saveSchedule(scheduleId: string, scheduleData: TimetableDay[]): Promise<void> {
+    try {
+      const scheduleRef = doc(db, 'schedules', scheduleId);
+      await setDoc(scheduleRef, {
+        days: scheduleData,
+        lastUpdated: new Date(),
+      });
+      console.log(`✅ Rozvrh "${scheduleId}" byl úspěšně uložen do Firestore.`);
+    } catch (error) {
+      console.error(`❌ Chyba při ukládání rozvrhu "${scheduleId}":`, error);
+      throw new Error('Nepodařilo se uložit rozvrh.');
+    }
+  }
+}
+
+export const scheduleService = new ScheduleService();
+
 export const firestoreService = new FirestoreService();
 
 // ==================== CALENDAR EVENTS SERVICE ====================

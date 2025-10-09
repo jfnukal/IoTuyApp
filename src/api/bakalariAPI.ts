@@ -1,7 +1,10 @@
 // src/api/bakalariAPI.ts
+
+// ODSTRANĚNO: Import 'node-fetch' se na frontendu nepoužívá. Prohlížeč má vlastní fetch.
 import { configService } from '../services/configService';
 import { MOCK_TIMETABLE } from './bakalariMockData';
 
+// ... definice interface (TimetableLesson, TimetableDay, atd.) zůstávají stejné ...
 interface TimetableLesson {
   subjecttext: string;
   teacher: string;
@@ -40,8 +43,8 @@ class BakalariAPI {
   private useMockData: boolean = false;
 
   constructor() {
-    // Načteme konfiguraci při startu
-    this.loadConfig();
+    // ODSTRANĚNO: Volání async metody z konstruktoru. Spolehneme se na ensureConfig().
+    // this.loadConfig();
   }
 
   /**
@@ -55,12 +58,12 @@ class BakalariAPI {
       this.password = config.apiKeys.bakalari_password;
       this.useMockData = config.features.useMockData;
 
-      console.log('🔧 Bakaláři API konfigurace:', 
+      console.log(
+        '🔧 Bakaláři API konfigurace:',
         this.useMockData ? 'MOCK DATA' : 'REAL API'
       );
     } catch (error) {
       console.error('❌ Nepodařilo se načíst Bakaláři konfiguraci:', error);
-      // Fallback na mock data při chybě
       this.useMockData = true;
     }
   }
@@ -99,23 +102,16 @@ class BakalariAPI {
         body: params.toString(),
       });
 
-      const responseText = await response.text();
-
       if (!response.ok) {
         console.error('Bakaláři login failed:', response.status);
         return false;
       }
 
-      try {
-        const data = JSON.parse(responseText);
-        this.accessToken = data.access_token;
-        this.tokenExpiry = Date.now() + data.expires_in * 1000;
-        console.log('✅ Bakaláři login successful');
-        return true;
-      } catch (parseError) {
-        console.error('❌ JSON parse error:', parseError);
-        return false;
-      }
+      const data = await response.json();
+      this.accessToken = data.access_token;
+      this.tokenExpiry = Date.now() + data.expires_in * 1000;
+      console.log('✅ Bakaláři login successful');
+      return true;
     } catch (error) {
       console.error('Bakaláři login error:', error);
       return false;
@@ -163,15 +159,13 @@ class BakalariAPI {
     }
   }
 
+  // PŘIDÁNO: Toto je ta klíčová veřejná metoda, která chyběla.
   async getTimetable(): Promise<TimetableDay[]> {
-    // Ujistíme se že máme config
     await this.ensureConfig();
 
     if (this.useMockData) {
       console.log('📦 Používám MOCK data pro rozvrh');
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(MOCK_TIMETABLE), 500);
-      });
+      return Promise.resolve(MOCK_TIMETABLE);
     }
 
     const cached = this.getCachedTimetable();
@@ -194,9 +188,9 @@ class BakalariAPI {
 
       const data = await response.json();
       const timetable = this.parseTimetable(data);
-      
+
       this.cacheTimetable(timetable);
-      
+
       return timetable;
     } catch (error) {
       console.error('Bakaláři timetable error:', error);

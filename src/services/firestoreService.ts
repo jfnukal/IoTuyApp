@@ -22,7 +22,7 @@ import type {
   DeviceCategory,
   CalendarEventData,
   FamilyMember,
-} from '../types';
+} from '@/types/index';
 
 class FirestoreService {
   // ==================== USER SETTINGS ====================
@@ -520,3 +520,4 @@ export const calendarFirebaseService = {
     await deleteDoc(eventRef);
   },
 };
+

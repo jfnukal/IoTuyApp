@@ -1,0 +1,275 @@
+/* ==================== IoTuyApp CSS ARCHITECTURE ==================== */
+/* * CSS architektura pro Smart Home IoT aplikaci
+ * Navrženo pro škálovatelnost a budoucí rozšíření:
+ * - Drag & Drop funkcionalita
+ * - 2D/3D vizualizace místností
+ * - Mobilní responzivita
+ * - Tmavý/světlý/high-contrast režim
+ * - Accessibility podpora
+ * - Print styly
+ */
+
+/* ==================== IMPORT HIERARCHY ==================== */
+/* Importy jsou v pořadí podle důležitosti a specificity */
+
+/* 1. CSS Reset - odstraní výchozí styly prohlížeče */
+@import './01-reset.css';
+
+/* 2. CSS Variables - definuje všechny barvy, spacing, atd. */
+@import './02-variables.css';
+
+/* 3. Base styly - základní HTML elementy */
+@import './03-base.css';
+
+/* 4. Layout systém - kontejnery, grid, flex */
+@import './04-layout.css';
+
+/* 5. Komponenty - tlačítka, karty, formuláře */
+@import './05-components.css';
+
+/* 6. Room management - ARCHIVOVÁNO */
+/* @import './06-rooms.css'; */
+
+/* 8. Dashboard - ARCHIVOVÁNO (styly jsou teď přímo u komponent) */
+/* @import './08-dashboard.css'; */
+
+/* 9. Sidebar - ARCHIVOVÁNO */
+/* @import './09-sidebar.css'; */
+
+/* 7. Utility třídy - pomocné třídy s nejvyšší prioritou */
+@import './07-utilities.css';
+
+/* Kalendář: */
+/* @import './Calendar.css'; */
+/* @import '../../../src/components/Widgets/Calendar/CalendarShared.css';  */
+
+/* ==================== CUSTOM PROPERTIES OVERRIDE ==================== */
+/* Místo pro override CSS variables pro různé konfigurace */
+
+/* Development mode - červené bordery pro debugging */
+.debug-mode * {
+  outline: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.debug-mode .device-card {
+  outline: 2px solid rgba(0, 255, 0, 0.5);
+}
+
+.debug-mode .room-selector {
+  outline: 2px solid rgba(0, 0, 255, 0.5);
+}
+
+/* ==================== FUTURE FEATURES PREPARATION ==================== */
+/* Placeholder pro budoucí funkce - zatím prázdné */
+
+/* Drag & Drop enhanced styles */
+.drag-enhanced {
+  /* Bude rozšířeno při implementaci drag & drop */
+}
+
+/* 2D Room View styles */
+.room-2d-enhanced {
+  /* Bude rozšířeno při implementaci 2D view */
+}
+
+/* 3D Room View styles */
+.room-3d-enhanced {
+  /* Bude rozšířeno při implementaci 3D view */
+  perspective: var(--room-3d-perspective);
+}
+
+/* Advanced animations pro budoucí použití */
+.enhanced-animations {
+  /* Pokročilé animace pro premium UX */
+}
+
+/* Mobile-specific enhancements */
+.mobile-optimized {
+  /* Mobilní optimalizace pro touch interakce */
+  touch-action: manipulation;
+}
+
+/* ==================== PERFORMANCE OPTIMIZATIONS ==================== */
+/* Optimalizace pro rychlejší vykreslování */
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.contain-layout {
+  contain: layout style paint;
+}
+
+/* ==================== PRINT OPTIMIZATIONS ==================== */
+@media print {
+  /* Skryj nepoužitelné elementy při tisku */
+  .room-selector,
+  .view-controls,
+  .sync-controls,
+  .user-controls,
+  .device-main-control {
+    display: none !important;
+  }
+
+  /* Optimalizuj device cards pro tisk */
+  .device-card {
+    break-inside: avoid;
+    border: 1px solid #000;
+    background: white !important;
+    color: black !important;
+  }
+
+  .devices-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* ==================== HIGH CONTRAST MODE ==================== */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary: #0000ff;
+    --color-success: #008000;
+    --color-danger: #ff0000;
+    --color-warning: #ff8000;
+    --border-width: 2px;
+    --border-width-thick: 3px;
+  }
+
+  .device-card {
+    border-width: var(--border-width-thick);
+  }
+
+  .btn {
+    border-width: var(--border-width-thick);
+  }
+}
+
+/* ==================== REDUCED MOTION SUPPORT ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .device-card {
+    transition: none;
+  }
+
+  .btn {
+    transition: none;
+  }
+
+  .room-tab {
+    transition: none;
+  }
+
+  .view-tab {
+    transition: none;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==================== THEME SWITCHING SUPPORT ==================== */
+/* Smooth přechod mezi tématy */
+:root {
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal);
+}
+
+[data-theme-transition] * {
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal), border-color var(--transition-normal);
+}
+
+/* ==================== ERROR BOUNDARIES ==================== */
+/* Styly pro error handling */
+.error-boundary {
+  padding: var(--spacing-8);
+  text-align: center;
+  background: var(--color-danger-light);
+  border: 2px solid var(--color-danger);
+  border-radius: var(--border-radius-lg);
+  color: var(--color-danger-dark);
+}
+
+.error-boundary h2 {
+  color: var(--color-danger-dark);
+  margin-bottom: var(--spacing-4);
+}
+
+/* ==================== LOADING STATES ==================== */
+/* Global loading styly */
+.app-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.app-loading::after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-gray-300);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==================== DEVELOPMENT HELPERS ==================== */
+/* Pouze pro development - odstraň v produkci */
+[data-dev='true'] {
+  /* Development mode indikátory */
+}
+
+[data-dev='true']::before {
+  content: 'DEV MODE';
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: red;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+  z-index: 9999;
+  border-radius: 3px;
+}
+
+/* ==================== CSS ARCHITECTURE NOTES ==================== */
+/*
+ * DŮLEŽITÉ POZNÁMKY PRO BUDOUCÍ ROZŠÍŘENÍ:
+ * 
+ * 1. CSS Variables jsou centralizovány v 02-variables.css
+ * 2. Všechny komponenty používají konzistentní naming (BEM-like)
+ * 3. Responsive je mobile-first
+ * 4. Accessibility je zabudována od začátku
+ * 5. Dark/Light mode je připraven
+ * 6. Print styly jsou implementovány
+ * 7. Performance optimalizace jsou připraveny
+ * 8. Drag & Drop placeholder existuje
+ * 9. 2D/3D view je připraven
+ * 10. Error boundaries mají styly
+ * 
+ * PŘIDÁVÁNÍ NOVÝCH KOMPONENT:
+ * - Přidej do příslušného souboru (05-components.css)
+ * - Používej CSS variables
+ * - Dodržuj naming konvenci
+ * - Přidej responsive varianty
+ * - Testuj s accessibility
+ * 
+ * ÚPRAVA BAREV/SPACING:
+ * - Uprav pouze 02-variables.css
+ * - Nepoužívej hardcoded hodnoty
+ * 
+ * DEBUGGING:
+ * - Přidej .debug-mode třídu na body
+ * - Použij .debug-red, .debug-blue, .debug-green
+ */

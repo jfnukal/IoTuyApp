@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { webPushService } from '../services/webPushService';
 import { familyMessagingService } from '../services/familyMessagingService';
 import type { FamilyMessage } from '../types/notifications';
+import { firestoreService } from '../services/firestoreService';
 
 export const useNotifications = (userId: string | null) => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -59,16 +60,35 @@ export const useNotifications = (userId: string | null) => {
   }, [userId]);
 
   // Požádat o povolení
-  const requestPermission = useCallback(async () => {
-    const granted = await webPushService.requestPermission();
-    if (granted) {
-      await webPushService.registerServiceWorker();
-      setPermission('granted');
-    } else {
-      setPermission('denied');
+// TOTO JE SPRÁVNÁ VERZE
+const requestPermission = useCallback(async () => {
+  // 1. Zkontrolujeme, jestli máme userId
+  if (!userId) {
+    console.error("Nemohu požádat o povolení bez ID uživatele.");
+    return false;
+  }
+
+  const granted = await webPushService.requestPermission();
+  if (granted) {
+    // 2. Zaregistrujeme service worker
+    await webPushService.registerServiceWorker();
+    setPermission('granted');
+
+    console.log('Povolení uděleno, pokouším se získat FCM token...');
+    
+    // 3. ZÍSKÁME TOKEN (tento krok chyběl)
+    const token = await webPushService.getFCMToken();
+    
+    // 4. Pokud máme token, uložíme ho
+    if (token) {
+      await firestoreService.saveFCMToken(userId, token);
     }
-    return granted;
-  }, []);
+
+  } else {
+    setPermission('denied');
+  }
+  return granted;
+}, [userId]); // 5. Přidáme userId do závislostí
 
   // Poslat zprávu
   const sendMessage = useCallback(async (

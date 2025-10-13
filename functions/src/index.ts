@@ -1,44 +1,101 @@
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import { bakalariAPI } from "./bakalariAPI";
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+import { bakalariAPI } from '../../src/api/bakalariAPI';
 
 // Inicializace Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
-// Definice naší automatické funkce
+// ================================================================= //
+// FUNKCE 1: Aktualizace rozvrhu (zůstává beze změny)
+// ================================================================= //
 export const updateBakalariTimetable = functions
-  // Nastavení časové zóny a plánu spouštění
-  .region("europe-west1") // Doporučeno pro Evropu
-  .pubsub.schedule("0 17 * * 1-5") // Spustí se v 17:00, od pondělí do pátku
-  .timeZone("Europe/Prague") // Důležité pro správný čas!
-  .onRun(async (context) => {
-    console.log("Spouštím automatickou aktualizaci rozvrhu z Bakalářů.");
-
+  .region('europe-west1')
+  .pubsub.schedule('0 17 * * 1-5')
+  .timeZone('Europe/Prague')
+  .onRun(async () => {
+    console.log('Spouštím automatickou aktualizaci rozvrhu z Bakalářů.');
     try {
-      // Krok 1: Načtení dat z Bakaláři API
       const freshTimetable = await bakalariAPI.getTimetable();
-
       if (!freshTimetable || freshTimetable.length === 0) {
-        console.warn("Nepodařilo se načíst nový rozvrh, žádná data k zápisu.");
+        console.warn('Nepodařilo se načíst nový rozvrh, žádná data k zápisu.');
         return null;
       }
-
-      // Krok 2: Zápis do Firestore
-      // Používáme .set() s { merge: true }, což zajistí "inkrementální"
-      // update - přepíše celý dokument, ale zachová ho, pokud existuje.
-      // Pro náš případ "přepsat změny" je to ideální.
-      const scheduleRef = db.collection("schedules").doc("johanka");
+      const scheduleRef = db.collection('schedules').doc('johanka');
       await scheduleRef.set({
         days: freshTimetable,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
       });
-
-      console.log("✅ Rozvrh pro Johanku byl úspěšně aktualizován v Firestore.");
+      console.log(
+        '✅ Rozvrh pro Johanku byl úspěšně aktualizován v Firestore.'
+      );
       return null;
-
     } catch (error) {
-      console.error("❌ Došlo k chybě při aktualizaci rozvrhu:", error);
+      console.error('❌ Došlo k chybě při aktualizaci rozvrhu:', error);
       return null;
+    }
+  });
+
+// ================================================================= //
+// FUNKCE 2: Odeslání Push notifikace při nové zprávě (naše nová funkce)
+// ================================================================= //
+export const sendPushOnNewMessage = functions
+  .region('europe-west1')
+  .firestore.document('familyMessages/{messageId}')
+  .onCreate(async (snapshot, context) => {
+    const messageData = snapshot.data();
+    if (!messageData) {
+      console.log('Nová zpráva nemá žádná data.');
+      return;
+    }
+
+    console.log(`Nová zpráva ${context.params.messageId}:`, messageData);
+
+    const recipients = messageData.recipients.filter(
+      (id: string) => id !== messageData.senderId
+    );
+
+    if (recipients.length === 0) {
+      console.log('Žádní příjemci k odeslání notifikace.');
+      return;
+    }
+
+    const userSettingsPromises = recipients.map((userId: string) =>
+      db.collection('userSettings').doc(userId).get()
+    );
+
+    const userSettingsResults = await Promise.all(userSettingsPromises);
+
+    const allTokens = userSettingsResults
+      .flatMap((doc) => (doc.exists ? doc.data()?.fcmTokens : []))
+      .filter((token) => token);
+
+    if (allTokens.length === 0) {
+      console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
+      return;
+    }
+
+    console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
+
+    const payload = {
+      notification: {
+        title: `💬 Nová zpráva od ${messageData.senderName}`,
+        body: messageData.message,
+        icon: '/icon-192x192.png',
+        badge: '/badge-72x72.png',
+      },
+    };
+
+    try {
+      const response = await admin.messaging().sendToDevice(allTokens, payload);
+      console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
+      if (response.failureCount > 0) {
+        console.warn(
+          'Některé notifikace se nepodařilo odeslat:',
+          response.failureCount
+        );
+      }
+    } catch (error) {
+      console.error('❌ Chyba při odesílání notifikací:', error);
     }
   });

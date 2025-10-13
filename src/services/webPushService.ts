@@ -1,4 +1,6 @@
 // src/services/webPushService.ts
+import { getToken } from 'firebase/messaging';
+import { messaging } from '../config/firebase';
 
 export class WebPushService {
   private static instance: WebPushService;
@@ -11,6 +13,31 @@ export class WebPushService {
       WebPushService.instance = new WebPushService();
     }
     return WebPushService.instance;
+  }
+
+  // NOVÁ METODA PRO ZÍSKÁNÍ TOKENU
+  async getFCMToken(): Promise<string | null> {
+    if (!this.isSupported()) {
+      console.warn('Push notifications are not supported.');
+      return null;
+    }
+
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+      });
+
+      if (token) {
+        console.log('FCM Token:', token);
+        return token;
+      } else {
+        console.warn('No registration token available. Request permission to generate one.');
+        return null;
+      }
+    } catch (error) {
+      console.error('An error occurred while retrieving token. ', error);
+      return null;
+    }
   }
 
   // Kontrola, jestli prohlížeč podporuje notifikace

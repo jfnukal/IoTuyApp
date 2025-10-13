@@ -4,11 +4,13 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  arrayUnion,
   collection,
   addDoc,
   query,
   orderBy,
   getDocs,
+  serverTimestamp,
   writeBatch,
   onSnapshot,
   where,
@@ -25,6 +27,7 @@ import type {
   TimetableDay,
   NamedayPreferenceDoc,
 } from '../types/index';
+
 
 class FirestoreService {
   // ==================== USER SETTINGS ====================
@@ -68,7 +71,33 @@ class FirestoreService {
     }
   }
 
-  // ==================== ROOMS ====================
+  async saveFCMToken(userId: string, token: string): Promise<void> {
+    try {
+      const userSettingsRef = doc(db, 'userSettings', userId);
+      const docSnap = await getDoc(userSettingsRef);
+
+      if (docSnap.exists()) {
+        // Dokument existuje, jen přidáme nový token do pole
+        await updateDoc(userSettingsRef, {
+          fcmTokens: arrayUnion(token),
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        // Dokument neexistuje, vytvoříme ho s polem pro tokeny
+        await setDoc(userSettingsRef, {
+          uid: userId,
+          fcmTokens: [token],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
+      console.log('✅ FCM token byl úspěšně uložen pro uživatele:', userId);
+    } catch (error) {
+      console.error('❌ Chyba při ukládání FCM tokenu:', error);
+    }
+  }
+
+   // ==================== ROOMS ====================
   async subscribeToUserRooms(
     uid: string,
     callback: (rooms: Room[]) => void

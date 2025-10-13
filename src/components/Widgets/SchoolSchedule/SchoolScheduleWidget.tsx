@@ -81,11 +81,7 @@ const SchoolScheduleWidget: React.FC = () => {
           firestoreService.getSchedule('johanka'),
           firestoreService.getSchedule('jarecek'),
         ]);
-        console.log('LADĚNÍ 1: Data přímo z Firebase', {
-          johankaData,
-          jarecekData,
-        });
-
+       
         setJohankaSchedule(johankaData);
         setJarecekSchedule(jarecekData);
 
@@ -142,10 +138,6 @@ const SchoolScheduleWidget: React.FC = () => {
 
   const currentTimetable =
     selectedKid === 'johanka' ? johankaSchedule : jarecekSchedule;
-  console.log(
-    'LADĚNÍ 2: `currentTimetable` před vykreslením',
-    currentTimetable
-  );
 
   // Zobrazení pro prázdný rozvrh
   if (currentTimetable.length === 0) {
@@ -209,7 +201,6 @@ const SchoolScheduleWidget: React.FC = () => {
   }
 
   const today = currentTimetable[selectedDay];
-  console.log('LADĚNÍ 3: Objekt `today` před vykreslením lekcí', today);
 
   // Plné zobrazení s daty
   return (

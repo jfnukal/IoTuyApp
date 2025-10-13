@@ -44,7 +44,6 @@ export const sendPushOnNewMessage = functions
   .region('europe-west1')
   .firestore.document('familyMessages/{messageId}')
   .onCreate(async (snapshot, context) => {
-    // ... (kód pro získání messageData a recipients zůstává stejný) ...
     const messageData = snapshot.data();
     if (!messageData) {
       console.log('Nová zpráva nemá žádná data.');
@@ -71,21 +70,17 @@ export const sendPushOnNewMessage = functions
     }
 
     console.log(`Zpracovávám zprávu s ID: ${context.params.messageId}`);
-
     console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
 
-    // --- ZAČÁTEK ZMĚNY ---
-    // Připravíme zprávu pro novou metodu sendMulticast
     const message = {
       notification: {
         title: `💬 Nová zpráva od ${messageData.senderName}`,
         body: messageData.message,
       },
-      tokens: allTokens, // Místo payloadu posíláme tokeny přímo ve zprávě
+      tokens: allTokens,
     };
 
     try {
-      // Použijeme novou metodu "sendMulticast"
       const response = await admin.messaging().sendMulticast(message);
       console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
       if (response.failureCount > 0) {
@@ -97,5 +92,4 @@ export const sendPushOnNewMessage = functions
     } catch (error) {
       console.error('❌ Chyba při odesílání notifikací:', error);
     }
-    // --- KONEC ZMĚNY ---
   });

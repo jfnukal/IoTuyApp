@@ -14,7 +14,7 @@ import type {
   Nameday,
   CalendarSettings,
   MonthTheme,
-  NamedayPreferenceDoc, 
+  NamedayPreferenceDoc,
 } from '../../../types/index';
 import { fetchCalendarDataForYear } from './data/czechData';
 import { fetchImageForQuery } from '../../../api/unsplash';
@@ -147,8 +147,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
       unsubscribe();
     };
   }, [currentUser]);
-  
-  // NOVÉ: Načtení a sledování označených jmenin z Firebase
+
   useEffect(() => {
     if (!currentUser) {
       setMarkedNamedays(new Set());
@@ -156,13 +155,13 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     }
     const unsubscribe = firestoreService.subscribeToNamedayPreferences(
       currentUser.uid,
-      (prefs) => {
+      // OPRAVA: Explicitně jsme řekli, jakého typu je parametr 'prefs'
+      (prefs: NamedayPreferenceDoc | null) => {
         setMarkedNamedays(new Set(prefs?.markedDates || []));
       }
     );
-    return () => unsubscribe();
+    return unsubscribe;
   }, [currentUser]);
-
 
   // Načtení obrázku na pozadí (zůstává stejné)
   useEffect(() => {
@@ -219,27 +218,32 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
   );
 
   // --- NOVÉ FUNKCE PRO JMENINY ---
-  const isNamedayMarked = useCallback((date: Date): boolean => {
-    const key = date.toISOString().split('T')[0]; // Klíč ve formátu YYYY-MM-DD
-    return markedNamedays.has(key);
-  }, [markedNamedays]);
+  const isNamedayMarked = useCallback(
+    (date: Date): boolean => {
+      const key = date.toISOString().split('T')[0]; // Klíč ve formátu YYYY-MM-DD
+      return markedNamedays.has(key);
+    },
+    [markedNamedays]
+  );
 
-  const markNameday = useCallback(async (date: Date, marked: boolean) => {
-    if (!currentUser) return;
-    const key = date.toISOString().split('T')[0];
-    const newMarkedDays = new Set(markedNamedays);
-    if (marked) {
-      newMarkedDays.add(key);
-    } else {
-      newMarkedDays.delete(key);
-    }
-    setMarkedNamedays(newMarkedDays); // Okamžitá aktualizace UI pro plynulost
-    // Uložení do Firebase na pozadí
-    await firestoreService.saveNamedayPreferences(currentUser.uid, {
-      markedDates: Array.from(newMarkedDays),
-    });
-  }, [currentUser, markedNamedays]);
-
+  const markNameday = useCallback(
+    async (date: Date, marked: boolean) => {
+      if (!currentUser) return;
+      const key = date.toISOString().split('T')[0];
+      const newMarkedDays = new Set(markedNamedays);
+      if (marked) {
+        newMarkedDays.add(key);
+      } else {
+        newMarkedDays.delete(key);
+      }
+      setMarkedNamedays(newMarkedDays); // Okamžitá aktualizace UI pro plynulost
+      // Uložení do Firebase na pozadí
+      await firestoreService.saveNamedayPreferences(currentUser.uid, {
+        markedDates: Array.from(newMarkedDays),
+      });
+    },
+    [currentUser, markedNamedays]
+  );
 
   // --- POMOCNÉ FUNKCE (zůstávají stejné) ---
   const isSameDay = useCallback((date1: Date | string, date2: Date) => {
@@ -292,12 +296,18 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     const weekDay = date.toLocaleDateString('cs-CZ', { weekday: 'long' });
 
     switch (format) {
-      case 'DD.MM.YYYY': return `${day}.${month}.${year}`;
-      case 'DD.MM': return `${day}.${month}`;
-      case 'WEEKDAY': return weekDay;
-      case 'FULL': return `${weekDay} ${day}.${month}.${year}`;
-      case 'MONTH': return date.toLocaleDateString('cs-CZ', { month: 'long' });
-      default: return date.toLocaleDateString('cs-CZ');
+      case 'DD.MM.YYYY':
+        return `${day}.${month}.${year}`;
+      case 'DD.MM':
+        return `${day}.${month}`;
+      case 'WEEKDAY':
+        return weekDay;
+      case 'FULL':
+        return `${weekDay} ${day}.${month}.${year}`;
+      case 'MONTH':
+        return date.toLocaleDateString('cs-CZ', { month: 'long' });
+      default:
+        return date.toLocaleDateString('cs-CZ');
     }
   };
 

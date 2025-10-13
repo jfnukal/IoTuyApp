@@ -3,42 +3,46 @@
 import { useState, useEffect } from 'react';
 import { useCalendar } from '../components/Widgets/Calendar/CalendarProvider';
 import type { FamilyMember } from '../types';
-import { getMarkedNamedays } from '../components/Widgets/Calendar/utils/namedayState';
+
+// SMAZÁNO: Starý a nefunkční import
+// import { getMarkedNamedays } from '../components/Widgets/Calendar/utils/namedayState';
 
 export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
-  const { formatDate, getNamedayByDate, isSameDay } = useCalendar();
+  // ZMĚNA: Přidali jsme si 'isNamedayMarked', abychom se mohli ptát na označené dny
+  const { formatDate, getNamedayByDate, isSameDay, isNamedayMarked } =
+    useCalendar();
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0);
 
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // --- Logika pro svátky ---
+  // --- Logika pro svátky (zůstává stejná) ---
   const todayNameday = getNamedayByDate(today);
   const tomorrowNameday = getNamedayByDate(tomorrow);
 
+  // --- ZMĚNA: Celá tato funkce je teď mnohem jednodušší ---
+  // Už si nemusíme nic složitě načítat, jen se zeptáme `isNamedayMarked`
   const getMarkedNamedayInfo = () => {
-    const marked = getMarkedNamedays();
-    const todayZero = new Date();
-    todayZero.setHours(0, 0, 0, 0);
     const info: { names: string; daysUntil: number; isToday: boolean }[] = [];
-
-    for (const dateStr of marked) {
-      const date = new Date(dateStr);
+    // Projdeme následujících 30 dní a podíváme se, jestli jsou označené
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
       date.setHours(0, 0, 0, 0);
-      const nameday = getNamedayByDate(date);
-      if (!nameday) continue;
+      date.setDate(date.getDate() + i);
 
-      const diffTime = date.getTime() - todayZero.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      info.push({
-        names: nameday.names.join(', '),
-        daysUntil: diffDays,
-        isToday: diffDays === 0,
-      });
+      if (isNamedayMarked(date)) {
+        const nameday = getNamedayByDate(date);
+        if (nameday) {
+          info.push({
+            names: nameday.names.join(', '),
+            daysUntil: i,
+            isToday: i === 0,
+          });
+        }
+      }
     }
-    return info.sort((a, b) => a.daysUntil - b.daysUntil);
+    return info;
   };
 
   const markedNamedays = getMarkedNamedayInfo();
@@ -47,12 +51,12 @@ export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
     .filter((m) => m.daysUntil > 0)
     .slice(0, 3);
 
-  // --- Logika pro narozeniny ---
+  // --- Logika pro narozeniny (zůstává stejná) ---
   const birthdaysToday = familyMembers.filter(
     (member) => member.birthday && isSameDay(new Date(member.birthday), today)
   );
 
-  // --- Rotující informace v záhlaví ---
+  // --- Rotující informace v záhlaví (zůstává stejná) ---
   const namedayInfos = [
     todayNameday ? `Dnes má svátek ${todayNameday.names.join(', ')}` : null,
     tomorrowNameday
@@ -73,7 +77,6 @@ export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
     return () => clearInterval(interval);
   }, [namedayInfos.length]);
 
-  // === OPRAVA: PŘIDÁNÍ KOMENTÁŘŮ KE DNI ===
   const weekday = today.toLocaleDateString('cs-CZ', { weekday: 'long' });
   const dayComments: { [key: string]: string } = {
     pondělí: 'Začínáme nový týden! 💪',
@@ -85,13 +88,12 @@ export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
     neděle: 'Odpočinkový den! 😴',
   };
   const dayComment = dayComments[weekday] || '✨';
-  // === KONEC OPRAVY ===
 
   // Hook vrací připravená data pro zobrazení
   return {
     today,
     formatDate,
-    dayComment, // <-- Posíláme dál opravený komentář
+    dayComment,
     birthdaysToday,
     namedayInfos,
     currentInfoIndex,

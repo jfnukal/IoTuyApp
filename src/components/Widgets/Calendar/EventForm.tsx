@@ -25,101 +25,114 @@ const EventForm: React.FC<EventFormProps> = ({
   onClose,
   defaultMemberId,
 }) => {
-  // DEBUG
-  console.log('[EventForm] Props:', {
-    event: event?.title,
-    date,
-    isToday: date?.toDateString() === new Date().toDateString(),
-  });
-  // Funkce pro zaokrouhlení času nahoru na nejbližších 15 minut
   const getRoundedTime = () => {
     const now = new Date();
     const minutes = now.getMinutes();
     const roundedMinutes = Math.ceil(minutes / 15) * 15;
-
     if (roundedMinutes >= 60) {
       now.setHours(now.getHours() + 1);
       now.setMinutes(0);
     } else {
       now.setMinutes(roundedMinutes);
     }
-
     return `${now.getHours().toString().padStart(2, '0')}:${now
       .getMinutes()
       .toString()
       .padStart(2, '0')}`;
   };
 
-  // Funkce pro čas +30 minut od zaokrouhleného času
   const getEndTime = (startTime: string) => {
     const [hours, minutes] = startTime.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes + 30);
-    return `${date.getHours().toString().padStart(2, '0')}:${date
+    const d = new Date();
+    d.setHours(hours, minutes + 30);
+    return `${d.getHours().toString().padStart(2, '0')}:${d
       .getMinutes()
       .toString()
       .padStart(2, '0')}`;
   };
 
-  const roundedTime = getRoundedTime();
-
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: new Date(), // VŽDY dnešní datum v lokálním čase
-    time: roundedTime, // Zaokrouhlený čas
-    endTime: getEndTime(roundedTime), // +30 minut
-    type: 'personal' as EventType,
-    familyMemberId: defaultMemberId || '',
-    color: '#667eea',
-    reminder: 'none' as ReminderType,
-    isAllDay: false,
-  });
-
-  // Naplň formulář při editaci NEBO nastav dnešní datum při vytváření
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     if (event) {
-      // EDITACE - naplň data z existující události
-      setFormData({
+      return {
         title: event.title,
         description: event.description || '',
-        date: new Date(event.date), // Oprava č. 2: Převedeme string z DB na Date pro formulář
+        date: new Date(event.date + 'T00:00:00'),
         time: event.time || '',
         endTime: event.endTime || '',
         type: event.type,
-        familyMemberId: event.familyMemberId || '', // Oprava č. 1: Používáme familyMemberId
+        familyMemberId: event.familyMemberId || '',
+        color: event.color || '#667eea',
+        reminder: event.reminder || 'none',
+        isAllDay: event.isAllDay || false,
+      };
+    }
+    const initialDate = date || new Date();
+    const roundedStartTime = getRoundedTime();
+    const calculatedEndTime = getEndTime(roundedStartTime);
+    return {
+      title: '',
+      description: '',
+      date: initialDate,
+      time: roundedStartTime,
+      endTime: calculatedEndTime,
+      type: 'personal' as EventType,
+      familyMemberId: defaultMemberId || '',
+      color: '#667eea',
+      reminder: 'none' as ReminderType,
+      isAllDay: false,
+    };
+  });
+
+  useEffect(() => {
+    if (event) {
+      setFormData({
+        title: event.title,
+        description: event.description || '',
+        date: new Date(event.date + 'T00:00:00'),
+        time: event.time || '',
+        endTime: event.endTime || '',
+        type: event.type,
+        familyMemberId: event.familyMemberId || '',
         color: event.color || '#667eea',
         reminder: event.reminder || 'none',
         isAllDay: event.isAllDay || false,
       });
-    } else {
-      // NOVÁ UDÁLOST - nastav aktuální datum a čas
-      const now = new Date();
-      const roundedStartTime = getRoundedTime();
-      const calculatedEndTime = getEndTime(roundedStartTime);
-
-      setFormData((prev) => ({
-        ...prev,
-        date: now, // Dnešní datum v lokálním čase
-        time: roundedStartTime, // Zaokrouhlený čas
-        endTime: calculatedEndTime, // +30 minut
-        familyMemberId: defaultMemberId || '',
-      }));
     }
-  }, [event, date, defaultMemberId]);
+  }, [event]);
 
-  // Efekt pro nastavení výchozího člena při vytváření nové události
-  useEffect(() => {
-    // Spustí se jen když vytváříme novou událost (event je null) a máme defaultMemberId
-    if (!event && defaultMemberId) {
-      setFormData((prev) => ({
-        ...prev,
-        familyMemberId: defaultMemberId,
-      }));
-    }
-  }, [event, defaultMemberId]);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+    onSave({
+      ...formData,
+      date: `${formData.date.getFullYear()}-${(formData.date.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}-${formData.date
+        .getDate()
+        .toString()
+        .padStart(2, '0')}`,
+      time: formData.isAllDay ? undefined : formData.time,
+      endTime: formData.isAllDay ? undefined : formData.endTime,
+    });
+  };
 
-  // Typy událostí
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => {
+      const newFormData = { ...prev, [field]: value };
+
+      if (field === 'familyMemberId') {
+        // Najdeme vybraného člena v seznamu
+        const selectedMember = familyMembers.find(
+          (member) => member.id === value
+        );
+        // A nastavíme jeho barvu (nebo výchozí, pokud není vybrán nikdo)
+        newFormData.color = selectedMember ? selectedMember.color : '#667eea';
+      }
+
+      return newFormData;
+    });
+  };
+
   const eventTypes = [
     { value: 'personal', label: 'Osobní', icon: '👤' },
     { value: 'work', label: 'Pracovní', icon: '💼' },
@@ -128,7 +141,7 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: 'reminder', label: 'Připomínka', icon: '⏰' },
   ];
 
-  // Možnosti připomenutí
+  // OPRAVENO: Vráceny všechny možnosti připomenutí
   const reminderOptions = [
     { value: 'none', label: 'Bez připomínky' },
     { value: '5min', label: '5 minut před' },
@@ -141,7 +154,6 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: 'push', label: 'Push notifikace' },
   ];
 
-  // Předefinované barvy
   const colorOptions = [
     '#667eea',
     '#764ba2',
@@ -161,27 +173,14 @@ const EventForm: React.FC<EventFormProps> = ({
     '#0abde3',
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title.trim()) return;
-
-    onSave({
-      ...formData,
-      date: formData.date.toISOString().split('T')[0],
-      time: formData.isAllDay ? undefined : formData.time,
-      endTime: formData.isAllDay ? undefined : formData.endTime,
-    });
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   return (
-    <div className="event-form-overlay" onClick={onClose}>
+    <div
+      className="event-form-overlay"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+    >
       <div className="event-form" onClick={(e) => e.stopPropagation()}>
         <div className="event-form-header">
           <h3 className="event-form-title">
@@ -218,15 +217,25 @@ const EventForm: React.FC<EventFormProps> = ({
             />
           </div>
 
-          {/* Datum a čas */}
+          {/* Datum */}
           <div className="form-group">
             <label className="form-label">Datum</label>
             <input
               type="date"
               className="form-input"
-              value={formData.date.toISOString().split('T')[0]}
+              value={`${formData.date.getFullYear()}-${(
+                formData.date.getMonth() + 1
+              )
+                .toString()
+                .padStart(2, '0')}-${formData.date
+                .getDate()
+                .toString()
+                .padStart(2, '0')}`}
               onChange={(e) =>
-                handleInputChange('date', new Date(e.target.value))
+                handleInputChange(
+                  'date',
+                  new Date(e.target.value + 'T00:00:00')
+                )
               }
             />
           </div>
@@ -246,7 +255,7 @@ const EventForm: React.FC<EventFormProps> = ({
             </label>
           </div>
 
-          {/* Časy - pouze pokud není celodenní */}
+          {/* Časy */}
           {!formData.isAllDay && (
             <div className="form-row">
               <div className="form-group">

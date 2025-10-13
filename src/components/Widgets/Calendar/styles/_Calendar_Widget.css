@@ -314,7 +314,7 @@
 /* --- Základní vzhled hlavičky --- */
 .new-family-header {
   /* Zajistíme, aby pozadí obrázku prosvítalo */
-  background-color: var(--calendar-header-blur);
+  background-color: var(--calendar-header-blur); 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -347,7 +347,33 @@
   text-shadow: var(--calendar-header-shadow); /* Stín pro čitelnost */
 }
 
+
 /* --- Zvýraznění pozadí --- */
+
+/* Zvýraznění CELÉHO levého sloupce (hlavička i buňky) */
+.day-info-header-cell,
+.day-info-cell {
+  /* Zde použijeme naši "chytrou" proměnnou */
+  background-color: var(--calendar-side-column-bg); 
+}
+
+/* Zvýraznění CELÉHO řádku pro víkend */
+.day-row.is-weekend .day-info-cell,
+.day-row.is-weekend .member-day-cell {
+  background-color: var(--calendar-weekend-bg);
+}
+
+/* Zvýraznění dnešního dne má nejvyšší prioritu a přebije i víkend */
+.day-row.today .day-info-cell,
+.day-row.today .member-day-cell {
+  background-color: var(--calendar-today-bg); 
+}
+
+/* NOVÉ: Zvýraznění celého řádku pro víkend */
+/* .day-row.is-weekend .day-info-cell,
+.day-row.is-weekend .member-day-cell {
+  background-color: var(--calendar-weekend-bg);
+} */
 
 /* Tělo kalendáře */
 .new-family-body {
@@ -366,6 +392,12 @@
 
 .day-row:last-child {
   border-bottom: none;
+}
+
+/* Dnešní den */
+.day-row.today .day-info-cell,
+.day-row.today .member-day-cell {
+  background-color: var(--calendar-today-bg);
 }
 
 /* Buňka s informacemi o dni */
@@ -396,6 +428,20 @@
 .day-name {
   font-size: 0.85rem;
   color: var(--calendar-text-secondary);
+}
+
+/* Speciální události (svátky, jmeniny) */
+.day-special-events {
+  font-size: 0.75rem;
+  color: var(--calendar-text-light);
+}
+
+.special-event.holiday {
+  font-weight: 600;
+}
+
+.special-event.birthday {
+  color: #e76f51;
 }
 
 /* Buňka pro člena rodiny */
@@ -796,55 +842,48 @@
   color: #6c757d;
 }
 
-/* =============================================================== */
-/* === FINÁLNÍ STYL PRO ŠTÍTKY (SVÁTKY, JMENINY, NAROZENINY) === */
-/* =============================================================== */
-
-/* Kontejner pro štítky - OPRAVA OŘEZÁVÁNÍ */
+/* Speciální události (svátky, jmeniny) */
 .day-special-events {
-  display: flex;
-  flex-direction: column; /* Uloží štítky pod sebe */
-  align-items: flex-start; /* Zarovná štítky doleva */
-  gap: 4px;
-  overflow: visible; /* KLÍČOVÁ ZMĚNA: Povolí efektům "přetékat" */
-  min-height: 20px; /* Zajistí minimální výšku, i když je prázdný */
-}
-
-/* Základní styl pro všechny štítky */
-.special-event {
-  display: inline-block; /* Dovolí nastavit padding a další vlastnosti */
-  padding: 3px 8px;
-  border-radius: 8px;
   font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.4; /* Lepší řádkování při zalamování */
-  max-width: 100%; /* Štítek nemůže být širší než levý sloupec */
-  white-space: normal; /* VÝCHOZÍ CHOVÁNÍ: Povolí zalamování textu */
-  overflow: hidden; /* Skryje text, který by i tak přetekl */
-  text-overflow: ellipsis; /* A přidá tři tečky (...) */
-  cursor: pointer;
-  position: relative; /* Důležité pro "zakroužkování" */
-  transition: all 0.2s ease;
+  color: var(--calendar-text-light);
+  display: flex; /* <-- PŘIDEJ */
+  flex-wrap: wrap; /* <-- PŘIDEJ */
+  gap: 4px; /* <-- PŘIDEJ */
+  max-height: 40px; /* <-- PŘIDEJ - omezí výšku */
+  overflow: hidden; /* <-- PŘIDEJ - skryje přetečení */
 }
 
-.special-event:hover {
-  transform: scale(1.05); /* Efekt lehkého zvětšení při najetí */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+.special-event {
+  display: inline-block; /* <-- Změň z flex na inline-block */
+  font-size: 0.7rem; /* <-- Zmenši font */
+  padding: 2px 6px; /* <-- Zmenši padding */
+  border-radius: 8px;
+  white-space: nowrap; /* <-- Zabrání zalamování */
+  overflow: hidden; /* <-- Skryje přetečení */
+  text-overflow: ellipsis; /* <-- Přidá ... když se nevejde */
+  max-width: 100%; /* <-- Omezí šířku */
 }
-/* Specifické barvy pro různé typy štítků */
+
 .special-event.holiday {
-  background-color: rgba(220, 53, 69, 0.15);
-  color: #c82333;
+  font-weight: 600;
+  background: rgba(220, 53, 69, 0.15); /* <-- Lehké pozadí */
+  color: #dc3545;
+  padding: 2px 6px;
 }
 
 .special-event.birthday {
-  background-color: rgba(231, 111, 81, 0.15);
   color: #e76f51;
+  background: rgba(231, 111, 81, 0.15); /* <-- Lehké pozadí */
+  padding: 2px 6px;
 }
 
 .special-event.nameday {
-  background-color: rgba(40, 167, 69, 0.15);
-  color: #218838;
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  padding: 2px 6px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
 .special-event.nameday:hover {
@@ -857,10 +896,9 @@
   position: relative;
   display: inline-block;
   padding: 2px 6px;
-  overflow: visible;
 }
 
-/* Společné vlastnosti pro obě části "tahu tužkou" = TOTO JE STEZEJNI PRO KROUZKOVANI!*/
+/* Společné vlastnosti pro obě části "tahu tužkou" */
 .special-event.nameday.marked::before,
 .special-event.nameday.marked::after {
   content: '';
@@ -1052,6 +1090,11 @@
   letter-spacing: 0.5px;
 }
 
+/* Oprava pro efekt tužky - povolí "přetékání" animace */
+.special-event.nameday.marked {
+  overflow: visible;
+}
+
 /* ==================== FINÁLNÍ OPRAVA VRSTVENÍ PRO EFEKT TUŽKY ==================== */
 
 /* 1. Celému řádku dne nastavíme pozici, aby se stal "plátnem" pro vrstvení. */
@@ -1160,28 +1203,4 @@
 .quick-delete-btn:hover {
   background: rgba(220, 53, 69, 0.9);
   transform: translateY(-50%) scale(1.15);
-}
-
-/* =============================================================== */
-/* === FINÁLNÍ OPRAVA STYLŮ (PŘIDAT NA KONEC SOUBORU) === */
-/* =============================================================== */
-
-/* --- Finální zvýraznění pozadí --- */
-
-/* Zvýraznění CELÉHO levého sloupce (hlavička i buňky těla) */
-.day-info-header-cell,
-.day-info-cell {
-  background-color: var(--calendar-side-column-bg) !important;
-}
-
-/* Zvýraznění CELÉHO řádku pro víkend */
-.day-row.is-weekend .day-info-cell,
-.day-row.is-weekend .member-day-cell {
-  background-color: var(--calendar-weekend-bg) !important;
-}
-
-/* Zvýraznění dnešního dne má nejvyšší prioritu a přebije i víkend */
-.day-row.today .day-info-cell,
-.day-row.today .member-day-cell {
-  background-color: var(--calendar-today-bg) !important;
 }

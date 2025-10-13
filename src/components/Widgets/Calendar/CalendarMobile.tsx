@@ -72,24 +72,22 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
 
   const handleSaveEvent = (eventData: Partial<CalendarEventData>) => {
     if (selectedEvent) {
+      // Část pro úpravu události zůstává stejná
       updateEvent(selectedEvent.id, eventData);
     } else {
-      const eventDate = eventData.date 
-        ? new Date(eventData.date) 
-        : selectedDate || new Date();
-
-      const newEvent: CalendarEventData = {
-        id: Date.now().toString(),
-        userId: '',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        title: eventData.title || 'Nová událost',
-        date: eventDate.toISOString().split('T')[0],
-        type: eventData.type || 'personal',
-        ...eventData,
+      // Část pro vytvoření nové události je teď čistší
+      const finalDate = eventData.date 
+        ? new Date(eventData.date).toISOString().split('T')[0]
+        : (selectedDate || new Date()).toISOString().split('T')[0];
+  
+      const newEventPayload = {
+        title: 'Nová událost',
+        type: 'personal' as const,
+        ...eventData, // Nejprve vložíme data z formuláře
+        date: finalDate, // A pak přepíšeme datum za správně naformátované
       };
       
-      addEvent(newEvent);
+      addEvent(newEventPayload);
     }
     setIsFormOpen(false);
   };

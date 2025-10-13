@@ -134,7 +134,7 @@ const DayView: React.FC<DayViewProps> = ({
 
       {/* Časový harmonogram */}
       <div className="day-schedule">
-        <div className="day-times">
+      <div className="day-times">
           {timeSlots.map((timeSlot) => (
             <div key={timeSlot} className="time-slot">
               {timeSlot}

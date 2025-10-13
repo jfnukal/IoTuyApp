@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -14,6 +14,7 @@ import type {
   Nameday,
   CalendarSettings,
   MonthTheme,
+  NamedayPreferenceDoc, 
 } from '../../../types/index';
 import { fetchCalendarDataForYear } from './data/czechData';
 import { fetchImageForQuery } from '../../../api/unsplash';
@@ -48,6 +49,9 @@ interface CalendarContextType {
   isToday: (date: Date) => boolean;
   isSameDay: (date1: Date | string, date2: Date) => boolean;
   formatDate: (date: Date, format?: string) => string;
+  // NOVÉ FUNKCE PRO PRÁCI S JMENINAMI
+  isNamedayMarked: (date: Date) => boolean;
+  markNameday: (date: Date, marked: boolean) => Promise<void>;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(
@@ -82,19 +86,18 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     showHolidays: true,
     showNamedays: true,
     defaultView: 'month',
-    reminderSettings: {
-      email: true,
-      push: true,
-      defaultTime: '15min',
-    },
+    reminderSettings: { email: true, push: true, defaultTime: '15min' },
     familyView: true,
   });
+
+  // NOVÝ STAV PRO OZNAČENÉ JMENINY
+  const [markedNamedays, setMarkedNamedays] = useState<Set<string>>(new Set());
 
   const calendarDataCache = useRef<
     Map<number, { holidays: Holiday[]; namedays: Nameday[] }>
   >(new Map());
 
-  // Načtení svátků a jmenin z API pro aktuální rok
+  // Načtení svátků a jmenin (zůstává stejné)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -120,7 +123,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     loadData();
   }, [currentDate.getFullYear()]);
 
-  // Sledování událostí z Firebase (nahrazuje localStorage)
+  // Sledování událostí z Firebase (zůstává stejné)
   useEffect(() => {
     if (!currentUser) {
       setEvents([]);
@@ -144,8 +147,24 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
       unsubscribe();
     };
   }, [currentUser]);
+  
+  // NOVÉ: Načtení a sledování označených jmenin z Firebase
+  useEffect(() => {
+    if (!currentUser) {
+      setMarkedNamedays(new Set());
+      return;
+    }
+    const unsubscribe = firestoreService.subscribeToNamedayPreferences(
+      currentUser.uid,
+      (prefs) => {
+        setMarkedNamedays(new Set(prefs?.markedDates || []));
+      }
+    );
+    return () => unsubscribe();
+  }, [currentUser]);
 
-  // Načtení obrázku na pozadí
+
+  // Načtení obrázku na pozadí (zůstává stejné)
   useEffect(() => {
     const loadHeaderImage = async () => {
       const month = currentDate.getMonth();
@@ -157,7 +176,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     loadHeaderImage();
   }, [currentDate.getMonth()]);
 
-  // --- CRUD OPERACE ---
+  // --- CRUD OPERACE PRO UDÁLOSTI ---
   const addEvent = useCallback(
     async (
       eventData: Omit<
@@ -199,7 +218,30 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     [currentUser]
   );
 
-  // --- POMOCNÉ FUNKCE ---
+  // --- NOVÉ FUNKCE PRO JMENINY ---
+  const isNamedayMarked = useCallback((date: Date): boolean => {
+    const key = date.toISOString().split('T')[0]; // Klíč ve formátu YYYY-MM-DD
+    return markedNamedays.has(key);
+  }, [markedNamedays]);
+
+  const markNameday = useCallback(async (date: Date, marked: boolean) => {
+    if (!currentUser) return;
+    const key = date.toISOString().split('T')[0];
+    const newMarkedDays = new Set(markedNamedays);
+    if (marked) {
+      newMarkedDays.add(key);
+    } else {
+      newMarkedDays.delete(key);
+    }
+    setMarkedNamedays(newMarkedDays); // Okamžitá aktualizace UI pro plynulost
+    // Uložení do Firebase na pozadí
+    await firestoreService.saveNamedayPreferences(currentUser.uid, {
+      markedDates: Array.from(newMarkedDays),
+    });
+  }, [currentUser, markedNamedays]);
+
+
+  // --- POMOCNÉ FUNKCE (zůstávají stejné) ---
   const isSameDay = useCallback((date1: Date | string, date2: Date) => {
     const d1 = new Date(date1);
     return (
@@ -250,18 +292,12 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     const weekDay = date.toLocaleDateString('cs-CZ', { weekday: 'long' });
 
     switch (format) {
-      case 'DD.MM.YYYY':
-        return `${day}.${month}.${year}`;
-      case 'DD.MM':
-        return `${day}.${month}`;
-      case 'WEEKDAY':
-        return weekDay;
-      case 'FULL':
-        return `${weekDay} ${day}.${month}.${year}`;
-      case 'MONTH':
-        return date.toLocaleDateString('cs-CZ', { month: 'long' });
-      default:
-        return date.toLocaleDateString('cs-CZ');
+      case 'DD.MM.YYYY': return `${day}.${month}.${year}`;
+      case 'DD.MM': return `${day}.${month}`;
+      case 'WEEKDAY': return weekDay;
+      case 'FULL': return `${weekDay} ${day}.${month}.${year}`;
+      case 'MONTH': return date.toLocaleDateString('cs-CZ', { month: 'long' });
+      default: return date.toLocaleDateString('cs-CZ');
     }
   };
 
@@ -287,6 +323,8 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     isToday,
     isSameDay,
     formatDate,
+    isNamedayMarked,
+    markNameday,
   };
 
   return (

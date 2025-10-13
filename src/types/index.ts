@@ -179,7 +179,6 @@ export type ReminderType =
   | 'email'
   | 'push';
 
-
 export type CalendarView = 'month' | 'week' | 'day';
 
 export interface FileAttachment {
@@ -285,4 +284,8 @@ export interface TimetableDay {
   dayOfWeek: number;
   dayDescription: string;
   lessons: TimetableLesson[];
+}
+
+export interface NamedayPreferenceDoc {
+  markedDates: string[]; // Pole datumů ve formátu 'YYYY-MM-DD'
 }

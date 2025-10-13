@@ -1,10 +1,6 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import type { CalendarEventData, FamilyMember } from '@/types/index';
+import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
-import {
-  markNameday,
-  isNamedayMarked,
-} from '@/components/Widgets/Calendar/utils/namedayState';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -29,15 +25,14 @@ const MonthView: React.FC<MonthViewProps> = ({
     getHolidayByDate,
     getNamedayByDate,
     formatDate,
+    isNamedayMarked,
+    markNameday,
   } = useCalendar();
-
-  const [, forceUpdate] = React.useState({});
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
     const currentlyMarked = isNamedayMarked(date);
     markNameday(date, !currentlyMarked);
-    forceUpdate({});
   };
 
   // Ref pro ukládání DOM elementů jednotlivých řádků
@@ -148,13 +143,13 @@ const MonthView: React.FC<MonthViewProps> = ({
       <div className="new-family-header">
         <div className="day-info-header-cell">Den</div>
         {familyMembers.map((member) => (
-          <div
-            key={member.id}
-            className="member-header-cell"
-            style={{ color: member.color }}
-          >
-            {member.icon && <span className="member-icon">{member.icon}</span>}
-            <span>{member.name}</span>
+          <div key={member.id} className="member-header-cell">
+            <span style={{ color: member.color || 'var(--calendar-text)' }}>
+              {member.icon && (
+                <span className="member-icon">{member.icon} </span>
+              )}
+              {member.name}
+            </span>
           </div>
         ))}
       </div>
@@ -177,7 +172,9 @@ const MonthView: React.FC<MonthViewProps> = ({
           return (
             <div
               key={date.toISOString()}
-              className={`day-row ${isToday(date) ? 'today' : ''}`}
+              className={`day-row ${isToday(date) ? 'today' : ''} ${
+                date.getDay() === 6 || date.getDay() === 0 ? 'is-weekend' : ''
+              }`}
               ref={(el) => {
                 if (el) {
                   dayRefs.current.set(dateKey, el);

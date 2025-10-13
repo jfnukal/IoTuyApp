@@ -53,6 +53,11 @@
   --calendar-z-header: 10;
   --calendar-z-modal: 99999;
   --calendar-z-backdrop: 2;
+
+  /* NOVÉ PROMĚNNÉ PRO POZADÍ */
+  --calendar-side-column-bg: rgba(255, 255, 255, 0.75);
+  --calendar-weekend-bg: rgba(0, 0, 0, 0.04);
+  --calendar-header-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 /* ==================== MODAL OVERLAY (sdílené pro desktop i mobile) ==================== */
@@ -351,5 +356,14 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Přepíšeme barvy pro tmavý režim */
+    --calendar-side-column-bg: rgba(255, 255, 255, 0.45);
+    --calendar-weekend-bg: rgba(255, 255, 255, 0.25); /* Velmi jemné zesvětlení pro víkendy */
+    --calendar-header-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
   }
 }

@@ -22,7 +22,8 @@ import type {
   DeviceCategory,
   CalendarEventData,
   FamilyMember,
-  TimetableDay, // Přidaný import
+  TimetableDay,
+  NamedayPreferenceDoc,
 } from '../types/index';
 
 class FirestoreService {
@@ -77,7 +78,7 @@ class FirestoreService {
       const q = query(
         roomsCollection,
         where('userId', '==', uid),
-        orderBy('createdAt', 'desc') 
+        orderBy('createdAt', 'desc')
       );
       return onSnapshot(q, (snapshot) => {
         const rooms = snapshot.docs.map(
@@ -545,6 +546,32 @@ class FirestoreService {
       console.error(`❌ Chyba při ukládání rozvrhu "${scheduleId}":`, error);
       throw new Error('Nepodařilo se uložit rozvrh.');
     }
+  }
+
+  // ==================== NAMEDAY PREFERENCES ====================
+
+  async saveNamedayPreferences(
+    userId: string,
+    prefs: NamedayPreferenceDoc
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, 'namedayPreferences', userId);
+      await setDoc(docRef, prefs, { merge: true });
+    } catch (error) {
+      console.error('Chyba při ukládání preferencí jmenin:', error);
+    }
+  }
+
+  subscribeToNamedayPreferences(
+    userId: string,
+    callback: (prefs: NamedayPreferenceDoc | null) => void
+  ): Unsubscribe {
+    const docRef = doc(db, 'namedayPreferences', userId);
+    return onSnapshot(docRef, (docSnap) => {
+      callback(
+        docSnap.exists() ? (docSnap.data() as NamedayPreferenceDoc) : null
+      );
+    });
   }
 }
 

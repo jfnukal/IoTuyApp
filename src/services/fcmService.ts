@@ -12,13 +12,19 @@ class FCMService {
   /**
    * Požádá uživatele o povolení notifikací a získá FCM token
    */
-  async requestPermissionAndGetToken(userId: string): Promise<string | null> {
-    try {
-      // Zkontroluj, jestli prohlížeč podporuje notifikace
-      if (!('Notification' in window)) {
-        console.warn('⚠️ Tento prohlížeč nepodporuje notifikace');
-        return null;
-      }
+async requestPermissionAndGetToken(userId: string): Promise<string | null> {
+  try {
+    // Počkej na inicializaci messaging (max 3 sekundy)
+    let attempts = 0;
+    while (!messaging && attempts < 30) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    if (!messaging) {
+      console.warn('⚠️ Firebase Messaging není k dispozici');
+      return null;
+    }
 
       // Zkontroluj, jestli je messaging inicializováno
       if (!messaging) {
@@ -116,5 +122,6 @@ class FCMService {
     return this.currentToken;
   }
 }
+
 
 export const fcmService = new FCMService();

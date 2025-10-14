@@ -120,7 +120,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Tlačítko pro aktivaci notifikací */}
       <button
-                  className="message-icon-btn"
+                  className="notification-permission-btn"
                   onClick={requestPermission} // <-- Přímo voláme naši funkci
                   title="Povolit notifikace"
                 >

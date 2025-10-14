@@ -13,7 +13,6 @@ import type { TuyaDevice } from './types';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
-import FamilyMemberSelector from './components/Dashboard/FamilyMemberSelector';
 
 declare global {
   interface Window {
@@ -114,26 +113,41 @@ function App() {
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
-  // useEffect pro Firebase integrace a načtení rodinného člena
-  useEffect(() => {
-    if (!currentUser) {
-      setFamilyMemberId(undefined);
-      return;
-    }
+// useEffect pro načtení family member podle authUid
+useEffect(() => {
+  if (!currentUser) {
+    setFamilyMemberId(undefined);
+    return;
+  }
 
-    const loadFamilyMember = async () => {
-      const settings = await firestoreService.getUserSettings(currentUser.uid);
-      if (settings?.familyMemberId) {
-        setFamilyMemberId(settings.familyMemberId);
+  const loadFamilyMember = async () => {
+    try {
+      console.log('🔍 Hledám family member pro UID:', currentUser.uid);
+      
+      // Najdi family member podle authUid
+      const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
+      
+      if (member) {
+        setFamilyMemberId(member.id);
+        console.log(`✅ Přihlášen jako: ${member.name} (${member.id})`);
       } else {
+        // Fallback - pokud se nepodaří najít
+        console.warn(`⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`);
+        console.warn('⚠️ Zkontroluj, že máš v Firestore přidané pole authUid');
+        setFamilyMemberId('dad'); // Výchozí hodnota
       }
-    };
-
-    loadFamilyMember();
-
-    if (devices && devices.length > 0) {
+    } catch (error) {
+      console.error('❌ Chyba při načítání family member:', error);
+      setFamilyMemberId('dad');
     }
-  }, [currentUser, devices, firebaseLoading]);
+  };
+
+  loadFamilyMember();
+
+  if (devices && devices.length > 0) {
+    // Zde můžeš přidat další logiku pokud potřebuješ
+  }
+}, [currentUser, devices, firebaseLoading]);
 
   // Přihlášení required - TENTO RETURN JE AŽ PO VŠECH HOOKECH!
   if (!currentUser) {
@@ -301,13 +315,6 @@ function App() {
     <div className="app-layout">
       <CalendarProvider>
         <NotificationProvider userId={familyMemberId || null}>
-          {!familyMemberId && currentUser && (
-            <FamilyMemberSelector
-              userId={currentUser.uid}
-              currentMemberId={familyMemberId}
-              onSelect={setFamilyMemberId}
-            />
-          )}
           <DashboardLayout
             onNavigateToSettings={() => {
               console.log('Navigate to settings...');

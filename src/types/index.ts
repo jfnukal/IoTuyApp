@@ -129,6 +129,7 @@ export interface AutomationRule {
 export interface FamilyMember {
   id: string;
   userId: string;
+  authUid?: string;
   name: string;
   color: string;
   emoji: string;

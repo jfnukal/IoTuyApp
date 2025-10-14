@@ -28,7 +28,6 @@ import type {
   NamedayPreferenceDoc,
 } from '../types/index';
 
-
 class FirestoreService {
   // ==================== USER SETTINGS ====================
   async getUserSettings(uid: string): Promise<UserSettings | null> {
@@ -61,10 +60,17 @@ class FirestoreService {
   ): Promise<void> {
     try {
       const docRef = doc(db, 'userSettings', uid);
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: Date.now(),
-      });
+      // To vytvoří dokument, pokud neexistuje
+      await setDoc(
+        docRef,
+        {
+          ...updates,
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
+
+      console.log('✅ User settings updated');
     } catch (error) {
       console.error('Error updating user settings:', error);
       throw new Error('Nepodařilo se aktualizovat nastavení');
@@ -84,12 +90,16 @@ class FirestoreService {
         });
       } else {
         // Dokument neexistuje, vytvoříme ho s polem pro tokeny
-        await setDoc(userSettingsRef, {
-          uid: userId,
-          fcmTokens: [token],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
+        await setDoc(
+          userSettingsRef,
+          {
+            uid: userId,
+            fcmTokens: [token],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
       }
       console.log('✅ FCM token byl úspěšně uložen pro uživatele:', userId);
     } catch (error) {
@@ -97,7 +107,7 @@ class FirestoreService {
     }
   }
 
-   // ==================== ROOMS ====================
+  // ==================== ROOMS ====================
   async subscribeToUserRooms(
     uid: string,
     callback: (rooms: Room[]) => void
@@ -601,6 +611,30 @@ class FirestoreService {
         docSnap.exists() ? (docSnap.data() as NamedayPreferenceDoc) : null
       );
     });
+  }
+
+  // ==================== FAMILY MEMBER BY AUTH UID ====================
+  async getFamilyMemberByAuthUid(
+    authUid: string
+  ): Promise<FamilyMember | null> {
+    try {
+      const membersRef = collection(db, 'familyMembers');
+      const q = query(membersRef, where('authUid', '==', authUid));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        console.warn(`⚠️ Žádný family member s authUid: ${authUid}`);
+        return null;
+      }
+
+      const doc = snapshot.docs[0];
+      const member = { id: doc.id, ...doc.data() } as FamilyMember;
+      console.log(`✅ Nalezen family member: ${member.name} (${member.id})`);
+      return member;
+    } catch (error) {
+      console.error('❌ Error getting family member by authUid:', error);
+      return null;
+    }
   }
 }
 

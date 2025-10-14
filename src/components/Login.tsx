@@ -3,43 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/login.css';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login, register, loginWithGoogle } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError('Vyplňte všechna pole');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    try {
-      if (isRegistering) {
-        await register(email, password);
-      } else {
-        await login(email, password);
-      }
-    } catch (err: any) {
-      const firebaseError = err.code || '';
-      if (firebaseError.includes('auth/invalid-credential')) {
-        setError('Nesprávné přihlašovací údaje.');
-      } else if (firebaseError.includes('auth/email-already-in-use')) {
-        setError('Tento email je již registrován.');
-      } else {
-        setError('Došlo k chybě. Zkuste to prosím znovu.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { loginWithGoogle } = useAuth();
 
   const handleGoogleLogin = async () => {
     setError('');
@@ -48,6 +15,7 @@ const Login: React.FC = () => {
       await loginWithGoogle();
     } catch (err: any) {
       setError('Došlo k chybě při přihlašování přes Google.');
+      console.error('Google login error:', err);
     } finally {
       setLoading(false);
     }
@@ -61,64 +29,7 @@ const Login: React.FC = () => {
           <p className="login-subtitle">Správa vašich chytrých zařízení</p>
         </div>
 
-        <div className="login-toggle">
-          <button
-            type="button"
-            onClick={() => setIsRegistering(false)}
-            className={`toggle-btn ${!isRegistering ? 'active' : ''}`}
-          >
-            Přihlášení
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRegistering(true)}
-            className={`toggle-btn ${isRegistering ? 'active' : ''}`}
-          >
-            Registrace
-          </button>
-        </div>
-
         {error && <div className="error-message">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vas@email.com"
-              required
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Heslo</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="form-input"
-            />
-          </div>
-
-          <button type="submit" disabled={loading} className="submit-btn">
-            {loading
-              ? 'Zpracovávám...'
-              : isRegistering
-              ? 'Vytvořit účet'
-              : 'Přihlásit se'}
-          </button>
-        </form>
-
-        <div className="separator">
-          <div className="separator-line"></div>
-          <span className="separator-text">nebo</span>
-          <div className="separator-line"></div>
-        </div>
 
         <button
           onClick={handleGoogleLogin}
@@ -143,8 +54,12 @@ const Login: React.FC = () => {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Pokračovat s Google
+          {loading ? 'Přihlašuji...' : 'Přihlásit se přes Google'}
         </button>
+
+        <p className="login-footer">
+          Přihlásit se mohou pouze oprávnění členové rodiny
+        </p>
       </div>
     </div>
   );

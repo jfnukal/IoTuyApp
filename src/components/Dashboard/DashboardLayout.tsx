@@ -26,7 +26,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isFabOpen, setIsFabOpen] = useState(false);
 
   const [isMessagePanelOpen, setIsMessagePanelOpen] = useState(false);
-  const { unreadCount } = useNotificationContext();
+  const { unreadCount, requestPermission } = useNotificationContext();
 
   // Najdi aktuálně přihlášeného uživatele z FAMILY_MEMBERS
   const getCurrentMember = () => {
@@ -118,17 +118,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </button>
             )}
 
-            {/* Tlačítko pro zprávy */}
-            <button
-              className="message-icon-btn"
-              onClick={() => setIsMessagePanelOpen(true)}
-              title="Poslat zprávu rodině"
-            >
-              💬
-              {unreadCount > 0 && (
-                <span className="unread-badge-desktop">{unreadCount}</span>
-              )}
-            </button>
+      {/* Tlačítko pro aktivaci notifikací */}
+      <button
+                  className="message-icon-btn"
+                  onClick={requestPermission} // <-- Přímo voláme naši funkci
+                  title="Povolit notifikace"
+                >
+                  🔔
+                </button>
+
+                {/* Tlačítko pro zprávy */}
+                <button
+                  className="message-icon-btn"
+                  onClick={() => setIsMessagePanelOpen(true)}
+                  title="Poslat zprávu rodině"
+                >
+                  💬
+                  {unreadCount > 0 && (
+                    <span className="unread-badge-desktop">{unreadCount}</span>
+                  )}
+                </button>
 
             {/* Tlačítka režimů */}
             <div className="mode-switcher">

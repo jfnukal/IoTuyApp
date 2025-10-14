@@ -314,7 +314,10 @@ useEffect(() => {
   return (
     <div className="app-layout">
       <CalendarProvider>
-        <NotificationProvider userId={familyMemberId || null}>
+      <NotificationProvider 
+            authUid={currentUser?.uid || null}
+            familyMemberId={familyMemberId || null}
+          >
           <DashboardLayout
             onNavigateToSettings={() => {
               console.log('Navigate to settings...');

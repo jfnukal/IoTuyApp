@@ -121,6 +121,9 @@ useEffect(() => {
   }
 
   const loadFamilyMember = async () => {
+    // OKAMŽITĚ nastav výchozí hodnotu (opraví race condition s FCM)
+    setFamilyMemberId('dad');
+    
     try {
       console.log('🔍 Hledám family member pro UID:', currentUser.uid);
       
@@ -128,17 +131,16 @@ useEffect(() => {
       const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
       
       if (member) {
-        setFamilyMemberId(member.id);
+        setFamilyMemberId(member.id); // ← Tady se PŘEPÍŠE správnou hodnotou!
         console.log(`✅ Přihlášen jako: ${member.name} (${member.id})`);
       } else {
-        // Fallback - pokud se nepodaří najít
+        // Fallback - 'dad' už je nastaveno výše
         console.warn(`⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`);
         console.warn('⚠️ Zkontroluj, že máš v Firestore přidané pole authUid');
-        setFamilyMemberId('dad'); // Výchozí hodnota
       }
     } catch (error) {
       console.error('❌ Chyba při načítání family member:', error);
-      setFamilyMemberId('dad');
+      // 'dad' už je nastaveno výše jako fallback
     }
   };
 

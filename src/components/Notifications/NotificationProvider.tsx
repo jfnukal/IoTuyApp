@@ -1,7 +1,6 @@
 // src/components/Notifications/NotificationProvider.tsx
 
 import React, { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
 import { useNotifications } from '../../hooks/useNotifications';
 import type { FamilyMessage } from '../../types/notifications';
 
@@ -34,18 +33,20 @@ export const useNotificationContext = () => {
 };
 
 interface NotificationProviderProps {
-  children: ReactNode;
-  userId: string | null;
+  authUid: string | null;
+  familyMemberId: string | null;
+  children: React.ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
-  children,
-  userId,
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ 
+  authUid,
+  familyMemberId,
+  children 
 }) => {
-  const notificationState = useNotifications(userId);
+  const notificationData = useNotifications(authUid, familyMemberId);
 
   return (
-    <NotificationContext.Provider value={notificationState}>
+    <NotificationContext.Provider value={notificationData}>
       {children}
     </NotificationContext.Provider>
   );

@@ -29,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
+    badge: '/badge-24x24.png',
     tag: payload.data?.messageId || 'family-message',
     requireInteraction: payload.data?.urgent === 'true',
     data: payload.data,
@@ -49,3 +49,4 @@ self.addEventListener('notificationclick', (event) => {
   // Otevři aplikaci
   event.waitUntil(clients.openWindow('https://iotuyapp.netlify.app/'));
 });
+

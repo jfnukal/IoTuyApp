@@ -7,10 +7,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: white;
-  border-radius: 24px;
+  border-radius: 15px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   width: 90%;
-  max-width: 600px;
+  max-width: 550px;
   max-height: 90vh;
   overflow: hidden;
   z-index: 10000;
@@ -32,7 +32,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 10px 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
@@ -47,10 +47,10 @@
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -64,33 +64,33 @@
 }
 
 .panel-content {
-  padding: 24px;
+  padding: 14px;
   overflow-y: auto;
   max-height: calc(90vh - 80px);
 }
 
 /* ==================== FORM SECTIONS ==================== */
 .form-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .form-section label {
   display: block;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   color: #333;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
 }
 
 /* ==================== RECIPIENT SELECTOR ==================== */
 .recipient-selector {
   background: #f8f9fa;
   border-radius: 16px;
-  padding: 16px;
+  padding: 8px;
 }
 
 .recipient-section {
-  margin-bottom: 16px;
+  margin-bottom: 5px;
 }
 
 .recipient-section:last-child {
@@ -98,7 +98,7 @@
 }
 
 .section-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #6c757d;
   margin-bottom: 8px;
@@ -116,13 +116,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 5px 18px;
   background: white;
-  border: 2px solid #dee2e6;
-  border-radius: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
@@ -159,13 +159,13 @@
 }
 
 .template-btn {
-  padding: 10px 16px;
+  padding: 5px 15px;
   background: white;
-  border: 2px solid #dee2e6;
+  border: 1px solid #dee2e6;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -187,9 +187,9 @@
 /* ==================== MESSAGE INPUT ==================== */
 .message-input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 5px 10px;
   border: 2px solid #dee2e6;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
@@ -202,42 +202,52 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+.char-counter {
+padding: 1px 10px;
+border: 1px solid #dee2e6;
+border-radius: 10px;
+font-size: 0.8rem;
+font-weight: 500;
+}
+
+
 /* ==================== CHECKBOX ==================== */
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
   cursor: pointer;
-  padding: 12px;
+  padding: 8px;
   background: #fff3cd;
-  border-radius: 12px;
-  border: 2px solid #ffc107;
+  border-radius: 10px;
+  border: 1px solid #ffc107;
 }
 
-.checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+.checkbox-label input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
 }
 
 .checkbox-text {
   font-weight: 600;
   color: #856404;
+  font-size: 0.9rem;
 }
 
 /* ==================== PANEL ACTIONS ==================== */
 .panel-actions {
   display: flex;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 2px solid #f8f9fa;
 }
 
 .btn-cancel,
 .btn-send {
   flex: 1;
-  padding: 14px 24px;
+  padding: 10px 24px;
   border: none;
   border-radius: 12px;
   font-size: 1rem;

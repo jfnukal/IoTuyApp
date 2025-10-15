@@ -422,15 +422,13 @@ class FirestoreService {
 
   // ==================== FAMILY MEMBERS ====================
   async subscribeToFamilyMembers(
-    uid: string,
     callback: (members: FamilyMember[]) => void
   ): Promise<Unsubscribe> {
     try {
       const membersCollection = collection(db, 'familyMembers');
       const q = query(
         membersCollection,
-        where('userId', '==', uid),
-        orderBy('createdAt', 'asc')
+        orderBy('createdAt', 'asc')  
       );
       return onSnapshot(q, (snapshot) => {
         const members = snapshot.docs.map(

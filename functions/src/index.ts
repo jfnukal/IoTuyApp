@@ -40,88 +40,99 @@ export const updateBakalariTimetable = functions
 export const sendPushOnNewMessage = functions
   .region('europe-west1')
   .firestore.document('familyMessages/{messageId}')
-  .onCreate(async (snapshot: admin.firestore.QueryDocumentSnapshot, context: functions.EventContext) => { // <-- PŘIDANÉ TYPY
-    console.log(`Zpracovávám zprávu s ID: ${context.params.messageId}`);
+  .onCreate(
+    async (
+      snapshot: admin.firestore.QueryDocumentSnapshot,
+      context: functions.EventContext
+    ) => {
+      // <-- PŘIDANÉ TYPY
+      console.log(`Zpracovávám zprávu s ID: ${context.params.messageId}`);
 
-    const messageData = snapshot.data();
-    if (!messageData) {
-      console.log('Nová zpráva nemá žádná data.');
-      return;
-    }
-
-    const recipientsIds = messageData.recipients.filter(
-      (id: string) => id !== messageData.senderId
-    );
-
-    if (recipientsIds.length === 0) {
-      console.log('Žádní příjemci k odeslání notifikace.');
-      return;
-    }
-
-    const authUidPromises = recipientsIds.map(async (memberId: string) => {
-      const memberQuery = await db
-        .collection('familyMembers')
-        .where('id', '==', memberId)
-        .limit(1)
-        .get();
-
-      if (!memberQuery.empty) {
-        return memberQuery.docs[0].data().authUid;
+      const messageData = snapshot.data();
+      if (!messageData) {
+        console.log('Nová zpráva nemá žádná data.');
+        return;
       }
-      console.warn(`Člen s id "${memberId}" nenalezen v kolekci familyMembers.`);
-      return null;
-    });
 
-    const authUids = (await Promise.all(authUidPromises)).filter(
-      (uid: string | null): uid is string => uid !== null
-    );
+      const recipientsIds = messageData.recipients.filter(
+        (id: string) => id !== messageData.senderId
+      );
 
-    if (authUids.length === 0) {
-      console.warn('⚠️ Žádné authUid nalezeny pro příjemce', recipientsIds);
-      return;
-    }
-    console.log(`Nalezeno ${authUids.length} authUid pro příjemce:`, authUids);
+      if (recipientsIds.length === 0) {
+        console.log('Žádní příjemci k odeslání notifikace.');
+        return;
+      }
 
-
-    const userSettingsPromises = authUids.map((uid: string) =>
-      db.collection('userSettings').doc(uid).get()
-    );
-
-    const userSettingsResults = await Promise.all(userSettingsPromises);
-    
-    // Zde také přidáme typy pro větší jistotu
-    const allTokens = userSettingsResults
-      .flatMap((doc: admin.firestore.DocumentSnapshot) => (doc.exists ? doc.data()?.fcmTokens : []))
-      .filter((token: any) => token);
-
-    if (allTokens.length === 0) {
-      console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
-      return;
-    }
-
-    console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
-
-    const message = {
-      notification: {
-        title: `💬 Nová zpráva od ${messageData.senderName}`,
-        body: messageData.message,
-      },
-      tokens: allTokens,
-    };
-
-    try {
-      const response = await admin.messaging().sendMulticast(message);
-      console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
-      if (response.failureCount > 0) {
+      const authUidPromises = recipientsIds.map(async (memberId: string) => {
+        const memberDoc = await db
+          .collection('familyMembers')
+          .doc(memberId)  // ← ✅ SPRÁVNĚ - použij document ID přímo
+          .get();
+      
+        if (memberDoc.exists) {
+          return memberDoc.data()?.authUid;
+        }
         console.warn(
-          'Některé notifikace se nepodařilo odeslat:',
-          response.failureCount
+          `Člen s id "${memberId}" nenalezen v kolekci familyMembers.`
         );
+        return null;
+      });
+
+      const authUids = (await Promise.all(authUidPromises)).filter(
+        (uid: string | null): uid is string => uid !== null
+      );
+
+      if (authUids.length === 0) {
+        console.warn('⚠️ Žádné authUid nalezeny pro příjemce', recipientsIds);
+        return;
       }
-    } catch (error) {
-      console.error('❌ Chyba při odesílání notifikací:', error);
+      console.log(
+        `Nalezeno ${authUids.length} authUid pro příjemce:`,
+        authUids
+      );
+
+      const userSettingsPromises = authUids.map((uid: string) =>
+        db.collection('userSettings').doc(uid).get()
+      );
+
+      const userSettingsResults = await Promise.all(userSettingsPromises);
+
+      // Zde také přidáme typy pro větší jistotu
+      const allTokens = userSettingsResults
+        .flatMap((doc: admin.firestore.DocumentSnapshot) =>
+          doc.exists ? doc.data()?.fcmTokens : []
+        )
+        .filter((token: any) => token);
+
+      if (allTokens.length === 0) {
+        console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
+        return;
+      }
+
+      console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
+
+      const message = {
+        notification: {
+          title: `💬 Nová zpráva od ${messageData.senderName}`,
+          body: messageData.message,
+        },
+        tokens: allTokens,
+      };
+
+      try {
+        const response = await admin.messaging().sendMulticast(message);
+        console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
+        if (response.failureCount > 0) {
+          console.warn(
+            'Některé notifikace se nepodařilo odeslat:',
+            response.failureCount
+          );
+        }
+      } catch (error) {
+        console.error('❌ Chyba při odesílání notifikací:', error);
+      }
     }
-  });
+  );
 
 // ================================================================= //
 // PŮVODNÍ ČÁST KÓDU !!!!!!!!!!!!!!!!!!

@@ -24,16 +24,20 @@ const messaging = firebase.messaging();
 // KLÍČOVÁ ČÁST: Zobraz notifikaci když přijde zpráva na pozadí
 messaging.onBackgroundMessage((payload) => {
   console.log('📨 Background Message received:', payload);
+  console.log('🔍 Zobrazuji notifikaci, timestamp:', Date.now());
 
   const notificationTitle = payload.notification?.title || 'Nová zpráva';
   const notificationOptions = {
     body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
-    tag: payload.data?.messageId || 'family-message',
+    badge: '/badge-24x24.png',
+    // tag: payload.data?.messageId || 'family-message',
+    tag: payload.data?.messageId || `msg-${Date.now()}`,
     requireInteraction: payload.data?.urgent === 'true',
     data: payload.data,
   };
+
+  console.log('🔔 Notification title:', notificationTitle);
 
   return self.registration.showNotification(
     notificationTitle,
@@ -48,19 +52,23 @@ self.addEventListener('notificationclick', (event) => {
 
   // Hledej existující okno a zaostři na něj, nebo otevři nové
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Pokud je aplikace už otevřená, zaměř se na ni
-      for (const client of clientList) {
-        // Používáme startsWith pro větší spolehlivost
-        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-          return client.focus();
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Pokud je aplikace už otevřená, zaměř se na ni
+        for (const client of clientList) {
+          // Používáme startsWith pro větší spolehlivost
+          if (
+            client.url.startsWith(self.location.origin) &&
+            'focus' in client
+          ) {
+            return client.focus();
+          }
         }
-      }
-      // Jinak otevři nové okno na hlavní stránce
-      if (clients.openWindow) {
-        return clients.openWindow('/'); // <-- Toto je ta klíčová, spolehlivá změna
-      }
-    })
+        // Jinak otevři nové okno na hlavní stránce
+        if (clients.openWindow) {
+          return clients.openWindow('/'); // <-- Toto je ta klíčová, spolehlivá změna
+        }
+      })
   );
 });
-

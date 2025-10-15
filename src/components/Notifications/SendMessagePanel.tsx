@@ -95,7 +95,7 @@ const SendMessagePanel: React.FC<SendMessagePanelProps> = ({
       <div className="panel-content">
         {/* Výběr příjemců */}
         <div className="form-section">
-          <label>Komu:</label>
+         <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Komu:</label>
           <RecipientSelector
             selectedRecipients={selectedRecipients}
             onChange={setSelectedRecipients}
@@ -159,7 +159,11 @@ const SendMessagePanel: React.FC<SendMessagePanelProps> = ({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Napiš zprávu..."
             rows={4}
+            maxLength={360}
           />
+          <div className="char-counter">
+            {message.length}/360 znaků
+          </div>
         </div>
 
         {/* Urgentní režim */}

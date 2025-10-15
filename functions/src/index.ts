@@ -109,30 +109,40 @@ export const sendPushOnNewMessage = functions
         return;
       }
 
-      console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
+      console.log(`✅ Nalezeno celkem ${allTokens.length} FCM tokenů`);
 
-      const message = {
-        notification: {
-          title: `💬 Nová zpráva od ${messageData.senderName}`,
-          body: messageData.message,
-        },
-        tokens: allTokens,
-      };
+    // OPRAVENÝ KÓD - použij sendEach místo sendMulticast
+    const messages = allTokens.map((token) => ({
+      notification: {
+        title: `💬 Nová zpráva od ${messageData.senderName}`,
+        body: messageData.message,
+      },
+      data: {
+        messageId: context.params.messageId,
+        senderId: messageData.senderId,
+        senderName: messageData.senderName,
+        urgent: messageData.urgent ? 'true' : 'false',
+      },
+      token: token,
+    }));
 
-      try {
-        const response = await admin.messaging().sendMulticast(message);
-        console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
-        if (response.failureCount > 0) {
-          console.warn(
-            'Některé notifikace se nepodařilo odeslat:',
-            response.failureCount
-          );
-        }
-      } catch (error) {
-        console.error('❌ Chyba při odesílání notifikací:', error);
+    try {
+      const response = await admin.messaging().sendEach(messages);
+      
+      console.log(`✅ Notifikace odeslány: ${response.successCount}/${allTokens.length}`);
+      
+      if (response.failureCount > 0) {
+        console.warn(`⚠️ Některé notifikace selhaly: ${response.failureCount}`);
+        
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            console.error(`❌ Token ${idx} selhal:`, resp.error);
+          }
+        });
       }
+    } catch (error) {
+      console.error('❌ Chyba při odesílání notifikací:', error);
     }
-  );
 
 // ================================================================= //
 // PŮVODNÍ ČÁST KÓDU !!!!!!!!!!!!!!!!!!

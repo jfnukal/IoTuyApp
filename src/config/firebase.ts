@@ -25,12 +25,17 @@ export const db = getFirestore(app);
 
 // Initialize Firebase Cloud Messaging - s kontrolou podpory
 let messagingInstance: ReturnType<typeof getMessaging> | null = null;
+let messagingInitialized = false;
 
-(async () => {
+// Inicializuj messaging asynchronně
+const initMessaging = async () => {
+  if (messagingInitialized) return;
+  
   try {
     const supported = await isSupported();
     if (supported) {
       messagingInstance = getMessaging(app);
+      messagingInitialized = true;
       console.log('✅ Firebase Messaging je podporováno');
     } else {
       console.warn('⚠️ Firebase Messaging není podporováno v tomto prostředí');
@@ -38,8 +43,17 @@ let messagingInstance: ReturnType<typeof getMessaging> | null = null;
   } catch (error) {
     console.warn('⚠️ Chyba při inicializaci Firebase Messaging:', error);
   }
-})();
+};
 
+// Spusť inicializaci
+initMessaging();
+
+// Exportuj funkci která vrací messaging instance
+export const getMessagingInstance = (): ReturnType<typeof getMessaging> | null => {
+  return messagingInstance;
+};
+
+// Export pro zpětnou kompatibilitu (deprecated)
 export const messaging = messagingInstance;
 
 // Initialize Analytics (volitelné)

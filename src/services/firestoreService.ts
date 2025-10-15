@@ -10,7 +10,6 @@ import {
   query,
   orderBy,
   getDocs,
-  serverTimestamp,
   writeBatch,
   onSnapshot,
   where,
@@ -79,31 +78,24 @@ class FirestoreService {
 
   async saveFCMToken(userId: string, token: string): Promise<void> {
     try {
-      const userSettingsRef = doc(db, 'userSettings', userId);
-      const docSnap = await getDoc(userSettingsRef);
+      const docRef = doc(db, 'userSettings', userId);
 
-      if (docSnap.exists()) {
-        // Dokument existuje, jen přidáme nový token do pole
-        await updateDoc(userSettingsRef, {
+      // Použij setDoc s merge místo updateDoc
+      // To vytvoří dokument, pokud neexistuje
+      await setDoc(
+        docRef,
+        {
+          uid: userId, // ← DŮLEŽITÉ: Uložíme i uid
           fcmTokens: arrayUnion(token),
-          updatedAt: serverTimestamp(),
-        });
-      } else {
-        // Dokument neexistuje, vytvoříme ho s polem pro tokeny
-        await setDoc(
-          userSettingsRef,
-          {
-            uid: userId,
-            fcmTokens: [token],
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      }
-      console.log('✅ FCM token byl úspěšně uložen pro uživatele:', userId);
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
+
+      console.log('✅ FCM token uložen do Firestore');
     } catch (error) {
       console.error('❌ Chyba při ukládání FCM tokenu:', error);
+      throw error;
     }
   }
 

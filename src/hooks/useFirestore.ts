@@ -39,7 +39,6 @@ export const useFirestore = () => {
         );
 
         familyUnsubscribe = await firestoreService.subscribeToFamilyMembers(
-          currentUser.uid,
           (membersFromDB) => { // Přejmenoval jsem proměnnou pro jasnost
             console.log('KROK 1: Data členů přímo z Firestore:', membersFromDB); // <-- PŘIDAT TENTO ŘÁDEK
             setFamilyMembers(membersFromDB);
@@ -99,4 +98,5 @@ export const useFirestore = () => {
 };
 
 // Export také jako useUserData pro zpětnou kompatibilitu
+
 export const useUserData = useFirestore;

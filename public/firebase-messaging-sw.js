@@ -41,27 +41,26 @@ messaging.onBackgroundMessage((payload) => {
   );
 });
 
+// Kliknutí na notifikaci
 self.addEventListener('notificationclick', (event) => {
   console.log('🖱️ Notification clicked:', event);
   event.notification.close();
 
-  // Otevři okno aplikace nebo na něj zaostři, pokud už běží
+  // Hledej existující okno a zaostři na něj, nebo otevři nové
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // Pokud je aplikace už otevřená, zaměř se na ni
       for (const client of clientList) {
+        // Používáme startsWith pro větší spolehlivost
         if (client.url.startsWith(self.location.origin) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Jinak otevři nové okno
+      // Jinak otevři nové okno na hlavní stránce
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow('/'); // <-- Toto je ta klíčová, spolehlivá změna
       }
     })
   );
 });
 
-  // Otevři aplikaci
-  event.waitUntil(clients.openWindow('https://iotuyapp.netlify.app/'));
-});

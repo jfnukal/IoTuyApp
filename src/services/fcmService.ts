@@ -109,17 +109,18 @@ class FCMService {
       console.log('📨 Zpráva přijata v popředí:', payload);
       callback(payload);
 
-      // Zobraz notifikaci i když je app otevřená
-      if (payload.notification && Notification.permission === 'granted') {
-        new Notification(payload.notification.title || 'Nová zpráva', {
-          body: payload.notification.body,
-          icon: '/icon-192x192.png',
-          tag: payload.data?.messageId || 'family-message',
-          requireInteraction: payload.data?.urgent === 'true',
-        });
-      }
+      // // Zobraz notifikaci i když je app otevřená
+      // if (payload.notification && Notification.permission === 'granted') {
+      //   new Notification(payload.notification.title || 'Nová zpráva', {
+      //     body: payload.notification.body,
+      //     icon: '/icon-192x192.png',
+      //     tag: payload.data?.messageId || 'family-message',
+      //     requireInteraction: payload.data?.urgent === 'true',
+      //   });
+      // }
     });
   }
+
 
   /**
    * Vrátí aktuální token (pokud existuje)
@@ -130,3 +131,4 @@ class FCMService {
 }
 
 export const fcmService = new FCMService();
+

@@ -143,7 +143,8 @@ export const sendPushOnNewMessage = functions
     } catch (error) {
       console.error('❌ Chyba při odesílání notifikací:', error);
     }
-
+  }
+);
 // ================================================================= //
 // PŮVODNÍ ČÁST KÓDU !!!!!!!!!!!!!!!!!!
 // ================================================================= //

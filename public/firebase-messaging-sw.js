@@ -29,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
-    badge: '/badge-24x24.png',
+    badge: '/icon-192x192.png',
     tag: payload.data?.messageId || 'family-message',
     requireInteraction: payload.data?.urgent === 'true',
     data: payload.data,
@@ -41,12 +41,27 @@ messaging.onBackgroundMessage((payload) => {
   );
 });
 
-// Kliknutí na notifikaci
 self.addEventListener('notificationclick', (event) => {
   console.log('🖱️ Notification clicked:', event);
   event.notification.close();
 
+  // Otevři okno aplikace nebo na něj zaostři, pokud už běží
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Pokud je aplikace už otevřená, zaměř se na ni
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Jinak otevři nové okno
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
+  );
+});
+
   // Otevři aplikaci
   event.waitUntil(clients.openWindow('https://iotuyapp.netlify.app/'));
 });
-

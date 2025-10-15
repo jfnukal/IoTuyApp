@@ -8,6 +8,7 @@ const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 class FCMService {
   private currentToken: string | null = null;
+  private messageUnsubscribe: (() => void) | null = null; // ← PŘIDEJ PROMĚNNOU
 
   /**
    * Požádá uživatele o povolení notifikací a získá FCM token
@@ -97,30 +98,26 @@ class FCMService {
   /**
    * Naslouchá zprávám, když je aplikace v popředí
    */
-  async listenForMessages(callback: (payload: any) => void): Promise<void> {
-    const messaging = getMessagingInstance();
-
-    if (!messaging) {
-      console.warn('⚠️ Firebase Messaging není k dispozici pro listening');
-      return;
-    }
-
-    onMessage(messaging, (payload) => {
-      console.log('📨 Zpráva přijata v popředí:', payload);
-      callback(payload);
-
-      // // Zobraz notifikaci i když je app otevřená
-      // if (payload.notification && Notification.permission === 'granted') {
-      //   new Notification(payload.notification.title || 'Nová zpráva', {
-      //     body: payload.notification.body,
-      //     icon: '/icon-192x192.png',
-      //     tag: payload.data?.messageId || 'family-message',
-      //     requireInteraction: payload.data?.urgent === 'true',
-      //   });
-      // }
-    });
-  }
-
+   async listenForMessages(callback: (payload: any) => void): Promise<void> {
+     const messaging = getMessagingInstance();
+   
+     if (!messaging) {
+       console.warn('⚠️ Firebase Messaging není k dispozici pro listening');
+       return;
+     }
+   
+     // ✅ Odregistruj starý listener pokud existuje
+     if (this.messageUnsubscribe) {
+       console.log('🔌 Odregistruji starý listener');
+       this.messageUnsubscribe();
+     }
+   
+     // ✅ Zaregistruj nový listener
+     this.messageUnsubscribe = onMessage(messaging, (payload) => {
+       console.log('📨 Zpráva přijata v popředí:', payload);
+       callback(payload);
+     });
+   }
 
   /**
    * Vrátí aktuální token (pokud existuje)
@@ -131,4 +128,3 @@ class FCMService {
 }
 
 export const fcmService = new FCMService();
-

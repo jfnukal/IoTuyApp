@@ -1,59 +1,51 @@
-// public/firebase-messaging-sw.js
+// Import Firebase scripts
+importScripts(
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
+);
+importScripts(
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js'
+);
 
-// Import Firebase scripts z CDN
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+// Firebase konfigurace - ZKOPÍRUJ Z .env
+const firebaseConfig = {
+  apiKey: 'AIzaSyCqtMF-R_5smwi1jXpDVxkFI9vQ2ktYz0Q',
+  authDomain: 'iotuyapp.firebaseapp.com',
+  projectId: 'iotuyapp',
+  storageBucket: 'iotuyapp.firebasestorage.app',
+  messagingSenderId: '375880123616',
+  appId: '1:375880123616:web:c7b8b1f7e5c79d4be8e0d8',
+  measurementId: 'G-3WFPE82CYD',
+};
 
-// Firebase konfigurace - MUSÍ být stejná jako v src/config/firebase.ts
-
-firebase.initializeApp({
-  apiKey: "AIzaSyDe3twpHJjf4-f-kPYO9_3CKYa83MY7Qoc",
-  authDomain: "iotuyapp.firebaseapp.com",
-  projectId: "iotuyapp",
-  storageBucket: "iotuyapp.firebasestorage.app",
-  messagingSenderId: "375880123616",
-  appId: "1:375880123616:web:439082786411401f407c85"
-});
-
-// Inicializace messaging
+// Inicializace Firebase
+firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Přijímání zpráv na pozadí (když je app zavřená)
+// KLÍČOVÁ ČÁST: Zobraz notifikaci když přijde zpráva na pozadí
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Background message received:', payload);
-  
-  const notificationTitle = payload.notification?.title || '💬 Nová rodinná zpráva';
+  console.log('📨 Background Message received:', payload);
+
+  const notificationTitle = payload.notification?.title || 'Nová zpráva';
   const notificationOptions = {
-    body: payload.notification?.body || 'Máte novou zprávu',
+    body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    badge: '/icon-192x192.png',
     tag: payload.data?.messageId || 'family-message',
     requireInteraction: payload.data?.urgent === 'true',
-    vibrate: payload.data?.urgent === 'true' ? [200, 100, 200, 100, 200] : [200],
-    data: payload.data
+    data: payload.data,
   };
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(
+    notificationTitle,
+    notificationOptions
+  );
 });
 
 // Kliknutí na notifikaci
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked');
+  console.log('🖱️ Notification clicked:', event);
   event.notification.close();
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Pokud je aplikace otevřená, zaměř se na ni
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        // Jinak otevři novou záložku
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-  );
+  // Otevři aplikaci
+  event.waitUntil(clients.openWindow('https://iotuyapp.netlify.app/'));
 });

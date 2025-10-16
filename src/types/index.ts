@@ -149,9 +149,9 @@ export type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks' | 'ontime';
 export type ReminderNotificationType = 'email' | 'push' | 'both';
 
 export interface ReminderItem {
-  id: string;              // Unikátní ID připomínky
-  value: number;           // Hodnota (10, 1, 2, 3...)
-  unit: ReminderUnit;      // Jednotka času
+  id: string; // Unikátní ID připomínky
+  value: number; // Hodnota (10, 1, 2, 3...)
+  unit: ReminderUnit; // Jednotka času
   type: ReminderNotificationType; // Typ notifikace
 }
 
@@ -236,7 +236,7 @@ export interface CalendarSettings {
   reminderSettings: {
     email: boolean;
     push: boolean;
-    defaultTime: ReminderType;
+    defaultTime: string;
   };
   familyView: boolean;
 }
@@ -265,7 +265,7 @@ export interface CalendarTheme {
   type: EventType;
   familyMemberId?: string;
   color?: string;
-  reminder?: ReminderType;
+  reminders?: ReminderItem[];
   isAllDay?: boolean;
   attachments?: FileAttachment[];
   recurring?: RecurringPattern;

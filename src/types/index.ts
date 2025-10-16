@@ -142,6 +142,19 @@ export interface FamilyMember {
   createdAt?: number;
 }
 
+// ==================== NOVÉ TYPY PRO PŘIPOMÍNKY ====================
+
+export type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks' | 'ontime';
+
+export type ReminderNotificationType = 'email' | 'push' | 'both';
+
+export interface ReminderItem {
+  id: string;              // Unikátní ID připomínky
+  value: number;           // Hodnota (10, 1, 2, 3...)
+  unit: ReminderUnit;      // Jednotka času
+  type: ReminderNotificationType; // Typ notifikace
+}
+
 export interface CalendarEventData {
   id: string;
   userId: string;
@@ -153,7 +166,7 @@ export interface CalendarEventData {
   type: EventType;
   familyMemberId?: string; // Přejmenováno pro konzistenci
   color?: string;
-  reminder?: ReminderType;
+  reminders?: ReminderItem[];
   isAllDay?: boolean;
   attachments?: FileAttachment[]; // Zachováno z tvé verze
   recurring?: RecurringPattern; // Zachováno z tvé verze
@@ -169,16 +182,16 @@ export type EventType =
   | 'holiday'
   | 'nameday'
   | 'reminder';
-export type ReminderType =
-  | 'none'
-  | '5min'
-  | '15min'
-  | '30min'
-  | '1hour'
-  | '1day'
-  | '1week'
-  | 'email'
-  | 'push';
+// export type ReminderType =
+//   | 'none'
+//   | '5min'
+//   | '15min'
+//   | '30min'
+//   | '1hour'
+//   | '1day'
+//   | '1week'
+//   | 'email'
+//   | 'push';
 
 export type CalendarView = 'month' | 'week' | 'day';
 

@@ -38,8 +38,8 @@ function App() {
 
   const [notification, setNotification] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
-  const [familyMemberId, setFamilyMemberId] = useState<string | undefined>(
-    undefined
+  const [familyMemberId, setFamilyMemberId] = useState<string | null>(
+    null
   );
 
   // 🔐 Remote Config initialization - MUSÍ BÝT PRVNÍ!
@@ -116,7 +116,7 @@ function App() {
   // useEffect pro načtení family member podle authUid
   useEffect(() => {
     if (!currentUser) {
-      setFamilyMemberId(undefined);
+      setFamilyMemberId(null);
       return;
     }
 
@@ -327,7 +327,7 @@ function App() {
           familyMemberId={familyMemberId || null}
         >
           <DashboardLayout
-            familyMemberId={familyMemberId}  // ← PŘIDEJ PROP
+            familyMemberId={familyMemberId}  // ← PŘIDEJ!
             onNavigateToSettings={() => {
               console.log('Navigate to settings...');
             }}

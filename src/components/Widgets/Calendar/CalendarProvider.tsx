@@ -37,6 +37,7 @@ interface CalendarContextType {
   ) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   getEventsByDate: (date: Date) => CalendarEventData[];
+  getBirthdayEventsByDate: (date: Date) => CalendarEventData[];
   holidays: Holiday[];
   namedays: Nameday[];
   getHolidayByDate: (date: Date) => Holiday | null;
@@ -262,6 +263,18 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     [events, isSameDay]
   );
 
+  // Funkce pro získání pouze narozeninových událostí
+      const getBirthdayEventsByDate = useCallback(
+        (date: Date) => {
+          return events.filter(
+            (event) => 
+              event.type === 'birthday' && 
+              isSameDay(event.date, date)
+          );
+        },
+        [events, isSameDay]
+      );
+
   const getHolidayByDate = useCallback(
     (date: Date) => {
       return holidays.find((holiday) => isSameDay(holiday.date, date)) || null;
@@ -321,6 +334,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     updateEvent,
     deleteEvent,
     getEventsByDate,
+    getBirthdayEventsByDate, 
     holidays,
     namedays,
     getHolidayByDate,

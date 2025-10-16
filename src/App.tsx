@@ -113,43 +113,49 @@ function App() {
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
-// useEffect pro načtení family member podle authUid
-useEffect(() => {
-  if (!currentUser) {
-    setFamilyMemberId(undefined);
-    return;
-  }
-
-  const loadFamilyMember = async () => {
-    // OKAMŽITĚ nastav výchozí hodnotu (opraví race condition s FCM)
-    setFamilyMemberId('dad');
-    
-    try {
-      console.log('🔍 Hledám family member pro UID:', currentUser.uid);
-      
-      // Najdi family member podle authUid
-      const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
-      
-      if (member) {
-        setFamilyMemberId(member.id); // ← Tady se PŘEPÍŠE správnou hodnotou!
-        console.log(`✅ Přihlášen jako: ${member.name} (${member.id})`);
-      } else {
-        // Fallback - 'dad' už je nastaveno výše
-        console.warn(`⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`);
-        console.warn('⚠️ Zkontroluj, že máš v Firestore přidané pole authUid');
-      }
-    } catch (error) {
-      console.error('❌ Chyba při načítání family member:', error);
-      // 'dad' už je nastaveno výše jako fallback
+  // useEffect pro načtení family member podle authUid
+  useEffect(() => {
+    if (!currentUser) {
+      setFamilyMemberId(undefined);
+      return;
     }
-  };
 
-  loadFamilyMember();
+    const loadFamilyMember = async () => {
+      // OKAMŽITĚ nastav výchozí hodnotu (opraví race condition s FCM)
+      setFamilyMemberId('dad');
 
-  if (devices && devices.length > 0) {
-    // Zde můžeš přidat další logiku pokud potřebuješ
-  }
-}, [currentUser, devices, firebaseLoading]);
+      try {
+        console.log('🔍 Hledám family member pro UID:', currentUser.uid);
+
+        // Najdi family member podle authUid
+        const member = await firestoreService.getFamilyMemberByAuthUid(
+          currentUser.uid
+        );
+
+        if (member) {
+          setFamilyMemberId(member.id); // ← Tady se PŘEPÍŠE správnou hodnotou!
+          console.log(`✅ Přihlášen jako: ${member.name} (${member.id})`);
+        } else {
+          // Fallback - 'dad' už je nastaveno výše
+          console.warn(
+            `⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`
+          );
+          console.warn(
+            '⚠️ Zkontroluj, že máš v Firestore přidané pole authUid'
+          );
+        }
+      } catch (error) {
+        console.error('❌ Chyba při načítání family member:', error);
+        // 'dad' už je nastaveno výše jako fallback
+      }
+    };
+
+    loadFamilyMember();
+
+    if (devices && devices.length > 0) {
+      // Zde můžeš přidat další logiku pokud potřebuješ
+    }
+  }, [currentUser, devices, firebaseLoading]);
 
   // Přihlášení required - TENTO RETURN JE AŽ PO VŠECH HOOKECH!
   if (!currentUser) {
@@ -316,14 +322,14 @@ useEffect(() => {
   return (
     <div className="app-layout">
       <CalendarProvider>
-      <NotificationProvider 
-            authUid={currentUser?.uid || null}
-            familyMemberId={familyMemberId || null}
-          >
+        <NotificationProvider
+          authUid={currentUser?.uid || null}
+          familyMemberId={familyMemberId || null}
+        >
           <DashboardLayout
+            familyMemberId={familyMemberId}  // ← PŘIDEJ PROP
             onNavigateToSettings={() => {
               console.log('Navigate to settings...');
-              // TODO: Přidáme navigaci na settings později
             }}
           />
         </NotificationProvider>

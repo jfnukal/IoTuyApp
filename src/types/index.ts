@@ -158,6 +158,7 @@ export interface ReminderItem {
 export interface CalendarEventData {
   id: string;
   userId: string;
+  createdBy?: string;
   title: string;
   description?: string;
   date: string; // Ponecháme string (ISO formát), je to spolehlivější pro DB

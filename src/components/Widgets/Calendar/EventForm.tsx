@@ -1,10 +1,12 @@
+// src/components/Widgets/Calendar/EventForm.tsx
+
 import React, { useState, useEffect } from 'react';
 import type {
   CalendarEventData,
   EventType,
-  ReminderType,
   FamilyMember,
 } from '../../../types/index';
+import ReminderSelector from './ReminderSelector';
 
 interface EventFormProps {
   event: CalendarEventData | null;
@@ -62,7 +64,7 @@ const EventForm: React.FC<EventFormProps> = ({
         type: event.type,
         familyMemberId: event.familyMemberId || '',
         color: event.color || '#667eea',
-        reminder: event.reminder || 'none',
+        reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
       };
     }
@@ -78,7 +80,7 @@ const EventForm: React.FC<EventFormProps> = ({
       type: 'personal' as EventType,
       familyMemberId: defaultMemberId || '',
       color: '#667eea',
-      reminder: 'none' as ReminderType,
+      reminders: [],
       isAllDay: false,
     };
   });
@@ -94,7 +96,7 @@ const EventForm: React.FC<EventFormProps> = ({
         type: event.type,
         familyMemberId: event.familyMemberId || '',
         color: event.color || '#667eea',
-        reminder: event.reminder || 'none',
+        reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
       });
     }
@@ -121,11 +123,9 @@ const EventForm: React.FC<EventFormProps> = ({
       const newFormData = { ...prev, [field]: value };
 
       if (field === 'familyMemberId') {
-        // Najdeme vybraného člena v seznamu
         const selectedMember = familyMembers.find(
           (member) => member.id === value
         );
-        // A nastavíme jeho barvu (nebo výchozí, pokud není vybrán nikdo)
         newFormData.color = selectedMember ? selectedMember.color : '#667eea';
       }
 
@@ -139,19 +139,6 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: 'family', label: 'Rodina', icon: '👨‍👩‍👧‍👦' },
     { value: 'birthday', label: 'Narozeniny', icon: '🎂' },
     { value: 'reminder', label: 'Připomínka', icon: '⏰' },
-  ];
-
-  // OPRAVENO: Vráceny všechny možnosti připomenutí
-  const reminderOptions = [
-    { value: 'none', label: 'Bez připomínky' },
-    { value: '5min', label: '5 minut před' },
-    { value: '15min', label: '15 minut před' },
-    { value: '30min', label: '30 minut před' },
-    { value: '1hour', label: '1 hodinu před' },
-    { value: '1day', label: '1 den před' },
-    { value: '1week', label: '1 týden před' },
-    { value: 'email', label: 'Email' },
-    { value: 'push', label: 'Push notifikace' },
   ];
 
   const colorOptions = [
@@ -359,26 +346,14 @@ const EventForm: React.FC<EventFormProps> = ({
             </div>
           </div>
 
-          {/* Připomínka */}
-          <div className="form-group">
-            <label className="form-label">Připomínka</label>
-            <div className="reminder-options">
-              {reminderOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={`reminder-option ${
-                    formData.reminder === option.value ? 'selected' : ''
-                  }`}
-                  onClick={() =>
-                    handleInputChange('reminder', option.value as ReminderType)
-                  }
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Připomínky */}
+          <ReminderSelector
+            reminders={formData.reminders}
+            onChange={(newReminders) =>
+              handleInputChange('reminders', newReminders)
+            }
+            maxReminders={5}
+          />
 
           {/* Akce */}
           <div className="form-actions">

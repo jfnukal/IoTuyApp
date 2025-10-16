@@ -22,6 +22,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   const {
     isToday,
     getEventsByDate,
+    getBirthdayEventsByDate,
     getHolidayByDate,
     getNamedayByDate,
     formatDate,
@@ -84,8 +85,12 @@ const MonthView: React.FC<MonthViewProps> = ({
   const renderEventsInCell = useCallback(
     (date: Date, member: FamilyMember) => {
       const allDayEvents = getEventsByDate(date);
+      
+      // ✅ NOVÉ: Vyfiltruj narozeniny - ty se zobrazí jinde!
       const dayEvents = allDayEvents.filter(
-        (event) => event.familyMemberId === member.id
+        (event) => 
+          event.familyMemberId === member.id && 
+          event.type !== 'birthday'  // ← DŮLEŽITÉ!
       );
 
       if (allDayEvents.length > 0) {
@@ -188,6 +193,24 @@ const MonthView: React.FC<MonthViewProps> = ({
                     {formatDate(date, 'WEEKDAY')}
                   </span>
                 </div>
+                  {/* 🎂 IKONA NAROZENIN V PRAVÉM HORNÍM ROHU */}
+                  {(() => {
+                    const birthdayEvents = getBirthdayEventsByDate(date);
+                    if (birthdayEvents.length === 0) return null;
+                    
+                    return (
+                      <div 
+                        className="birthday-indicator"
+                        title={birthdayEvents.map(e => e.title).join(', ')}
+                      >
+                        🎂
+                        {birthdayEvents.length > 1 && (
+                          <span className="birthday-badge">{birthdayEvents.length}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
+             
                 <div
                   className={`day-special-events ${
                     nameday && isNamedayMarked(date) ? 'has-marked-nameday' : ''
@@ -207,12 +230,13 @@ const MonthView: React.FC<MonthViewProps> = ({
                       {nameday.name}
                     </div>
                   )}
-                  {holiday && (
+                {holiday && (
                     <div className="special-event holiday" title={holiday.name}>
                       {holiday.name}
                     </div>
                   )}
-                  {birthdays.map((member) => (
+
+                  {birthdays.map((member) => (                  
                     <div
                       key={member.id}
                       className="special-event birthday"

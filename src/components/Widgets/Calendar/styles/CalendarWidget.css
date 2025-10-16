@@ -1185,3 +1185,49 @@
 .day-row.today .member-day-cell {
   background-color: var(--calendar-today-bg) !important;
 }
+/* ==================== BIRTHDAY INDICATOR - MALÁ IKONA ==================== */
+
+.birthday-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.birthday-indicator:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 2px 4px rgba(255, 107, 157, 0.5));
+}
+
+.birthday-badge {
+  background: linear-gradient(135deg, #ff6b9d, #c06c84);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .birthday-indicator {
+    font-size: 1rem;
+    top: 6px;
+    right: 6px;
+  }
+  
+  .birthday-badge {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+    min-width: 14px;
+  }
+}

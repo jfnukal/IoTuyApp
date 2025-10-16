@@ -13,10 +13,12 @@ import { useAuth } from '../../contexts/AuthContext';
 type DashboardMode = 'family' | 'tech';
 
 interface DashboardLayoutProps {
+  familyMemberId: string | null; // ← PŘIDEJ
   onNavigateToSettings?: () => void;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
+  familyMemberId,
   onNavigateToSettings,
 }) => {
   const { logout } = useAuth();
@@ -28,11 +30,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isMessagePanelOpen, setIsMessagePanelOpen] = useState(false);
   const { unreadCount, requestPermission } = useNotificationContext();
 
-  // Najdi aktuálně přihlášeného uživatele z FAMILY_MEMBERS
   const getCurrentMember = () => {
-    // TODO: V budoucnu přidáme skutečnou autentizaci členů
-    // Pro teď vracíme první member (Táta)
-    return familyMembers[0];
+    if (!familyMemberId) {
+      return familyMembers[0]; // Fallback
+    }
+
+    const member = familyMembers.find((m) => m.id === familyMemberId);
+    return member || familyMembers[0]; // Fallback pokud nenalezen
   };
 
   const handleMemberClick = (memberId: string) => {
@@ -118,26 +122,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </button>
             )}
 
-      {/* Tlačítko pro aktivaci notifikací */}
-      <button
-                  className="notification-permission-btn"
-                  onClick={requestPermission} // <-- Přímo voláme naši funkci
-                  title="Povolit notifikace"
-                >
-                  🔔
-                </button>
+            {/* Tlačítko pro aktivaci notifikací */}
+            <button
+              className="notification-permission-btn"
+              onClick={requestPermission} // <-- Přímo voláme naši funkci
+              title="Povolit notifikace"
+            >
+              🔔
+            </button>
 
-                {/* Tlačítko pro zprávy */}
-                <button
-                  className="message-icon-btn"
-                  onClick={() => setIsMessagePanelOpen(true)}
-                  title="Poslat zprávu rodině"
-                >
-                  💬
-                  {unreadCount > 0 && (
-                    <span className="unread-badge-desktop">{unreadCount}</span>
-                  )}
-                </button>
+            {/* Tlačítko pro zprávy */}
+            <button
+              className="message-icon-btn"
+              onClick={() => setIsMessagePanelOpen(true)}
+              title="Poslat zprávu rodině"
+            >
+              💬
+              {unreadCount > 0 && (
+                <span className="unread-badge-desktop">{unreadCount}</span>
+              )}
+            </button>
 
             {/* Tlačítka režimů */}
             <div className="mode-switcher">

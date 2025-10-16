@@ -12,6 +12,7 @@ import {
   getDocs,
   writeBatch,
   onSnapshot,
+  serverTimestamp ,
   where,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -77,27 +78,29 @@ class FirestoreService {
   }
 
   async saveFCMToken(userId: string, token: string): Promise<void> {
-    try {
-      const docRef = doc(db, 'userSettings', userId);
-
-      // Použij setDoc s merge místo updateDoc
-      // To vytvoří dokument, pokud neexistuje
-      await setDoc(
-        docRef,
-        {
-          uid: userId, // ← DŮLEŽITÉ: Uložíme i uid
-          fcmTokens: arrayUnion(token),
-          updatedAt: Date.now(),
-        },
-        { merge: true }
-      );
-
-      console.log('✅ FCM token uložen do Firestore');
-    } catch (error) {
-      console.error('❌ Chyba při ukládání FCM tokenu:', error);
-      throw error;
+    const userSettingsRef = doc(db, 'userSettings', userId);
+    
+    // ✅ Nejdřív zkontroluj, jestli token už není
+    const userSettingsSnap = await getDoc(userSettingsRef);
+    const existingTokens = userSettingsSnap.data()?.fcmTokens || [];
+    
+    if (existingTokens.includes(token)) {
+      console.log('✅ Token už existuje, nepřidávám duplicitu');
+      return;
     }
+    
+    console.log('➕ Přidávám nový token');
+    
+    await setDoc(
+      userSettingsRef,
+      {
+        fcmTokens: arrayUnion(token),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   }
+  
 
   // ==================== ROOMS ====================
   async subscribeToUserRooms(

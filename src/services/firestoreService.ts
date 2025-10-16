@@ -486,65 +486,94 @@ class FirestoreService {
     }
   }
 
-  // ==================== CALENDAR EVENTS ====================
-  async subscribeToEvents(
-    userId: string,
-    callback: (events: CalendarEventData[]) => void
-  ): Promise<Unsubscribe> {
-    try {
-      const eventsRef = collection(db, 'calendarEvents');
-      const q = query(eventsRef, where('userId', '==', userId));
-      return onSnapshot(q, (snapshot) => {
-        const events = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
-        );
-        callback(events);
+// ==================== CALENDAR EVENTS ====================
+
+/**
+ * ✅ NOVÉ: Rodinné události - vidí všichni!
+ * Jen "personal" události vidí pouze ten, kdo je vytvořil
+ */
+ async subscribeToEvents(
+  currentUserAuthUid: string,
+  callback: (events: CalendarEventData[]) => void
+): Promise<Unsubscribe> {
+  try {
+    // ✅ ZMĚNA: Načteme VŠECHNY události (bez filtru userId)
+    const eventsRef = collection(db, 'calendarEvents');
+    const q = query(eventsRef, orderBy('date', 'asc'));
+    
+    return onSnapshot(q, (snapshot) => {
+      const allEvents = snapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
+      );
+      
+      // ✅ FILTROVÁNÍ: Personal události vidí jen jejich autor
+      const visibleEvents = allEvents.filter(event => {
+        // Pokud je to osobní událost
+        if (event.type === 'personal') {
+          // Vidí jen ten, kdo ji vytvořil
+          return event.createdBy === currentUserAuthUid || event.userId === currentUserAuthUid;
+        }
+        // Všechny ostatní typy jsou sdílené
+        return true;
       });
-    } catch (error) {
-      console.error('Error subscribing to events:', error);
-      throw error;
-    }
-  }
-
-  async getEvents(userId: string): Promise<CalendarEventData[]> {
-    const eventsRef = collection(db, 'calendarEvents');
-    const q = query(eventsRef, where('userId', '==', userId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
-    );
-  }
-
-  async addEvent(
-    userId: string,
-    event: Omit<CalendarEventData, 'id' | 'createdAt' | 'updatedAt' | 'userId'>
-  ): Promise<string> {
-    const eventsRef = collection(db, 'calendarEvents');
-    const newEvent = {
-      ...event,
-      userId: userId,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    const docRef = await addDoc(eventsRef, newEvent);
-    return docRef.id;
-  }
-
-  async updateEvent(
-    eventId: string,
-    updates: Partial<Omit<CalendarEventData, 'id' | 'userId'>>
-  ): Promise<void> {
-    const eventRef = doc(db, 'calendarEvents', eventId);
-    await updateDoc(eventRef, {
-      ...updates,
-      updatedAt: Date.now(),
+      
+      callback(visibleEvents);
     });
+  } catch (error) {
+    console.error('Error subscribing to events:', error);
+    throw error;
   }
+}
 
-  async deleteEvent(eventId: string): Promise<void> {
-    const eventRef = doc(db, 'calendarEvents', eventId);
-    await deleteDoc(eventRef);
-  }
+async getEvents(currentUserAuthUid: string): Promise<CalendarEventData[]> {
+  const eventsRef = collection(db, 'calendarEvents');
+  const q = query(eventsRef, orderBy('date', 'asc'));
+  const snapshot = await getDocs(q);
+  
+  const allEvents = snapshot.docs.map(
+    (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
+  );
+  
+  // Filtrování stejně jako u subscribe
+  return allEvents.filter(event => {
+    if (event.type === 'personal') {
+      return event.createdBy === currentUserAuthUid || event.userId === currentUserAuthUid;
+    }
+    return true;
+  });
+}
+
+async addEvent(
+  currentUserAuthUid: string,
+  event: Omit<CalendarEventData, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'createdBy'>
+): Promise<string> {
+  const eventsRef = collection(db, 'calendarEvents');
+  const newEvent = {
+    ...event,
+    userId: currentUserAuthUid,      // Zachováme pro kompatibilitu
+    createdBy: currentUserAuthUid,   // ✅ NOVÉ: Kdo událost vytvořil
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  const docRef = await addDoc(eventsRef, newEvent);
+  return docRef.id;
+}
+
+async updateEvent(
+  eventId: string,
+  updates: Partial<Omit<CalendarEventData, 'id' | 'userId' | 'createdBy'>>
+): Promise<void> {
+  const eventRef = doc(db, 'calendarEvents', eventId);
+  await updateDoc(eventRef, {
+    ...updates,
+    updatedAt: Date.now(),
+  });
+}
+
+async deleteEvent(eventId: string): Promise<void> {
+  const eventRef = doc(db, 'calendarEvents', eventId);
+  await deleteDoc(eventRef);
+}
 
   // ==================== SCHEDULES (ROZVRHY) ====================
   async getSchedule(scheduleId: string): Promise<TimetableDay[]> {

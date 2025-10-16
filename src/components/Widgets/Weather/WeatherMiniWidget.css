@@ -822,3 +822,92 @@
     padding: 3px 6px;
   }
 }
+/* ==================== MOBILNÍ KOMPAKTNÍ VERZE ==================== */
+@media (max-width: 768px) {
+  .weather-mini-widget {
+    padding: 12px;
+    min-height: 120px; /* Mnohem menší! */
+    border-radius: 16px;
+  }
+
+  /* Skryj zbytečné sekce na mobilu */
+  .forecast-comparison,
+  .playful-comment,
+  .quick-stats,
+  .last-updated,
+  .click-hint {
+    display: none !important;
+  }
+
+  /* Header menší */
+  .weather-mini-header {
+    margin-bottom: 8px;
+  }
+
+  .widget-title {
+    font-size: 0.9rem;
+  }
+
+  .location-name {
+    font-size: 0.75rem;
+  }
+
+  /* Current weather kompaktní */
+  .current-weather-section {
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .current-temp {
+    font-size: 2rem; /* Menší teplota */
+  }
+
+  .current-details {
+    gap: 0;
+  }
+
+  .condition-text {
+    font-size: 0.8rem;
+  }
+
+  .feels-like {
+    font-size: 0.7rem;
+  }
+
+  .weather-icon {
+    width: 40px; /* Menší ikona */
+    height: 40px;
+  }
+
+  /* Tlačítka menší */
+  .refresh-btn,
+  .close-widget-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mickey-ear {
+    width: 10px;
+    height: 10px;
+  }
+
+  .expand-icon {
+    font-size: 12px;
+  }
+}
+
+/* Extra malé mobily */
+@media (max-width: 480px) {
+  .weather-mini-widget {
+    padding: 10px;
+    min-height: 100px;
+  }
+
+  .current-temp {
+    font-size: 1.8rem;
+  }
+
+  .widget-title {
+    font-size: 0.85rem;
+  }
+}

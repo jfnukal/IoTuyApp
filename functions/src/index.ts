@@ -36,16 +36,17 @@ export const updateBakalariTimetable = functions
     }
   });
 
-// NAHRAĎ CELOU TUTO FUNKCI
+// ================================================================= //
+// FUNKCE 2: Odeslání Push notifikace při nové zprávě
+// ================================================================= //
 export const sendPushOnNewMessage = functions
   .region('europe-west1')
   .firestore.document('familyMessages/{messageId}')
   .onCreate(
     async (
       snapshot: admin.firestore.QueryDocumentSnapshot,
-      context: functions.EventContext
+      context: functions.EventContext<Record<string, string>>
     ) => {
-      // <-- PŘIDANÉ TYPY
       console.log(`Zpracovávám zprávu s ID: ${context.params.messageId}`);
 
       const messageData = snapshot.data();
@@ -66,9 +67,9 @@ export const sendPushOnNewMessage = functions
       const authUidPromises = recipientsIds.map(async (memberId: string) => {
         const memberDoc = await db
           .collection('familyMembers')
-          .doc(memberId)  // ← ✅ SPRÁVNĚ - použij document ID přímo
+          .doc(memberId)
           .get();
-      
+
         if (memberDoc.exists) {
           return memberDoc.data()?.authUid;
         }
@@ -97,12 +98,11 @@ export const sendPushOnNewMessage = functions
 
       const userSettingsResults = await Promise.all(userSettingsPromises);
 
-      // Zde také přidáme typy pro větší jistotu
       const allTokens = userSettingsResults
         .flatMap((doc: admin.firestore.DocumentSnapshot) =>
           doc.exists ? doc.data()?.fcmTokens : []
         )
-        .filter((token: any) => token);
+        .filter((token: string) => token);
 
       if (allTokens.length === 0) {
         console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
@@ -111,98 +111,47 @@ export const sendPushOnNewMessage = functions
 
       console.log(`✅ Nalezeno celkem ${allTokens.length} FCM tokenů`);
 
-    // OPRAVENÝ KÓD - použij sendEach místo sendMulticast
-    const messages = allTokens.map((token) => ({
-      notification: {
-        title: `💬 Nová zpráva od ${messageData.senderName}`,
-        body: messageData.message,
-      },
-      data: {
-        messageId: context.params.messageId,
-        senderId: messageData.senderId,
-        senderName: messageData.senderName,
-        urgent: messageData.urgent ? 'true' : 'false',
-      },
-      token: token,
-    }));
+      // ✅ OPRAVENO: Explicitní typy pro token
+      const messages = allTokens.map((token: string) => ({
+        notification: {
+          title: `💬 Nová zpráva od ${messageData.senderName}`,
+          body: messageData.message,
+        },
+        data: {
+          messageId: context.params.messageId,
+          senderId: messageData.senderId,
+          senderName: messageData.senderName,
+          urgent: messageData.urgent ? 'true' : 'false',
+        },
+        token: token,
+      }));
 
-    try {
-      const response = await admin.messaging().sendEach(messages);
-      
-      console.log(`✅ Notifikace odeslány: ${response.successCount}/${allTokens.length}`);
-      
-      if (response.failureCount > 0) {
-        console.warn(`⚠️ Některé notifikace selhaly: ${response.failureCount}`);
-        
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success) {
-            console.error(`❌ Token ${idx} selhal:`, resp.error);
-          }
-        });
+      try {
+        const response = await admin.messaging().sendEach(messages);
+
+        console.log(
+          `✅ Notifikace odeslány: ${response.successCount}/${allTokens.length}`
+        );
+
+        if (response.failureCount > 0) {
+          console.warn(
+            `⚠️ Některé notifikace selhaly: ${response.failureCount}`
+          );
+
+          // ✅ OPRAVENO: Explicitní typy pro resp a idx
+          response.responses.forEach((resp: admin.messaging.SendResponse, idx: number) => {
+            if (!resp.success) {
+              console.error(`❌ Token ${idx} selhal:`, resp.error);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('❌ Chyba při odesílání notifikací:', error);
       }
-    } catch (error) {
-      console.error('❌ Chyba při odesílání notifikací:', error);
     }
-  }
-);
-// ================================================================= //
-// PŮVODNÍ ČÁST KÓDU !!!!!!!!!!!!!!!!!!
-// ================================================================= //
+  );
 
 // ================================================================= //
-// FUNKCE 2: Odeslání Push notifikace při nové zprávě (naše nová funkce)
+// FUNKCE 3: Kontrola a odesílání připomínek z kalendáře
 // ================================================================= //
-// NAHRAĎ CELOU TUTO FUNKCI
-// export const sendPushOnNewMessage = functions
-//   .region('europe-west1')
-//   .firestore.document('familyMessages/{messageId}')
-//   .onCreate(async (snapshot, context) => {
-//     const messageData = snapshot.data();
-//     if (!messageData) {
-//       console.log('Nová zpráva nemá žádná data.');
-//       return;
-//     }
-//     const recipients = messageData.recipients.filter(
-//       (id: string) => id !== messageData.senderId
-//     );
-//     if (recipients.length === 0) {
-//       console.log('Žádní příjemci k odeslání notifikace.');
-//       return;
-//     }
-//     const userSettingsPromises = recipients.map((userId: string) =>
-//       db.collection('userSettings').doc(userId).get()
-//     );
-//     const userSettingsResults = await Promise.all(userSettingsPromises);
-//     const allTokens = userSettingsResults
-//       .flatMap((doc) => (doc.exists ? doc.data()?.fcmTokens : []))
-//       .filter((token) => token);
-
-//     if (allTokens.length === 0) {
-//       console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
-//       return;
-//     }
-
-//     console.log(`Zpracovávám zprávu s ID: ${context.params.messageId}`);
-//     console.log(`Nalezeno ${allTokens.length} tokenů pro odeslání.`);
-
-//     const message = {
-//       notification: {
-//         title: `💬 Nová zpráva od ${messageData.senderName}`,
-//         body: messageData.message,
-//       },
-//       tokens: allTokens,
-//     };
-
-//     try {
-//       const response = await admin.messaging().sendMulticast(message);
-//       console.log('✅ Notifikace úspěšně odeslány:', response.successCount);
-//       if (response.failureCount > 0) {
-//         console.warn(
-//           'Některé notifikace se nepodařilo odeslat:',
-//           response.failureCount
-//         );
-//       }
-//     } catch (error) {
-//       console.error('❌ Chyba při odesílání notifikací:', error);
-//     }
-//   });
+export { checkReminders } from './checkReminders';

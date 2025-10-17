@@ -1185,8 +1185,10 @@
 .day-row.today .member-day-cell {
   background-color: var(--calendar-today-bg) !important;
 }
-/* ==================== BIRTHDAY INDICATOR - MALÁ IKONA ==================== */
 
+/* ==================== BIRTHDAY MENU POPUP ==================== */
+
+/* Základní styl ikony */
 .birthday-indicator {
   position: absolute;
   top: 8px;
@@ -1217,17 +1219,119 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile */
+/* Wrapper a menu */
+.birthday-indicator-wrapper {
+  position: relative;
+  z-index: 20;
+}
+
+/* Menu je nyní přímo v day-info-cell */
+.birthday-menu {
+  position: absolute;
+  top: 20px; /* Pod ikonou */
+  left: 155px;
+  margin-top: 4px;
+  background: white;
+  border: 2px solid #ff6b9d;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  z-index: 100;
+  display: none; /* ← PŘIDEJ */
+}
+
+.birthday-menu.show-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  display: block; /* ← PŘIDEJ */
+}
+
+.birthday-indicator-wrapper.show-menu .birthday-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+  display: block !important;
+}
+
+.birthday-menu-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #fef5f8;
+}
+
+.birthday-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.birthday-menu-item:last-child {
+  border-bottom: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.birthday-menu-item:hover {
+  background: linear-gradient(90deg, #fff0f5, #ffe4ec);
+}
+
+.birthday-menu-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.birthday-menu-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.birthday-menu-arrow {
+  color: #ff6b9d;
+  font-weight: bold;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.birthday-menu-item:hover .birthday-menu-arrow {
+  transform: translateX(3px);
+}
+
+/* Mobile optimalizace */
 @media (max-width: 768px) {
-  .birthday-indicator {
-    font-size: 1rem;
-    top: 6px;
-    right: 6px;
+  .birthday-menu {
+    min-width: 180px;
+    font-size: 13px;
   }
   
-  .birthday-badge {
-    font-size: 0.65rem;
-    padding: 1px 4px;
-    min-width: 14px;
+  .birthday-menu-header {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+  
+  .birthday-menu-item {
+    padding: 8px 10px;
+  }
+  
+  .birthday-menu-icon {
+    font-size: 16px;
+  }
+  
+  .birthday-menu-title {
+    font-size: 13px;
   }
 }

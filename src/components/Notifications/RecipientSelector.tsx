@@ -53,13 +53,14 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
         <div className="section-label">Skupiny:</div>
         <div className="recipient-chips">
           {FAMILY_GROUPS.map((group) => (
-            <button
-              key={group.id}
-              className={`recipient-chip group ${
-                isGroupSelected(group.id) ? 'selected' : ''
-              }`}
-              onClick={() => toggleGroup(group.id)}
-            >
+                  <button
+                  key={group.id}
+                  type="button"  
+                  className={`recipient-chip group ${
+                    isGroupSelected(group.id) ? 'selected' : ''
+                  }`}
+                  onClick={() => toggleGroup(group.id)}
+                >
               <span className="chip-icon">{group.icon}</span>
               <span className="chip-name">{group.name}</span>
             </button>
@@ -73,12 +74,13 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
         <div className="recipient-chips">
           {familyMembers.map((member: FamilyMember) => (
             <button
-              key={member.id}
-              className={`recipient-chip individual ${
-                selectedRecipients.includes(member.id) ? 'selected' : ''
-              }`}
-              onClick={() => toggleRecipient(member.id)}
-            >
+                  key={member.id}
+                  type="button"  
+                  className={`recipient-chip individual ${
+                    selectedRecipients.includes(member.id) ? 'selected' : ''
+                  }`}
+                  onClick={() => toggleRecipient(member.id)}
+                >
               <span className="chip-icon">{member.emoji}</span>
               <span className="chip-name">{member.name}</span>
             </button>

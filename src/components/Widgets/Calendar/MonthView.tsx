@@ -193,23 +193,69 @@ const MonthView: React.FC<MonthViewProps> = ({
                     {formatDate(date, 'WEEKDAY')}
                   </span>
                 </div>
-                  {/* 🎂 IKONA NAROZENIN V PRAVÉM HORNÍM ROHU */}
-                  {(() => {
-                    const birthdayEvents = getBirthdayEventsByDate(date);
-                    if (birthdayEvents.length === 0) return null;
-                    
-                    return (
-                      <div 
-                        className="birthday-indicator"
-                        title={birthdayEvents.map(e => e.title).join(', ')}
-                      >
-                        🎂
-                        {birthdayEvents.length > 1 && (
-                          <span className="birthday-badge">{birthdayEvents.length}</span>
-                        )}
-                      </div>
-                    );
-                  })()}
+          {/* 🎂 IKONA NAROZENIN V PRAVÉM HORNÍM ROHU */}
+          {(() => {
+            const birthdayEvents = getBirthdayEventsByDate(date);
+            if (birthdayEvents.length === 0) return null;
+            
+            // Pokud je jen jedna narozenina, otevři rovnou EventForm
+            if (birthdayEvents.length === 1) {
+              return (
+                <div 
+                  className="birthday-indicator clickable"
+                  title={`${birthdayEvents[0].title} - Klikni pro editaci`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEventClick(birthdayEvents[0]);
+                  }}
+                >
+                  🎂
+                </div>
+              );
+            }
+            
+            // Pokud je více narozenin, zobraz popup menu
+            return (
+              <>
+                <div 
+                  className="birthday-indicator clickable multiple"
+                  title={`${birthdayEvents.length} narozeniny - Klikni pro výběr`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Najdi wrapper (day-info-cell)
+                    const dayCell = e.currentTarget.closest('.day-info-cell');
+                    const menu = dayCell?.querySelector('.birthday-menu');
+                    menu?.classList.toggle('show-menu');
+                  }}
+                >
+                  🎂
+                  <span className="birthday-badge">{birthdayEvents.length}</span>
+                </div>
+                
+                {/* Menu MIMO indicator */}
+                <div className="birthday-menu">
+                  <div className="birthday-menu-header">
+                    Narozeniny tohoto dne:
+                  </div>
+                  {birthdayEvents.map(event => (
+                    <div
+                      key={event.id}
+                      className="birthday-menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick(event);
+                        e.currentTarget.parentElement?.classList.remove('show-menu');
+                      }}
+                    >
+                      <span className="birthday-menu-icon">🎂</span>
+                      <span className="birthday-menu-title">{event.title}</span>
+                      <span className="birthday-menu-arrow">→</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
              
                 <div
                   className={`day-special-events ${

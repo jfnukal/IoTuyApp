@@ -27,7 +27,9 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export const useNotificationContext = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotificationContext must be used within NotificationProvider');
+    throw new Error(
+      'useNotificationContext must be used within NotificationProvider'
+    );
   }
   return context;
 };
@@ -38,10 +40,10 @@ interface NotificationProviderProps {
   children: React.ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ 
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   authUid,
   familyMemberId,
-  children 
+  children,
 }) => {
   const notificationData = useNotifications(authUid, familyMemberId);
 

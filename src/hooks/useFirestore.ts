@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestoreService } from '../services/firestoreService';
-import type { TuyaDevice, UserSettings, FamilyMember } from '../types/index'; 
+import type { TuyaDevice, UserSettings, FamilyMember } from '../types/index';
 
 export const useFirestore = () => {
   const { currentUser } = useAuth();
@@ -29,7 +29,9 @@ export const useFirestore = () => {
         setError(null);
 
         // Načti uživatelská nastavení (beze změny)
-        const settings = await firestoreService.getUserSettings(currentUser.uid);
+        const settings = await firestoreService.getUserSettings(
+          currentUser.uid
+        );
         setUserSettings(settings);
 
         // Nastav real-time listener pro devices (beze změny)
@@ -39,7 +41,8 @@ export const useFirestore = () => {
         );
 
         familyUnsubscribe = await firestoreService.subscribeToFamilyMembers(
-          (membersFromDB) => { // Přejmenoval jsem proměnnou pro jasnost
+          (membersFromDB) => {
+            // Přejmenoval jsem proměnnou pro jasnost
             console.log('KROK 1: Data členů přímo z Firestore:', membersFromDB); // <-- PŘIDAT TENTO ŘÁDEK
             setFamilyMembers(membersFromDB);
           }
@@ -55,12 +58,12 @@ export const useFirestore = () => {
 
     loadUserData();
 
-   // Cleanup funkce
-   return () => {
-    devicesUnsubscribe?.();
-    familyUnsubscribe?.(); // <-- Přidat do cleanup
-  };
-}, [currentUser]);
+    // Cleanup funkce
+    return () => {
+      devicesUnsubscribe?.();
+      familyUnsubscribe?.(); // <-- Přidat do cleanup
+    };
+  }, [currentUser]);
 
   const updateSettings = async (updates: Partial<UserSettings>) => {
     if (!currentUser || !userSettings) return;
@@ -98,5 +101,4 @@ export const useFirestore = () => {
 };
 
 // Export také jako useUserData pro zpětnou kompatibilitu
-
 export const useUserData = useFirestore;

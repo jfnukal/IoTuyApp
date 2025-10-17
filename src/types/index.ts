@@ -168,6 +168,7 @@ export interface CalendarEventData {
   familyMemberId?: string; // Přejmenováno pro konzistenci
   color?: string;
   reminders?: ReminderItem[];
+  sentReminders?: string[]; 
   isAllDay?: boolean;
   attachments?: FileAttachment[]; // Zachováno z tvé verze
   recurring?: RecurringPattern; // Zachováno z tvé verze

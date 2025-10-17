@@ -822,6 +822,7 @@
     padding: 3px 6px;
   }
 }
+
 /* ==================== MOBILNÍ KOMPAKTNÍ VERZE ==================== */
 @media (max-width: 768px) {
   .weather-mini-widget {

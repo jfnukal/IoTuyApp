@@ -878,6 +878,21 @@
 
   .fab-button:hover {
     transform: scale(1.1);
-    box-shadow: 0
+    box-shadow: 0;
   }
+}
+
+/* Zaručí, že tlačítko pro povolení notifikací bude vždy vidět */
+.notification-permission-btn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 5px; /* Přidá malou mezeru kolem */
 }

@@ -7,6 +7,7 @@ import type {
   FamilyMember,
 } from '../../../types/index';
 import ReminderSelector from './ReminderSelector';
+import RecipientSelector from '../../Notifications/RecipientSelector';
 
 interface EventFormProps {
   event: CalendarEventData | null;
@@ -131,6 +132,67 @@ const EventForm: React.FC<EventFormProps> = ({
 
       return newFormData;
     });
+  };
+
+  // ✅ POMOCNÁ FUNKCE: Převod familyMemberId na selectedRecipients
+  const getSelectedRecipients = (): string[] => {
+    if (!formData.familyMemberId || formData.familyMemberId === 'nikdo' || formData.familyMemberId === 'personal') {
+      return [];
+    }
+    if (formData.familyMemberId === 'all') {
+      return familyMembers.map(m => m.id);
+    }
+    if (formData.familyMemberId === 'parents') {
+      return familyMembers.filter(m => m.role === 'parent').map(m => m.id);
+    }
+    if (formData.familyMemberId === 'children') {
+      return familyMembers.filter(m => m.role === 'child').map(m => m.id);
+    }
+    return [formData.familyMemberId];
+  };
+
+  // ✅ POMOCNÁ FUNKCE: Převod selectedRecipients na familyMemberId
+  const handleRecipientsChange = (recipients: string[]) => {
+    if (recipients.length === 0) {
+      handleInputChange('familyMemberId', 'nikdo');
+      return;
+    }
+
+    const allMemberIds = familyMembers.map(m => m.id);
+    const parentIds = familyMembers.filter(m => m.role === 'parent').map(m => m.id);
+    const childIds = familyMembers.filter(m => m.role === 'child').map(m => m.id);
+
+    // Všichni?
+    if (recipients.length === allMemberIds.length && 
+        recipients.every(r => allMemberIds.includes(r))) {
+      handleInputChange('familyMemberId', 'all');
+      return;
+    }
+
+    // Rodiče?
+    if (parentIds.length > 0 && 
+        recipients.length === parentIds.length && 
+        recipients.every(r => parentIds.includes(r))) {
+      handleInputChange('familyMemberId', 'parents');
+      return;
+    }
+
+    // Děti?
+    if (childIds.length > 0 && 
+        recipients.length === childIds.length && 
+        recipients.every(r => childIds.includes(r))) {
+      handleInputChange('familyMemberId', 'children');
+      return;
+    }
+
+    // Jeden člen?
+    if (recipients.length === 1) {
+      handleInputChange('familyMemberId', recipients[0]);
+      return;
+    }
+
+    // Více členů (ale ne celá skupina) - uložíme jako první vybraný
+    handleInputChange('familyMemberId', recipients[0]);
   };
 
   const eventTypes = [
@@ -284,45 +346,52 @@ const EventForm: React.FC<EventFormProps> = ({
             </select>
           </div>
 
-          {/* Člen rodiny */}
+          {/* ✅ NOVÝ: Příjemci připomínky */}
           {familyMembers.length > 0 && (
             <div className="form-group">
-              <label className="form-label">Člen rodiny</label>
-              <div className="family-member-selector">
+              <label className="form-label">Příjemci připomínky:</label>
+              <RecipientSelector
+                selectedRecipients={getSelectedRecipients()}
+                onChange={handleRecipientsChange}
+                familyMembers={familyMembers}
+              />
+              
+              {/* ✅ Speciální volby: Nikdo a Jen mně */}
+              <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
-                  className={`family-member-option ${
-                    !formData.familyMemberId ? 'selected' : ''
-                  }`}
-                  onClick={() => handleInputChange('familyMemberId', '')}
+                  className={`recipient-chip ${formData.familyMemberId === 'nikdo' ? 'selected' : ''}`}
+                  onClick={() => handleInputChange('familyMemberId', 'nikdo')}
+                  style={{
+                    padding: '8px 16px',
+                    border: '2px solid',
+                    borderColor: formData.familyMemberId === 'nikdo' ? '#667eea' : '#ddd',
+                    borderRadius: '20px',
+                    background: formData.familyMemberId === 'nikdo' ? '#667eea' : 'white',
+                    color: formData.familyMemberId === 'nikdo' ? 'white' : '#333',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                  }}
                 >
-                  Nikdo
+                  🚫 Nikdo (bez připomínek)
                 </button>
-                {familyMembers.map((member) => (
-                  <button
-                    key={member.id}
-                    type="button"
-                    className={`family-member-option ${
-                      formData.familyMemberId === member.id ? 'selected' : ''
-                    }`}
-                    style={{
-                      backgroundColor:
-                        formData.familyMemberId === member.id
-                          ? member.color
-                          : 'transparent',
-                      borderColor: member.color,
-                      color:
-                        formData.familyMemberId === member.id
-                          ? 'white'
-                          : member.color,
-                    }}
-                    onClick={() =>
-                      handleInputChange('familyMemberId', member.id)
-                    }
-                  >
-                    {member.name}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className={`recipient-chip ${formData.familyMemberId === 'personal' ? 'selected' : ''}`}
+                  onClick={() => handleInputChange('familyMemberId', 'personal')}
+                  style={{
+                    padding: '8px 16px',
+                    border: '2px solid',
+                    borderColor: formData.familyMemberId === 'personal' ? '#667eea' : '#ddd',
+                    borderRadius: '20px',
+                    background: formData.familyMemberId === 'personal' ? '#667eea' : 'white',
+                    color: formData.familyMemberId === 'personal' ? 'white' : '#333',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                  }}
+                >
+                  🔒 Jen mně (osobní)
+                </button>
               </div>
             </div>
           )}

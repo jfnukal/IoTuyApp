@@ -1,5 +1,4 @@
 // /functions/src/checkReminders.ts
-
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
@@ -14,60 +13,74 @@ function calculateReminderTime(
     reminderValue,
     reminderUnit,
     eventTime,
-    eventTimeType: typeof eventTime
   });
 
-  // ✅ OPRAVA: Parsování data v Europe/Prague timezone
-  const [year, month, day] = eventDate.split('-').map(Number);
-  
-  // Vytvoř datum v Prague timezone
-  const eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
-  
+  // ✅ OPRAVA: Vytvoř datum jako UTC string a pak parsuj
+  let dateTimeString = `${eventDate}T`;
+
   if (eventTime && typeof eventTime === 'string') {
-    const [hours, minutes] = eventTime.split(':').map(Number);
-    eventDateTime.setHours(hours, minutes, 0, 0);
+    dateTimeString += `${eventTime}:00`;
   } else {
-    console.log('⚠️ eventTime není string, používám default 8:00');
-    eventDateTime.setHours(8, 0, 0, 0);
+    dateTimeString += '08:00:00';
   }
-  
+
+  // Přidej timezone offset pro Prague (UTC+1 nebo UTC+2)
+  // Zjednodušeně: Europe/Prague je UTC+1 v zimě, UTC+2 v létě
+  // Pro přesnost bychom potřebovali moment-timezone, ale zjednodušíme to
+  const eventDateTime = new Date(dateTimeString);
+
+  // Získej offset serveru (který je v UTC)
+  const serverOffset = eventDateTime.getTimezoneOffset(); // v minutách
+
+  // Europe/Prague je UTC+1 (zimní čas) nebo UTC+2 (letní čas)
+  // Zjistíme, jestli je letní čas pro dané datum
+  const pragueOffset = -120; // UTC+2 (letní čas) - v minutách
+
+  // Přidej rozdíl mezi Prague a serverem
+  const offsetDifference = pragueOffset - -serverOffset;
+  eventDateTime.setMinutes(eventDateTime.getMinutes() + offsetDifference);
+
   const eventTimestamp = eventDateTime.getTime();
-  
+
   console.log('📅 Event timestamp:', {
+    dateTimeString,
     eventDateTime: eventDateTime.toISOString(),
     eventTimestamp,
     currentTime: Date.now(),
-    difference: eventTimestamp - Date.now()
+    pragueOffset,
+    serverOffset,
+    offsetDifference,
   });
-  
+
   let reminderTime: number;
-  
+
   switch (reminderUnit) {
     case 'ontime':
       reminderTime = eventTimestamp;
       break;
     case 'minutes':
-      reminderTime = eventTimestamp - (reminderValue * 60 * 1000);
+      reminderTime = eventTimestamp - reminderValue * 60 * 1000;
       break;
     case 'hours':
-      reminderTime = eventTimestamp - (reminderValue * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - reminderValue * 60 * 60 * 1000;
       break;
     case 'days':
-      reminderTime = eventTimestamp - (reminderValue * 24 * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - reminderValue * 24 * 60 * 60 * 1000;
       break;
     case 'weeks':
-      reminderTime = eventTimestamp - (reminderValue * 7 * 24 * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - reminderValue * 7 * 24 * 60 * 60 * 1000;
       break;
     default:
       reminderTime = eventTimestamp;
   }
-  
+
   console.log('⏰ Reminder time:', {
     reminderTime,
     reminderDateTime: new Date(reminderTime).toISOString(),
-    shouldTrigger: Date.now() >= reminderTime && Date.now() < reminderTime + 5 * 60 * 1000
+    shouldTriggerNow:
+      Date.now() >= reminderTime && Date.now() < reminderTime + 5 * 60 * 1000,
   });
-  
+
   return reminderTime;
 }
 
@@ -84,7 +97,10 @@ async function sendPushNotification(
     console.log('👤 Hledám authUid pro:', { familyMemberId, createdBy });
 
     if (familyMemberId) {
-      const memberDoc = await db.collection('familyMembers').doc(familyMemberId).get();
+      const memberDoc = await db
+        .collection('familyMembers')
+        .doc(familyMemberId)
+        .get();
       if (memberDoc.exists) {
         authUid = memberDoc.data()?.authUid;
         console.log('✅ Nalezen authUid z familyMemberId:', authUid);
@@ -101,7 +117,10 @@ async function sendPushNotification(
       return;
     }
 
-    const userSettingsDoc = await db.collection('userSettings').doc(authUid).get();
+    const userSettingsDoc = await db
+      .collection('userSettings')
+      .doc(authUid)
+      .get();
     const tokens = userSettingsDoc.data()?.fcmTokens || [];
 
     console.log('🔑 FCM tokeny:', { count: tokens.length, authUid });
@@ -124,10 +143,14 @@ async function sendPushNotification(
       token,
     }));
 
-    console.log('📤 Odesílám push notifikace...', { messageCount: messages.length });
+    console.log('📤 Odesílám push notifikace...', {
+      messageCount: messages.length,
+    });
 
     const response = await admin.messaging().sendEach(messages);
-    console.log(`✅ Push notifikace odeslány: ${response.successCount}/${tokens.length}`);
+    console.log(
+      `✅ Push notifikace odeslány: ${response.successCount}/${tokens.length}`
+    );
 
     if (response.failureCount > 0) {
       console.warn(`⚠️ Některé notifikace selhaly: ${response.failureCount}`);
@@ -149,8 +172,12 @@ export const checkReminders = functions
   .timeZone('Europe/Prague')
   .onRun(async () => {
     console.log('🔔 Spouštím kontrolu připomínek...');
-    console.log('🕐 Aktuální čas:', new Date().toISOString());
-    
+    console.log('🕐 Aktuální čas (UTC):', new Date().toISOString());
+    console.log(
+      '🕐 Aktuální čas (Prague):',
+      new Date().toLocaleString('cs-CZ', { timeZone: 'Europe/Prague' })
+    );
+
     const now = Date.now();
     const db = admin.firestore();
 
@@ -167,7 +194,7 @@ export const checkReminders = functions
 
       for (const eventDoc of eventsSnapshot.docs) {
         const event = eventDoc.data();
-        
+
         console.log('📅 Zpracovávám událost:', {
           id: eventDoc.id,
           title: event.title,
@@ -175,7 +202,6 @@ export const checkReminders = functions
           time: event.time,
           familyMemberId: event.familyMemberId,
           createdBy: event.createdBy,
-          remindersCount: event.reminders?.length
         });
 
         const reminders = event.reminders || [];
@@ -185,7 +211,9 @@ export const checkReminders = functions
           processedCount++;
 
           if (sentReminders.includes(reminder.id)) {
-            console.log(`⏭️ Přeskakuji již odeslanou připomínku: ${reminder.id}`);
+            console.log(
+              `⏭️ Přeskakuji již odeslanou připomínku: ${reminder.id}`
+            );
             continue;
           }
 
@@ -199,10 +227,12 @@ export const checkReminders = functions
           const timeWindow = 5 * 60 * 1000;
 
           if (now >= reminderTime && now < reminderTime + timeWindow) {
-            console.log(`⏰ ČAS PRO PŘIPOMÍNKU: ${event.title} (${reminder.value} ${reminder.unit})`);
+            console.log(
+              `🎯 ČAS PRO PŘIPOMÍNKU: ${event.title} (${reminder.value} ${reminder.unit})`
+            );
 
             const title = `Připomínka: ${event.title}`;
-            const body = event.time 
+            const body = event.time
               ? `${event.date} v ${event.time}`
               : event.date;
 
@@ -217,27 +247,23 @@ export const checkReminders = functions
               sentCount++;
             }
 
-            if (reminder.type === 'email' || reminder.type === 'both') {
-              console.log('📧 Email notifikace zatím není implementován');
-            }
-
             await eventDoc.ref.update({
               sentReminders: admin.firestore.FieldValue.arrayUnion(reminder.id),
             });
 
             console.log(`✅ Připomínka odeslána a označena: ${reminder.id}`);
           } else {
-            console.log(`⏸️ Ještě není čas pro připomínku ${reminder.id}:`, {
-              now,
-              reminderTime,
-              difference: reminderTime - now,
-              inWindow: now >= reminderTime && now < reminderTime + timeWindow
-            });
+            const minutesUntil = Math.round((reminderTime - now) / 60000);
+            console.log(
+              `⏸️ Ještě není čas pro připomínku (${minutesUntil} minut)`
+            );
           }
         }
       }
 
-      console.log(`✅ Kontrola dokončena: ${processedCount} připomínek zkontrolováno, ${sentCount} odesláno`);
+      console.log(
+        `✅ Kontrola dokončena: ${processedCount} připomínek zkontrolováno, ${sentCount} odesláno`
+      );
       return null;
     } catch (error) {
       console.error('❌ Chyba při kontrole připomínek:', error);

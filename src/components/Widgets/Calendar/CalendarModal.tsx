@@ -97,7 +97,10 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {isMobile ? (
-          <CalendarMobile familyMembers={familyMembers} />
+          <CalendarMobile 
+          familyMembers={familyMembers}
+          onClose={onClose}
+           />
         ) : (
           <CalendarWidget
             familyMembers={familyMembers}

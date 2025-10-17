@@ -314,3 +314,58 @@
     font-size: 1.5rem;
   }
 }
+
+/* --- STYLY PRO OVLÁDACÍ PRVKY WIDGETU --- */
+
+.widget-header {
+  /* Ujistíme se, že header používá flexbox pro správné zarovnání */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Mezera mezi počtem a tlačítkem */
+}
+
+.toggle-button {
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle-button:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.toggle-button:active {
+  transform: scale(0.9);
+}
+
+.toggle-arrow {
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* --- Skrytí tlačítka na desktopu --- */
+/* Tento kód se aktivuje pouze pro obrazovky širší než 768px */
+@media (min-width: 768px) {
+  .toggle-button {
+    display: none;
+  }
+}

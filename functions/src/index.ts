@@ -137,11 +137,13 @@ export const sendPushOnNewMessage = functions
             `⚠️ Některé notifikace selhaly: ${response.failureCount}`
           );
 
-          response.responses.forEach((resp: admin.messaging.SendResponse, idx: number) => {
-            if (!resp.success) {
-              console.error(`❌ Token ${idx} selhal:`, resp.error);
+          response.responses.forEach(
+            (resp: admin.messaging.SendResponse, idx: number) => {
+              if (!resp.success) {
+                console.error(`❌ Token ${idx} selhal:`, resp.error);
+              }
             }
-          });
+          );
         }
       } catch (error) {
         console.error('❌ Chyba při odesílání notifikací:', error);

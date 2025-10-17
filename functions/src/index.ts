@@ -7,7 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // ================================================================= //
-// FUNKCE 1: Aktualizace rozvrhu (zůstává beze změny)
+// FUNKCE 1: Aktualizace rozvrhu (z Bakalářů)
 // ================================================================= //
 export const updateBakalariTimetable = functions
   .region('europe-west1')
@@ -111,7 +111,6 @@ export const sendPushOnNewMessage = functions
 
       console.log(`✅ Nalezeno celkem ${allTokens.length} FCM tokenů`);
 
-      // ✅ OPRAVENO: Explicitní typy pro token
       const messages = allTokens.map((token: string) => ({
         notification: {
           title: `💬 Nová zpráva od ${messageData.senderName}`,
@@ -138,7 +137,6 @@ export const sendPushOnNewMessage = functions
             `⚠️ Některé notifikace selhaly: ${response.failureCount}`
           );
 
-          // ✅ OPRAVENO: Explicitní typy pro resp a idx
           response.responses.forEach((resp: admin.messaging.SendResponse, idx: number) => {
             if (!resp.success) {
               console.error(`❌ Token ${idx} selhal:`, resp.error);

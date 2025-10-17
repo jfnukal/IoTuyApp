@@ -146,14 +146,14 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
             const hasEvents = dayEvents.length > 0;
             const holiday = getHolidayByDate(date);
             const isSelected = selectedDate && 
-              date.getDate() === selectedDate.getDate() &&
-              date.getMonth() === selectedDate.getMonth();
-            return (
-              <div
-                key={date.toISOString()}
-                className={`mobile-day ${isToday(date) ? 'today' : ''} ${isSelected ? 'selected' : ''} ${holiday ? 'holiday' : ''}`}
-                onClick={() => handleDateClick(date)}
-              >
+            date.getDate() === selectedDate.getDate() &&
+            date.getMonth() === selectedDate.getMonth();
+                return (
+                  <div
+                    key={date.toISOString()}
+                    className={`mobile-day ${isToday(date) ? 'today' : ''} ${isSelected ? 'selected' : ''} ${holiday ? 'holiday' : ''} ${hasEvents ? 'has-events' : ''}`}
+                    onClick={() => handleDateClick(date)}
+                  >
                 <span className="mobile-day-number">{date.getDate()}</span>
                 {hasEvents && <div className="mobile-event-dot" />}
               </div>
@@ -172,11 +172,25 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
             </button>
           </div>
           {selectedHoliday && (
-            <div className="mobile-special-event holiday">🎉 {selectedHoliday.name}</div>
-          )}
-          {selectedNameday && (
-            <div className="mobile-special-event nameday">🎂 Svátek: {selectedNameday.names.join(', ')}</div>
-          )}
+              <div className="mobile-special-event holiday">🎉 {selectedHoliday.name}</div>
+            )}
+            {selectedNameday && (
+              <div className="mobile-special-event nameday">🎂 Svátek: {selectedNameday.names.join(', ')}</div>
+            )}
+            {/* ✅ PŘIDÁNO: Narozeniny */}
+            {selectedDate && (() => {
+              const birthdaysToday = familyMembers.filter(
+                (member) =>
+                  member.birthday &&
+                  new Date(member.birthday).getDate() === selectedDate.getDate() &&
+                  new Date(member.birthday).getMonth() === selectedDate.getMonth()
+              );
+              return birthdaysToday.map((member) => (
+                <div key={member.id} className="mobile-special-event birthday">
+                  🎈 Narozeniny: {member.name}
+                </div>
+              ));
+            })()}
           <div className="mobile-events-list">
             {selectedDateEvents.length > 0 ? (
               selectedDateEvents.map((event) => {

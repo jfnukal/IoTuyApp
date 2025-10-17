@@ -111,6 +111,16 @@
   font-weight: 600;
 }
 
+/* Zvýraznění dnů s událostmi */
+.mobile-day.has-events {
+  background: rgba(102, 126, 234, 0.1);
+  font-weight: 600;
+}
+
+.mobile-day.has-events:not(.today):not(.selected) {
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
 .mobile-event-dot {
   width: 4px;
   height: 4px;
@@ -176,6 +186,12 @@
 .mobile-special-event.nameday {
   background: #f0f9ff;
   color: #3b82f6;
+}
+
+.mobile-special-event.birthday {
+  background: #fef3c7;
+  color: #f59e0b;
+  font-weight: 600;
 }
 
 .mobile-events-list {

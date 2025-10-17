@@ -1,38 +1,74 @@
+// /functions/src/checkReminders.ts
+
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-// ✅ OPRAVENÁ FUNKCE - eventTime jako POSLEDNÍ parametr
 function calculateReminderTime(
   eventDate: string,
   reminderValue: number,
   reminderUnit: string,
   eventTime?: string
 ): number {
-  const eventDateTime = new Date(eventDate + 'T00:00:00Z');
+  console.log('🔍 calculateReminderTime called with:', {
+    eventDate,
+    reminderValue,
+    reminderUnit,
+    eventTime,
+    eventTimeType: typeof eventTime
+  });
+
+  // ✅ OPRAVA: Parsování data v Europe/Prague timezone
+  const [year, month, day] = eventDate.split('-').map(Number);
   
-  if (eventTime) {
+  // Vytvoř datum v Prague timezone
+  const eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
+  
+  if (eventTime && typeof eventTime === 'string') {
     const [hours, minutes] = eventTime.split(':').map(Number);
-    eventDateTime.setUTCHours(hours, minutes, 0, 0);
+    eventDateTime.setHours(hours, minutes, 0, 0);
   } else {
-    eventDateTime.setUTCHours(8, 0, 0, 0);
+    console.log('⚠️ eventTime není string, používám default 8:00');
+    eventDateTime.setHours(8, 0, 0, 0);
   }
   
   const eventTimestamp = eventDateTime.getTime();
   
+  console.log('📅 Event timestamp:', {
+    eventDateTime: eventDateTime.toISOString(),
+    eventTimestamp,
+    currentTime: Date.now(),
+    difference: eventTimestamp - Date.now()
+  });
+  
+  let reminderTime: number;
+  
   switch (reminderUnit) {
     case 'ontime':
-      return eventTimestamp;
+      reminderTime = eventTimestamp;
+      break;
     case 'minutes':
-      return eventTimestamp - (reminderValue * 60 * 1000);
+      reminderTime = eventTimestamp - (reminderValue * 60 * 1000);
+      break;
     case 'hours':
-      return eventTimestamp - (reminderValue * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - (reminderValue * 60 * 60 * 1000);
+      break;
     case 'days':
-      return eventTimestamp - (reminderValue * 24 * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - (reminderValue * 24 * 60 * 60 * 1000);
+      break;
     case 'weeks':
-      return eventTimestamp - (reminderValue * 7 * 24 * 60 * 60 * 1000);
+      reminderTime = eventTimestamp - (reminderValue * 7 * 24 * 60 * 60 * 1000);
+      break;
     default:
-      return eventTimestamp;
+      reminderTime = eventTimestamp;
   }
+  
+  console.log('⏰ Reminder time:', {
+    reminderTime,
+    reminderDateTime: new Date(reminderTime).toISOString(),
+    shouldTrigger: Date.now() >= reminderTime && Date.now() < reminderTime + 5 * 60 * 1000
+  });
+  
+  return reminderTime;
 }
 
 async function sendPushNotification(
@@ -45,15 +81,19 @@ async function sendPushNotification(
   try {
     let authUid: string | null = null;
 
+    console.log('👤 Hledám authUid pro:', { familyMemberId, createdBy });
+
     if (familyMemberId) {
       const memberDoc = await db.collection('familyMembers').doc(familyMemberId).get();
       if (memberDoc.exists) {
         authUid = memberDoc.data()?.authUid;
+        console.log('✅ Nalezen authUid z familyMemberId:', authUid);
       }
     }
 
     if (!authUid && createdBy) {
       authUid = createdBy;
+      console.log('✅ Použit authUid z createdBy:', authUid);
     }
 
     if (!authUid) {
@@ -63,6 +103,8 @@ async function sendPushNotification(
 
     const userSettingsDoc = await db.collection('userSettings').doc(authUid).get();
     const tokens = userSettingsDoc.data()?.fcmTokens || [];
+
+    console.log('🔑 FCM tokeny:', { count: tokens.length, authUid });
 
     if (tokens.length === 0) {
       console.warn(`⚠️ Žádné FCM tokeny pro uživatele ${authUid}`);
@@ -82,11 +124,18 @@ async function sendPushNotification(
       token,
     }));
 
+    console.log('📤 Odesílám push notifikace...', { messageCount: messages.length });
+
     const response = await admin.messaging().sendEach(messages);
     console.log(`✅ Push notifikace odeslány: ${response.successCount}/${tokens.length}`);
 
     if (response.failureCount > 0) {
       console.warn(`⚠️ Některé notifikace selhaly: ${response.failureCount}`);
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          console.error(`❌ Token ${idx} selhal:`, resp.error);
+        }
+      });
     }
   } catch (error) {
     console.error('❌ Chyba při odesílání Push notifikace:', error);
@@ -100,6 +149,7 @@ export const checkReminders = functions
   .timeZone('Europe/Prague')
   .onRun(async () => {
     console.log('🔔 Spouštím kontrolu připomínek...');
+    console.log('🕐 Aktuální čas:', new Date().toISOString());
     
     const now = Date.now();
     const db = admin.firestore();
@@ -117,6 +167,17 @@ export const checkReminders = functions
 
       for (const eventDoc of eventsSnapshot.docs) {
         const event = eventDoc.data();
+        
+        console.log('📅 Zpracovávám událost:', {
+          id: eventDoc.id,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          familyMemberId: event.familyMemberId,
+          createdBy: event.createdBy,
+          remindersCount: event.reminders?.length
+        });
+
         const reminders = event.reminders || [];
         const sentReminders = event.sentReminders || [];
 
@@ -124,10 +185,10 @@ export const checkReminders = functions
           processedCount++;
 
           if (sentReminders.includes(reminder.id)) {
+            console.log(`⏭️ Přeskakuji již odeslanou připomínku: ${reminder.id}`);
             continue;
           }
 
-          // ✅ SPRÁVNÉ VOLÁNÍ - eventTime jako poslední
           const reminderTime = calculateReminderTime(
             event.date,
             reminder.value,
@@ -138,7 +199,7 @@ export const checkReminders = functions
           const timeWindow = 5 * 60 * 1000;
 
           if (now >= reminderTime && now < reminderTime + timeWindow) {
-            console.log(`⏰ Čas pro připomínku: ${event.title} (${reminder.value} ${reminder.unit})`);
+            console.log(`⏰ ČAS PRO PŘIPOMÍNKU: ${event.title} (${reminder.value} ${reminder.unit})`);
 
             const title = `Připomínka: ${event.title}`;
             const body = event.time 
@@ -165,6 +226,13 @@ export const checkReminders = functions
             });
 
             console.log(`✅ Připomínka odeslána a označena: ${reminder.id}`);
+          } else {
+            console.log(`⏸️ Ještě není čas pro připomínku ${reminder.id}:`, {
+              now,
+              reminderTime,
+              difference: reminderTime - now,
+              inWindow: now >= reminderTime && now < reminderTime + timeWindow
+            });
           }
         }
       }

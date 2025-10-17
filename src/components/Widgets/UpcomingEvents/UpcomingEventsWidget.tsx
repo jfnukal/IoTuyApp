@@ -20,6 +20,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
     Array<CalendarEventData & { displayDate: Date }>
   >([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Defaultně rozbaleno
 
   useEffect(() => {
     const loadEvents = () => {
@@ -102,8 +103,32 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
       >
         {/* Header */}
         <div className="widget-header">
-          <h3 className="widget-title">📅 Co nás čeká?</h3>
-          <span className="event-count">{upcomingEvents.length} událostí</span>
+          <h3 className="widget-title">🗓️ Co nás čeká?</h3>
+          <div className="widget-controls">
+            <span className="event-count">{upcomingEvents.length} událostí</span>
+            <button
+              className="toggle-button"
+              onClick={(e) => {
+                e.stopPropagation(); // Zabrání otevření modálu při kliku na šipku
+                setIsExpanded(!isExpanded);
+              }}
+              aria-label={isExpanded ? 'Sbalit' : 'Rozbalit'}
+            >
+              <svg
+                className={`toggle-arrow ${isExpanded ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Obsah */}
@@ -146,9 +171,9 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                 </div>
               )}
 
-              {/* Nadcházející události */}
-              {upcomingEvents.filter((e) => !isToday(e.displayDate)).length >
-                0 && (
+        {/* Nadcházející události */}
+            {isExpanded &&
+              upcomingEvents.filter((e) => !isToday(e.displayDate)).length > 0 && (
                 <div className="upcoming-section">
                   <h4 className="section-title">🔜 Brzy</h4>
                   {upcomingEvents

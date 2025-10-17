@@ -6,9 +6,13 @@ import './styles/CalendarMobile.css';
 
 interface CalendarMobileProps {
   familyMembers?: FamilyMember[];
+  onClose?: () => void; 
 }
 
-const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) => {
+const CalendarMobile: React.FC<CalendarMobileProps> = ({ 
+  familyMembers = [],
+  onClose
+}) => {
   const {
     currentDate,
     setCurrentDate,
@@ -126,6 +130,13 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({ familyMembers = [] }) =
           </h2>
           <button className="mobile-nav-btn" onClick={() => navigateMonth('next')}>
             ▶
+          </button>
+          <button 
+          className="mobile-close-btn" 
+          onClick={onClose || (() => window.history.back())}
+          aria-label="Zavřít kalendář"
+        >
+          ✕
           </button>
         </div>
       </div>

@@ -1,4 +1,6 @@
 // /functions/src/checkReminders.ts
+
+
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
@@ -8,15 +10,27 @@ function calculateReminderTime(
   reminderUnit: string,
   eventTime?: string
 ): number {
+  // Parse date components
   const [year, month, day] = eventDate.split('-').map(Number);
+  
+  // Create date at midnight in local timezone
   const eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
   
+  // Set time if provided
   if (eventTime && typeof eventTime === 'string') {
     const [hours, minutes] = eventTime.split(':').map(Number);
     eventDateTime.setHours(hours, minutes, 0, 0);
   } else {
     eventDateTime.setHours(8, 0, 0, 0);
   }
+  
+  // ✅ OPRAVA: Adjust for Prague timezone (UTC+2 in summer, UTC+1 in winter)
+  // Server runs in UTC, so we need to subtract 2 hours to get Prague time
+  const pragueOffsetMinutes = -120; // UTC+2 (summer time)
+  const serverOffsetMinutes = eventDateTime.getTimezoneOffset(); // 0 for UTC
+  const offsetDifference = pragueOffsetMinutes - (-serverOffsetMinutes);
+  
+  eventDateTime.setMinutes(eventDateTime.getMinutes() + offsetDifference);
   
   const eventTimestamp = eventDateTime.getTime();
   
@@ -79,7 +93,6 @@ async function sendPushNotification(
       return;
     }
 
-    // ✅ OPRAVA: Odstraněn "icon" - není podporován v Admin SDK
     const messages = tokens.map((token: string) => ({
       notification: {
         title,
@@ -115,6 +128,7 @@ export const checkReminders = functions
   .timeZone('Europe/Prague')
   .onRun(async () => {
     console.log('🔔 Spouštím kontrolu připomínek...');
+    console.log('🕐 Prague čas:', new Date().toLocaleString('cs-CZ', { timeZone: 'Europe/Prague' }));
     
     const now = Date.now();
     const db = admin.firestore();

@@ -76,6 +76,7 @@ function App() {
         const { bakalariAPI } = await import('./api/bakalariAPI');
 
         const timetable = await bakalariAPI.getTimetable();
+        console.log('📅 Rozvrh:', timetable);
       } catch (error) {
         console.error('❌ Bakaláři API Chyba:', error);
       }

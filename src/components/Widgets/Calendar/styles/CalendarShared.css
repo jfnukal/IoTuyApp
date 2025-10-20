@@ -77,6 +77,7 @@
 }
 
 .calendar-modal-content {
+  position: relative;
   background: white;
   border-radius: 20px;
   width: 95vw;
@@ -370,5 +371,45 @@
       0.25
     ); /* Velmi jemné zesvětlení pro víkendy */
     --calendar-header-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* ==================== FAB BUTTON V MODALU ==================== */
+
+.fab-add-event-modal {
+  position: absolute; /* ← ZMĚNA z fixed na absolute */
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 32px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s ease;
+  pointer-events: auto; /* ← Zajistí klikatelnost */
+}
+
+.fab-add-event-modal:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.7);
+}
+
+.fab-add-event-modal:active {
+  transform: scale(0.95);
+}
+
+/* Skrýt na mobilu */
+@media (max-width: 767px) {
+  .fab-add-event-modal {
+    display: none;
   }
 }

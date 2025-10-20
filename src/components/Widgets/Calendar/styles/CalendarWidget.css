@@ -1438,10 +1438,21 @@
 
 /* ==================== TABLET MODE ==================== */
 
-/* Tablet - tlačítko + vpravo místo uprostřed */
 .add-event-button-cell.tablet-mode {
   right: 8px;
   left: auto;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 10; /* ← PŘIDÁNO */
+  background: rgba(0, 0, 0, 0.6); /* ← PŘIDÁNO - tmavší pozadí */
+  color: white; /* ← PŘIDÁNO */
+  border: 2px solid white; /* ← PŘIDÁNO - bílý okraj */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* ← PŘIDÁNO - stín */
+  pointer-events: auto; /* ← PŘIDÁNO - zajistí klikatelnost */
 }
+
+.add-event-button-cell.tablet-mode:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+

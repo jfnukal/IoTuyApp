@@ -34,6 +34,11 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   const isTabletDevice = isTablet();
 
+// ✅ DEBUG - vypiš do konzole
+console.log('🔍 isTablet():', isTabletDevice);
+console.log('📱 Screen width:', window.innerWidth);
+console.log('📱 User Agent:', navigator.userAgent);
+
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
     const currentlyMarked = isNamedayMarked(date);
@@ -429,6 +434,16 @@ const MonthView: React.FC<MonthViewProps> = ({
           );
         })}
       </div>
+         {/* ✅ FAB tlačítko pro tablet */}
+          {isTabletDevice && (
+            <button
+              className="fab-add-event-tablet"
+              onClick={() => onAddEventFor(new Date(), 'all')}
+              title="Přidat událost"
+            >
+              <span>+</span>
+            </button>
+          )}
     </div>
   );
 };

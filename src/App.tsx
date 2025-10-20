@@ -13,6 +13,7 @@ import type { TuyaDevice } from './types';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 declare global {
   interface Window {
@@ -34,13 +35,13 @@ function App() {
     syncDevices,
   } = useFirestore();
 
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
-  const [familyMemberId, setFamilyMemberId] = useState<string | null>(
-    null
-  );
+  const [familyMemberId, setFamilyMemberId] = useState<string | null>(null);
 
   // 🔐 Remote Config initialization - MUSÍ BÝT PRVNÍ!
   useEffect(() => {
@@ -129,7 +130,7 @@ function App() {
         );
 
         if (member) {
-          setFamilyMemberId(member.id); 
+          setFamilyMemberId(member.id);
         } else {
           console.warn(
             `⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`
@@ -149,6 +150,28 @@ function App() {
       // Zde můžeš přidat další logiku pokud potřebuješ
     }
   }, [currentUser, devices, firebaseLoading]);
+
+    // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
+    useEffect(() => {
+      window.history.pushState(null, '', window.location.href);
+      
+      const handleBackButton = (e: PopStateEvent) => {
+        e.preventDefault();
+        
+        if (location.pathname === '/' || location.pathname === '') {
+          window.history.pushState(null, '', window.location.href);
+          return;
+        }
+        
+        navigate(-1);
+      };
+      
+      window.addEventListener('popstate', handleBackButton);
+      
+      return () => {
+        window.removeEventListener('popstate', handleBackButton);
+      };
+    }, [navigate, location]);
 
   if (!currentUser) {
     return <Login />;
@@ -319,7 +342,7 @@ function App() {
           familyMemberId={familyMemberId || null}
         >
           <DashboardLayout
-            familyMemberId={familyMemberId}  // ← PŘIDEJ!
+            familyMemberId={familyMemberId} // ← PŘIDEJ!
             onNavigateToSettings={() => {
               console.log('Navigate to settings...');
             }}

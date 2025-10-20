@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
+import { isTablet } from '../../../utils/deviceDetection';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -30,6 +31,8 @@ const MonthView: React.FC<MonthViewProps> = ({
     markNameday,
     events,
   } = useCalendar();
+
+  const isTabletDevice = isTablet();
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -333,7 +336,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                 >
                   {renderEventsInCell(date, member)}
                   <button
-                    className="add-event-button-cell"
+                    className={`add-event-button-cell ${isTabletDevice ? 'tablet-mode' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddEventFor(date, member.id);
@@ -415,7 +418,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                   );
                 })()}
                 <button
-                  className="add-event-button-cell"
+                  className={`add-event-button-cell ${isTabletDevice ? 'tablet-mode' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddEventFor(date, 'all');

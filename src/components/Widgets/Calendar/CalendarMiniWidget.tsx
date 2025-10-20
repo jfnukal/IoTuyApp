@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from './styles/CalendarMini.css';
+import './styles/CalendarMini.css';
 import { useCalendar } from './CalendarProvider';
 import CalendarModal from './CalendarModal';
 import type { FamilyMember, CalendarEventData } from '../../../types/index';
@@ -53,7 +53,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
   return (
     <>
             <div
-              className={styles.calendarMiniWidget}
+              className="calendar-mini-widget"
               onClick={() => setIsModalOpen(true)}
             >
         {/* Header */}

@@ -28,6 +28,7 @@ const MonthView: React.FC<MonthViewProps> = ({
     formatDate,
     isNamedayMarked,
     markNameday,
+    events,
   } = useCalendar();
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
@@ -84,62 +85,79 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   const renderEventsInCell = useCallback(
     (date: Date, member: FamilyMember) => {
-      const allDayEvents = getEventsByDate(date);
+      const allEvents = getEventsByDate(date);
       
-      // ✅ NOVÉ: Vyfiltruj narozeniny - ty se zobrazí jinde!
-      const dayEvents = allDayEvents.filter(
-        (event) => 
-          event.familyMemberId === member.id && 
-          event.type !== 'birthday'  // ← DŮLEŽITÉ!
+      // Vyfiltruj události pro daného člena (bez narozenin)
+      const dayEvents = allEvents.filter(
+        (event: CalendarEventData) =>
+          event.familyMemberId === member.id && event.type !== 'birthday'
       );
-
-      if (allDayEvents.length > 0) {
-        console.log(
-          `[renderEventsInCell] Datum: ${date.toLocaleDateString()}, Člen: ${
-            member.name
-          }`
-        );
-        console.log('  Všechny události:', allDayEvents);
-        console.log('  Po filtrování:', dayEvents);
-        console.log(
-          '  FamilyMember IDs:',
-          allDayEvents.map((e) => e.familyMemberId)
-        );
-      }
-
+  
+      // ✅ NOVÉ: Přidej vícedenní události, které "probíhají" v tento den
+      const multiDayEvents = events.filter((event: CalendarEventData) => {
+        if (!event.endDate || event.familyMemberId !== member.id || event.type === 'birthday') {
+          return false;
+        }
+        const eventStart = new Date(event.date);
+        const eventEnd = new Date(event.endDate);
+        const currentDate = new Date(date);
+        
+        // Kontrola, zda aktuální datum je mezi začátkem a koncem
+        return currentDate >= eventStart && currentDate <= eventEnd;
+      });
+  
+      const allEventsToShow = [...dayEvents, ...multiDayEvents];
+      // Odstraň duplicity
+      const uniqueEvents = Array.from(new Map(allEventsToShow.map(e => [e.id, e])).values());
+  
       return (
         <div className="events-in-cell">
-          {dayEvents.map((event) => (
-            <div key={event.id} className="event-wrapper">
-              <div
-                className="family-event-item"
-                style={{ backgroundColor: member.color }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEventClick(event);
-                }}
-                title={event.title}
-              >
-                {event.title}
+          {uniqueEvents.map((event) => {
+            const isMultiDay = !!event.endDate;
+            const eventStart = new Date(event.date);
+            const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+            const currentDate = new Date(date);
+            
+            const isFirstDay = currentDate.toDateString() === eventStart.toDateString();
+            const isLastDay = currentDate.toDateString() === eventEnd.toDateString();
+            const isMiddleDay = !isFirstDay && !isLastDay;
+  
+            return (
+              <div key={event.id} className="event-wrapper">
+                <div
+                  className={`family-event-item ${isMultiDay ? 'multi-day-event' : ''} ${
+                    isFirstDay ? 'first-day' : ''
+                  } ${isLastDay ? 'last-day' : ''} ${isMiddleDay ? 'middle-day' : ''}`}
+                  style={{ backgroundColor: member.color }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEventClick(event);
+                  }}
+                  title={event.title}
+                >
+                  {isFirstDay ? event.title : ''}
+                </div>
+                {isFirstDay && (
+                  <button
+                    className="quick-delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+                        onDeleteEvent(event.id);
+                      }
+                    }}
+                    title="Smazat událost"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
-              <button
-                className="quick-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
-                    onDeleteEvent(event.id);
-                  }
-                }}
-                title="Smazat událost"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     },
-    [getEventsByDate, onEventClick, onDeleteEvent]
+    [getEventsByDate, events, onEventClick, onDeleteEvent]
   );
 
   return (
@@ -157,6 +175,12 @@ const MonthView: React.FC<MonthViewProps> = ({
             </span>
           </div>
         ))}
+        {/* Nový sloupec Rodina */}
+        <div className="member-header-cell">
+          <span style={{ color: 'var(--calendar-primary)' }}>
+            Rodina
+          </span>
+        </div>
       </div>
 
       {/* Tělo kalendáře, kde každý den je ŘÁDEK */}
@@ -193,70 +217,77 @@ const MonthView: React.FC<MonthViewProps> = ({
                     {formatDate(date, 'WEEKDAY')}
                   </span>
                 </div>
-          {/* 🎂 IKONA NAROZENIN V PRAVÉM HORNÍM ROHU */}
-          {(() => {
-            const birthdayEvents = getBirthdayEventsByDate(date);
-            if (birthdayEvents.length === 0) return null;
-            
-            // Pokud je jen jedna narozenina, otevři rovnou EventForm
-            if (birthdayEvents.length === 1) {
-              return (
-                <div 
-                  className="birthday-indicator clickable"
-                  title={`${birthdayEvents[0].title} - Klikni pro editaci`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEventClick(birthdayEvents[0]);
-                  }}
-                >
-                  🎂
-                </div>
-              );
-            }
-            
-            // Pokud je více narozenin, zobraz popup menu
-            return (
-              <>
-                <div 
-                  className="birthday-indicator clickable multiple"
-                  title={`${birthdayEvents.length} narozeniny - Klikni pro výběr`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Najdi wrapper (day-info-cell)
-                    const dayCell = e.currentTarget.closest('.day-info-cell');
-                    const menu = dayCell?.querySelector('.birthday-menu');
-                    menu?.classList.toggle('show-menu');
-                  }}
-                >
-                  🎂
-                  <span className="birthday-badge">{birthdayEvents.length}</span>
-                </div>
-                
-                {/* Menu MIMO indicator */}
-                <div className="birthday-menu">
-                  <div className="birthday-menu-header">
-                    Narozeniny tohoto dne:
-                  </div>
-                  {birthdayEvents.map(event => (
-                    <div
-                      key={event.id}
-                      className="birthday-menu-item"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEventClick(event);
-                        e.currentTarget.parentElement?.classList.remove('show-menu');
-                      }}
-                    >
-                      <span className="birthday-menu-icon">🎂</span>
-                      <span className="birthday-menu-title">{event.title}</span>
-                      <span className="birthday-menu-arrow">→</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
-             
+                {/* 🎂 IKONA NAROZENIN V PRAVÉM HORNÍM ROHU */}
+                {(() => {
+                  const birthdayEvents = getBirthdayEventsByDate(date);
+                  if (birthdayEvents.length === 0) return null;
+
+                  // Pokud je jen jedna narozenina, otevři rovnou EventForm
+                  if (birthdayEvents.length === 1) {
+                    return (
+                      <div
+                        className="birthday-indicator clickable"
+                        title={`${birthdayEvents[0].title} - Klikni pro editaci`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick(birthdayEvents[0]);
+                        }}
+                      >
+                        🎂
+                      </div>
+                    );
+                  }
+
+                  // Pokud je více narozenin, zobraz popup menu
+                  return (
+                    <>
+                      <div
+                        className="birthday-indicator clickable multiple"
+                        title={`${birthdayEvents.length} narozeniny - Klikni pro výběr`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Najdi wrapper (day-info-cell)
+                          const dayCell =
+                            e.currentTarget.closest('.day-info-cell');
+                          const menu = dayCell?.querySelector('.birthday-menu');
+                          menu?.classList.toggle('show-menu');
+                        }}
+                      >
+                        🎂
+                        <span className="birthday-badge">
+                          {birthdayEvents.length}
+                        </span>
+                      </div>
+
+                      {/* Menu MIMO indicator */}
+                      <div className="birthday-menu">
+                        <div className="birthday-menu-header">
+                          Narozeniny tohoto dne:
+                        </div>
+                        {birthdayEvents.map((event) => (
+                          <div
+                            key={event.id}
+                            className="birthday-menu-item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEventClick(event);
+                              e.currentTarget.parentElement?.classList.remove(
+                                'show-menu'
+                              );
+                            }}
+                          >
+                            <span className="birthday-menu-icon">🎂</span>
+                            <span className="birthday-menu-title">
+                              {event.title}
+                            </span>
+                            <span className="birthday-menu-arrow">→</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+
                 <div
                   className={`day-special-events ${
                     nameday && isNamedayMarked(date) ? 'has-marked-nameday' : ''
@@ -276,13 +307,13 @@ const MonthView: React.FC<MonthViewProps> = ({
                       {nameday.name}
                     </div>
                   )}
-                {holiday && (
+                  {holiday && (
                     <div className="special-event holiday" title={holiday.name}>
                       {holiday.name}
                     </div>
                   )}
 
-                  {birthdays.map((member) => (                  
+                  {birthdays.map((member) => (
                     <div
                       key={member.id}
                       className="special-event birthday"
@@ -310,6 +341,87 @@ const MonthView: React.FC<MonthViewProps> = ({
                   />
                 </div>
               ))}
+
+             {/* Sloupec Rodina - zobrazí události pro "all" */}
+              <div
+                className="member-day-cell family-cell"
+                onClick={() => onDateClick(date)}
+              >
+                {(() => {
+                  const familyEvents = getEventsByDate(date).filter(
+                    (event: CalendarEventData) => event.familyMemberId === 'all' && event.type !== 'birthday'
+                  );
+
+                  // ✅ NOVÉ: Přidej vícedenní rodinné události
+                  const multiDayFamilyEvents = events.filter((event: CalendarEventData) => {
+                    if (!event.endDate || event.familyMemberId !== 'all' || event.type === 'birthday') {
+                      return false;
+                    }
+                    const eventStart = new Date(event.date);
+                    const eventEnd = new Date(event.endDate);
+                    const currentDate = new Date(date);
+                    
+                    return currentDate >= eventStart && currentDate <= eventEnd;
+                  });
+
+                  const allFamilyEvents = [...familyEvents, ...multiDayFamilyEvents];
+                  const uniqueFamilyEvents = Array.from(new Map(allFamilyEvents.map(e => [e.id, e])).values());
+
+                  return (
+                    <div className="events-in-cell">
+                      {uniqueFamilyEvents.map((event) => {
+                        const isMultiDay = !!event.endDate;
+                        const eventStart = new Date(event.date);
+                        const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+                        const currentDate = new Date(date);
+                        
+                        const isFirstDay = currentDate.toDateString() === eventStart.toDateString();
+                        const isLastDay = currentDate.toDateString() === eventEnd.toDateString();
+                        const isMiddleDay = !isFirstDay && !isLastDay;
+
+                        return (
+                          <div key={event.id} className="event-wrapper">
+                            <div
+                              className={`family-event-item ${isMultiDay ? 'multi-day-event' : ''} ${
+                                isFirstDay ? 'first-day' : ''
+                              } ${isLastDay ? 'last-day' : ''} ${isMiddleDay ? 'middle-day' : ''}`}
+                              style={{ backgroundColor: event.color || '#667eea' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEventClick(event);
+                              }}
+                              title={event.title}
+                            >
+                              {isFirstDay ? event.title : ''}
+                            </div>
+                            {isFirstDay && (
+                              <button
+                                className="quick-delete-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+                                    onDeleteEvent(event.id);
+                                  }
+                                }}
+                                title="Smazat událost"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                <button
+                  className="add-event-button-cell"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddEventFor(date, 'all');
+                  }}
+                />
+              </div>
             </div>
           );
         })}

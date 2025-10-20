@@ -59,13 +59,10 @@ export const useNotifications = (
     // Sledování zpráv z Firestore (real-time listener)
     useEffect(() => {
       if (!familyMemberId) {
-        console.log('❌ useNotifications: No familyMemberId');
         return;
       }
 
-      console.log('✅ useNotifications: Subscribing to messages for:', familyMemberId);
-
-      const unsubscribe = familyMessagingService.subscribeToMessages(
+     const unsubscribe = familyMessagingService.subscribeToMessages(
         familyMemberId,
         (newMessages) => {
           console.log(
@@ -80,8 +77,6 @@ export const useNotifications = (
             (msg) => !msg.readBy.includes(familyMemberId)
           ).length;
           setUnreadCount(unread);
-
-          console.log(`📊 Nepřečtených zpráv: ${unread}/${newMessages.length}`);
         }
       );
 
@@ -94,7 +89,6 @@ export const useNotifications = (
       // Požádat o povolení notifikací
       const requestPermission = useCallback(async () => {
         if (!authUid) {
-          console.error('❌ Nelze požádat o povolení bez authUid');
           return false;
         }
       
@@ -168,7 +162,6 @@ export const useNotifications = (
   const markAsRead = useCallback(
     async (messageId: string) => {
       if (!familyMemberId) return;
-      console.log('👁️ Označuji zprávu jako přečtenou:', messageId);
       await familyMessagingService.markAsRead(messageId, familyMemberId);
     },
     [familyMemberId]
@@ -177,7 +170,6 @@ export const useNotifications = (
   // Smazat zprávu
   const deleteMessage = useCallback(async (messageId: string) => {
     try {
-      console.log('🗑️ Mažu zprávu:', messageId);
       await familyMessagingService.deleteMessage(messageId);
     } catch (error) {
       console.error('❌ Chyba při mazání zprávy:', error);
@@ -189,7 +181,6 @@ export const useNotifications = (
       const deleteReadMessages = useCallback(async () => {
         if (!familyMemberId) return 0;
         try {
-          console.log('🗑️ Mažu přečtené zprávy...');
           const count = await familyMessagingService.deleteReadMessages(familyMemberId);
           console.log(`✅ Smazáno ${count} přečtených zpráv`);
           return count;

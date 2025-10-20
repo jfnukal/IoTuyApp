@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './styles/CalendarMini.css';
+import styles from './styles/CalendarMini.css';
 import { useCalendar } from './CalendarProvider';
 import CalendarModal from './CalendarModal';
 import type { FamilyMember, CalendarEventData } from '../../../types/index';
@@ -14,6 +14,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
   familyMembers = [],
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const { getEventsByDate, getHolidayByDate, getNamedayByDate, formatDate } =
     useCalendar();
 
@@ -37,6 +38,7 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
   };
 
   const upcomingEvents = getUpcomingEvents();
+  const totalUpcomingEventCount = todayEvents.length + upcomingEvents.length;
 
   // Získej narozeniny tento měsíc
   const getBirthdaysThisMonth = () => {
@@ -50,18 +52,50 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
 
   return (
     <>
-      <div
-        className="calendar-mini-widget"
-        onClick={() => setIsModalOpen(true)}
-      >
+            <div
+              className={styles.calendarMiniWidget}
+              onClick={() => setIsModalOpen(true)}
+            >
         {/* Header */}
         <div className="mini-widget-header">
-          <div className="widget-title">📅 Kalendář</div>
-          <div className="current-date">{formatDate(today, 'FULL')}</div>
+          <div className="widget-title">🗓️ Co nás čeká?</div>
+
+          <div className="mini-widget-controls">
+            <div
+              className="event-count-badge"
+              onClick={(e) => e.stopPropagation()} // Zabráníme otevření modálu i při kliku na počet
+            >
+              {totalUpcomingEventCount} událostí
+            </div>
+            <button
+              className="mini-widget-toggle-btn"
+              onClick={(e) => {
+                e.stopPropagation(); // Zabrání otevření modálu při kliku na šipku
+                setIsExpanded(!isExpanded);
+              }}
+              aria-label={isExpanded ? 'Sbalit' : 'Rozbalit'}
+            >
+              {/* SVG ikona šipky */}
+              <svg
+                className={`toggle-arrow ${isExpanded ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Dnešní události */}
         <div className="mini-section">
+          <h3 className="mini-section-title">Dnes</h3>
           {holiday && (
             <div className="mini-event holiday-event">
               <span className="event-icon">🎉</span>
@@ -106,66 +140,69 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
           )}
         </div>
 
-        {/* Nadcházející události */}
-        {upcomingEvents.length > 0 && (
-          <div className="mini-section">
-            <h3 className="mini-section-title">Nadcházející</h3>
-            {upcomingEvents.slice(0, 2).map((event) => (
-              <div
-                key={`${event.id}-${event.displayDate}`}
-                className="mini-event upcoming-event"
-              >
-                <span className="event-icon">⏰</span>
-                <div className="event-details">
-                  <span className="event-text">{event.title}</span>
-                  <span className="event-date">
-                    {formatDate(event.displayDate, 'DD.MM')}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {upcomingEvents.length > 2 && (
-              <div className="mini-event more-events">
-                <span className="event-text">
-                  +{upcomingEvents.length - 2} v kalendáři
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Narozeniny tento měsíc */}
-        {birthdaysThisMonth.length > 0 && (
-          <div className="mini-section">
-            <h3 className="mini-section-title">
-              Narozeniny v {formatDate(today, 'MONTH')}
-            </h3>
-            {birthdaysThisMonth.slice(0, 2).map((member) => (
-              <div key={member.id} className="mini-event birthday-event">
-                <span className="event-icon">🎈</span>
-                <div className="event-details">
-                  <span className="event-text">{member.name}</span>
-                  <span className="event-date">
-                    {member.birthday && (
-                      <>
-                        {new Date(member.birthday).getDate()}.
-                        {new Date(member.birthday).getMonth() + 1}.
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {birthdaysThisMonth.length > 2 && (
-              <div className="mini-event more-events">
-                <span className="event-text">
-                  +{birthdaysThisMonth.length - 2} v kalendáři
-                </span>
+        {isExpanded && (
+          <>
+            {/* Nadcházející události */}
+            {upcomingEvents.length > 0 && (
+              <div className="mini-section">
+                <h3 className="mini-section-title">Nadcházející</h3>
+                {upcomingEvents.slice(0, 2).map((event) => (
+                  <div
+                    key={`${event.id}-${event.displayDate}`}
+                    className="mini-event upcoming-event"
+                  >
+                    <span className="event-icon">⏰</span>
+                    <div className="event-details">
+                      <span className="event-text">{event.title}</span>
+                      <span className="event-date">
+                        {formatDate(event.displayDate, 'DD.MM')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {upcomingEvents.length > 2 && (
+                  <div className="mini-event more-events">
+                    <span className="event-text">
+                      +{upcomingEvents.length - 2} v kalendáři
+                    </span>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
+            {/* Narozeniny tento měsíc */}
+            {birthdaysThisMonth.length > 0 && (
+              <div className="mini-section">
+                <h3 className="mini-section-title">
+                  Narozeniny v {formatDate(today, 'MONTH')}
+                </h3>
+                {birthdaysThisMonth.slice(0, 2).map((member) => (
+                  <div key={member.id} className="mini-event birthday-event">
+                    <span className="event-icon">🎈</span>
+                    <div className="event-details">
+                      <span className="event-text">{member.name}</span>
+                      <span className="event-date">
+                        {member.birthday && (
+                          <>
+                            {new Date(member.birthday).getDate()}.
+                            {new Date(member.birthday).getMonth() + 1}.
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {birthdaysThisMonth.length > 2 && (
+                  <div className="mini-event more-events">
+                    <span className="event-text">
+                      +{birthdaysThisMonth.length - 2} v kalendáři
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
         {/* Klik pro otevření */}
         <div className="mini-widget-footer">
           <span className="click-hint">👆 Klikněte pro otevření kalendáře</span>

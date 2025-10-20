@@ -11,7 +11,7 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   min-height: auto;
-  max-height: 350px;
+  max-height: 450px; /* Lehce navýšeno pro lepší flexibilitu */
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -41,27 +41,88 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* --- ZAČÁTEK OPRAVENÉ SEKCE --- */
+
 .mini-widget-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Odtlačí název a ovládací prvky od sebe */
   align-items: center;
-  margin-bottom: 1px;
-  padding-bottom: 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  gap: 16px; /* Přidá bezpečnou mezeru mezi levou a pravou stranou */
 }
 
 .widget-title {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.1rem; /* Zmenšeno, aby se vždy vešlo */
+  font-weight: 600;
+  white-space: nowrap; /* Zabrání zalamování názvu */
+  flex-grow: 1; /* Dovolí titulku, aby se roztáhl */
+  min-width: 0; /* Důležitý trik pro flexbox, aby se text správně zkrátil, když je málo místa */
 }
 
-.current-date {
-  font-size: 1.25rem;
-  opacity: 0.9;
+/* Kontejner pro pravou část hlavičky (počet a šipka) */
+.mini-widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Mezera mezi počtem událostí a šipkou */
+  flex-shrink: 0; /* KLÍČOVÁ VLASTNOST: Zabrání, aby se tyto prvky smrskly */
 }
+
+/* Odznáček s počtem událostí */
+.event-count-badge {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: default;
+  white-space: nowrap;
+}
+
+/* Tlačítko pro sbalení/rozbalení */
+.mini-widget-toggle-btn {
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* Zabrání smrsknutí tlačítka */
+}
+
+.mini-widget-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.mini-widget-toggle-btn:active {
+  transform: scale(0.9);
+}
+
+/* Ikona šipky (SVG) */
+.toggle-arrow {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Otočení šipky, když je widget rozbalený */
+.toggle-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* --- KONEC OPRAVENÉ SEKCE --- */
 
 .mini-section {
-  margin-bottom: 46px;
+  margin-bottom: 16px; /* Sníženo pro kompaktnější vzhled */
+}
+
+.mini-section:last-of-type {
+    margin-bottom: 0; /* Poslední sekce nemá mezeru dole */
 }
 
 .mini-section .mini-event:nth-child(n+4) {
@@ -75,12 +136,15 @@
   opacity: 0.8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex; /* Pro ikonku */
+  align-items: center;
+  gap: 8px; /* Mezera mezi ikonkou a textem */
 }
 
 .mini-event {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -92,6 +156,7 @@
 .event-icon {
   font-size: 1.2rem;
   min-width: 20px;
+  text-align: center;
 }
 
 .event-details {
@@ -99,6 +164,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .event-text {
@@ -109,10 +175,11 @@
 .event-time,
 .event-date {
   font-size: 0.8rem;
-  opacity: 0.7;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 6px;
+  opacity: 0.8;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 3px 8px;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
 .no-events {
@@ -126,9 +193,15 @@
 }
 
 .mini-widget-footer {
-  display: none;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  opacity: 0.8;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .click-hint {
-  display: none;
+  display: inline-block; /* Změna, aby byl viditelný */
 }

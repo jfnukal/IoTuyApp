@@ -363,7 +363,12 @@
   :root {
     /* Přepíšeme barvy pro tmavý režim */
     --calendar-side-column-bg: rgba(255, 255, 255, 0.45);
-    --calendar-weekend-bg: rgba(255, 255, 255, 0.25); /* Velmi jemné zesvětlení pro víkendy */
+    --calendar-weekend-bg: rgba(
+      255,
+      255,
+      255,
+      0.25
+    ); /* Velmi jemné zesvětlení pro víkendy */
     --calendar-header-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
   }
 }

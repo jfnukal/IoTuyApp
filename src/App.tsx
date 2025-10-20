@@ -76,7 +76,6 @@ function App() {
         const { bakalariAPI } = await import('./api/bakalariAPI');
 
         const timetable = await bakalariAPI.getTimetable();
-        console.log('✅ Rozvrh:', timetable);
       } catch (error) {
         console.error('❌ Bakaláři API Chyba:', error);
       }
@@ -113,7 +112,6 @@ function App() {
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
-  // useEffect pro načtení family member podle authUid
   useEffect(() => {
     if (!currentUser) {
       setFamilyMemberId(null);
@@ -121,22 +119,17 @@ function App() {
     }
 
     const loadFamilyMember = async () => {
-      // OKAMŽITĚ nastav výchozí hodnotu (opraví race condition s FCM)
       setFamilyMemberId('dad');
 
       try {
-        console.log('🔍 Hledám family member pro UID:', currentUser.uid);
-
         // Najdi family member podle authUid
         const member = await firestoreService.getFamilyMemberByAuthUid(
           currentUser.uid
         );
 
         if (member) {
-          setFamilyMemberId(member.id); // ← Tady se PŘEPÍŠE správnou hodnotou!
-          console.log(`✅ Přihlášen jako: ${member.name} (${member.id})`);
+          setFamilyMemberId(member.id); 
         } else {
-          // Fallback - 'dad' už je nastaveno výše
           console.warn(
             `⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`
           );
@@ -146,7 +139,6 @@ function App() {
         }
       } catch (error) {
         console.error('❌ Chyba při načítání family member:', error);
-        // 'dad' už je nastaveno výše jako fallback
       }
     };
 
@@ -157,7 +149,6 @@ function App() {
     }
   }, [currentUser, devices, firebaseLoading]);
 
-  // Přihlášení required - TENTO RETURN JE AŽ PO VŠECH HOOKECH!
   if (!currentUser) {
     return <Login />;
   }

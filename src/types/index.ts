@@ -161,11 +161,13 @@ export interface CalendarEventData {
   createdBy?: string;
   title: string;
   description?: string;
-  date: string; // Ponecháme string (ISO formát), je to spolehlivější pro DB
+  date: string;
+  endDate?: string; 
   time?: string;
   endTime?: string;
   type: EventType;
-  familyMemberId?: string; // Přejmenováno pro konzistenci
+  familyMemberId?: string; 
+  reminderRecipients?: string[];
   color?: string;
   reminders?: ReminderItem[];
   sentReminders?: string[]; 

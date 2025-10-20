@@ -67,6 +67,9 @@ const EventForm: React.FC<EventFormProps> = ({
         color: event.color || '#667eea',
         reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
+        isMultiDay: !!event.endDate,
+        endDate: event.endDate ? new Date(event.endDate + 'T00:00:00') : null,
+        reminderRecipients: event.reminderRecipients || [],
       };
     }
     const initialDate = date || new Date();
@@ -83,6 +86,9 @@ const EventForm: React.FC<EventFormProps> = ({
       color: '#667eea',
       reminders: [],
       isAllDay: false,
+      isMultiDay: false,
+      endDate: initialDate,
+      reminderRecipients: [],
     };
   });
 
@@ -99,6 +105,9 @@ const EventForm: React.FC<EventFormProps> = ({
         color: event.color || '#667eea',
         reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
+        isMultiDay: !!event.endDate,
+        endDate: event.endDate ? new Date(event.endDate + 'T00:00:00') : null,
+        reminderRecipients: event.reminderRecipients || [],
       });
     }
   }, [event]);
@@ -106,7 +115,9 @@ const EventForm: React.FC<EventFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    onSave({
+
+    // ✅ Vytvoř objekt s daty
+    const eventData: any = {
       ...formData,
       date: `${formData.date.getFullYear()}-${(formData.date.getMonth() + 1)
         .toString()
@@ -114,9 +125,32 @@ const EventForm: React.FC<EventFormProps> = ({
         .getDate()
         .toString()
         .padStart(2, '0')}`,
-      time: formData.isAllDay ? undefined : formData.time,
-      endTime: formData.isAllDay ? undefined : formData.endTime,
-    });
+    };
+
+    // ✅ Přidej endDate pouze pokud existuje
+    if (formData.isMultiDay && formData.endDate) {
+      eventData.endDate = `${formData.endDate.getFullYear()}-${(
+        formData.endDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, '0')}-${formData.endDate
+        .getDate()
+        .toString()
+        .padStart(2, '0')}`;
+    }
+
+    // ✅ Přidej time a endTime pouze pokud NENÍ celodenní
+    if (!formData.isAllDay) {
+      if (formData.time) eventData.time = formData.time;
+      if (formData.endTime) eventData.endTime = formData.endTime;
+    }
+
+    // ✅ Přidej reminderRecipients (pole ID členů, kteří dostanou připomínku)
+    if (formData.reminderRecipients && formData.reminderRecipients.length > 0) {
+      eventData.reminderRecipients = formData.reminderRecipients;
+    }
+
+    onSave(eventData);
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -134,65 +168,14 @@ const EventForm: React.FC<EventFormProps> = ({
     });
   };
 
-  // ✅ POMOCNÁ FUNKCE: Převod familyMemberId na selectedRecipients
+  // ✅ POMOCNÁ FUNKCE: Vrátí seznam příjemců připomínek
   const getSelectedRecipients = (): string[] => {
-    if (!formData.familyMemberId || formData.familyMemberId === 'nikdo' || formData.familyMemberId === 'personal') {
-      return [];
-    }
-    if (formData.familyMemberId === 'all') {
-      return familyMembers.map(m => m.id);
-    }
-    if (formData.familyMemberId === 'parents') {
-      return familyMembers.filter(m => m.role === 'parent').map(m => m.id);
-    }
-    if (formData.familyMemberId === 'children') {
-      return familyMembers.filter(m => m.role === 'child').map(m => m.id);
-    }
-    return [formData.familyMemberId];
+    return formData.reminderRecipients || [];
   };
 
-  // ✅ POMOCNÁ FUNKCE: Převod selectedRecipients na familyMemberId
+  // ✅ POMOCNÁ FUNKCE: Nastaví příjemce připomínek
   const handleRecipientsChange = (recipients: string[]) => {
-    if (recipients.length === 0) {
-      handleInputChange('familyMemberId', 'nikdo');
-      return;
-    }
-
-    const allMemberIds = familyMembers.map(m => m.id);
-    const parentIds = familyMembers.filter(m => m.role === 'parent').map(m => m.id);
-    const childIds = familyMembers.filter(m => m.role === 'child').map(m => m.id);
-
-    // Všichni?
-    if (recipients.length === allMemberIds.length && 
-        recipients.every(r => allMemberIds.includes(r))) {
-      handleInputChange('familyMemberId', 'all');
-      return;
-    }
-
-    // Rodiče?
-    if (parentIds.length > 0 && 
-        recipients.length === parentIds.length && 
-        recipients.every(r => parentIds.includes(r))) {
-      handleInputChange('familyMemberId', 'parents');
-      return;
-    }
-
-    // Děti?
-    if (childIds.length > 0 && 
-        recipients.length === childIds.length && 
-        recipients.every(r => childIds.includes(r))) {
-      handleInputChange('familyMemberId', 'children');
-      return;
-    }
-
-    // Jeden člen?
-    if (recipients.length === 1) {
-      handleInputChange('familyMemberId', recipients[0]);
-      return;
-    }
-
-    // Více členů (ale ne celá skupina) - uložíme jako první vybraný
-    handleInputChange('familyMemberId', recipients[0]);
+    handleInputChange('reminderRecipients', recipients);
   };
 
   const eventTypes = [
@@ -266,27 +249,81 @@ const EventForm: React.FC<EventFormProps> = ({
             />
           </div>
 
-          {/* Datum */}
-          <div className="form-group">
-            <label className="form-label">Datum</label>
-            <input
-              type="date"
-              className="form-input"
-              value={`${formData.date.getFullYear()}-${(
-                formData.date.getMonth() + 1
-              )
-                .toString()
-                .padStart(2, '0')}-${formData.date
-                .getDate()
-                .toString()
-                .padStart(2, '0')}`}
-              onChange={(e) =>
-                handleInputChange(
-                  'date',
-                  new Date(e.target.value + 'T00:00:00')
+          {/* Datum od a do */}
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Datum od:</label>
+              <input
+                type="date"
+                className="form-input"
+                value={`${formData.date.getFullYear()}-${(
+                  formData.date.getMonth() + 1
                 )
-              }
-            />
+                  .toString()
+                  .padStart(2, '0')}-${formData.date
+                  .getDate()
+                  .toString()
+                  .padStart(2, '0')}`}
+                onChange={(e) => {
+                  const newStartDate = new Date(e.target.value + 'T00:00:00');
+                  handleInputChange('date', newStartDate);
+                  // Pokud je endDate menší než nové startDate, nastav endDate na startDate
+                  if (formData.endDate && formData.endDate < newStartDate) {
+                    handleInputChange('endDate', newStartDate);
+                  }
+                }}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Datum do: (nepovinné)</label>
+              <input
+                type="date"
+                className="form-input"
+                value={
+                  formData.endDate
+                    ? `${formData.endDate.getFullYear()}-${(
+                        formData.endDate.getMonth() + 1
+                      )
+                        .toString()
+                        .padStart(2, '0')}-${formData.endDate
+                        .getDate()
+                        .toString()
+                        .padStart(2, '0')}`
+                    : ''
+                }
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const newEndDate = new Date(e.target.value + 'T00:00:00');
+                    // Validace: endDate nesmí být menší než startDate
+                    if (newEndDate >= formData.date) {
+                      handleInputChange('endDate', newEndDate);
+                      handleInputChange('isMultiDay', true);
+
+                      // ✅ NOVÉ: Pokud je víc než jeden den, automaticky nastav celodenní
+                      if (
+                        newEndDate.toDateString() !==
+                        formData.date.toDateString()
+                      ) {
+                        handleInputChange('isAllDay', true);
+                      }
+                    } else {
+                      alert('Datum do nemůže být dřívější než datum od!');
+                    }
+                  } else {
+                    handleInputChange('endDate', null);
+                    handleInputChange('isMultiDay', false);
+                  }
+                }}
+                min={`${formData.date.getFullYear()}-${(
+                  formData.date.getMonth() + 1
+                )
+                  .toString()
+                  .padStart(2, '0')}-${formData.date
+                  .getDate()
+                  .toString()
+                  .padStart(2, '0')}`}
+              />
+            </div>
           </div>
 
           {/* Celodenní událost */}
@@ -346,53 +383,26 @@ const EventForm: React.FC<EventFormProps> = ({
             </select>
           </div>
 
-          {/* ✅ NOVÝ: Příjemci připomínky */}
+          {/* ✅ Příjemci připomínky */}
           {familyMembers.length > 0 && (
             <div className="form-group">
-              <label className="form-label">Příjemci připomínky:</label>
+              <label className="form-label">
+                Příjemci připomínky:
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    color: '#6c757d',
+                    marginLeft: '8px',
+                  }}
+                >
+                  (Nevyber nikoho = žádné připomínky)
+                </span>
+              </label>
               <RecipientSelector
                 selectedRecipients={getSelectedRecipients()}
                 onChange={handleRecipientsChange}
                 familyMembers={familyMembers}
               />
-              
-              {/* ✅ Speciální volby: Nikdo a Jen mně */}
-              <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className={`recipient-chip ${formData.familyMemberId === 'nikdo' ? 'selected' : ''}`}
-                  onClick={() => handleInputChange('familyMemberId', 'nikdo')}
-                  style={{
-                    padding: '8px 16px',
-                    border: '2px solid',
-                    borderColor: formData.familyMemberId === 'nikdo' ? '#667eea' : '#ddd',
-                    borderRadius: '20px',
-                    background: formData.familyMemberId === 'nikdo' ? '#667eea' : 'white',
-                    color: formData.familyMemberId === 'nikdo' ? 'white' : '#333',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  🚫 Nikdo (bez připomínek)
-                </button>
-                <button
-                  type="button"
-                  className={`recipient-chip ${formData.familyMemberId === 'personal' ? 'selected' : ''}`}
-                  onClick={() => handleInputChange('familyMemberId', 'personal')}
-                  style={{
-                    padding: '8px 16px',
-                    border: '2px solid',
-                    borderColor: formData.familyMemberId === 'personal' ? '#667eea' : '#ddd',
-                    borderRadius: '20px',
-                    background: formData.familyMemberId === 'personal' ? '#667eea' : 'white',
-                    color: formData.familyMemberId === 'personal' ? 'white' : '#333',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  🔒 Jen mně (osobní)
-                </button>
-              </div>
             </div>
           )}
 

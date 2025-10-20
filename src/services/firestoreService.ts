@@ -651,7 +651,6 @@ async deleteEvent(eventId: string): Promise<void> {
 
       const doc = snapshot.docs[0];
       const member = { id: doc.id, ...doc.data() } as FamilyMember;
-      console.log(`✅ Nalezen family member: ${member.name} (${member.id})`);
       return member;
     } catch (error) {
       console.error('❌ Error getting family member by authUid:', error);

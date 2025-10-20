@@ -243,7 +243,7 @@
 /* Sticky header se jmény */
 .new-family-header {
   display: grid;
-  grid-template-columns: var(--calendar-day-info-width) repeat(4, 1fr);
+  grid-template-columns: var(--calendar-day-info-width) repeat(4, 1fr) 1fr;
   position: sticky;
   top: 0;
   z-index: var(--calendar-z-header);
@@ -360,8 +360,10 @@
 /* Řádky (dny) */
 .day-row {
   display: grid;
-  grid-template-columns: var(--calendar-day-info-width) repeat(4, 1fr);
+  grid-template-columns: var(--calendar-day-info-width) repeat(4, 1fr) 1fr;
   border-bottom: var(--calendar-border);
+  min-height: var(--calendar-cell-min-height);
+  transition: var(--calendar-transition);
 }
 
 .day-row:last-child {
@@ -1317,21 +1319,119 @@
     min-width: 180px;
     font-size: 13px;
   }
-  
+
   .birthday-menu-header {
     font-size: 10px;
     padding: 6px 10px;
   }
-  
+
   .birthday-menu-item {
     padding: 8px 10px;
   }
-  
+
   .birthday-menu-icon {
     font-size: 16px;
   }
-  
+
   .birthday-menu-title {
     font-size: 13px;
   }
+}
+
+/* ==================== VÍCEDENNÍ UDÁLOSTI ==================== */
+
+/* Základní styl */
+.family-event-item.multi-day-event {
+  position: relative;
+  font-weight: 600;
+}
+
+/* ========== PRVNÍ DEN - VODOROVNÝ PRUH ========== */
+.family-event-item.multi-day-event.first-day {
+  width: 100%;
+  border-radius: 4px 0 0 4px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 8px 4px 8px;
+}
+
+/* Šipka pokračování */
+.family-event-item.multi-day-event.first-day:not(.last-day)::after {
+  content: '▶';
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.9;
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ========== NÁSLEDUJÍCÍ DNY - SVISLÁ ČÁRA ========== */
+.family-event-item.multi-day-event.middle-day,
+.family-event-item.multi-day-event.last-day:not(.first-day) {
+  width: 13px;
+  min-height: 60px;
+  max-height: 100%;
+  padding: 0;
+  margin: 0 8px 0 auto;
+  border-radius: 2px;
+  opacity: 0.85;
+  display: block;
+  overflow: visible;
+  flex-shrink: 0
+}
+
+/* Šipka dolů na prostředních dnech */
+.family-event-item.multi-day-event.middle-day::after {
+  content: '▼';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6em;
+  color: currentColor;
+  opacity: 0.9;
+}
+
+
+/* Poslední den - stejná šířka + zakončení kolečkem */
+.family-event-item.multi-day-event.last-day:not(.first-day) {
+  width: 13px;
+  opacity: 1;
+}
+
+/* Zakončení čáry - kulatá tečka UVNITŘ buňky */
+.family-event-item.multi-day-event.last-day:not(.first-day)::after {
+  width: 13px;
+  content: '';
+  position: absolute;
+  bottom: 2px;  /* ← ZMĚNA: posunuto dovnitř */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 50%;
+  opacity: 1;
+}
+
+/* ========== JEDNODENNÍ UDÁLOST ========== */
+.family-event-item.multi-day-event.first-day.last-day {
+  border-radius: 4px;
+  width: 100%;
+}
+
+.family-event-item.multi-day-event.first-day.last-day::after {
+  display: none;
+}
+
+.events-in-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;  /* Zabrání scrollbaru */
 }

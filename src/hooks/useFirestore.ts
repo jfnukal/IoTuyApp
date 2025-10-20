@@ -7,7 +7,7 @@ export const useFirestore = () => {
   const { currentUser } = useAuth();
   const [devices, setDevices] = useState<TuyaDevice[]>([]);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]); // <-- NOVÝ STAV
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,7 +15,7 @@ export const useFirestore = () => {
     if (!currentUser) {
       setDevices([]);
       setUserSettings(null);
-      setFamilyMembers([]); // <-- Vynulovat stav
+      setFamilyMembers([]); 
       setLoading(false);
       return;
     }
@@ -28,13 +28,11 @@ export const useFirestore = () => {
         setLoading(true);
         setError(null);
 
-        // Načti uživatelská nastavení (beze změny)
         const settings = await firestoreService.getUserSettings(
           currentUser.uid
         );
         setUserSettings(settings);
 
-        // Nastav real-time listener pro devices (beze změny)
         devicesUnsubscribe = await firestoreService.subscribeToUserDevices(
           currentUser.uid,
           setDevices
@@ -42,8 +40,6 @@ export const useFirestore = () => {
 
         familyUnsubscribe = await firestoreService.subscribeToFamilyMembers(
           (membersFromDB) => {
-            // Přejmenoval jsem proměnnou pro jasnost
-            console.log('KROK 1: Data členů přímo z Firestore:', membersFromDB); // <-- PŘIDAT TENTO ŘÁDEK
             setFamilyMembers(membersFromDB);
           }
         );
@@ -61,7 +57,7 @@ export const useFirestore = () => {
     // Cleanup funkce
     return () => {
       devicesUnsubscribe?.();
-      familyUnsubscribe?.(); // <-- Přidat do cleanup
+      familyUnsubscribe?.(); 
     };
   }, [currentUser]);
 
@@ -82,7 +78,6 @@ export const useFirestore = () => {
 
     try {
       await firestoreService.saveUserDevices(currentUser.uid, newDevices);
-      // Devices se aktualizují automaticky přes listener
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -100,5 +95,4 @@ export const useFirestore = () => {
   };
 };
 
-// Export také jako useUserData pro zpětnou kompatibilitu
 export const useUserData = useFirestore;

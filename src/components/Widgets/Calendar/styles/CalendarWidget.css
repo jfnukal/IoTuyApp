@@ -1435,3 +1435,13 @@
   flex: 1;
   overflow: hidden;  /* Zabrání scrollbaru */
 }
+
+/* ==================== TABLET MODE ==================== */
+
+/* Tablet - tlačítko + vpravo místo uprostřed */
+.add-event-button-cell.tablet-mode {
+  right: 8px;
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}

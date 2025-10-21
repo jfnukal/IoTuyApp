@@ -151,27 +151,34 @@ function App() {
     }
   }, [currentUser, devices, firebaseLoading]);
 
-    // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
-    useEffect(() => {
-      window.history.pushState(null, '', window.location.href);
-      
-      const handleBackButton = (e: PopStateEvent) => {
-        e.preventDefault();
-        
-        if (location.pathname === '/' || location.pathname === '') {
-          window.history.pushState(null, '', window.location.href);
-          return;
-        }
-        
-        navigate(-1);
-      };
-      
-      window.addEventListener('popstate', handleBackButton);
-      
-      return () => {
-        window.removeEventListener('popstate', handleBackButton);
-      };
-    }, [navigate, location]);
+  // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+
+    const handleBackButton = (e: PopStateEvent) => {
+      // ✅ KONTROLA: Pokud je otevřený modal, nech ho zpracovat back button
+      const modalOpen = document.querySelector('.calendar-modal-overlay');
+      if (modalOpen) {
+        // Modal si to vyřeší sám
+        return;
+      }
+
+      e.preventDefault();
+
+      if (location.pathname === '/' || location.pathname === '') {
+        window.history.pushState(null, '', window.location.href);
+        return;
+      }
+
+      navigate(-1);
+    };
+
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [navigate, location]);
 
   if (!currentUser) {
     return <Login />;

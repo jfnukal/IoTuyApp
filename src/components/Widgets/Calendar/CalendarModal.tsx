@@ -8,6 +8,7 @@ import { useIsMobile } from './utils/deviceDetection';
 import type { FamilyMember, CalendarEventData } from '../../../types/index';
 import './styles/CalendarShared.css';
 import { createPortal } from 'react-dom';
+import { isTablet } from '../../../utils/deviceDetection';
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
 }) => {
   const { addEvent, updateEvent, deleteEvent } = useCalendar();
   const isMobile = useIsMobile(768);
+  const isTabletDevice = isTablet();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(
@@ -98,9 +100,9 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
       >
         {isMobile ? (
           <CalendarMobile 
-          familyMembers={familyMembers}
-          onClose={onClose}
-           />
+            familyMembers={familyMembers}
+            onClose={onClose}
+          />
         ) : (
           <CalendarWidget
             familyMembers={familyMembers}
@@ -108,8 +110,19 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
             onEditEvent={handleShowEditForm}
           />
         )}
+  
+        {/* ✅ FAB tlačítko JEN PRO TABLET */}
+        {isTabletDevice && !isMobile && (
+          <button
+            className="fab-add-event-modal"
+            onClick={() => handleShowAddForm(new Date())}
+            title="Přidat událost"
+          >
+            +
+          </button>
+        )}
       </div>
-
+  
       {!isMobile && isFormOpen && (
         <EventForm
           event={selectedEvent}

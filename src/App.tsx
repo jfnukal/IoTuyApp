@@ -151,27 +151,59 @@ function App() {
     }
   }, [currentUser, devices, firebaseLoading]);
 
-    // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
+    // ✅ BACK BUTTON HANDLER - Prevence opuštění aplikace
     useEffect(() => {
-      window.history.pushState(null, '', window.location.href);
-      
-      const handleBackButton = (e: PopStateEvent) => {
-        e.preventDefault();
-        
-        if (location.pathname === '/' || location.pathname === '') {
-          window.history.pushState(null, '', window.location.href);
-          return;
+      // Přidej počáteční stav do historie při prvním načtení
+      const initialPath = window.location.pathname;
+      if (!window.history.state?.appInitialized) {
+        window.history.replaceState({ appInitialized: true, path: initialPath }, '', window.location.href);
+      }
+
+      const handleBackButton = () => {
+        const currentPath = location.pathname;
+
+        // Pokud jsme na domovské stránce, zabraň opuštění aplikace
+        if (currentPath === '/' || currentPath === '') {
+          // Pushneme nový stav, aby uživatel nemohl jít mimo aplikaci
+          window.history.pushState({ appInitialized: true, path: currentPath }, '', window.location.href);
+        } else {
+          // Jinak použij React Router navigaci zpět
+          navigate(-1);
+          // Ujisti se, že zůstáváme v aplikaci
+          setTimeout(() => {
+            if (!window.history.state?.appInitialized) {
+              window.history.pushState({ appInitialized: true, path: window.location.pathname }, '', window.location.href);
+            }
+          }, 0);
         }
-        
-        navigate(-1);
       };
-      
+
       window.addEventListener('popstate', handleBackButton);
-      
+
       return () => {
         window.removeEventListener('popstate', handleBackButton);
       };
-    }, [navigate, location]);
+    }, [navigate, location.pathname]);
+
+    // 🛡️ Dodatečná ochrana proti opuštění aplikace v PWA režimu
+    useEffect(() => {
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                    (window.navigator as any).standalone === true;
+
+      if (isPWA) {
+        // V PWA režimu zabraň úplnému opuštění aplikace
+        const preventExit = (e: BeforeUnloadEvent) => {
+          e.preventDefault();
+          e.returnValue = '';
+        };
+
+        window.addEventListener('beforeunload', preventExit);
+
+        return () => {
+          window.removeEventListener('beforeunload', preventExit);
+        };
+      }
+    }, []);
 
   if (!currentUser) {
     return <Login />;

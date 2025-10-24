@@ -8,16 +8,8 @@
   overflow-x: hidden;
 }
 
-/* ==================== UTILITY CLASSES ==================== */
-/* Skrýt desktop controls - už je nahrazují FAB tlačítka */
-.header-controls.desktop-only {
-  display: none !important;
-}
-
 /* ==================== HEADER ==================== */
 .dashboard-layout-header {
-  width: 100%;
-  margin-bottom: 30px;
   padding: 30px 20px;
   text-align: center;
   animation: slideDown 0.6s ease;
@@ -120,13 +112,13 @@
 
 /* ==================== HEADER CONTROLS ==================== */
 .header-controls {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 15px;
-  flex-wrap: wrap;
-  width: 100%;
-  padding: 0 20px;
 }
 
 /* Ikona nastavení - jen ikona */
@@ -389,10 +381,8 @@
 
 /* ==================== HEADER CONTENT - DESKTOP ==================== */
 .header-content {
-  width: 100%;
   display: flex;
-  gap: 20px;
-  flex-direction: column;
+  gap: 30px;
   align-items: start;
   justify-content: center;
   max-width: 1400px;
@@ -658,192 +648,121 @@
   }
 }
 
-/* ==================== FAB (Floating Action Button) ==================== */
+/* ==================== FLOATING ACTION BUTTON (FAB) ==================== */
 
-/* FAB VLEVO - Menu */
-.fab-container.fab-left {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
-  z-index: 1000;
-  display: flex; /* VŽDY viditelný */
+/* Desktop - FAB skrytý */
+.fab-container {
+  display: none;
 }
 
-/* FAB menu položky */
-.fab-menu {
-  position: absolute;
-  bottom: 80px;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(20px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fab-container.open .fab-menu {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateY(0);
-}
-
-.fab-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: white;
-  border: none;
-  border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.fab-menu-item:hover {
-  transform: translateX(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.fab-menu-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.fab-menu-icon {
-  font-size: 1.3rem;
-}
-
-.fab-menu-label {
-  font-size: 0.9rem;
-}
-
-/* Hlavní FAB tlačítko */
-.fab-button {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.fab-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-}
-
-.fab-button:active {
-  transform: scale(0.95);
-}
-
-.fab-icon {
-  font-size: 1.5rem;
-  color: white;
-  transition: transform 0.3s ease;
-}
-
-.fab-icon.open {
-  transform: rotate(90deg);
-}
-
-/* FAB VPRAVO - Poslat zprávu (primární akce) */
-.fab-message-primary {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border: none;
-  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  transition: all 0.3s ease;
-}
-
-.fab-message-primary:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5);
-}
-
-.fab-message-primary:active {
-  transform: scale(0.95);
-}
-
-.fab-message-icon {
-  font-size: 1.8rem;
-}
-
-.unread-badge-fab {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #ff3b30;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 2px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Zobrazení FAB na tabletu a mobilu */
+/* Tablet/Mobil - FAB viditelný */
 @media (max-width: 768px) {
-  .fab-container.fab-left,
-  .fab-message-primary {
-    display: flex;
+  /* Skrýt původní header controls */
+  .header-controls {
+    display: none !important;
   }
 
-  /* Skryjeme desktop ovládací prvky */
-  .header-controls.desktop-only {
-    display: flex;
-  }
-}
-
-@media (max-width: 768px) {
-  .fab-container.fab-left {
-    bottom: 20px;
-    left: 20px;
-  }
-
-  .fab-message-primary {
-    bottom: 20px;
+  /* Zobrazit FAB */
+  .fab-container {
+    display: block;
+    position: fixed;
+    bottom: 30px;
     right: 20px;
-    width: 60px;
-    height: 60px;
+    z-index: 1000;
   }
 
-  .fab-button {
-    width: 56px;
-    height: 56px;
+  /* FAB Menu */
+  .fab-menu {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
+  .fab-container.open .fab-menu {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: all;
+  }
+
+  /* FAB Menu Item */
   .fab-menu-item {
-    padding: 10px 16px;
-    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: white;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 160px;
+  }
+
+  .fab-menu-item:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .fab-menu-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
   }
 
   .fab-menu-icon {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
+
+  .fab-menu-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #333;
+  }
+
+  .fab-menu-item.active .fab-menu-label {
+    color: white;
+  }
+
+  /* Hlavní FAB tlačítko */
+  .fab-button {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .fab-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0;
+  }
+}
+
+/* Zaručí, že tlačítko pro povolení notifikací bude vždy vidět */
+.notification-permission-btn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 5px; /* Přidá malou mezeru kolem */
 }

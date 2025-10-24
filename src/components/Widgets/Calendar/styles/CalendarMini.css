@@ -117,15 +117,75 @@
 
 /* --- KONEC OPRAVENÉ SEKCE --- */
 
+/* === GRID LAYOUT PRO DNEŠNÍ UDÁLOSTI === */
+.mini-events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 sloupce */
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mini-event.compact {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: none; /* Zrušíme spodní border */
+  font-size: 0.85rem; /* Menší text */
+  flex-direction: column; /* Ikona a text pod sebou */
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 70px;
+  transition: all 0.2s ease;
+}
+
+.mini-event.compact:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.mini-event.compact .event-icon {
+  font-size: 1.5rem;
+  min-width: auto;
+}
+
+.mini-event.compact .event-details {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+
+.mini-event.compact .event-text {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Max 2 řádky */
+  -webkit-box-orient: vertical;
+}
+
+.mini-event.compact .event-time {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
+
+/* Responsive - na malých šířkách zpět na 1 sloupec */
+@media (max-width: 768px) {
+  .mini-events-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mini-section {
   margin-bottom: 16px; /* Sníženo pro kompaktnější vzhled */
 }
 
 .mini-section:last-of-type {
-    margin-bottom: 0; /* Poslední sekce nemá mezeru dole */
+  margin-bottom: 0; /* Poslední sekce nemá mezeru dole */
 }
 
-.mini-section .mini-event:nth-child(n+4) {
+.mini-section .mini-event:nth-child(n + 4) {
   display: none;
 }
 

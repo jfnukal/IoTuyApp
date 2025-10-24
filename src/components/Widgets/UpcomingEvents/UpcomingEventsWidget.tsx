@@ -5,15 +5,17 @@ import type { CalendarEventData, FamilyMember } from '../../../types';
 import './UpcomingEventsWidget.css';
 
 interface UpcomingEventsWidgetProps {
-  daysAhead?: number; // V budoucnu konfigurovatelné
+  daysAhead?: number; // TODO: V budoucnu konfigurovatelné
   maxEvents?: number;
   familyMembers?: FamilyMember[];
+  compact?: boolean; // Pro hlavičku - 2 sloupce
 }
 
 const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
-  daysAhead = 7,
-  maxEvents = 5,
+  daysAhead = 60, //  60 dní dopředu událostí
+  maxEvents = 5,  // max 5 událostí
   familyMembers = [],
+  compact = false,
 }) => {
   const { getEventsByDate, formatDate, isToday } = useCalendar();
   const [upcomingEvents, setUpcomingEvents] = useState<
@@ -27,10 +29,12 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
       const today = new Date();
       const events: Array<CalendarEventData & { displayDate: Date }> = [];
 
-      // Načti dnešní události
+      // Načti dnešní události (filtruj typ "personal")
       const todayEvents = getEventsByDate(today);
       todayEvents.forEach((event) => {
-        events.push({ ...event, displayDate: today });
+        if (event.type !== 'personal') {
+          events.push({ ...event, displayDate: today });
+        }
       });
 
       // Načti události pro následujících X dní
@@ -39,7 +43,10 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
         date.setDate(today.getDate() + i);
         const dayEvents = getEventsByDate(date);
         dayEvents.forEach((event) => {
-          events.push({ ...event, displayDate: date });
+          // Filtruj typ "personal"
+          if (event.type !== 'personal') {
+            events.push({ ...event, displayDate: date });
+          }
         });
       }
 
@@ -143,14 +150,15 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
             </div>
           ) : (
             <>
-              {/* Dnešní události - speciální sekce */}
-              {hasTodayEvents && (
+            {/* Dnešní události - speciální sekce */}
+            {hasTodayEvents && (
                 <div className="today-section">
                   <h4 className="section-title">🌟 Dnes</h4>
-                  {todayEvents.map((event, index) => (
-                    <div
-                      key={event.id}
-                      className="event-card today-event"
+                  <div className={`today-events-grid ${todayEvents.length === 1 ? 'single-event' : ''}`}>
+                    {todayEvents.slice(0, 6).map((event, index) => (
+                      <div
+                        key={event.id}
+                        className="event-card today-event"
                       style={{
                         background: getEventColor(event.type),
                         animationDelay: `${index * 0.1}s`,
@@ -166,19 +174,21 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                         )}
                       </div>
                       <div className="event-badge">Dnes!</div>
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-
-        {/* Nadcházející události */}
-            {isExpanded &&
+              
+          {/* Nadcházející události */}
+          {isExpanded &&
               upcomingEvents.filter((e) => !isToday(e.displayDate)).length > 0 && (
-                <div className="upcoming-section">
-                  <h4 className="section-title">🔜 Brzy</h4>
-                  {upcomingEvents
-                    .filter((e) => !isToday(e.displayDate))
-                    .map((event, index) => (
+                <div className={`upcoming-section ${compact ? 'compact-mode' : ''}`}>
+                  <h4 className="section-title">📜 Brzy</h4>
+                  <div className={`events-list ${compact ? 'two-columns' : ''}`}>
+                    {upcomingEvents
+                      .filter((e) => !isToday(e.displayDate))
+                      .map((event, index) => (
                       <div
                         key={event.id}
                         className="event-card upcoming-event"
@@ -204,8 +214,9 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                         </div>
                       </div>
                     ))}
-                </div>
-              )}
+                    </div>
+                  </div>
+                )}
             </>
           )}
         </div>

@@ -18,26 +18,52 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
   const { getEventsByDate, getHolidayByDate, getNamedayByDate, formatDate } =
     useCalendar();
 
+  console.log('🚀 CalendarMiniWidget se renderuje!');
   const today = new Date();
-  const todayEvents = getEventsByDate(today);
+  const allTodayEvents = getEventsByDate(today);
+  // Filtrujeme připomínky bez příjemců (osobní upozornění)
+  const todayEvents = allTodayEvents.filter(
+    (event) =>
+      event.type !== 'reminder' ||
+      (event.reminderRecipients && event.reminderRecipients.length > 0)
+  );
+
   const holiday = getHolidayByDate(today);
   const nameday = getNamedayByDate(today);
 
-  // Získej nejbližší události (následujících 7 dní)
   const getUpcomingEvents = () => {
     const upcoming: UpcomingEvent[] = [];
-    for (let i = 1; i <= 7; i++) {
+    console.log('🔍 Hledám události od:', today);
+
+    for (let i = 1; i <= 30; i++) {
       const date = new Date();
       date.setDate(today.getDate() + i);
       const dayEvents = getEventsByDate(date);
+
+      console.log(
+        `📅 Den ${i} (${date.toLocaleDateString()}):`,
+        dayEvents.length,
+        'událostí'
+      );
+
       dayEvents.forEach((event) => {
-        upcoming.push({ ...event, displayDate: date });
+        if (
+          event.type !== 'reminder' ||
+          (event.reminderRecipients && event.reminderRecipients.length > 0)
+        ) {
+          upcoming.push({ ...event, displayDate: date });
+        }
       });
     }
-    return upcoming.slice(0, 3); // Max 3 nadcházející události
+
+    console.log('✅ Celkem nalezeno:', upcoming.length, 'událostí');
+    console.log('📋 Zobrazuji:', upcoming.slice(0, 6));
+
+    return upcoming.slice(0, 6);
   };
 
   const upcomingEvents = getUpcomingEvents();
+  console.log('🎯 UPCOMING EVENTS RESULT:', upcomingEvents);
   const totalUpcomingEventCount = todayEvents.length + upcomingEvents.length;
 
   // Získej narozeniny tento měsíc
@@ -52,10 +78,10 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
 
   return (
     <>
-            <div
-              className="calendar-mini-widget"
-              onClick={() => setIsModalOpen(true)}
-            >
+      <div
+        className="calendar-mini-widget"
+        onClick={() => setIsModalOpen(true)}
+      >
         {/* Header */}
         <div className="mini-widget-header">
           <div className="widget-title">🗓️ Co nás čeká?</div>
@@ -113,17 +139,19 @@ const CalendarMiniWidget: React.FC<CalendarMiniWidgetProps> = ({
           )}
 
           {todayEvents.length > 0 ? (
-            todayEvents.slice(0, 3).map((event) => (
-              <div key={event.id} className="mini-event user-event">
-                <span className="event-icon">📌</span>
-                <div className="event-details">
-                  <span className="event-text">{event.title}</span>
-                  {event.time && (
-                    <span className="event-time">{event.time}</span>
-                  )}
+            <div className="mini-events-grid">
+              {todayEvents.slice(0, 4).map((event) => (
+                <div key={event.id} className="mini-event user-event compact">
+                  <span className="event-icon">📌</span>
+                  <div className="event-details">
+                    <span className="event-text">{event.title}</span>
+                    {event.time && (
+                      <span className="event-time">{event.time}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
             <div className="mini-event no-events">
               <span className="event-icon">✨</span>

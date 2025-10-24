@@ -26,6 +26,8 @@ import type {
   FamilyMember,
   TimetableDay,
   NamedayPreferenceDoc,
+  HeaderConfigDoc,
+  HeaderSlotConfig,
 } from '../types/index';
 
 class FirestoreService {
@@ -656,6 +658,93 @@ async deleteEvent(eventId: string): Promise<void> {
       console.error('❌ Error getting family member by authUid:', error);
       return null;
     }
+  }
+
+  // ==================== HEADER CONFIG ====================
+
+  /**
+   * Získá konfiguraci hlavičky pro rodinný tablet
+   */
+   async getHeaderConfig(): Promise<HeaderSlotConfig> {
+    try {
+      const docRef = doc(db, 'allFamily', 'headerConfig');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data() as HeaderConfigDoc;
+        return data.slots;
+      }
+
+      // Výchozí konfigurace
+      const defaultConfig: HeaderSlotConfig = {
+        left: 'greeting',
+        center: 'upcoming',
+        right: 'weather',
+      };
+
+      // Uložíme výchozí konfiguraci
+      await this.updateHeaderConfig(defaultConfig);
+      return defaultConfig;
+    } catch (error) {
+      console.error('❌ Chyba při načítání header config:', error);
+      
+      // Fallback výchozí konfigurace
+      return {
+        left: 'greeting',
+        center: 'upcoming',
+        right: 'weather',
+      };
+    }
+  }
+
+  /**
+   * Aktualizuje konfiguraci hlavičky
+   */
+  async updateHeaderConfig(slots: HeaderSlotConfig): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'headerConfig');
+      const data: HeaderConfigDoc = {
+        slots,
+        updatedAt: Date.now(),
+      };
+
+      await setDoc(docRef, data, { merge: true });
+      console.log('✅ Header config uložena');
+    } catch (error) {
+      console.error('❌ Chyba při ukládání header config:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Poslouchá změny v konfiguraci hlavičky (real-time)
+   */
+  subscribeToHeaderConfig(
+    callback: (config: HeaderSlotConfig) => void
+  ): () => void {
+    const docRef = doc(db, 'allFamily', 'headerConfig');
+
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data() as HeaderConfigDoc;
+          callback(data.slots);
+        } else {
+          // Výchozí konfigurace
+          callback({
+            left: 'greeting',
+            center: 'upcoming',
+            right: 'weather',
+          });
+        }
+      },
+      (error) => {
+        console.error('❌ Chyba při poslechu header config:', error);
+      }
+    );
+
+    return unsubscribe;
   }
 }
 

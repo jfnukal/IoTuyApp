@@ -307,3 +307,18 @@ export interface TimetableDay {
 export interface NamedayPreferenceDoc {
   markedDates: string[]; // Pole datumů ve formátu 'YYYY-MM-DD'
 }
+
+// ==================== HEADER CONFIG ====================
+
+export type HeaderWidgetType = 'greeting' | 'weather' | 'upcoming' | 'none';
+
+export interface HeaderSlotConfig {
+  left: HeaderWidgetType;
+  center: HeaderWidgetType;
+  right: HeaderWidgetType;
+}
+
+export interface HeaderConfigDoc {
+  slots: HeaderSlotConfig;
+  updatedAt: number;
+}

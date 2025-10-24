@@ -101,54 +101,6 @@
   }
 }
 
-/* ==================== MICKEY MOUSE CLOSE BUTTON ==================== */
-.close-widget-btn {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-}
-
-.close-widget-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.15);
-}
-
-.mickey-ear {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.mickey-ear-left {
-  top: -4px;
-  left: 2px;
-}
-
-.mickey-ear-right {
-  top: -4px;
-  right: 2px;
-}
-
-.close-widget-btn:hover .mickey-ear {
-  background: rgba(255, 255, 255, 0.5);
-  transform: scale(1.2);
-}
-
-.expand-icon {
-  font-size: 14px;
-  z-index: 1;
-}
 
 /* ==================== CURRENT WEATHER SECTION ==================== */
 .current-weather-section {
@@ -592,18 +544,12 @@
     border-color: #ffff00;
   }
 
-  .refresh-btn,
-  .close-widget-btn {
-    border: 2px solid white;
-  }
 }
 
 /* ==================== REDUCED MOTION ==================== */
 @media (prefers-reduced-motion: reduce) {
   .weather-mini-widget,
   .refresh-btn,
-  .close-widget-btn,
-  .mickey-ear,
   .weather-icon {
     transition: none;
     animation: none;
@@ -625,7 +571,6 @@
 }
 
 .refresh-btn:focus,
-.close-widget-btn:focus,
 .retry-btn:focus {
   outline: 2px solid #ffff00;
   outline-offset: 2px;
@@ -656,64 +601,6 @@
   font-weight: 700;
   color: white;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-/* ==================== MICKEY MOUSE BUTTON FIXES ==================== */
-
-/* Lepší Mickey Mouse tlačítko */
-.close-widget-btn {
-  position: relative;
-  width: 32px; /* Větší pro lepší klikání */
-  height: 32px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.close-widget-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-/* Mickey uši - větší a výraznější */
-.mickey-ear {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.mickey-ear-left {
-  top: -5px;
-  left: 1px;
-}
-
-.mickey-ear-right {
-  top: -5px;
-  right: 1px;
-}
-
-.close-widget-btn:hover .mickey-ear {
-  background: rgba(255, 255, 255, 0.7);
-  transform: scale(1.2);
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.expand-icon {
-  font-size: 16px;
-  z-index: 1;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* ==================== WIDGET CLICK IMPROVEMENTS ==================== */
@@ -803,27 +690,13 @@
 /* ==================== RESPONSIVE IMPROVEMENTS ==================== */
 
 @media (max-width: 480px) {
-  .close-widget-btn {
-    width: 28px;
-    height: 28px;
-  }
-
-  .mickey-ear {
-    width: 12px;
-    height: 12px;
-  }
-
-  .expand-icon {
-    font-size: 14px;
-  }
-
   .rain-chance {
     font-size: 0.75rem;
     padding: 3px 6px;
   }
 }
 
-/* ==================== MOBILNÍ KOMPAKTNÍ VERZE ==================== */
+/* ==================== MOBILNÍ KOMPAKTNÍ VERZE - ovlivnuje stary widget na mobilu!==================== */
 @media (max-width: 768px) {
   .weather-mini-widget {
     padding: 12px;
@@ -881,21 +754,12 @@
   }
 
   /* Tlačítka menší */
-  .refresh-btn,
-  .close-widget-btn {
+  .refresh-btn {
     width: 28px;
     height: 28px;
   }
-
-  .mickey-ear {
-    width: 10px;
-    height: 10px;
-  }
-
-  .expand-icon {
-    font-size: 12px;
-  }
 }
+
 
 /* Extra malé mobily */
 @media (max-width: 480px) {
@@ -912,3 +776,65 @@
     font-size: 0.85rem;
   }
 }
+/* ==================== FORCE COMPACT MODE (FINÁLNÍ VELIKOST) ==================== */
+/* Aplikuje kompaktní mobilní vzhled, finálně zvětšený */
+
+.weather-mini-widget.force-compact-mode {
+  padding: 16px; /* (bylo 15px) */
+  min-height: 155px; /* (bylo 144px) */
+  border-radius: 16px;
+}
+
+/* Skryj zbytečné sekce */
+.weather-mini-widget.force-compact-mode .forecast-comparison,
+.weather-mini-widget.force-compact-mode .playful-comment,
+.weather-mini-widget.force-compact-mode .quick-stats,
+.weather-mini-widget.force-compact-mode .last-updated,
+.weather-mini-widget.force-compact-mode .click-hint {
+  display: none !important;
+}
+
+/* Header menší */
+.weather-mini-widget.force-compact-mode .weather-mini-header {
+  margin-bottom: 12px; /* (bylo 10px) */
+}
+.weather-mini-widget.force-compact-mode .widget-title {
+  font-size: 1.2rem; /* (bylo 1.1rem) */
+}
+.weather-mini-widget.force-compact-mode .location-name {
+  font-size: 1.0rem; /* (bylo 0.9rem) */
+}
+
+/* Current weather kompaktní */
+.weather-mini-widget.force-compact-mode .current-weather-section {
+  margin-bottom: 0;
+  gap: 12px; /* (bylo 10px) */
+}
+.weather-mini-widget.force-compact-mode .current-temp {
+  font-size: 2.6rem; /* (bylo 2.4rem) */
+}
+.weather-mini-widget.force-compact-mode .current-details {
+  gap: 3px; /* (bylo 2px) */
+}
+.weather-mini-widget.force-compact-mode .condition-text {
+  font-size: 1.1rem; /* (bylo 0.95rem) */
+}
+.weather-mini-widget.force-compact-mode .feels-like {
+  font-size: 0.9rem; /* (bylo 0.85rem) */
+}
+.weather-mini-widget.force-compact-mode .weather-icon {
+  width: 56px; /* (bylo 48px) */
+  height: 56px; /* (bylo 48px) */
+}
+
+/* Tlačítka menší */
+.weather-mini-widget.force-compact-mode .refresh-btn,
+.weather-mini-widget.force-compact-mode .close-widget-btn {
+  width: 34px; /* (bylo 32px) */
+  height: 34px; /* (bylo 32px) */
+}
+.weather-mini-widget.force-compact-mode .mickey-ear {
+  width: 12px; 
+  height: 12px;
+}
+

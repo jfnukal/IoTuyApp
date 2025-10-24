@@ -1,0 +1,155 @@
+/* src/components/Dashboard/styles/HeaderSlots.css */
+
+.header-slots {
+  display: grid;
+  grid-template-columns: 380px 1fr 420px;
+  gap: 15px;
+  width: calc(100% + 80px);
+  margin-left: -50px;
+  margin-right: -50px;
+  padding: 15px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  align-items: stretch;
+}
+
+.header-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.header-slot-left {
+  justify-content: flex-start;
+}
+
+.header-slot-center {
+  justify-content: center;
+}
+
+.header-slot-right {
+  justify-content: flex-end;
+}
+
+/* Widget wrappery */
+.header-widget-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stack pro pravý slot - 2 widgety nad sebou */
+.header-widget-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Speciální styling pro jednotlivé widgety */
+.weather-widget-header {
+  max-width: 300px;
+}
+
+
+/* Rozvrh v hlavičce */
+.schedule-widget-header {
+  flex: 1;
+  min-height: 370px;
+}
+
+.schedule-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.schedule-icon {
+  font-size: 2rem;
+  animation: bounce 2s infinite;
+}
+
+.schedule-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.upcoming-widget-header {
+  width: 100%;
+}
+
+.empty-slot {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+}
+
+.empty-slot::before {
+  content: 'Prázdný slot';
+}
+
+/* Loading state */
+.header-slots.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  font-size: 1.2rem;
+  color: white;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header-slots {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .header-slot {
+    min-height: 150px;
+  }
+
+  .header-slot-left,
+  .header-slot-center,
+  .header-slot-right {
+    justify-content: center;
+  }
+
+  .weather-widget-header {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-slots {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .header-slot {
+    min-height: 120px;
+  }
+}

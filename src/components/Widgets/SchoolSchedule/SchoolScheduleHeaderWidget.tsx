@@ -1,32 +1,65 @@
-// src/components/Widgets/SchoolSchedule/SchoolScheduleWidget.tsx
+// src/components/Widgets/SchoolSchedule/SchoolScheduleHeaderWidget.tsx
 import React, { useState, useEffect } from 'react';
 import { bakalariAPI } from '../../../api/bakalariAPI';
 import { firestoreService } from '../../../services/firestoreService';
 import type { TimetableDay } from '../../../types/index';
-import './SchoolSchedule.css';
+import './SchoolScheduleHeader.css'; // 🆕 Změněný import CSS
 import { SchoolScheduleModal } from './SchoolScheduleModal';
 
 const DAYS_OF_WEEK = [
-  'Pondělí',
-  'Úterý',
-  'Středa',
-  'Čtvrtek',
-  'Pátek',
-  'Sobota',
-  'Neděle',
+  'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'
 ];
 
-const SchoolScheduleWidget: React.FC = () => {
-  const [selectedKid, setSelectedKid] = useState<'jarecek' | 'johanka'>(
-    'johanka'
-  );
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay() - 1); // Nastaví aktuální den v týdnu
+// 🆕 Logika pro výběr správného dne
+const getTargetDayIndex = () => {
+  const now = new Date();
+  const currentDayOfWeek = now.getDay(); // 0=Ne, 1=Po, ..., 6=So
+  const currentHour = now.getHours();
+
+  // TODO: Načíst hodinu z konfigurace
+  const showNextDayHour = 14; 
+
+  let targetDayIndex = currentDayOfWeek - 1; // 0=Po, ..., 4=Pá, 5=So, 6=Ne
+
+  if (currentHour >= showNextDayHour) {
+    targetDayIndex++; // Po 14h ukážeme další den
+  }
+
+  // O víkendu (Pá po 14h, So, Ne) vždy ukaž Pondělí
+  if (targetDayIndex < 0 || targetDayIndex > 4) {
+    targetDayIndex = 0; // 0 = Pondělí
+  }
+
+  return targetDayIndex;
+};
+
+
+const SchoolScheduleHeaderWidget: React.FC = () => {
+  const [selectedKid, setSelectedKid] = useState<'jarecek' | 'johanka'>('johanka');
+  
+  // 🆕 selectedDay bude nastaven jen jednou, nebudeme ho měnit klikáním
+  const [selectedDay, setSelectedDay] = useState(getTargetDayIndex()); 
+  
   const [johankaSchedule, setJohankaSchedule] = useState<TimetableDay[]>([]);
   const [jarecekSchedule, setJarecekSchedule] = useState<TimetableDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 🆕 Automatické otáčení dětí
+  useEffect(() => {
+    // TODO: Načíst interval z konfigurace
+    const rotationInterval = 10000; // 10 sekund
+
+    const intervalId = setInterval(() => {
+      setSelectedKid((prevKid) => (prevKid === 'johanka' ? 'jarecek' : 'johanka'));
+    }, rotationInterval);
+
+    return () => clearInterval(intervalId); // Uklidíme po sobě
+  }, []);
+
+
   const handleSaveSchedule = async (newSchedule: TimetableDay[]) => {
+    // ... (tato funkce zůstává stejná jako v originále)
     try {
       const sortedSchedule = newSchedule.map((day) => ({
         ...day,
@@ -38,7 +71,7 @@ const SchoolScheduleWidget: React.FC = () => {
       }));
 
       await firestoreService.saveSchedule('jarecek', sortedSchedule);
-      setJarecekSchedule(sortedSchedule); // Uložíme seřazenou verzi
+      setJarecekSchedule(sortedSchedule);
       setIsModalOpen(false);
     } catch (error) {
       console.error('Nepodařilo se uložit Jarečkův rozvrh:', error);
@@ -47,6 +80,7 @@ const SchoolScheduleWidget: React.FC = () => {
   };
 
   const handleRefresh = async () => {
+    // ... (tato funkce zůstává stejná jako v originále)
     if (
       !window.confirm(
         'Chcete aktualizovat rozvrh z Bakalářů? Tato akce přepíše stávající data pro Johanku.'
@@ -58,7 +92,6 @@ const SchoolScheduleWidget: React.FC = () => {
     try {
       const freshData = await bakalariAPI.getTimetable(true);
       if (freshData && freshData.length > 0) {
-        // Řazení už proběhlo uvnitř getTimetable(), není třeba ho dělat znovu
         await firestoreService.saveSchedule('johanka', freshData);
         setJohankaSchedule(freshData);
         alert('Rozvrh pro Johanku byl úspěšně aktualizován.');
@@ -84,14 +117,10 @@ const SchoolScheduleWidget: React.FC = () => {
        
         setJohankaSchedule(johankaData);
         setJarecekSchedule(jarecekData);
+        
+        // 🆕 Nastavení dne už probíhá v useState
+        setSelectedDay(getTargetDayIndex()); 
 
-        // Automaticky vybere aktuální den v týdnu, pokud je to možné (0 = Po, 4 = Pá)
-        const currentDayIndex = new Date().getDay() - 1;
-        if (currentDayIndex >= 0 && currentDayIndex < 5) {
-          setSelectedDay(currentDayIndex);
-        } else {
-          setSelectedDay(0); // O víkendu zobrazí pondělí
-        }
       } catch (error) {
         console.error('Chyba při načítání dat pro widget:', error);
       } finally {
@@ -102,28 +131,14 @@ const SchoolScheduleWidget: React.FC = () => {
   }, []);
 
   const getSubjectEmoji = (subject: string): string => {
+    // ... (tato funkce zůstává stejná jako v originále)
     const emojiMap: { [key: string]: string } = {
-      Matematika: '📐',
-      'Český jazyk a literatura': '📖',
-      Čeština: '📖',
-      'Český jazyk': '📖',
-      Angličtina: '🇬🇧',
-      'Anglický jazyk': '🇬🇧',
-      Fyzika: '⚡',
-      Chemie: '🧪',
-      Přírodopis: '🌿',
-      Biologie: '🌿',
-      Dějepis: '🏛️',
-      Zeměpis: '🌍',
-      Tělocvik: '⚽',
-      'Tělesná výchova': '⚽',
-      Informatika: '💻',
-      Výtvarka: '🎨',
-      'Výtvarná výchova': '🎨',
-      'Hudební výchova': '🎵',
-      Hudebka: '🎵',
-      'Občanská výchova': '⚖️',
-      Přestávka: '☕',
+      Matematika: '📐', 'Český jazyk a literatura': '📖', Čeština: '📖', 'Český jazyk': '📖',
+      Angličtina: '🇬🇧', 'Anglický jazyk': '🇬🇧', Fyzika: '⚡', Chemie: '🧪',
+      Přírodopis: '🌿', Biologie: '🌿', Dějepis: '🏛️', Zeměpis: '🌍',
+      Tělocvik: '⚽', 'Tělesná výchova': '⚽', Informatika: '💻', Výtvarka: '🎨',
+      'Výtvarná výchova': '🎨', 'Hudební výchova': '🎵', Hudebka: '🎵',
+      'Občanská výchova': '⚖️', Přestávka: '☕',
     };
     return emojiMap[subject] || '📚';
   };
@@ -143,57 +158,50 @@ const SchoolScheduleWidget: React.FC = () => {
   if (currentTimetable.length === 0) {
     return (
       <div className="school-schedule-widget">
-        {/* ZMĚNA: Refresh tlačítko je teď malé a v rohu */}
         {selectedKid === 'johanka' && (
-          <button
-            onClick={handleRefresh}
-            className="schedule-refresh-btn"
-            title="Aktualizovat z Bakalářů"
-          >
+          <button onClick={handleRefresh} className="schedule-refresh-btn" title="Aktualizovat z Bakalářů">
             🔄
           </button>
         )}
-        <div className="schedule-header">
-          <div className="schedule-title">
-            <span className="schedule-icon">🎒</span>
-            <span>Školní rozvrh</span>
-          </div>
-          <div className="schedule-kids-tabs">
-            <button
-              className={`kid-tab ${selectedKid === 'jarecek' ? 'active' : ''}`}
-              onClick={() => setSelectedKid('jarecek')}
-            >
-              Jareček
-            </button>
-            <button
-              className={`kid-tab ${selectedKid === 'johanka' ? 'active' : ''}`}
-              onClick={() => setSelectedKid('johanka')}
-            >
-              Johanka
-            </button>
-          </div>
+       {/* 🆕 NOVÁ STRUKTURA HLAVIČKY */}
+      <div className="schedule-header">
+        <div className="schedule-title">
+          <span className="schedule-icon">🎒</span>
+          <span>Školní rozvrh</span>
         </div>
+
+        {/* Taby jsou teď v samostatném kontejneru pro vertikální uspořádání */}
+        <div className="schedule-kids-tabs-vertical">
+          <button
+            className={`kid-tab ${selectedKid === 'jarecek' ? 'active' : ''}`}
+            onClick={() => setSelectedKid('jarecek')}
+          >
+            Jareček
+          </button>
+          <button
+            className={`kid-tab ${selectedKid === 'johanka' ? 'active' : ''}`}
+            onClick={() => setSelectedKid('johanka')}
+          >
+            Johanka
+          </button>
+        </div>
+       </div>
         <div className="schedule-error">
           {selectedKid === 'jarecek' ? (
             <div>
               <p>Nastavte rozvrh pro Jarečka</p>
-              <button
-                className="setup-button"
-                onClick={() => setIsModalOpen(true)}
-              >
-                ⚙️ Nastavit rozvrh
+              <button className="setup-button" onClick={() => setIsModalOpen(true)}>
+                ⚙️ Nastavit
               </button>
             </div>
           ) : (
-            'Rozvrh není k dispozici. Zkuste jej aktualizovat pomocí 🔄.'
+            'Rozvrh není k dispozici.'
           )}
         </div>
         {isModalOpen && (
           <SchoolScheduleModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSave={handleSaveSchedule}
-            initialSchedule={jarecekSchedule}
+            isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveSchedule} initialSchedule={jarecekSchedule}
           />
         )}
       </div>
@@ -205,25 +213,20 @@ const SchoolScheduleWidget: React.FC = () => {
   // Plné zobrazení s daty
   return (
     <div className="school-schedule-widget">
-      {/* ZMĚNA: Refresh tlačítko je teď malé a v rohu */}
       {selectedKid === 'johanka' && (
-        <button
-          onClick={handleRefresh}
-          className="schedule-refresh-btn"
-          title="Aktualizovat z Bakalářů"
-        >
+        <button onClick={handleRefresh} className="schedule-refresh-btn" title="Aktualizovat z Bakalářů">
           🔄
         </button>
       )}
+      
+      {/* 🆕 Tlačítko pro úpravu je teď jen tužka */}
+      {selectedKid === 'jarecek' && (
+        <button className="edit-schedule-btn" onClick={() => setIsModalOpen(true)} title="Upravit rozvrh">
+          ✏️
+        </button>
+      )}
+
       <div className="schedule-header">
-        {selectedKid === 'jarecek' && (
-          <button
-            className="edit-schedule-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            ✏️ Upravit rozvrh
-          </button>
-        )}
         <div className="schedule-title">
           <span className="schedule-icon">🎒</span>
           <span>Školní rozvrh</span>
@@ -243,27 +246,23 @@ const SchoolScheduleWidget: React.FC = () => {
           </button>
         </div>
       </div>
+      
+      {/* 🆕 Navigace dnů (Po-Pá) je SKRYTÁ (viz CSS) */}
       <div className="schedule-days-nav">
         {currentTimetable.map((day, index) => (
-          <button
-            key={index}
-            className={`day-nav-btn ${selectedDay === index ? 'active' : ''}`}
-            onClick={() => setSelectedDay(index)}
-          >
-            {/* ZMĚNA: Pokud chybí popisek dne, použijeme záložní pole */}
-            {day.dayDescription ||
-              DAYS_OF_WEEK[day.dayOfWeek - 1] ||
-              `Den ${index + 1}`}
+          <button key={index} className={`day-nav-btn ${selectedDay === index ? 'active' : ''}`}>
+            {day.dayDescription || DAYS_OF_WEEK[day.dayOfWeek - 1] || `Den ${index + 1}`}
           </button>
         ))}
       </div>
-      <div className="schedule-content">
+
+      <div className="schedule-content" key={selectedKid}>
         {today ? (
           <>
-            <h3 className="schedule-day-title" key={selectedKid + '-title'}> {/* ⬅️ KLÍČ ZDE */}
+            <h3 className="schedule-day-title">
               {today.dayDescription || DAYS_OF_WEEK[today.dayOfWeek - 1]}
             </h3>
-            <div className="lessons-list" key={selectedKid + '-list'}> {/* ⬅️ A KLÍČ ZDE */}
+            <div className="lessons-list">
               {today.lessons.map((lesson, index) => (
                 <div key={index} className="lesson-item">
                   <div className="lesson-time">{lesson.begintime}</div>
@@ -273,26 +272,22 @@ const SchoolScheduleWidget: React.FC = () => {
                     </span>
                     <span className="lesson-subject">{lesson.subjecttext}</span>
                   </div>
-                  </div>
+                </div>
               ))}
             </div>
           </>
         ) : (
-          <div className="schedule-error" key={selectedKid + '-error'}> {/* ⬅️ A TAKÉ ZDE */}
-            Vyberte den
-          </div>
+          <div className="schedule-error">Vyberte den</div>
         )}
       </div>
       {isModalOpen && (
         <SchoolScheduleModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveSchedule}
-          initialSchedule={jarecekSchedule}
+          isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveSchedule} initialSchedule={jarecekSchedule}
         />
       )}
     </div>
   );
 };
 
-export default SchoolScheduleWidget;
+export default SchoolScheduleHeaderWidget;

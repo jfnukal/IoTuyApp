@@ -135,6 +135,53 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* ==================== COMPACT MODE (2 SLOUPCE) ==================== */
+.upcoming-section.compact-mode {
+  margin-bottom: 10px;
+}
+
+.events-list.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.events-list.two-columns .event-card {
+  margin-bottom: 0;
+}
+
+/* Compact mode - menší event cards */
+.compact-mode .event-card {
+  padding: 10px;
+  gap: 10px;
+}
+
+.compact-mode .event-icon {
+  font-size: 2rem;
+  min-width: 40px;
+  height: 40px;
+}
+
+.compact-mode .event-title {
+  font-size: 0.95rem;
+}
+
+.compact-mode .event-date {
+  font-size: 0.8rem;
+}
+
+.compact-mode .event-time {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
+
+/* Responsive pro compact mode */
+@media (max-width: 768px) {
+  .events-list.two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ==================== EVENT CARDS ==================== */
 .event-card {
   display: flex;
@@ -367,5 +414,28 @@
 @media (min-width: 768px) {
   .toggle-button {
     display: none;
+  }
+}
+
+/* === GRID PRO DNEŠNÍ UDÁLOSTI === */
+.today-events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 sloupce */
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.today-events-grid.single-event {
+  grid-template-columns: 1fr; /* Jen 1 sloupec pro jednu událost */
+}
+
+.today-events-grid .event-card {
+  margin: 0; /* Zrušíme původní marginy */
+}
+
+/* Responsive - na mobilech zpět na 1 sloupec */
+@media (max-width: 768px) {
+  .today-events-grid {
+    grid-template-columns: 1fr;
   }
 }

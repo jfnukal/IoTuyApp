@@ -12,12 +12,16 @@ interface WeatherMiniWidgetProps {
   className?: string;
   onExpand?: () => void;
   isVisible?: boolean;
+  headerMode?: boolean; // 🆕 Režim pro hlavičku
+  compactMode?: boolean;
 }
 
 const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   className = '',
   onExpand,
   isVisible = true,
+  headerMode = false,
+  compactMode = false,
 }) => {
   const {
     isLoading,
@@ -151,10 +155,129 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
 
   const modalRoot = document.getElementById('modal-root');
 
+// Speciální render pro header mode
+if (headerMode) {
   return (
     <>
       <div 
-        className={`weather-mini-widget ${className}`}
+        className={`weather-mini-widget header-compact-mode ${className}`}
+        onClick={handleClick}
+        style={{
+          backgroundImage: backgroundImage 
+            ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${backgroundImage})`
+            : gradientStyle,
+          backgroundColor: gradient[0],
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Current Weather - kompaktní */}
+        <div className="current-weather-section">
+          <div className="current-temp-container">
+            <span className="current-temp">
+              {WeatherUtils.formatTemperature(primaryWeather.current.temperature, settings.temperatureUnit)}
+            </span>
+            <div className="current-details">
+              <span className="condition-text">{primaryWeather.current.condition}</span>
+              <span className="feels-like">
+                Pocitově {WeatherUtils.formatTemperature(primaryWeather.current.feelsLike, settings.temperatureUnit)}
+              </span>
+            </div>
+          </div>
+          
+          <div className="weather-icon-container">
+            <img 
+              src={primaryWeather.current.iconUrl} 
+              alt={primaryWeather.current.condition}
+              className="weather-icon"
+            />
+          </div>
+        </div>
+
+        {/* Today vs Tomorrow */}
+        <div className="forecast-comparison">
+          <div className="forecast-day today">
+            <span className="day-label">Dnes</span>
+            <div className="day-temps">
+              <span className="temp-high">{todayForecast?.maxTemp}°</span>
+              <span className="temp-low">{todayForecast?.minTemp}°</span>
+            </div>
+            <div className="rain-chance">
+              <span className="rain-icon">☔</span>
+              <span className="rain-percentage">{todayForecast?.chanceOfRain}%</span>
+            </div>
+          </div>
+          
+          <div className="forecast-separator"></div>
+          
+          <div className="forecast-day tomorrow">
+            <span className="day-label">Zítra</span>
+            <div className="day-temps">
+              <span className="temp-high">{tomorrowForecast?.maxTemp}°</span>
+              <span className="temp-low">{tomorrowForecast?.minTemp}°</span>
+            </div>
+            <div className="rain-chance">
+              <span className="rain-icon">☔</span>
+              <span className="rain-percentage">{tomorrowForecast?.chanceOfRain}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Playful Comment */}
+        {playfulComment && (
+          <div className="playful-comment">
+            <span className="comment-text">{playfulComment}</span>
+          </div>
+        )}
+
+        {/* Quick Stats */}
+        <div className="quick-stats">
+          <div className="stat-item">
+            <span className="stat-icon">💨</span>
+            <span className="stat-value">
+              {WeatherUtils.formatWindSpeed(primaryWeather.current.windSpeed, settings.windUnit)}
+            </span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-icon">💧</span>
+            <span className="stat-value">{primaryWeather.current.humidity}%</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-icon">👁️</span>
+            <span className="stat-value">{primaryWeather.current.visibility}km</span>
+          </div>
+        </div>
+
+        {/* Click Hint */}
+        <div className="click-hint">
+          <span>Klikni pro detail</span>
+        </div>
+      </div>
+
+      {showModal && modalRoot && createPortal(
+        isMobile ? (
+          <WeatherModalMobile 
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+          />
+        ) : (
+          <WeatherModal 
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+          />
+        ),
+        modalRoot
+      )}
+    </>
+  );
+}
+
+// Normální render pro ne-header mode
+
+  return (
+    <>
+      <div 
+        className={`weather-mini-widget ${compactMode ? 'force-compact-mode' : ''} ${className}`}
         onClick={handleClick}
           style={{
             backgroundImage: backgroundImage 
@@ -178,15 +301,7 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
             <button className="refresh-btn" onClick={handleRefresh} title="Obnovit">
               <span className={`refresh-icon ${isLoading ? 'spinning' : ''}`}>🔄</span>
             </button>
-            <div className="close-widget-btn" title="Rozšířit" onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}>
-              <div className="mickey-ear mickey-ear-left"></div>
-              <div className="mickey-ear mickey-ear-right"></div>
-              <span className="expand-icon">⚏</span>
-            </div>
-          </div>
+           </div>
         </div>
 
         {/* Current Weather */}

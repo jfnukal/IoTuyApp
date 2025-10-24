@@ -3,7 +3,7 @@
   "short_name": "Fukis",
   "description": "Rodinná smart home aplikace",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#1a1a2e",
   "theme_color": "#6c5ce7",
   "orientation": "any",
@@ -19,4 +19,5 @@
       "type": "image/png"
     }
   ]
+
 }

@@ -8,7 +8,7 @@ importScripts(
 
 // Firebase konfigurace - ZKOPÍRUJ Z .env
 const firebaseConfig = {
-  apiKey: 'AIzaSyCqtMF-R_5smwi1jXpDVxkFI9vQ2ktYz0Q',
+  apiKey: 'AIzaSyDan3bgiAAUPQn8NeEDsNAcawpsO17Hax8',
   authDomain: 'iotuyapp.firebaseapp.com',
   projectId: 'iotuyapp',
   storageBucket: 'iotuyapp.firebasestorage.app',

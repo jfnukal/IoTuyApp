@@ -44,7 +44,6 @@ const initialize = useCallback(async () => {
         weatherData = await weatherAPI.getWeatherByCoordinates(coords.lat, coords.lon);
         isGpsUsed = true;
       } catch (gpsError) {
-        console.warn('GPS se nepodařilo načíst, používá se záložní lokace (Krnov).', gpsError);
         weatherData = await weatherAPI.getWeatherByCity('Krnov');
       }
     } else {

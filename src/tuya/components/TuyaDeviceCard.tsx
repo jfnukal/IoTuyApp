@@ -12,7 +12,7 @@ interface TuyaDeviceCardProps {
 const TuyaDeviceCard: React.FC<TuyaDeviceCardProps> = ({
   device,
   onToggle,
-  onControl,
+  onControl: _onControl,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 

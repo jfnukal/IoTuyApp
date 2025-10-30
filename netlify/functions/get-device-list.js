@@ -216,9 +216,9 @@ exports.handler = async function (event, context) {
         if (automaticDevices.length > 0) {
             console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
             
-            // Získej stav pro první 10 zařízení
+            // Získej stav pro zařízení
             const devicesWithStatus = [];
-            for (let i = 0; i < Math.min(automaticDevices.length, 10); i++) {
+            for (let i = 0; i < automaticDevices.length; i++) {
                 const device = automaticDevices[i];
                 try {
                     const deviceId = device.id || device.device_id;
@@ -307,4 +307,5 @@ exports.handler = async function (event, context) {
             })
         };
     }
+
 };

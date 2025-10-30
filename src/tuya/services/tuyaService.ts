@@ -142,19 +142,19 @@ class TuyaService {
       console.log('📋 PRVNÍ ZAŘÍZENÍ Z API:', JSON.stringify(data.devices[0], null, 2));
       const devices: TuyaDevice[] = data.devices.map((device: any) => ({
         id: device.id || device.device_id,
-        name: device.name || device.custom_name || 'Neznámé zařízení',
-        local_key: device.local_key || '',
+        name: device.customName || device.name || 'Neznámé zařízení',
+        local_key: device.localKey || '',
         category: device.category || 'other',
-        product_id: device.product_id || '',
-        product_name: device.product_name || '',
+        product_id: device.productId || '',
+        product_name: device.productName || '',
         sub: device.sub || false,
         uuid: device.uuid || device.id,
         owner_id: device.owner_id || '',
-        online: device.online !== undefined ? device.online : false,
+        online: device.isOnline !== undefined ? device.isOnline : false,
         status: device.status || [],
         lastUpdated: Date.now(),
         isVisible: true,
-        ...(device.custom_name && { customName: device.custom_name }),
+        ...(device.customName && { customName: device.customName }),
       }));
 
       console.log('✅ ZMAPOVANÁ ZAŘÍZENÍ:', JSON.stringify(devices, null, 2)); 
@@ -265,5 +265,6 @@ class TuyaService {
 
 
 export const tuyaService = new TuyaService();
+
 
 

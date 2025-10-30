@@ -1,15 +1,15 @@
-// src/plugins/HandwritingNotes/notesStorage.ts
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  getDocs, 
-  query, 
-  where, 
+// src/components/Widgets/HandwritingNotes/notesStorage.ts
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
   orderBy,
-  Timestamp 
+  Timestamp as _Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import type { HandwritingNote } from './types';
@@ -20,7 +20,9 @@ class NotesStorage {
   /**
    * Vytvoří novou poznámku
    */
-  async createNote(note: Omit<HandwritingNote, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  async createNote(
+    note: Omit<HandwritingNote, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<string> {
     try {
       const now = Date.now();
       const docRef = await addDoc(collection(db, this.COLLECTION), {
@@ -39,7 +41,10 @@ class NotesStorage {
   /**
    * Načte všechny poznámky pro daného uživatele
    */
-  async getNotes(userId: string, includeArchived: boolean = false): Promise<HandwritingNote[]> {
+  async getNotes(
+    userId: string,
+    includeArchived: boolean = false
+  ): Promise<HandwritingNote[]> {
     try {
       const constraints = [
         where('userId', '==', userId),
@@ -53,10 +58,13 @@ class NotesStorage {
       const q = query(collection(db, this.COLLECTION), ...constraints);
       const snapshot = await getDocs(q);
 
-      const notes: HandwritingNote[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as HandwritingNote));
+      const notes: HandwritingNote[] = snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as HandwritingNote)
+      );
 
       return notes;
     } catch (error) {
@@ -68,7 +76,10 @@ class NotesStorage {
   /**
    * Načte poznámky podle typu
    */
-  async getNotesByType(userId: string, type: 'note' | 'shopping'): Promise<HandwritingNote[]> {
+  async getNotesByType(
+    userId: string,
+    type: 'note' | 'shopping'
+  ): Promise<HandwritingNote[]> {
     try {
       const q = query(
         collection(db, this.COLLECTION),
@@ -79,10 +90,13 @@ class NotesStorage {
       );
 
       const snapshot = await getDocs(q);
-      const notes: HandwritingNote[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as HandwritingNote));
+      const notes: HandwritingNote[] = snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as HandwritingNote)
+      );
 
       return notes;
     } catch (error) {
@@ -101,7 +115,6 @@ class NotesStorage {
         editedText,
         updatedAt: Date.now(),
       });
-
     } catch (error) {
       throw error;
     }
@@ -110,15 +123,17 @@ class NotesStorage {
   /**
    * Změní typ poznámky (poznámka ↔ nákup)
    */
-  async updateNoteType(noteId: string, type: 'note' | 'shopping'): Promise<void> {
+  async updateNoteType(
+    noteId: string,
+    type: 'note' | 'shopping'
+  ): Promise<void> {
     try {
       const noteRef = doc(db, this.COLLECTION, noteId);
       await updateDoc(noteRef, {
         type,
         updatedAt: Date.now(),
       });
-
-   } catch (error) {
+    } catch (error) {
       throw error;
     }
   }
@@ -133,7 +148,6 @@ class NotesStorage {
         isArchived: true,
         updatedAt: Date.now(),
       });
-
     } catch (error) {
       console.error('❌ Chyba při archivaci:', error);
       throw error;
@@ -150,9 +164,8 @@ class NotesStorage {
         isArchived: false,
         updatedAt: Date.now(),
       });
-
     } catch (error) {
-     throw error;
+      throw error;
     }
   }
 
@@ -163,7 +176,6 @@ class NotesStorage {
     try {
       const noteRef = doc(db, this.COLLECTION, noteId);
       await deleteDoc(noteRef);
-
     } catch (error) {
       throw error;
     }

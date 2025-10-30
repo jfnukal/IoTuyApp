@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestoreService } from '../services/firestoreService';
-import type { TuyaDevice, UserSettings, FamilyMember } from '../types/index';
+import type {
+  TuyaDevice,
+  UserSettings,
+  FamilyMember,
+  CalendarEventData,
+} from '../types/index';
 
 export const useFirestore = () => {
   const { currentUser } = useAuth();
   const [devices, setDevices] = useState<TuyaDevice[]>([]);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]); 
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [events, setEvents] = useState<CalendarEventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,32 +21,45 @@ export const useFirestore = () => {
     if (!currentUser) {
       setDevices([]);
       setUserSettings(null);
-      setFamilyMembers([]); 
+      setFamilyMembers([]);
+      setEvents([]);
       setLoading(false);
       return;
     }
 
     let devicesUnsubscribe: (() => void) | null = null;
     let familyUnsubscribe: (() => void) | null = null;
+    let eventsUnsubscribe: (() => void) | null = null;
 
     const loadUserData = async () => {
       try {
         setLoading(true);
         setError(null);
 
+        // Načíst settings
         const settings = await firestoreService.getUserSettings(
           currentUser.uid
         );
         setUserSettings(settings);
 
+        // Subscribe to devices (Tuya)
         devicesUnsubscribe = await firestoreService.subscribeToUserDevices(
           currentUser.uid,
           setDevices
         );
 
+        // Subscribe to family members
         familyUnsubscribe = await firestoreService.subscribeToFamilyMembers(
           (membersFromDB) => {
             setFamilyMembers(membersFromDB);
+          }
+        );
+
+        // Subscribe to calendar events
+        eventsUnsubscribe = await firestoreService.subscribeToEvents(
+          currentUser.uid,
+          (eventsFromDB) => {
+            setEvents(eventsFromDB);
           }
         );
 
@@ -57,7 +76,8 @@ export const useFirestore = () => {
     // Cleanup funkce
     return () => {
       devicesUnsubscribe?.();
-      familyUnsubscribe?.(); 
+      familyUnsubscribe?.();
+      eventsUnsubscribe?.();
     };
   }, [currentUser]);
 
@@ -88,6 +108,7 @@ export const useFirestore = () => {
     devices,
     userSettings,
     familyMembers,
+    events,
     loading,
     error,
     updateSettings,

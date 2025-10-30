@@ -2,18 +2,13 @@ import { useState, useEffect } from 'react';
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
-// import { useRooms } from './hooks/useRooms';
 import Login from './components/Login';
-// import RoomSelector from './components/RoomSelector';
-// import DeviceCard from './components/DeviceCard';
 import { firestoreService } from './services/firestoreService';
 import type { TuyaDevice } from './types';
-// import RoomVisualization2D from './components/RoomVisualization2D';
-// import RoomVisualization3D from './components/RoomVisualization3D';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
-import DashboardLayout from './components/Dashboard/DashboardLayout';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AppRoutes } from './routes';
 
 declare global {
   interface Window {
@@ -30,6 +25,7 @@ function App() {
   // Firestore hooks
   const {
     devices,
+    events: calendarEvents,
     loading: firebaseLoading,
     error: firebaseError,
     syncDevices,
@@ -51,7 +47,6 @@ function App() {
           './services/remoteConfigService.ts'
         );
         await remoteConfigService.initialize();
-        console.log('✅ Remote Config inicializován');
       } catch (error) {
         console.error('❌ Chyba při inicializaci Remote Config:', error);
       }
@@ -68,24 +63,6 @@ function App() {
     }
   }, []);
 
-  // TEST BAKALÁŘI API
-  useEffect(() => {
-    const testBakalari = async () => {
-      console.log('🔍 Testování Bakaláři API...');
-
-      try {
-        const { bakalariAPI } = await import('./api/bakalariAPI');
-
-        const timetable = await bakalariAPI.getTimetable();
-        console.log('📅 Rozvrh:', timetable);
-      } catch (error) {
-        console.error('❌ Bakaláři API Chyba:', error);
-      }
-    };
-
-    testBakalari();
-  }, []); // Spustí se jen jednou při načtení
-
   // Automatické mazání starých zpráv - 1x denně
   useEffect(() => {
     if (!currentUser) return;
@@ -96,8 +73,10 @@ function App() {
           './services/familyMessagingService'
         );
 
-        // TODO: Toto bude konfigurovatelné v nastavení
-        const daysToKeep = 7; // Zatím hardcoded, později z settings
+      // Načíst ze settings
+      const { settingsService } = await import('./services/settingsService');
+      const settings = await settingsService.loadSettings();
+      const daysToKeep = settings.widgets.messageHistory.deleteAfterDays;
 
         await familyMessagingService.runCleanup(daysToKeep);
       } catch (error) {
@@ -288,10 +267,8 @@ function App() {
       setNotification('Synchronizuji zařízení...');
       setShowNotification(true);
 
-      console.log('Synchronizing with Tuya API...');
       const tuyaDevices = await fetchTuyaDevices();
 
-      console.log('Saving to Firebase...');
       await syncDevices(tuyaDevices);
 
       setNotification('✓ Synchronizace dokončena');
@@ -342,36 +319,33 @@ function App() {
   }
 
   return (
-    <div className="app-layout">
-      <CalendarProvider>
-        <NotificationProvider
-          authUid={currentUser?.uid || null}
-          familyMemberId={familyMemberId || null}
-        >
-          <DashboardLayout
-            familyMemberId={familyMemberId} // ← PŘIDEJ!
-            onNavigateToSettings={() => {
-              console.log('Navigate to settings...');
-            }}
-          />
-        </NotificationProvider>
-      </CalendarProvider>
+    <CalendarProvider events={calendarEvents}>
+      <NotificationProvider
+        authUid={currentUser?.uid || null}
+        familyMemberId={familyMemberId || null}
+      >
+        <div className="app-layout">
+          <AppRoutes familyMemberId={familyMemberId} />
 
-      <div id="modal-root"></div>
+          <div id="modal-root"></div>
 
-      {/* Modern Notification */}
-      {notification && (
-        <div
-          className={`modern-notification ${showNotification ? 'show' : ''}`}
-        >
-          <div className="notification-content">
-            <span className="notification-icon">✓</span>
-            <span className="notification-text">{notification}</span>
-          </div>
-          <div className="notification-progress"></div>
+          {/* Modern Notification */}
+          {notification && (
+            <div
+              className={`modern-notification ${
+                showNotification ? 'show' : ''
+              }`}
+            >
+              <div className="notification-content">
+                <span className="notification-icon">✓</span>
+                <span className="notification-text">{notification}</span>
+              </div>
+              <div className="notification-progress"></div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </NotificationProvider>
+    </CalendarProvider>
   );
 }
 

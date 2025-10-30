@@ -14,7 +14,7 @@ async function getUnsplashClient() {
 
   try {
     const accessKey = await configService.getApiKey('unsplash');
-    
+
     if (!accessKey) {
       throw new Error('Unsplash API klíč není dostupný');
     }
@@ -30,10 +30,12 @@ async function getUnsplashClient() {
   }
 }
 
-export const fetchImageForQuery = async (query: string): Promise<string | null> => {
+export const fetchImageForQuery = async (
+  query: string
+): Promise<string | null> => {
   try {
     const unsplash = await getUnsplashClient();
-    
+
     const result = await unsplash.search.getPhotos({
       query: query,
       page: 1,
@@ -43,14 +45,17 @@ export const fetchImageForQuery = async (query: string): Promise<string | null> 
 
     if (result.response && result.response.results.length > 0) {
       // Z výsledků vybereme náhodný obrázek
-      const randomIndex = Math.floor(Math.random() * result.response.results.length);
+      const randomIndex = Math.floor(
+        Math.random() * result.response.results.length
+      );
       const randomPhoto = result.response.results[randomIndex];
-      // Vrátíme URL obrázku v "regular" velikosti
-      return randomPhoto.urls.regular;
+      // Vrátíme optimalizovaný obrázek (WebP, 1200x400, kvalita 80)
+      // Parametry: w=šířka, h=výška, fit=crop (ořízne), q=kvalita, fm=webp (formát)
+      return `${randomPhoto.urls.raw}&w=1200&h=400&fit=crop&q=80&fm=webp`;
     }
     return null;
   } catch (error) {
-    console.error("Chyba při načítání obrázku z Unsplash:", error);
+    console.error('Chyba při načítání obrázku z Unsplash:', error);
     return null;
   }
 };

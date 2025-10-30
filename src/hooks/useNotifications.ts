@@ -31,25 +31,20 @@ export const useNotifications = (
 
       const initFCM = async () => {
         try {
-          console.log('🔔 Inicializuji FCM pro authUid:', authUid);
 
           // Získej FCM token (pokud už uživatel povolil notifikace)
           if (Notification.permission === 'granted') {
             const token = await fcmService.requestPermissionAndGetToken(authUid);
 
             if (token) {
-              console.log('✅ FCM úspěšně inicializován');
 
               // Naslouchej zprávám v popředí
-              fcmService.listenForMessages((payload) => {
-                console.log('📨 Nová zpráva z FCM:', payload);
+              fcmService.listenForMessages(() => {
               });
             }
           } else {
-            console.log('ℹ️ Notifikace ještě nejsou povoleny');
           }
         } catch (error) {
-          console.error('❌ Chyba při inicializaci FCM:', error);
         }
       };
 
@@ -65,12 +60,7 @@ export const useNotifications = (
      const unsubscribe = familyMessagingService.subscribeToMessages(
         familyMemberId,
         (newMessages) => {
-          console.log(
-            '📨 useNotifications: Received',
-            newMessages.length,
-            'messages'
-          );
-          setMessages(newMessages);
+         setMessages(newMessages);
 
           // Spočítej nepřečtené
           const unread = newMessages.filter(
@@ -81,7 +71,6 @@ export const useNotifications = (
       );
 
       return () => {
-        console.log('🔌 Odpojuji listener pro zprávy');
         unsubscribe();
       };
     }, [familyMemberId]);
@@ -93,23 +82,20 @@ export const useNotifications = (
         }
       
         try {
-          console.log('🔔 Žádám o povolení notifikací...');
       
           const token = await fcmService.requestPermissionAndGetToken(authUid);
       
           if (token) {
             setPermission('granted');
-            console.log('✅ Notifikace povoleny, token uložen do Firestore');
       
             // Inicializuj listening pro zprávy v popředí
-            fcmService.listenForMessages((payload) => {
-              console.log('📨 Nová zpráva z FCM:', payload);
+            fcmService.listenForMessages(() => {
+              console.log('📨 Nová zpráva z FCM:', );
             });
       
             return true;
           } else {
             setPermission(Notification.permission);
-            console.log('ℹ️ Notifikace nebyly povoleny nebo nejsou podporovány');
             return false;
           }
         } catch (error) {
@@ -130,18 +116,11 @@ export const useNotifications = (
     ) => {
       if (!familyMemberId) {
         throw new Error('User not authenticated');
-      }
-      console.log('📤 Odesílám zprávu:', {
-        senderName,
-        recipients,
-        message,
-        urgent,
-      });
+      };
 
       // Expanduj skupiny na jednotlivé členy
       const expandedRecipients =
         familyMessagingService.expandRecipients(recipients);
-      console.log('👥 Rozšířené příjemci:', expandedRecipients);
 
       const messageId = await familyMessagingService.sendMessage(
         familyMemberId,
@@ -152,7 +131,6 @@ export const useNotifications = (
         urgent
       );
 
-      console.log('✅ Zpráva odeslána s ID:', messageId);
       return messageId;
     },
     [familyMemberId]
@@ -182,7 +160,6 @@ export const useNotifications = (
         if (!familyMemberId) return 0;
         try {
           const count = await familyMessagingService.deleteReadMessages(familyMemberId);
-          console.log(`✅ Smazáno ${count} přečtených zpráv`);
           return count;
         } catch (error) {
           console.error('❌ Chyba při mazání přečtených zpráv:', error);

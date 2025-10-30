@@ -1,0 +1,164 @@
+/* src/components/visualization/FloorPlan.css */
+
+.floor-plan {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.floor-plan.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  font-size: 3rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Header patra */
+.floor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--floor-color, rgba(102, 126, 234, 0.3));
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.floor-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.floor-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.floor-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+}
+
+/* Půdorys (canvas s místnostmi) */
+.floor-canvas {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+/* Empty state */
+.empty-floor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+.empty-floor p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .floor-canvas {
+    height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .floor-plan {
+    padding: 16px;
+  }
+
+  .floor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .floor-name {
+    font-size: 1.3rem;
+  }
+
+  .floor-stats {
+    width: 100%;
+  }
+
+  .stat-badge {
+    flex: 1;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  .floor-canvas {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floor-canvas {
+    height: 350px;
+  }
+
+  .floor-name {
+    font-size: 1.1rem;
+  }
+
+  .floor-icon {
+    font-size: 1.5rem;
+  }
+}

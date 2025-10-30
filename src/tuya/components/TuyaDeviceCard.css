@@ -1,0 +1,320 @@
+/* src/tuya/components/TuyaDeviceCard.css */
+
+.tuya-device-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.tuya-device-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--category-color, #6c757d);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.tuya-device-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.tuya-device-card:hover::before {
+  opacity: 1;
+}
+
+/* Online/Offline states */
+.tuya-device-card.offline {
+  opacity: 0.6;
+}
+
+.tuya-device-card.offline::before {
+  background: #dc3545;
+}
+
+.tuya-device-card.active {
+  border-color: var(--category-color, #6c757d);
+  box-shadow: 0 4px 20px rgba(var(--category-color-rgb, 108, 117, 125), 0.3);
+}
+
+/* Header */
+.tuya-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.device-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.device-names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.device-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
+}
+
+.device-category {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: capitalize;
+}
+
+.device-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.online {
+  background: #28a745;
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
+}
+
+.status-dot.offline {
+  background: #dc3545;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.6);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Body - Stats */
+.tuya-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  min-height: 60px;
+}
+
+.device-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.device-stat:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.device-stat-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0.5;
+}
+
+.placeholder-text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* Footer - Controls */
+.tuya-card-footer {
+  display: flex !important;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.device-control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.control-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-updated {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Toggle Switch pro zařízení */
+.device-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.device-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.device-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #6c757d, #495057);
+  transition: 0.4s;
+  border-radius: 34px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.device-toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.device-toggle-switch input:checked + .device-toggle-slider {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.device-toggle-switch input:checked + .device-toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.device-toggle-switch input:disabled + .device-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.device-toggle-switch input:disabled + .device-toggle-slider:before {
+  background-color: #e0e0e0;
+}
+
+.loading-spinner-small {
+  font-size: 0.9rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tuya-device-card {
+    padding: 16px;
+  }
+
+  .device-icon {
+    font-size: 1.5rem;
+  }
+
+  .device-name {
+    font-size: 1rem;
+  }
+
+  .device-toggle-switch {
+    width: 50px;
+    height: 28px;
+  }
+
+  .device-toggle-slider:before {
+    height: 22px;
+    width: 22px;
+  }
+
+  .device-toggle-switch input:checked + .device-toggle-slider:before {
+    transform: translateX(22px);
+  }
+}

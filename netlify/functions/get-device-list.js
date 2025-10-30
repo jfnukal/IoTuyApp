@@ -212,38 +212,38 @@ exports.handler = async function (event, context) {
             }
         }
         
-        // Pokud automatické získání našlo zařízení, použij je
-        if (automaticDevices.length > 0) {
-            console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
-            
-            // Získej stav pro zařízení
-            const devicesWithStatus = [];
-            for (let i = 0; i < automaticDevices.length; i++) {
-                const device = automaticDevices[i];
-                try {
-                    const deviceId = device.id || device.device_id;
-                    const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
-                    devicesWithStatus.push({ ...device, status });
-                } catch (statusError) {
-                    devicesWithStatus.push({ ...device, status: null, statusError: statusError.message });
-                }
-            }
-            
-            return {
-                statusCode: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                body: JSON.stringify({
-                    success: true,
-                    method: 'automatic',
-                    endpoint_used: usedEndpoint,
-                    total_devices: automaticDevices.length,
-                    devices: devicesWithStatus
-                })
-            };
+// Pokud automatické získání našlo zařízení, použij je
+if (automaticDevices.length > 0) {
+    console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
+    
+    // Získej stav pro první 10 zařízení
+    const devicesWithStatus = [];
+    for (let i = 0; i < automaticDevices.length; i++) {
+        const device = automaticDevices[i];
+        try {
+            const deviceId = device.id || device.device_id;
+            const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
+            devicesWithStatus.push({ ...device, status });
+        } catch (statusError) {
+            devicesWithStatus.push({ ...device, status: null, statusError: statusError.message });
         }
+    }
+    
+    return {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+            success: true,
+            method: 'automatic',
+            endpoint_used: usedEndpoint,
+            total_devices: automaticDevices.length,
+            devices: devicesWithStatus
+        })
+    };
+}
         
         // Fallback: použij známá device ID
         console.log('Automatic discovery failed, using known device IDs...');
@@ -309,3 +309,4 @@ exports.handler = async function (event, context) {
     }
 
 };
+

@@ -215,30 +215,41 @@ exports.handler = async function (event, context) {
 // Pokud automatické získání našlo zařízení, použij je
 if (automaticDevices.length > 0) {
     console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
-
-    // ✅ LOG STATUS POLÍ
-    console.log('=== DEVICE STATUS FIELDS ===');
-    automaticDevices.forEach((device, index) => {
-        console.log(`[${index}] ${device.name || device.customName}:`);
-        console.log(`  - isOnline: ${device.isOnline}`);
-        console.log(`  - status:`, JSON.stringify(device.status || []));
-    });
-    console.log('=== END STATUS ===');
     
-   return {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({
-            success: true,
-            method: 'automatic',
-            endpoint_used: usedEndpoint,
-            total_devices: automaticDevices.length,
-            devices: automaticDevices
-        })
-    };
+// Načti status JEN pro online zařízení (rychlejší)
+console.log('Step 3: Loading status for online devices...');
+const devicesWithStatus = await Promise.all(
+    automaticDevices.map(async (device) => {
+        if (device.isOnline) {
+            try {
+                const deviceId = device.id || device.device_id;
+                const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
+                return { ...device, status };
+            } catch (error) {
+                console.log(`Failed to get status for ${device.name}: ${error.message}`);
+                return { ...device, status: [] };
+            }
+        }
+        return { ...device, status: [] };
+    })
+);
+
+console.log(`Status loaded for ${devicesWithStatus.filter(d => d.status?.length > 0).length} devices`);
+
+return {
+    statusCode: 200,
+    headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+        success: true,
+        method: 'automatic',
+        endpoint_used: usedEndpoint,
+        total_devices: automaticDevices.length,
+        devices: devicesWithStatus
+    })
+};
 }
         
         // Fallback: použij známá device ID
@@ -304,4 +315,3 @@ if (automaticDevices.length > 0) {
         };
     }
 };
-

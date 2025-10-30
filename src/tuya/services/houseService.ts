@@ -1,13 +1,11 @@
 // src/services/houseService.ts
 import { db } from '../../config/firebase';
 import {
-  collection,
   doc,
   setDoc,
   getDoc,
   updateDoc,
   onSnapshot,
-  Timestamp,
 } from 'firebase/firestore';
 import type {
   House,

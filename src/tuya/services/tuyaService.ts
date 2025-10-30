@@ -153,7 +153,7 @@ class TuyaService {
         status: device.status || [],
         lastUpdated: Date.now(),
         isVisible: true,
-        customName: device.custom_name,
+        ...(device.custom_name && { customName: device.custom_name }),
       }));
 
       return devices;
@@ -263,3 +263,4 @@ class TuyaService {
 
 
 export const tuyaService = new TuyaService();
+

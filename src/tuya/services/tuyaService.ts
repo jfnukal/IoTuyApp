@@ -119,7 +119,7 @@ class TuyaService {
     try {
       console.log('📡 Načítám Tuya zařízení ze serveru...');
       
-      const response = await fetch(`${this.baseUrl}/get-device-status`, {
+      const response = await fetch(`${this.baseUrl}/get-device-list`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -260,5 +260,6 @@ class TuyaService {
     return currentState ? this.turnOff(deviceId) : this.turnOn(deviceId);
   }
 }
+
 
 export const tuyaService = new TuyaService();

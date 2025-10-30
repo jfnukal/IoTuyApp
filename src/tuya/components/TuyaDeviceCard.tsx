@@ -6,13 +6,11 @@ import './TuyaDeviceCard.css';
 interface TuyaDeviceCardProps {
   device: TuyaDevice;
   onToggle: (deviceId: string) => Promise<void>;
-  onControl?: (deviceId: string, commands: { code: string; value: any }[]) => Promise<void>;
 }
 
 const TuyaDeviceCard: React.FC<TuyaDeviceCardProps> = ({
   device,
   onToggle,
-  onControl: _onControl,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 

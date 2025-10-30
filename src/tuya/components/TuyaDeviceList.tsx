@@ -22,10 +22,15 @@ const TuyaDeviceList: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOffline, setShowOffline] = useState(false); 
 
   // Filtrování zařízení
   const filteredDevices = useMemo(() => {
     let result = [...devices];
+
+    if (!showOffline) {
+      result = result.filter((d) => d.online);
+    }
 
     // Filtr podle online/offline
     if (filter === 'online') {
@@ -51,7 +56,7 @@ const TuyaDeviceList: React.FC = () => {
     }
 
     return result;
-  }, [devices, filter, categoryFilter, searchQuery]);
+  }, [devices, filter, categoryFilter, searchQuery, showOffline]);
 
   // Počet zařízení podle kategorií
   const categoryCounts = useMemo(() => {
@@ -124,6 +129,14 @@ const TuyaDeviceList: React.FC = () => {
           <span className={`sync-icon ${isSyncing ? 'spinning' : ''}`}>🔄</span>
           <span>{isSyncing ? 'Synchronizuji...' : 'Synchronizovat'}</span>
         </button>
+        <label className="show-offline-toggle" title="Zobrazit i offline zařízení">
+        <input
+          type="checkbox"
+          checked={showOffline}
+          onChange={(e) => setShowOffline(e.target.checked)}
+        />
+        <span>Zobrazit offline ({deviceCount - onlineCount})</span>
+      </label>
       </div>
 
       {/* Filters */}

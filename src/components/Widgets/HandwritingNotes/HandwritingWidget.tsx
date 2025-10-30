@@ -1,4 +1,4 @@
-// src/plugins/HandwritingNotes/HandwritingWidget.tsx
+// src/components/Widgets/HandwritingNotes/HandwritingWidget.tsx
 import React, { useState, useEffect } from 'react';
 import CanvasDrawing from './CanvasDrawing';
 import { ocrService } from './ocrService';
@@ -13,7 +13,7 @@ interface HandwritingWidgetProps {
 
 const HandwritingWidget: React.FC<HandwritingWidgetProps> = ({
   userId,
-  familyMembers = [],
+  familyMembers: _familyMembers = [],
 }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,7 +46,7 @@ const HandwritingWidget: React.FC<HandwritingWidgetProps> = ({
       const result = await ocrService.recognizeAndCategorize(imageData);
       
       // Uložení do Firestore
-      const noteId = await notesStorage.createNote({
+      await notesStorage.createNote({
         userId,
         type: result.type,
         originalImage: imageData,

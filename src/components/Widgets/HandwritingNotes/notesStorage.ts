@@ -9,9 +9,9 @@ import {
   query,
   where,
   orderBy,
-  Timestamp as _Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import { Timestamp as _Timestamp } from 'firebase/firestore';
 import type { HandwritingNote } from './types';
 
 class NotesStorage {

@@ -131,7 +131,7 @@ class TuyaService {
       }
 
       const data = await response.json();
-      
+      console.log('📦 RAW DATA Z API:', JSON.stringify(data, null, 2));
       if (!data.success) {
         throw new Error(data.error || 'Nepodařilo se načíst zařízení');
       }
@@ -139,6 +139,7 @@ class TuyaService {
       console.log(`✅ Načteno ${data.devices.length} zařízení`);
       
       // Mapování dat z Tuya API na naše typy
+      console.log('📋 PRVNÍ ZAŘÍZENÍ Z API:', JSON.stringify(data.devices[0], null, 2));
       const devices: TuyaDevice[] = data.devices.map((device: any) => ({
         id: device.id || device.device_id,
         name: device.name || device.custom_name || 'Neznámé zařízení',
@@ -156,6 +157,7 @@ class TuyaService {
         ...(device.custom_name && { customName: device.custom_name }),
       }));
 
+      console.log('✅ ZMAPOVANÁ ZAŘÍZENÍ:', JSON.stringify(devices, null, 2)); 
       return devices;
     } catch (error) {
       console.error('❌ Chyba při načítání Tuya zařízení:', error);
@@ -263,4 +265,5 @@ class TuyaService {
 
 
 export const tuyaService = new TuyaService();
+
 

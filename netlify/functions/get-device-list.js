@@ -215,6 +215,15 @@ exports.handler = async function (event, context) {
 // Pokud automatické získání našlo zařízení, použij je
 if (automaticDevices.length > 0) {
     console.log(`Using automatic discovery: ${automaticDevices.length} devices`);
+
+    // ✅ LOG STATUS POLÍ
+    console.log('=== DEVICE STATUS FIELDS ===');
+    automaticDevices.forEach((device, index) => {
+        console.log(`[${index}] ${device.name || device.customName}:`);
+        console.log(`  - isOnline: ${device.isOnline}`);
+        console.log(`  - status:`, JSON.stringify(device.status || []));
+    });
+    console.log('=== END STATUS ===');
     
    return {
         statusCode: 200,
@@ -295,3 +304,4 @@ if (automaticDevices.length > 0) {
         };
     }
 };
+

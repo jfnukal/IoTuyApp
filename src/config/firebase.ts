@@ -11,7 +11,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -30,7 +30,7 @@ let messagingInitialized = false;
 // Inicializuj messaging asynchronně
 const initMessaging = async () => {
   if (messagingInitialized) return;
-  
+
   try {
     const supported = await isSupported();
     if (supported) {
@@ -49,7 +49,9 @@ const initMessaging = async () => {
 initMessaging();
 
 // Exportuj funkci která vrací messaging instance
-export const getMessagingInstance = (): ReturnType<typeof getMessaging> | null => {
+export const getMessagingInstance = (): ReturnType<
+  typeof getMessaging
+> | null => {
   return messagingInstance;
 };
 
@@ -57,6 +59,7 @@ export const getMessagingInstance = (): ReturnType<typeof getMessaging> | null =
 export const messaging = messagingInstance;
 
 // Initialize Analytics (volitelné)
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+export const analytics =
+  typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 export default app;

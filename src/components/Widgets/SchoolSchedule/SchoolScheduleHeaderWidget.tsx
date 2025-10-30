@@ -1,9 +1,10 @@
 // src/components/Widgets/SchoolSchedule/SchoolScheduleHeaderWidget.tsx
 import React, { useState, useEffect } from 'react';
+import { useWidgetSettings } from '../../../hooks/useWidgetSettings';
 import { bakalariAPI } from '../../../api/bakalariAPI';
 import { firestoreService } from '../../../services/firestoreService';
 import type { TimetableDay } from '../../../types/index';
-import './SchoolScheduleHeader.css'; // 🆕 Změněný import CSS
+import './SchoolScheduleHeader.css';
 import { SchoolScheduleModal } from './SchoolScheduleModal';
 
 const DAYS_OF_WEEK = [
@@ -11,23 +12,19 @@ const DAYS_OF_WEEK = [
 ];
 
 // 🆕 Logika pro výběr správného dne
-const getTargetDayIndex = () => {
+const getTargetDayIndex = (showNextDayHour: number) => {
   const now = new Date();
-  const currentDayOfWeek = now.getDay(); // 0=Ne, 1=Po, ..., 6=So
+  const currentDayOfWeek = now.getDay();
   const currentHour = now.getHours();
 
-  // TODO: Načíst hodinu z konfigurace
-  const showNextDayHour = 14; 
-
-  let targetDayIndex = currentDayOfWeek - 1; // 0=Po, ..., 4=Pá, 5=So, 6=Ne
+  let targetDayIndex = currentDayOfWeek - 1;
 
   if (currentHour >= showNextDayHour) {
-    targetDayIndex++; // Po 14h ukážeme další den
+    targetDayIndex++;
   }
 
-  // O víkendu (Pá po 14h, So, Ne) vždy ukaž Pondělí
   if (targetDayIndex < 0 || targetDayIndex > 4) {
-    targetDayIndex = 0; // 0 = Pondělí
+    targetDayIndex = 0;
   }
 
   return targetDayIndex;
@@ -35,10 +32,13 @@ const getTargetDayIndex = () => {
 
 
 const SchoolScheduleHeaderWidget: React.FC = () => {
+  const { settings } = useWidgetSettings();
   const [selectedKid, setSelectedKid] = useState<'jarecek' | 'johanka'>('johanka');
   
   // 🆕 selectedDay bude nastaven jen jednou, nebudeme ho měnit klikáním
-  const [selectedDay, setSelectedDay] = useState(getTargetDayIndex()); 
+  const [selectedDay, setSelectedDay] = useState(
+    getTargetDayIndex(settings?.widgets?.schoolSchedule?.showNextDayAfterHour ?? 14)
+  );
   
   const [johankaSchedule, setJohankaSchedule] = useState<TimetableDay[]>([]);
   const [jarecekSchedule, setJarecekSchedule] = useState<TimetableDay[]>([]);
@@ -47,15 +47,14 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
 
   // 🆕 Automatické otáčení dětí
   useEffect(() => {
-    // TODO: Načíst interval z konfigurace
-    const rotationInterval = 10000; // 10 sekund
+    const rotationInterval = (settings?.widgets?.schoolSchedule?.kidRotationInterval ?? 10) * 1000; // převod na milisekundy
 
     const intervalId = setInterval(() => {
       setSelectedKid((prevKid) => (prevKid === 'johanka' ? 'jarecek' : 'johanka'));
     }, rotationInterval);
 
-    return () => clearInterval(intervalId); // Uklidíme po sobě
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [settings]);
 
 
   const handleSaveSchedule = async (newSchedule: TimetableDay[]) => {
@@ -119,7 +118,7 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
         setJarecekSchedule(jarecekData);
         
         // 🆕 Nastavení dne už probíhá v useState
-        setSelectedDay(getTargetDayIndex()); 
+        setSelectedDay(getTargetDayIndex(settings?.widgets?.schoolSchedule?.showNextDayAfterHour ?? 14)); 
 
       } catch (error) {
         console.error('Chyba při načítání dat pro widget:', error);

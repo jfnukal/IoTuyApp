@@ -322,3 +322,27 @@
   outline: 3px solid #ffff00;
   outline-offset: 2px;
 }
+
+.loading-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loading-settings .spinner {
+  font-size: 3rem;
+  animation: spin 1s linear infinite;
+}
+
+.loading-settings p {
+  margin-top: 20px;
+  font-size: 1.1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

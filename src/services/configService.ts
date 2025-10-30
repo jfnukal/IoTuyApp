@@ -9,6 +9,7 @@ export interface AppConfig {
     bakalari_username: string;
     bakalari_password: string;
     bakalari_server: string;
+    google_vision: string;
   };
   features: {
     useMockData: boolean;
@@ -76,6 +77,7 @@ class ConfigService {
           bakalari_username: apiKeysData.bakalari_username || '',
           bakalari_password: apiKeysData.bakalari_password || '',
           bakalari_server: apiKeysData.bakalari_server || '',
+          google_vision: apiKeysData.google_vision || '',
         },
         features: {
           useMockData: featuresData.useMockData ?? false,

@@ -1,11 +1,13 @@
 // src/components/Widgets/Weather/WeatherMiniWidget.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense, memo } from 'react';
 import { useWeather } from './hooks/useWeather';
 import { WeatherUtils } from './utils/weatherUtils';
 import { fetchImageForQuery } from '../../../api/unsplash';
 import './WeatherMiniWidget.css';
-import WeatherModal from './WeatherModal';
-import WeatherModalMobile from './WeatherModalMobile';
+
+// 🚀 Lazy loading pro modály - načtou se až když uživatel otevře detail počasí
+const WeatherModal = lazy(() => import('./WeatherModal'));
+const WeatherModalMobile = lazy(() => import('./WeatherModalMobile'));
 import { createPortal } from 'react-dom';
 
 interface WeatherMiniWidgetProps {
@@ -255,17 +257,36 @@ if (headerMode) {
       </div>
 
       {showModal && modalRoot && createPortal(
-        isMobile ? (
-          <WeatherModalMobile 
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-          />
-        ) : (
-          <WeatherModal 
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-          />
-        ),
+        <Suspense fallback={
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            color: 'white',
+            fontSize: '2rem'
+          }}>
+            🌤️ Načítám počasí...
+          </div>
+        }>
+          {isMobile ? (
+            <WeatherModalMobile 
+              isOpen={showModal}
+              onClose={() => setShowModal(false)}
+            />
+          ) : (
+            <WeatherModal 
+              isOpen={showModal}
+              onClose={() => setShowModal(false)}
+            />
+          )}
+        </Suspense>,
         modalRoot
       )}
     </>
@@ -395,17 +416,36 @@ if (headerMode) {
       </div>
 
       {showModal && modalRoot && createPortal(
-        isMobile ? (
-          <WeatherModalMobile 
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-          />
-        ) : (
-          <WeatherModal 
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-          />
-          ),
+        <Suspense fallback={
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            color: 'white',
+            fontSize: '2rem'
+          }}>
+            🌤️ Načítám počasí...
+          </div>
+        }>
+          {isMobile ? (
+            <WeatherModalMobile 
+              isOpen={showModal}
+              onClose={() => setShowModal(false)}
+            />
+          ) : (
+            <WeatherModal 
+              isOpen={showModal}
+              onClose={() => setShowModal(false)}
+            />
+          )}
+        </Suspense>,
         modalRoot
         )}
 
@@ -458,4 +498,6 @@ if (headerMode) {
   );
 };
 
-export default WeatherMiniWidget;
+// 🚀 React.memo - widget se překreslí POUZE když se změní props (className, isVisible, headerMode, compactMode)
+// To je důležité, protože počasí má hodně dat a efektů (animace, obrázky)
+export default memo(WeatherMiniWidget);

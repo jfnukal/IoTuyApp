@@ -1,6 +1,6 @@
 // Soubor: src/components/Dashboard/HeaderInfo.tsx
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useFamilyEvents } from '../../hooks/useFamilyEvents';
 import type { FamilyMember } from '../../types';
 import './styles/HeaderInfo.css';
@@ -69,4 +69,6 @@ const HeaderInfo: React.FC<HeaderInfoProps> = ({ familyMembers }) => {
   );
 };
 
-export default HeaderInfo;
+// 🚀 React.memo - komponenta se překreslí POUZE když se změní familyMembers
+// To znamená méně zbytečných renderů a rychlejší UI
+export default memo(HeaderInfo);

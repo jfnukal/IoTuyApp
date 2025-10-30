@@ -16,9 +16,17 @@
 
 /* ==================== HEADER ==================== */
 .tech-dashboard-header {
-  text-align: center;
-  margin-bottom: 30px;
-  color: white;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+  padding: 20px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  gap: 20px !important;
+  text-align: left !important; /* Přepíše původní center */
 }
 
 .tech-title {
@@ -26,12 +34,79 @@
   font-weight: 800;
   margin: 0 0 10px 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  color: white;
 }
 
 .tech-subtitle {
   font-size: 1rem;
   opacity: 0.9;
   margin: 0;
+  color: white;
+}
+
+/* ==================== PŘEPÍNAČ ZOBRAZENÍ ==================== */
+.view-toggle {
+  display: flex !important;
+  gap: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  flex-shrink: 0 !important; /* Zabrání smrštění */
+  min-width: 250px !important; /* Minimální šířka */
+}
+
+.toggle-button {
+  padding: 10px 20px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.toggle-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.toggle-button.active {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Responsive pro přepínač */
+@media (max-width: 768px) {
+  .tech-dashboard-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .view-toggle {
+    width: 100% !important;
+  }
+
+  .toggle-button {
+    flex: 1 !important;
+    text-align: center !important;
+  }
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.tech-main-content {
+  width: 100%;
+  min-height: 400px;
+  margin-bottom: 30px;
 }
 
 /* ==================== WIDGETS GRID ==================== */
@@ -53,10 +128,18 @@
   animation: slideUp 0.5s ease both;
 }
 
-.tech-widget:nth-child(1) { animation-delay: 0.1s; }
-.tech-widget:nth-child(2) { animation-delay: 0.2s; }
-.tech-widget:nth-child(3) { animation-delay: 0.3s; }
-.tech-widget:nth-child(4) { animation-delay: 0.4s; }
+.tech-widget:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.tech-widget:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.tech-widget:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.tech-widget:nth-child(4) {
+  animation-delay: 0.4s;
+}
 
 @keyframes slideUp {
   from {
@@ -137,7 +220,8 @@
 }
 
 @keyframes swing {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
   }
   25% {
@@ -220,4 +304,21 @@
 .tech-widget:focus-within {
   outline: 3px solid #ffff00;
   outline-offset: 2px;
+}
+
+.visualization-layout {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+.devices-sidebar {
+  width: 350px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.visualization-main {
+  flex: 1;
+  overflow-y: auto;
 }

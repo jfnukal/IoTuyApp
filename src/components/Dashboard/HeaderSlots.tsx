@@ -1,7 +1,8 @@
 // src/components/Dashboard/HeaderSlots.tsx
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useHeaderConfig } from '../../hooks/useHeaderConfig';
+import { useWidgetSettings } from '../../hooks/useWidgetSettings';
 import HeaderInfo from './HeaderInfo';
 import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
 import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
@@ -22,6 +23,7 @@ interface HeaderSlotsProps {
 
 const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
   const { headerConfig, loading } = useHeaderConfig();
+  const { settings } = useWidgetSettings();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   // Funkce pro vykreslení widgetu podle typu
@@ -32,18 +34,32 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
     // Speciální případ: pravý slot má 2 widgety nad sebou
     // ...
     if (position === 'right' && window.innerWidth > 768) {
+      const showWeather = settings?.widgets?.weather?.enabled ?? true;
+      const showSchedule = settings?.widgets?.schoolSchedule?.enabled ?? true;
+
+      // Pokud jsou oba vypnuté, zobraz prázdný slot
+      if (!showWeather && !showSchedule) {
+        return <div className="header-widget-wrapper empty-slot"></div>;
+      }
+
       return (
         <div className="header-widget-stack">
           {/* Počasí nahoře */}
-          <div className="header-widget-wrapper weather-widget-header-compact">
-            {/* TOTO JE FINÁLNÍ ZMĚNA */}
-            <WeatherMiniWidget isVisible={true} compactMode={true} />
-          </div>
+          {showWeather && (
+            <div className="header-widget-wrapper weather-widget-header-compact">
+              <WeatherMiniWidget
+                isVisible={true}
+                compactMode={settings?.widgets?.weather?.compactMode ?? true}
+              />
+            </div>
+          )}
 
-      {/* Rozvrh dole */}
-      <div className="header-widget-wrapper schedule-widget-header">
+          {/* Rozvrh dole */}
+          {showSchedule && (
+            <div className="header-widget-wrapper schedule-widget-header">
               <SchoolScheduleHeaderWidget />
             </div>
+          )}
         </div>
       );
     }
@@ -54,13 +70,23 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
         return <HeaderInfo familyMembers={familyMembers} />;
 
       case 'weather':
+        if (!settings?.widgets?.weather?.enabled) {
+          return <div className="header-widget-wrapper empty-slot"></div>;
+        }
         return (
           <div className="header-widget-wrapper weather-widget-header">
-            <WeatherMiniWidget isVisible={true} />
+            <WeatherMiniWidget
+              isVisible={true}
+              compactMode={settings?.widgets?.weather?.compactMode ?? false}
+            />
           </div>
         );
 
       case 'upcoming':
+        // Zkontroluj nastavení kalendáře
+        if (!settings?.widgets.calendar.enabled) {
+          return <div className="header-widget-wrapper empty-slot"></div>;
+        }
         return (
           <div className="header-widget-wrapper upcoming-widget-header">
             <UpcomingEventsWidget
@@ -92,22 +118,24 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
     // Tím se opraví chyba "bez reakce"
 
     return createPortal(
-      <div className="schedule-modal-overlay" onClick={() => setShowScheduleModal(false)}>
+      <div
+        className="schedule-modal-overlay"
+        onClick={() => setShowScheduleModal(false)}
+      >
         {/* Použijeme .schedule-modal-content pro konzistentní vzhled, ale přidáme třídu pro rozvrh */}
-        <div 
-          className="schedule-modal-content full-schedule-modal" 
+        <div
+          className="schedule-modal-content full-schedule-modal"
           onClick={(e) => e.stopPropagation()}
         >
-          <button 
-            className="modal-close-btn" 
+          <button
+            className="modal-close-btn"
             onClick={() => setShowScheduleModal(false)}
           >
             ×
           </button>
-          
+
           {/* ZDE VOLÁME SKUTEČNÝ WIDGET */}
           <SchoolScheduleWidget />
-
         </div>
       </div>,
       document.body // <-- ZMĚNA BYLA ZDE (z 'modalRoot' na 'document.body')
@@ -137,4 +165,6 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
   );
 };
 
-export default HeaderSlots;
+// 🚀 React.memo - komponenta se překreslí POUZE když se změní familyMembers, headerConfig nebo settings
+// HeaderSlots obsahuje několik widgetů, takže optimalizace má velký dopad na výkon
+export default memo(HeaderSlots);

@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
 } from 'react';
 import type { ReactNode } from 'react';
 import type {
@@ -69,15 +70,19 @@ export const useCalendar = () => {
 
 interface CalendarProviderProps {
   children: ReactNode;
+  events?: CalendarEventData[]; // Nový prop pro events z useFirestore
 }
 
-const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
+const CalendarProvider: React.FC<CalendarProviderProps> = ({ 
+  children,
+  events: externalEvents = []
+}) => {
   const { currentUser } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<CalendarView>('month');
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [namedays, setNamedays] = useState<Nameday[]>([]);
-  const [events, setEvents] = useState<CalendarEventData[]>([]);
+  const events = externalEvents;
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [settings, setSettings] = useState<CalendarSettings>({
     theme: 'light',
@@ -124,32 +129,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     loadData();
   }, [currentDate.getFullYear()]);
 
-  // Sledování událostí z Firebase (zůstává stejné)
-  useEffect(() => {
-    if (!currentUser) {
-      setEvents([]);
-      return;
-    }
-    let unsubscribe = () => {};
-    const setupListener = async () => {
-      try {
-        unsubscribe = await firestoreService.subscribeToEvents(
-          currentUser.uid,
-          (firebaseEvents) => {
-            setEvents(firebaseEvents);
-          }
-        );
-      } catch (error) {
-        console.error('Error setting up Firebase event listener:', error);
-      }
-    };
-    setupListener();
-    return () => {
-      unsubscribe();
-    };
-  }, [currentUser]);
-
-  useEffect(() => {
+    useEffect(() => {
     if (!currentUser) {
       setMarkedNamedays(new Set());
       return;
@@ -164,13 +144,23 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     return unsubscribe;
   }, [currentUser]);
 
-  // Načtení obrázku na pozadí (zůstává stejné)
+  const imageCache = useRef<Map<number, string>>(new Map());
+
   useEffect(() => {
     const loadHeaderImage = async () => {
       const month = currentDate.getMonth();
+
+      // Zkontroluj cache
+      if (imageCache.current.has(month)) {
+        setHeaderImage(imageCache.current.get(month)!);
+        return; // ← OKAMŽITĚ hotovo!
+      }
+
+      // Pokud není v cache, stáhni a ulož
       const currentTheme = monthThemes[month];
       const query = `${currentTheme.name} ${currentTheme.month}`;
       const imageUrl = await fetchImageForQuery(query);
+      imageCache.current.set(month, imageUrl || currentTheme.backgroundImage);
       setHeaderImage(imageUrl || currentTheme.backgroundImage);
     };
     loadHeaderImage();
@@ -264,16 +254,14 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
   );
 
   // Funkce pro získání pouze narozeninových událostí
-      const getBirthdayEventsByDate = useCallback(
-        (date: Date) => {
-          return events.filter(
-            (event) => 
-              event.type === 'birthday' && 
-              isSameDay(event.date, date)
-          );
-        },
-        [events, isSameDay]
+  const getBirthdayEventsByDate = useCallback(
+    (date: Date) => {
+      return events.filter(
+        (event) => event.type === 'birthday' && isSameDay(event.date, date)
       );
+    },
+    [events, isSameDay]
+  );
 
   const getHolidayByDate = useCallback(
     (date: Date) => {
@@ -324,32 +312,55 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     }
   };
 
-  const value: CalendarContextType = {
-    currentDate,
-    setCurrentDate,
-    currentView,
-    setCurrentView,
-    events,
-    addEvent,
-    updateEvent,
-    deleteEvent,
-    getEventsByDate,
-    getBirthdayEventsByDate, 
-    holidays,
-    namedays,
-    getHolidayByDate,
-    getNamedayByDate,
-    headerImage,
-    settings,
-    updateSettings,
-    monthThemes,
-    getCurrentMonthTheme,
-    isToday,
-    isSameDay,
-    formatDate,
-    isNamedayMarked,
-    markNameday,
-  };
+  const value = useMemo<CalendarContextType>(
+    () => ({
+      currentDate,
+      setCurrentDate,
+      currentView,
+      setCurrentView,
+      events,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      getEventsByDate,
+      getBirthdayEventsByDate,
+      holidays,
+      namedays,
+      getHolidayByDate,
+      getNamedayByDate,
+      headerImage,
+      settings,
+      updateSettings,
+      monthThemes,
+      getCurrentMonthTheme,
+      isToday,
+      isSameDay,
+      formatDate,
+      isNamedayMarked,
+      markNameday,
+    }),
+    [
+      currentDate,
+      currentView,
+      events,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      getEventsByDate,
+      getBirthdayEventsByDate,
+      holidays,
+      namedays,
+      getHolidayByDate,
+      getNamedayByDate,
+      headerImage,
+      settings,
+      isToday,
+      isSameDay,
+      formatDate,
+      isNamedayMarked,
+      markNameday,
+    ]
+  );
 
   return (
     <CalendarContext.Provider value={value}>

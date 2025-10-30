@@ -56,15 +56,15 @@ const TechDashboard: React.FC = () => {
 
       {/* Hlavní obsah */}
       <div className="tech-main-content">
-        {console.log('🎨 Rendering content for view:', view)}
-        {view === 'list' ? (
+      {(() => { console.log('🎨 Rendering content for view:', view); return null; })()}
+{view === 'list' ? (
   <>
-    {console.log('📋 Rendering TuyaDeviceList')}
+    {(() => { console.log('📋 Rendering TuyaDeviceList'); return null; })()}
     <TuyaDeviceList />
   </>
 ) : (
   <>
-    {console.log('🏠 Rendering Visualization Layout')}
+    {(() => { console.log('🏠 Rendering Visualization Layout'); return null; })()}
     <div className="visualization-layout">
       <div className="devices-sidebar">
         <TuyaDeviceList />

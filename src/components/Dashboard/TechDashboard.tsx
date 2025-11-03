@@ -1,10 +1,10 @@
 // src/components/Dashboard/TechDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { TuyaDeviceList, HouseVisualization } from '../../tuya';
+import { TuyaDeviceList, HouseVisualization, RoomManager } from '../../tuya';
 import './styles/TechDashboard.css';
 
 const TechDashboard: React.FC = () => {
-  const [view, setView] = useState<'list' | 'visualization'>('list');
+  const [view, setView] = useState<'list' | 'visualization' | 'rooms'>('list');
 
   // 🔍 DEBUG - mount komponenty
   useEffect(() => {
@@ -51,30 +51,49 @@ const TechDashboard: React.FC = () => {
           >
             🏠 Vizualizace
           </button>
+          <button
+            className={`toggle-button ${view === 'rooms' ? 'active' : ''}`}
+            onClick={() => {
+              console.log('🖱️ Clicked MÍSTNOSTI button');
+              setView('rooms');
+            }}
+          >
+            🚪 Místnosti
+          </button>
         </div>
       </div>
 
       {/* Hlavní obsah */}
       <div className="tech-main-content">
-      {(() => { console.log('🎨 Rendering content for view:', view); return null; })()}
-{view === 'list' ? (
-  <>
-    {(() => { console.log('📋 Rendering TuyaDeviceList'); return null; })()}
-    <TuyaDeviceList />
-  </>
-) : (
-  <>
-    {(() => { console.log('🏠 Rendering Visualization Layout'); return null; })()}
-    <div className="visualization-layout">
-      <div className="devices-sidebar">
-        <TuyaDeviceList />
-      </div>
-      <div className="visualization-main">
-        <HouseVisualization />
-      </div>
-    </div>
-  </>
-)}
+        {(() => { console.log('🎨 Rendering content for view:', view); return null; })()}
+        
+        {view === 'list' && (
+          <>
+            {(() => { console.log('📋 Rendering TuyaDeviceList'); return null; })()}
+            <TuyaDeviceList />
+          </>
+        )}
+
+        {view === 'visualization' && (
+          <>
+            {(() => { console.log('🏠 Rendering Visualization Layout'); return null; })()}
+            <div className="visualization-layout">
+              <div className="devices-sidebar">
+                <TuyaDeviceList />
+              </div>
+              <div className="visualization-main">
+                <HouseVisualization />
+              </div>
+            </div>
+          </>
+        )}
+
+        {view === 'rooms' && (
+          <>
+            {(() => { console.log('🚪 Rendering RoomManager'); return null; })()}
+            <RoomManager />
+          </>
+        )}
       </div>
 
       {/* Další widgety */}

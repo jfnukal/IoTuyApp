@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
-import { isTablet } from '../../../utils/deviceDetection';
+import { isTablet } from '../../../tuya/utils/deviceDetection';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -34,10 +34,10 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   const isTabletDevice = isTablet();
 
-// ✅ DEBUG - vypiš do konzole
-console.log('🔍 isTablet():', isTabletDevice);
-console.log('📱 Screen width:', window.innerWidth);
-console.log('📱 User Agent:', navigator.userAgent);
+  // ✅ DEBUG - vypiš do konzole
+  console.log('🔍 isTablet():', isTabletDevice);
+  console.log('📱 Screen width:', window.innerWidth);
+  console.log('📱 User Agent:', navigator.userAgent);
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -94,48 +94,60 @@ console.log('📱 User Agent:', navigator.userAgent);
   const renderEventsInCell = useCallback(
     (date: Date, member: FamilyMember) => {
       const allEvents = getEventsByDate(date);
-      
+
       // Vyfiltruj události pro daného člena (bez narozenin)
       const dayEvents = allEvents.filter(
         (event: CalendarEventData) =>
           event.familyMemberId === member.id && event.type !== 'birthday'
       );
-  
+
       // ✅ NOVÉ: Přidej vícedenní události, které "probíhají" v tento den
       const multiDayEvents = events.filter((event: CalendarEventData) => {
-        if (!event.endDate || event.familyMemberId !== member.id || event.type === 'birthday') {
+        if (
+          !event.endDate ||
+          event.familyMemberId !== member.id ||
+          event.type === 'birthday'
+        ) {
           return false;
         }
         const eventStart = new Date(event.date);
         const eventEnd = new Date(event.endDate);
         const currentDate = new Date(date);
-        
+
         // Kontrola, zda aktuální datum je mezi začátkem a koncem
         return currentDate >= eventStart && currentDate <= eventEnd;
       });
-  
+
       const allEventsToShow = [...dayEvents, ...multiDayEvents];
       // Odstraň duplicity
-      const uniqueEvents = Array.from(new Map(allEventsToShow.map(e => [e.id, e])).values());
-  
+      const uniqueEvents = Array.from(
+        new Map(allEventsToShow.map((e) => [e.id, e])).values()
+      );
+
       return (
         <div className="events-in-cell">
           {uniqueEvents.map((event) => {
             const isMultiDay = !!event.endDate;
             const eventStart = new Date(event.date);
-            const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+            const eventEnd = event.endDate
+              ? new Date(event.endDate)
+              : eventStart;
             const currentDate = new Date(date);
-            
-            const isFirstDay = currentDate.toDateString() === eventStart.toDateString();
-            const isLastDay = currentDate.toDateString() === eventEnd.toDateString();
+
+            const isFirstDay =
+              currentDate.toDateString() === eventStart.toDateString();
+            const isLastDay =
+              currentDate.toDateString() === eventEnd.toDateString();
             const isMiddleDay = !isFirstDay && !isLastDay;
-  
+
             return (
               <div key={event.id} className="event-wrapper">
                 <div
-                  className={`family-event-item ${isMultiDay ? 'multi-day-event' : ''} ${
-                    isFirstDay ? 'first-day' : ''
-                  } ${isLastDay ? 'last-day' : ''} ${isMiddleDay ? 'middle-day' : ''}`}
+                  className={`family-event-item ${
+                    isMultiDay ? 'multi-day-event' : ''
+                  } ${isFirstDay ? 'first-day' : ''} ${
+                    isLastDay ? 'last-day' : ''
+                  } ${isMiddleDay ? 'middle-day' : ''}`}
                   style={{ backgroundColor: member.color }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -185,9 +197,7 @@ console.log('📱 User Agent:', navigator.userAgent);
         ))}
         {/* Nový sloupec Rodina */}
         <div className="member-header-cell">
-          <span style={{ color: 'var(--calendar-primary)' }}>
-            Rodina
-          </span>
+          <span style={{ color: 'var(--calendar-primary)' }}>Rodina</span>
         </div>
       </div>
 
@@ -341,7 +351,9 @@ console.log('📱 User Agent:', navigator.userAgent);
                 >
                   {renderEventsInCell(date, member)}
                   <button
-                    className={`add-event-button-cell ${isTabletDevice ? 'tablet-mode' : ''}`}
+                    className={`add-event-button-cell ${
+                      isTabletDevice ? 'tablet-mode' : ''
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddEventFor(date, member.id);
@@ -350,50 +362,75 @@ console.log('📱 User Agent:', navigator.userAgent);
                 </div>
               ))}
 
-             {/* Sloupec Rodina - zobrazí události pro "all" */}
+              {/* Sloupec Rodina - zobrazí události pro "all" */}
               <div
                 className="member-day-cell family-cell"
                 onClick={() => onDateClick(date)}
               >
                 {(() => {
                   const familyEvents = getEventsByDate(date).filter(
-                    (event: CalendarEventData) => event.familyMemberId === 'all' && event.type !== 'birthday'
+                    (event: CalendarEventData) =>
+                      event.familyMemberId === 'all' &&
+                      event.type !== 'birthday'
                   );
 
                   // ✅ NOVÉ: Přidej vícedenní rodinné události
-                  const multiDayFamilyEvents = events.filter((event: CalendarEventData) => {
-                    if (!event.endDate || event.familyMemberId !== 'all' || event.type === 'birthday') {
-                      return false;
-                    }
-                    const eventStart = new Date(event.date);
-                    const eventEnd = new Date(event.endDate);
-                    const currentDate = new Date(date);
-                    
-                    return currentDate >= eventStart && currentDate <= eventEnd;
-                  });
+                  const multiDayFamilyEvents = events.filter(
+                    (event: CalendarEventData) => {
+                      if (
+                        !event.endDate ||
+                        event.familyMemberId !== 'all' ||
+                        event.type === 'birthday'
+                      ) {
+                        return false;
+                      }
+                      const eventStart = new Date(event.date);
+                      const eventEnd = new Date(event.endDate);
+                      const currentDate = new Date(date);
 
-                  const allFamilyEvents = [...familyEvents, ...multiDayFamilyEvents];
-                  const uniqueFamilyEvents = Array.from(new Map(allFamilyEvents.map(e => [e.id, e])).values());
+                      return (
+                        currentDate >= eventStart && currentDate <= eventEnd
+                      );
+                    }
+                  );
+
+                  const allFamilyEvents = [
+                    ...familyEvents,
+                    ...multiDayFamilyEvents,
+                  ];
+                  const uniqueFamilyEvents = Array.from(
+                    new Map(allFamilyEvents.map((e) => [e.id, e])).values()
+                  );
 
                   return (
                     <div className="events-in-cell">
                       {uniqueFamilyEvents.map((event) => {
                         const isMultiDay = !!event.endDate;
                         const eventStart = new Date(event.date);
-                        const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+                        const eventEnd = event.endDate
+                          ? new Date(event.endDate)
+                          : eventStart;
                         const currentDate = new Date(date);
-                        
-                        const isFirstDay = currentDate.toDateString() === eventStart.toDateString();
-                        const isLastDay = currentDate.toDateString() === eventEnd.toDateString();
+
+                        const isFirstDay =
+                          currentDate.toDateString() ===
+                          eventStart.toDateString();
+                        const isLastDay =
+                          currentDate.toDateString() ===
+                          eventEnd.toDateString();
                         const isMiddleDay = !isFirstDay && !isLastDay;
 
                         return (
                           <div key={event.id} className="event-wrapper">
                             <div
-                              className={`family-event-item ${isMultiDay ? 'multi-day-event' : ''} ${
-                                isFirstDay ? 'first-day' : ''
-                              } ${isLastDay ? 'last-day' : ''} ${isMiddleDay ? 'middle-day' : ''}`}
-                              style={{ backgroundColor: event.color || '#667eea' }}
+                              className={`family-event-item ${
+                                isMultiDay ? 'multi-day-event' : ''
+                              } ${isFirstDay ? 'first-day' : ''} ${
+                                isLastDay ? 'last-day' : ''
+                              } ${isMiddleDay ? 'middle-day' : ''}`}
+                              style={{
+                                backgroundColor: event.color || '#667eea',
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onEventClick(event);
@@ -407,7 +444,11 @@ console.log('📱 User Agent:', navigator.userAgent);
                                 className="quick-delete-btn"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+                                  if (
+                                    window.confirm(
+                                      `Opravdu smazat "${event.title}"?`
+                                    )
+                                  ) {
                                     onDeleteEvent(event.id);
                                   }
                                 }}
@@ -423,7 +464,9 @@ console.log('📱 User Agent:', navigator.userAgent);
                   );
                 })()}
                 <button
-                  className={`add-event-button-cell ${isTabletDevice ? 'tablet-mode' : ''}`}
+                  className={`add-event-button-cell ${
+                    isTabletDevice ? 'tablet-mode' : ''
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddEventFor(date, 'all');
@@ -434,16 +477,16 @@ console.log('📱 User Agent:', navigator.userAgent);
           );
         })}
       </div>
-         {/* ✅ FAB tlačítko pro tablet */}
-          {isTabletDevice && (
-            <button
-              className="fab-add-event-tablet"
-              onClick={() => onAddEventFor(new Date(), 'all')}
-              title="Přidat událost"
-            >
-              <span>+</span>
-            </button>
-          )}
+      {/* ✅ FAB tlačítko pro tablet */}
+      {isTabletDevice && (
+        <button
+          className="fab-add-event-tablet"
+          onClick={() => onAddEventFor(new Date(), 'all')}
+          title="Přidat událost"
+        >
+          <span>+</span>
+        </button>
+      )}
     </div>
   );
 };

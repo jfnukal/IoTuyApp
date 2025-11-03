@@ -8,7 +8,7 @@ import { useIsMobile } from './utils/deviceDetection';
 import type { FamilyMember, CalendarEventData } from '../../../types/index';
 import './styles/CalendarShared.css';
 import { createPortal } from 'react-dom';
-import { isTablet } from '../../../utils/deviceDetection';
+import { isTablet } from '../../../tuya/utils/deviceDetection';
 
 interface CalendarModalProps {
   isOpen: boolean;

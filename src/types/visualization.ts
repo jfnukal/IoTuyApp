@@ -1,5 +1,9 @@
 // src/types/visualization.ts
 
+// Re-export Room types z index.ts
+export type { Room, RoomType, RoomConfig } from './index';
+export { ROOM_CONFIGS } from './index';
+
 /**
  * 🏠 Typy pro vizualizaci domu, místností a umístění zařízení
  */
@@ -26,32 +30,32 @@ export interface DevicePlacement {
 /**
  * Místnost (Room)
  */
-export interface Room {
-  id: string;
-  name: string;
-  type: RoomType;
-  floorId: string; // ID patra, ke kterému místnost patří
-  position: Position; // Pozice v rámci patra
-  size: Size; // Velikost místnosti
-  color: string; // Barva místnosti
-  icon: string; // Emoji ikona
-  devices: string[]; // ID zařízení v této místnosti
-}
+// export interface Room {
+//   id: string;
+//   name: string;
+//   type: RoomType;
+//   floorId: string; // ID patra, ke kterému místnost patří
+//   position: Position; // Pozice v rámci patra
+//   size: Size; // Velikost místnosti
+//   color: string; // Barva místnosti
+//   icon: string; // Emoji ikona
+//   devices: string[]; // ID zařízení v této místnosti
+// }
 
-export type RoomType =
-  | 'living-room'    // Obývák
-  | 'bedroom'        // Ložnice
-  | 'kitchen'        // Kuchyň
-  | 'bathroom'       // Koupelna
-  | 'hallway'        // Chodba
-  | 'toilet'         // WC
-  | 'garage'         // Garáž
-  | 'cellar'         // Sklep
-  | 'garden'         // Zahrada
-  | 'office'         // Pracovna
-  | 'kids-room'      // Dětský pokoj
-  | 'storage'        // Komora
-  | 'other';         // Ostatní
+// export type RoomType =
+//   | 'living-room'    // Obývák
+//   | 'bedroom'        // Ložnice
+//   | 'kitchen'        // Kuchyň
+//   | 'bathroom'       // Koupelna
+//   | 'hallway'        // Chodba
+//   | 'toilet'         // WC
+//   | 'garage'         // Garáž
+//   | 'cellar'         // Sklep
+//   | 'garden'         // Zahrada
+//   | 'office'         // Pracovna
+//   | 'kids-room'      // Dětský pokoj
+//   | 'storage'        // Komora
+//   | 'other';         // Ostatní
 
 /**
  * Patro domu
@@ -65,9 +69,9 @@ export interface Floor {
   color: string;
 }
 
-/**
- * Celý dům
- */
+// /**
+//  * Celý dům
+//  */
 export interface House {
   id: string;
   name: string;
@@ -78,117 +82,117 @@ export interface House {
   updatedAt: number;
 }
 
-/**
- * Konfigurace místnosti (pro vytváření)
- */
+// /**
+//  * Konfigurace místnosti (pro vytváření)
+//  */
 export interface RoomConfig {
   type: RoomType;
   defaultName: string;
   defaultIcon: string;
   defaultColor: string;
   description: string;
-}
-
-/**
- * Přednastavené konfigurace místností
- */
-export const ROOM_CONFIGS: Record<RoomType, RoomConfig> = {
-  'living-room': {
-    type: 'living-room',
-    defaultName: 'Obývák',
-    defaultIcon: '🛋️',
-    defaultColor: '#FF6B6B',
-    description: 'Hlavní obývací prostor',
-  },
-  'bedroom': {
-    type: 'bedroom',
-    defaultName: 'Ložnice',
-    defaultIcon: '🛏️',
-    defaultColor: '#4ECDC4',
-    description: 'Ložnice pro spaní',
-  },
-  'kitchen': {
-    type: 'kitchen',
-    defaultName: 'Kuchyň',
-    defaultIcon: '🍳',
-    defaultColor: '#FFE66D',
-    description: 'Kuchyně a jídelna',
-  },
-  'bathroom': {
-    type: 'bathroom',
-    defaultName: 'Koupelna',
-    defaultIcon: '🚿',
-    defaultColor: '#95E1D3',
-    description: 'Koupelna s vanou/sprchou',
-  },
-  'hallway': {
-    type: 'hallway',
-    defaultName: 'Chodba',
-    defaultIcon: '🚪',
-    defaultColor: '#C7CEEA',
-    description: 'Vstupní chodba',
-  },
-  'toilet': {
-    type: 'toilet',
-    defaultName: 'WC',
-    defaultIcon: '🚽',
-    defaultColor: '#B4E7CE',
-    description: 'Toaleta',
-  },
-  'garage': {
-    type: 'garage',
-    defaultName: 'Garáž',
-    defaultIcon: '🚗',
-    defaultColor: '#A8E6CF',
-    description: 'Garáž pro auto',
-  },
-  'cellar': {
-    type: 'cellar',
-    defaultName: 'Sklep',
-    defaultIcon: '📦',
-    defaultColor: '#786FA6',
-    description: 'Sklep/suterén',
-  },
-  'garden': {
-    type: 'garden',
-    defaultName: 'Zahrada',
-    defaultIcon: '🌳',
-    defaultColor: '#58B19F',
-    description: 'Venkovní zahrada',
-  },
-  'office': {
-    type: 'office',
-    defaultName: 'Pracovna',
-    defaultIcon: '💼',
-    defaultColor: '#F8B500',
-    description: 'Domácí kancelář',
-  },
-  'kids-room': {
-    type: 'kids-room',
-    defaultName: 'Dětský pokoj',
-    defaultIcon: '🧸',
-    defaultColor: '#FFA07A',
-    description: 'Pokoj pro děti',
-  },
-  'storage': {
-    type: 'storage',
-    defaultName: 'Komora',
-    defaultIcon: '📦',
-    defaultColor: '#B0B0B0',
-    description: 'Skladovací prostor',
-  },
-  'other': {
-    type: 'other',
-    defaultName: 'Ostatní',
-    defaultIcon: '🏠',
-    defaultColor: '#D3D3D3',
-    description: 'Ostatní prostory',
-  },
 };
 
-/**
- * Přednastavené rozložení pater
- */
+// /**
+//  * Přednastavené konfigurace místností
+//  */
+// export const ROOM_CONFIGS: Record<RoomType, RoomConfig> = {
+//   'living-room': {
+//     type: 'living-room',
+//     defaultName: 'Obývák',
+//     defaultIcon: '🛋️',
+//     defaultColor: '#FF6B6B',
+//     description: 'Hlavní obývací prostor',
+//   },
+//   'bedroom': {
+//     type: 'bedroom',
+//     defaultName: 'Ložnice',
+//     defaultIcon: '🛏️',
+//     defaultColor: '#4ECDC4',
+//     description: 'Ložnice pro spaní',
+//   },
+//   'kitchen': {
+//     type: 'kitchen',
+//     defaultName: 'Kuchyň',
+//     defaultIcon: '🍳',
+//     defaultColor: '#FFE66D',
+//     description: 'Kuchyně a jídelna',
+//   },
+//   'bathroom': {
+//     type: 'bathroom',
+//     defaultName: 'Koupelna',
+//     defaultIcon: '🚿',
+//     defaultColor: '#95E1D3',
+//     description: 'Koupelna s vanou/sprchou',
+//   },
+//   'hallway': {
+//     type: 'hallway',
+//     defaultName: 'Chodba',
+//     defaultIcon: '🚪',
+//     defaultColor: '#C7CEEA',
+//     description: 'Vstupní chodba',
+//   },
+//   'toilet': {
+//     type: 'toilet',
+//     defaultName: 'WC',
+//     defaultIcon: '🚽',
+//     defaultColor: '#B4E7CE',
+//     description: 'Toaleta',
+//   },
+//   'garage': {
+//     type: 'garage',
+//     defaultName: 'Garáž',
+//     defaultIcon: '🚗',
+//     defaultColor: '#A8E6CF',
+//     description: 'Garáž pro auto',
+//   },
+//   'cellar': {
+//     type: 'cellar',
+//     defaultName: 'Sklep',
+//     defaultIcon: '📦',
+//     defaultColor: '#786FA6',
+//     description: 'Sklep/suterén',
+//   },
+//   'garden': {
+//     type: 'garden',
+//     defaultName: 'Zahrada',
+//     defaultIcon: '🌳',
+//     defaultColor: '#58B19F',
+//     description: 'Venkovní zahrada',
+//   },
+//   'office': {
+//     type: 'office',
+//     defaultName: 'Pracovna',
+//     defaultIcon: '💼',
+//     defaultColor: '#F8B500',
+//     description: 'Domácí kancelář',
+//   },
+//   'kids-room': {
+//     type: 'kids-room',
+//     defaultName: 'Dětský pokoj',
+//     defaultIcon: '🧸',
+//     defaultColor: '#FFA07A',
+//     description: 'Pokoj pro děti',
+//   },
+//   'storage': {
+//     type: 'storage',
+//     defaultName: 'Komora',
+//     defaultIcon: '📦',
+//     defaultColor: '#B0B0B0',
+//     description: 'Skladovací prostor',
+//   },
+//   'other': {
+//     type: 'other',
+//     defaultName: 'Ostatní',
+//     defaultIcon: '🏠',
+//     defaultColor: '#D3D3D3',
+//     description: 'Ostatní prostory',
+//   },
+// };
+
+// /**
+//  * Přednastavené rozložení pater
+//  */
 export const DEFAULT_FLOORS = {
   cellar: {
     id: 'floor-cellar',

@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { houseService } from '../services/houseService';
-import type { House, Floor, Room } from '../../types/visualization';
+import type { House, Floor } from '../../types/visualization';
+import type { Room } from '../../types/index';
 
 export const useHouse = () => {
   const { currentUser } = useAuth();
@@ -90,7 +91,11 @@ export const useHouse = () => {
    * 📌 Umístí zařízení do místnosti
    */
   const placeDevice = useCallback(
-    async (deviceId: string, roomId: string, position: { x: number; y: number }) => {
+    async (
+      deviceId: string,
+      roomId: string,
+      position: { x: number; y: number }
+    ) => {
       if (!currentUser) {
         throw new Error('Uživatel není přihlášen');
       }
@@ -144,17 +149,14 @@ export const useHouse = () => {
   /**
    * 🔍 Najdi místnost podle ID
    */
-  const getRoom = useCallback(
-    async (roomId: string): Promise<Room | null> => {
-      try {
-        return await houseService.getRoom(roomId);
-      } catch (err: any) {
-        console.error('❌ Chyba při načítání místnosti:', err);
-        return null;
-      }
-    },
-    []
-  );
+  const getRoom = useCallback(async (roomId: string): Promise<Room | null> => {
+    try {
+      return await houseService.getRoom(roomId);
+    } catch (err: any) {
+      console.error('❌ Chyba při načítání místnosti:', err);
+      return null;
+    }
+  }, []);
 
   /**
    * 🏢 Najdi patro podle ID

@@ -1,6 +1,6 @@
 // src/components/visualization/RoomCard2D.tsx
 import React from 'react';
-import type { Room } from '../../../types/visualization';
+import type { Room } from '../../../types/index';
 import type { TuyaDevice } from '../../../types';
 import './RoomCard2D.css';
 
@@ -18,7 +18,7 @@ const RoomCard2D: React.FC<RoomCard2DProps> = ({
   devices,
   onClick,
   onDeviceClick,
-  onDeviceDrop,  // ✅ PŘIDEJ
+  onDeviceDrop,  
   isSelected = false,
 }) => {
   // Spočítej statistiky
@@ -34,15 +34,20 @@ const RoomCard2D: React.FC<RoomCard2DProps> = ({
     return room.icon || '🏠';
   };
 
+  // Default hodnoty pro optional fields
+  const position = room.position || { x: 0, y: 0 };
+  const size = room.size || { width: 100, height: 100 };
+  const color = room.color || '#667eea';
+
   return (
     <div
-  className={`room-card-2d ${isSelected ? 'selected' : ''}`}
-  style={{
-    '--room-color': room.color,
-    left: `${room.position.x}%`,
-    top: `${room.position.y}%`,
-    width: `${room.size.width}%`,
-    height: `${room.size.height}%`,
+      className={`room-card-2d ${isSelected ? 'selected' : ''}`}
+      style={{
+        '--room-color': color,
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        width: `${size.width}%`,
+        height: `${size.height}%`,
   } as React.CSSProperties}
   onClick={onClick}
   onDragOver={(e) => {

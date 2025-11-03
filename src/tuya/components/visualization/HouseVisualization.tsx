@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import FloorPlan from './FloorPlan';
 import { useHouse } from '../../hooks/useHouse';
 import { useTuya } from '../../hooks/useTuya';
-import type { Room } from '../../../types/visualization';
+import type { Room } from '../../../types/index';
 import './HouseVisualization.css';
 
 const HouseVisualization: React.FC = () => {
@@ -15,7 +15,7 @@ const HouseVisualization: React.FC = () => {
     isLoading: houseLoading,
     error: houseError,
     initializeHouse,
-    placeDevice,  // ✅ PŘIDEJ
+    placeDevice, // ✅ PŘIDEJ
   } = useHouse();
 
   const { devices } = useTuya();
@@ -31,7 +31,7 @@ const HouseVisualization: React.FC = () => {
     console.log('  📱 Devices:', devices);
     console.log('  ⏳ Loading:', houseLoading);
     console.log('  ❌ Error:', houseError);
-    
+
     return () => {
       console.log('🏠 HouseVisualization unmounted');
     };
@@ -54,7 +54,7 @@ const HouseVisualization: React.FC = () => {
       floorsCount: floors.length,
       devicesCount: devices.length,
       loading: houseLoading,
-      error: houseError
+      error: houseError,
     });
   }, [house, floors, devices, houseLoading, houseError]);
 
@@ -93,7 +93,7 @@ const HouseVisualization: React.FC = () => {
     hasHouse: !!house,
     floorsCount: floors.length,
     selectedFloorId,
-    currentFloor: currentFloor?.name
+    currentFloor: currentFloor?.name,
   });
 
   if (houseLoading) {
@@ -160,7 +160,9 @@ const HouseVisualization: React.FC = () => {
             .map((floor) => (
               <button
                 key={floor.id}
-                className={`floor-tab ${floor.id === selectedFloorId ? 'active' : ''}`}
+                className={`floor-tab ${
+                  floor.id === selectedFloorId ? 'active' : ''
+                }`}
                 onClick={() => {
                   console.log('🏢 Přepínám na patro:', floor.name);
                   setSelectedFloorId(floor.id);
@@ -185,7 +187,7 @@ const HouseVisualization: React.FC = () => {
             allDevices={devices}
             onRoomClick={handleRoomClick}
             onDeviceClick={handleDeviceClick}
-            onDeviceDrop={handleDeviceDrop} 
+            onDeviceDrop={handleDeviceDrop}
             selectedRoomId={selectedRoom?.id}
           />
         </>
@@ -202,7 +204,10 @@ const HouseVisualization: React.FC = () => {
             <h3>
               {selectedRoom.icon} {selectedRoom.name}
             </h3>
-            <button className="close-button" onClick={() => setSelectedRoom(null)}>
+            <button
+              className="close-button"
+              onClick={() => setSelectedRoom(null)}
+            >
               ✕
             </button>
           </div>

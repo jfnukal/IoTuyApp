@@ -1,7 +1,8 @@
 // src/components/visualization/FloorPlan.tsx
 import React, { useState, useEffect } from 'react';
 import RoomCard2D from './RoomCard2D';
-import type { Floor, Room } from '../../../types/visualization';
+import type { Room } from '../../../types/index';
+import type { Floor } from '../../../types/visualization';
 import type { TuyaDevice } from '../../../types';
 import { houseService } from '../../services/houseService';
 import './FloorPlan.css';

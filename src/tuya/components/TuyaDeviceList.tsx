@@ -1,7 +1,7 @@
 // src/tuya/components/TuyaDeviceList.tsx
 import React, { useState, useMemo } from 'react';
 import { useTuya } from '../hooks/useTuya';
-import TuyaDeviceCard from './TuyaDeviceCard';
+import DeviceCardRenderer from './cards/DeviceCardRenderer';
 import './TuyaDeviceList.css';
 
 type FilterType = 'all' | 'online' | 'offline';
@@ -17,7 +17,11 @@ const TuyaDeviceList: React.FC = () => {
     error,
     syncDevices,
     toggleDevice,
+    controlDevice,  // ← Přidáno
   } = useTuya();
+
+  // Načti showDebugInfo z nastavení (zatím default false, později napojíš na skutečná nastavení)
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const [filter, setFilter] = useState<FilterType>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
@@ -137,6 +141,15 @@ const TuyaDeviceList: React.FC = () => {
         />
         <span>Zobrazit offline ({deviceCount - onlineCount})</span>
       </label>
+      
+      <label className="show-debug-toggle" title="Zobrazit debug informace">
+        <input
+          type="checkbox"
+          checked={showDebugInfo}
+          onChange={(e) => setShowDebugInfo(e.target.checked)}
+        />
+        <span>🔍 Debug režim</span>
+      </label>
       </div>
 
       {/* Filters */}
@@ -247,10 +260,12 @@ const TuyaDeviceList: React.FC = () => {
           </div>
           <div className="tuya-device-grid">
             {filteredDevices.map((device) => (
-              <TuyaDeviceCard
+              <DeviceCardRenderer
                 key={device.id}
                 device={device}
                 onToggle={toggleDevice}
+                onControl={controlDevice}  
+                isDebugVisible={showDebugInfo}
               />
             ))}
           </div>

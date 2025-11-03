@@ -14,7 +14,8 @@ import type {
   DevicePlacement,
   RoomType,
 } from '../../types/visualization';
-import { ROOM_CONFIGS, DEFAULT_FLOORS } from '../../types/visualization';
+import { ROOM_CONFIGS } from '../../types/index';
+import { DEFAULT_FLOORS } from '../../types/visualization';
 
 class HouseService {
   private housesCollection = 'houses';
@@ -153,6 +154,9 @@ class HouseService {
       color: config.defaultColor,
       icon: config.defaultIcon,
       devices: [],
+      userId: '',  // Bude nastaveno při ukládání do Firestore
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
   }
 

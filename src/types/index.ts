@@ -33,26 +33,197 @@ export interface TuyaDevice {
   customIcon?: string;
   customColor?: string;
   notes?: string;
+
+  // 🎨 NASTAVENÍ KARTY (jak se má zobrazovat)
+  cardSettings?: {
+    // Velikost karty
+    size?: 'small' | 'medium' | 'large'; // small=malá (150px), medium=normální (300px), large=velká (450px)
+
+    // Typ zobrazení
+    layout?: 'compact' | 'default'; // compact=úsporný (pro teplotu), default=normální
+
+    // Skryté ovládací prvky (co nechci vidět na hlavní kartě)
+    hiddenControls?: string[]; // např. ['switch_3'] = skryj třetí vypínač
+
+    // Co zobrazit POUZE v detailu (ne na hlavní kartě)
+    showInDetail?: string[]; // např. ['temp_set'] = nastavení teploty jen v detailu
+  };
+
+  // 🏠 MÍSTNOST (kde zařízení patří)
+  roomAssignment?: {
+    roomId?: string; // ID místnosti
+    floorId?: string; // ID patra
+  };
 }
 
+/**
+ * 🏠 Místnost - sloučený interface pro Firestore i vizualizaci
+ */
 export interface Room {
+  // === ZÁKLADNÍ INFO ===
   id: string;
   name: string;
   description?: string;
-  devices: string[];
-  owner: string;
-  createdAt: number;
-  updatedAt: number;
+  userId: string;
+
+  // === VIZUALIZACE (2D/3D půdorys) ===
+  type?: RoomType;
+  floorId?: string; // ID patra (pro vizualizaci domu)
+  position?: {
+    x: number; // 0-100 (procenta)
+    y: number; // 0-100 (procenta)
+  };
+  size?: {
+    width: number; // 0-100 (procenta)
+    height: number; // 0-100 (procenta)
+  };
+
+  // === STYLING ===
   color?: string;
   icon?: string;
   backgroundImage?: string;
-  isDefault?: boolean;
+
+  // === DATA ===
+  devices: string[]; // ID zařízení v této místnosti
+  isDefault?: boolean; // Výchozí místnost (nelze smazat)
+
+  // === METADATA ===
+  createdAt: number;
+  updatedAt: number;
+
+  // === LAYOUT (pro budoucí rozšíření) ===
   layout?: {
     width: number;
     height: number;
     type: '2d' | '3d';
   };
 }
+
+/**
+ * Typy místností
+ */
+export type RoomType =
+  | 'living-room' // Obývák
+  | 'bedroom' // Ložnice
+  | 'kitchen' // Kuchyň
+  | 'bathroom' // Koupelna
+  | 'hallway' // Chodba
+  | 'toilet' // WC
+  | 'garage' // Garáž
+  | 'cellar' // Sklep
+  | 'garden' // Zahrada
+  | 'office' // Pracovna
+  | 'kids-room' // Dětský pokoj
+  | 'storage' // Komora
+  | 'other'; // Ostatní
+
+/**
+ * Konfigurace typu místnosti (pro vytváření)
+ */
+export interface RoomConfig {
+  type: RoomType;
+  defaultName: string;
+  defaultIcon: string;
+  defaultColor: string;
+  description: string;
+}
+
+/**
+ * Přednastavené konfigurace místností
+ */
+export const ROOM_CONFIGS: Record<RoomType, RoomConfig> = {
+  'living-room': {
+    type: 'living-room',
+    defaultName: 'Obývák',
+    defaultIcon: '🛋️',
+    defaultColor: '#FF6B6B',
+    description: 'Hlavní obývací prostor',
+  },
+  bedroom: {
+    type: 'bedroom',
+    defaultName: 'Ložnice',
+    defaultIcon: '🛏️',
+    defaultColor: '#4ECDC4',
+    description: 'Ložnice pro spaní',
+  },
+  kitchen: {
+    type: 'kitchen',
+    defaultName: 'Kuchyň',
+    defaultIcon: '🍳',
+    defaultColor: '#FFE66D',
+    description: 'Kuchyně a jídelna',
+  },
+  bathroom: {
+    type: 'bathroom',
+    defaultName: 'Koupelna',
+    defaultIcon: '🚿',
+    defaultColor: '#95E1D3',
+    description: 'Koupelna s vanou/sprchou',
+  },
+  hallway: {
+    type: 'hallway',
+    defaultName: 'Chodba',
+    defaultIcon: '🚪',
+    defaultColor: '#C7CEEA',
+    description: 'Vstupní chodba',
+  },
+  toilet: {
+    type: 'toilet',
+    defaultName: 'WC',
+    defaultIcon: '🚽',
+    defaultColor: '#B4E7CE',
+    description: 'Toaleta',
+  },
+  garage: {
+    type: 'garage',
+    defaultName: 'Garáž',
+    defaultIcon: '🚗',
+    defaultColor: '#A8E6CF',
+    description: 'Garáž pro auto',
+  },
+  cellar: {
+    type: 'cellar',
+    defaultName: 'Sklep',
+    defaultIcon: '📦',
+    defaultColor: '#786FA6',
+    description: 'Sklep/suterén',
+  },
+  garden: {
+    type: 'garden',
+    defaultName: 'Zahrada',
+    defaultIcon: '🌳',
+    defaultColor: '#58B19F',
+    description: 'Venkovní zahrada',
+  },
+  office: {
+    type: 'office',
+    defaultName: 'Pracovna',
+    defaultIcon: '💼',
+    defaultColor: '#F8B500',
+    description: 'Domácí kancelář',
+  },
+  'kids-room': {
+    type: 'kids-room',
+    defaultName: 'Dětský pokoj',
+    defaultIcon: '🧸',
+    defaultColor: '#FFA07A',
+    description: 'Pokoj pro děti',
+  },
+  storage: {
+    type: 'storage',
+    defaultName: 'Komora',
+    defaultIcon: '📦',
+    defaultColor: '#B0B0B0',
+    description: 'Skladovací prostor',
+  },
+  other: {
+    type: 'other',
+    defaultName: 'Ostatní',
+    defaultIcon: '🏠',
+    defaultColor: '#D3D3D3',
+    description: 'Ostatní prostory',
+  },
+};
 
 export interface DeviceCategory {
   id: string;
@@ -82,6 +253,7 @@ export interface UserSettings {
     defaultRoomId?: string;
     showEmptyRooms: boolean;
     roomSortOrder: 'name' | 'created' | 'updated' | 'custom';
+    showDebugInfo?: boolean; // 🔍 Debug informace v Tuya kartách
   };
   tuyaConfig?: {
     hasValidCredentials: boolean;
@@ -162,15 +334,15 @@ export interface CalendarEventData {
   title: string;
   description?: string;
   date: string;
-  endDate?: string; 
+  endDate?: string;
   time?: string;
   endTime?: string;
   type: EventType;
-  familyMemberId?: string; 
+  familyMemberId?: string;
   reminderRecipients?: string[];
   color?: string;
   reminders?: ReminderItem[];
-  sentReminders?: string[]; 
+  sentReminders?: string[];
   isAllDay?: boolean;
   attachments?: FileAttachment[]; // Zachováno z tvé verze
   recurring?: RecurringPattern; // Zachováno z tvé verze
@@ -322,3 +494,33 @@ export interface HeaderConfigDoc {
   slots: HeaderSlotConfig;
   updatedAt: number;
 }
+
+// ==================== TUYA DEVICE CARDS ====================
+
+/**
+ * Props pro jednotlivé karty zařízení
+ */
+export interface DeviceCardProps {
+  device: TuyaDevice;
+  onToggle: (deviceId: string) => Promise<void>;
+  onControl?: (
+    deviceId: string,
+    commands: { code: string; value: any }[]
+  ) => Promise<void>;
+}
+
+/**
+ * Typy karet pro Tuya zařízení
+ */
+export type DeviceCardType =
+  | 'heating'
+  | 'multi_switch'
+  | 'smart_light'
+  | 'multi_socket'
+  | 'temp_sensor'
+  | 'motion_sensor'
+  | 'door_sensor'
+  | 'gateway'
+  | 'valve'
+  | 'soil_sensor'
+  | 'basic';

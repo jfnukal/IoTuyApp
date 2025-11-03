@@ -8,15 +8,19 @@ class TuyaService {
   /**
    * Načte Test Mode z nastavení
    */
-   private async isTestMode(): Promise<boolean> {
+  private async isTestMode(): Promise<boolean> {
     try {
-      const { settingsService } = await import('../../services/settingsService');
+      const { settingsService } = await import(
+        '../../services/settingsService'
+      );
       const settings = await settingsService.loadSettings();
       const testMode = settings.systemSettings.tuyaTestMode;
       console.log('🔍 Tuya Test Mode:', testMode); // ✅ Debug log
       return testMode;
     } catch (error) {
-      console.warn('⚠️ Nepodařilo se načíst Tuya test mode, použiju default (true)');
+      console.warn(
+        '⚠️ Nepodařilo se načíst Tuya test mode, použiju default (true)'
+      );
       return true;
     }
   }
@@ -105,7 +109,7 @@ class TuyaService {
   /**
    * Načte všechna Tuya zařízení ze serveru
    */
-   async fetchDevices(): Promise<TuyaDevice[]> {
+  async fetchDevices(): Promise<TuyaDevice[]> {
     // 🧪 TEST MODE: Vrátí mock data
     const testMode = await this.isTestMode();
     if (testMode) {
@@ -118,7 +122,7 @@ class TuyaService {
     // 🚀 PRODUCTION: Volá skutečné Netlify funkce
     try {
       console.log('📡 Načítám Tuya zařízení ze serveru...');
-      
+
       const response = await fetch(`${this.baseUrl}/get-device-list`, {
         method: 'GET',
         headers: {
@@ -131,15 +135,18 @@ class TuyaService {
       }
 
       const data = await response.json();
-      console.log('📦 RAW DATA Z API:', JSON.stringify(data, null, 2));
+
       if (!data.success) {
         throw new Error(data.error || 'Nepodařilo se načíst zařízení');
       }
 
       console.log(`✅ Načteno ${data.devices.length} zařízení`);
-      
+
       // Mapování dat z Tuya API na naše typy
-      console.log('📋 PRVNÍ ZAŘÍZENÍ Z API:', JSON.stringify(data.devices[0], null, 2));
+      console.log(
+        '📋 PRVNÍ ZAŘÍZENÍ Z API:',
+        JSON.stringify(data.devices[0], null, 2)
+      );
       const devices: TuyaDevice[] = data.devices.map((device: any) => ({
         id: device.id || device.device_id,
         name: device.customName || device.name || 'Neznámé zařízení',
@@ -157,7 +164,8 @@ class TuyaService {
         ...(device.customName && { customName: device.customName }),
       }));
 
-      console.log('✅ ZMAPOVANÁ ZAŘÍZENÍ:', JSON.stringify(devices, null, 2)); 
+      console.log('✅ ZMAPOVANÁ ZAŘÍZENÍ:', JSON.stringify(devices, null, 2));
+
       return devices;
     } catch (error) {
       console.error('❌ Chyba při načítání Tuya zařízení:', error);
@@ -168,14 +176,17 @@ class TuyaService {
   /**
    * Ovládá zařízení (zapne/vypne/změna hodnoty)
    */
-   async controlDevice(
+  async controlDevice(
     deviceId: string,
     commands: { code: string; value: any }[]
   ): Promise<boolean> {
     // 🧪 TEST MODE: Simuluj úspěch
     const testMode = await this.isTestMode();
     if (testMode) {
-      console.log(`🧪 TEST MODE: Simuluji ovládání zařízení ${deviceId}:`, commands);
+      console.log(
+        `🧪 TEST MODE: Simuluji ovládání zařízení ${deviceId}:`,
+        commands
+      );
       return new Promise((resolve) => {
         setTimeout(() => resolve(true), 300);
       });
@@ -201,7 +212,7 @@ class TuyaService {
       }
 
       const data = await response.json();
-
+      console.log('📦 RAW DATA Z API:', JSON.stringify(data, null, 2));
       if (!data.success) {
         throw new Error(data.error || 'Nepodařilo se ovládat zařízení');
       }
@@ -217,7 +228,7 @@ class TuyaService {
   /**
    * Synchronizuje Tuya zařízení do Firestore
    */
-   async syncToFirestore(userId: string): Promise<TuyaDevice[]> {
+  async syncToFirestore(userId: string): Promise<TuyaDevice[]> {
     try {
       console.log('🔄 Synchronizuji Tuya → Firestore...');
 
@@ -225,9 +236,9 @@ class TuyaService {
       const devices = await this.fetchDevices();
 
       // ✅ DŮLEŽITÉ: Přidej userId do každého zařízení
-      const devicesWithUserId = devices.map(device => ({
+      const devicesWithUserId = devices.map((device) => ({
         ...device,
-        userId: userId // Explicitně přidej userId
+        userId: userId, // Explicitně přidej userId
       }));
 
       // Ulož do Firestore
@@ -263,8 +274,4 @@ class TuyaService {
   }
 }
 
-
 export const tuyaService = new TuyaService();
-
-
-

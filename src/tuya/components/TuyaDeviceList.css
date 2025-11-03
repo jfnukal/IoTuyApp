@@ -434,7 +434,7 @@
   user-select: none;
 }
 
-.show-offline-toggle input[type="checkbox"] {
+.show-offline-toggle input[type='checkbox'] {
   width: 18px;
   height: 18px;
   cursor: pointer;

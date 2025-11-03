@@ -95,7 +95,7 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
                 onChange={(e) => handleTemperatureChange(parseFloat(e.target.value))}
                 disabled={!device.online || isAdjusting}
                 className="vertical-slider"
-                orient="vertical"
+                // orient="vertical"
               />
               
               <div className="slider-labels">
@@ -219,5 +219,6 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
     </div>
   );
 };
+
 
 export default HeatingCard;

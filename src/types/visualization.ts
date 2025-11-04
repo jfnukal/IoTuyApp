@@ -82,16 +82,16 @@ export interface House {
   updatedAt: number;
 }
 
-// /**
-//  * Konfigurace místnosti (pro vytváření)
-//  */
-export interface RoomConfig {
-  type: RoomType;
-  defaultName: string;
-  defaultIcon: string;
-  defaultColor: string;
-  description: string;
-};
+// // /**
+// //  * Konfigurace místnosti (pro vytváření)
+// //  */
+// export interface RoomConfig {
+//   type: RoomType;
+//   defaultName: string;
+//   defaultIcon: string;
+//   defaultColor: string;
+//   description: string;
+// };
 
 // /**
 //  * Přednastavené konfigurace místností

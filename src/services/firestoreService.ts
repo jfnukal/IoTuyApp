@@ -148,7 +148,7 @@ class FirestoreService {
 
   async createRoom(
     uid: string,
-    roomData: Omit<Room, 'id' | 'userId'>
+    roomData: Omit<Room, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
   ): Promise<string> {
     try {
       const roomsRef = collection(db, 'rooms');

@@ -5,6 +5,8 @@ import {
   updateDoc,
   deleteDoc,
   arrayUnion,
+  arrayRemove,
+  deleteField, 
   collection,
   addDoc,
   query,
@@ -12,7 +14,7 @@ import {
   getDocs,
   writeBatch,
   onSnapshot,
-  serverTimestamp ,
+  serverTimestamp,
   where,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -81,18 +83,18 @@ class FirestoreService {
 
   async saveFCMToken(userId: string, token: string): Promise<void> {
     const userSettingsRef = doc(db, 'userSettings', userId);
-    
+
     // ✅ Nejdřív zkontroluj, jestli token už není
     const userSettingsSnap = await getDoc(userSettingsRef);
     const existingTokens = userSettingsSnap.data()?.fcmTokens || [];
-    
+
     if (existingTokens.includes(token)) {
       console.log('✅ Token už existuje, nepřidávám duplicitu');
       return;
     }
-    
+
     console.log('➕ Přidávám nový token');
-    
+
     await setDoc(
       userSettingsRef,
       {
@@ -102,9 +104,66 @@ class FirestoreService {
       { merge: true }
     );
   }
-  
 
   // ==================== ROOMS ====================
+
+  /**
+   * ⚛️ Atomicky přiřadí zařízení k místnosti (nebo ho odebere)
+   * Aktualizuje dokument zařízení AŽ dva dokumenty místností.
+   * * @param deviceId ID zařízení, které se přesouvá
+   * @param newRoomId ID nové místnosti (nebo ""/null pro odebrání)
+   * @param oldRoomId ID staré místnosti (pokud bylo někde přiřazeno)
+   */
+   async assignDeviceToRoom(
+    deviceId: string,
+    newRoomId: string | null | undefined,
+    oldRoomId: string | null | undefined
+  ) {
+    try {
+      const batch = this.getWriteBatch();
+      const deviceRef = doc(db, 'devices', deviceId);
+
+      // Krok 1: Aktualizuj samotné zařízení
+      if (newRoomId) {
+        // Přiřazujeme do nové místnosti
+        batch.update(deviceRef, { roomId: newRoomId, lastUpdated: Date.now() });
+      } else {
+        // Odebíráme z místnosti (nastavujeme "nezařazeno")
+        batch.update(deviceRef, { 
+          roomId: deleteField(), // Smaže pole 'roomId' z dokumentu
+          lastUpdated: Date.now() 
+        });
+      }
+
+      // Krok 2: Odeber ID zařízení ze staré místnosti (pokud existovala)
+      if (oldRoomId) {
+        const oldRoomRef = doc(db, 'rooms', oldRoomId);
+        batch.update(oldRoomRef, {
+          devices: arrayRemove(deviceId), // Atomicky odebere ID z pole
+          updatedAt: Date.now()
+        });
+      }
+
+      // Krok 3: Přidej ID zařízení do nové místnosti (pokud existuje)
+      if (newRoomId) {
+        const newRoomRef = doc(db, 'rooms', newRoomId);
+        batch.update(newRoomRef, {
+          devices: arrayUnion(deviceId), // Atomicky přidá ID do pole
+          updatedAt: Date.now()
+        });
+      }
+
+      // Krok 4: Spusť všechny operace najednou
+      await batch.commit();
+      
+      console.log(`✅ Atomicky přesunuto zařízení ${deviceId} (Odebráno z: ${oldRoomId}, Přidáno do: ${newRoomId})`);
+
+    } catch (error) {
+      console.error('❌ Chyba při atomickém přiřazení zařízení:', error);
+      throw new Error('Nepodařilo se přiřadit zařízení');
+    }
+  }
+  
   async subscribeToUserRooms(
     uid: string,
     callback: (rooms: Room[]) => void
@@ -236,6 +295,14 @@ class FirestoreService {
   }
 
   // ==================== DEVICES ====================
+
+  /**
+   * 🗂️ Vytvoří novou dávku (batch) pro hromadné zápisy
+   */
+   getWriteBatch() {
+    return writeBatch(db);
+  }
+
   async subscribeToUserDevices(
     uid: string,
     callback: (devices: TuyaDevice[]) => void
@@ -347,6 +414,34 @@ class FirestoreService {
     }
   }
 
+  /**
+   * 🔄 Aktualizuje ČÁST nastavení JEDNOHO zařízení (pro batch)
+   * Používá "dot notation" pro aktualizaci vnořeného objektu.
+   *
+   * @param batch Instance WriteBatch z getWriteBatch()
+   * @param userId ID uživatele (zde se nepoužívá pro cestu, ale předává se)
+   * @param deviceId ID zařízení
+   * @param dataToUpdate Objekt s cestou k aktualizaci,
+   * např: { 'cardSettings.gridLayout': {x: 1, y: 2, w: 1, h: 1} }
+   */
+   updateDevicePartial(
+    batch: any, // Firebase WriteBatch
+    _userId: string, // Přijímáme, ale nepoužíváme v cestě
+    deviceId: string,
+    dataToUpdate: Record<string, any>
+  ) {
+    // Tvoje kolekce je 'devices', nikoliv vnořená pod uživatelem
+    const deviceDocRef = doc(db, 'devices', deviceId);
+    
+    // Přidáme i 'lastUpdated' pro konzistenci
+    const updatesWithTimestamp = {
+      ...dataToUpdate,
+      lastUpdated: Date.now(),
+    };
+    
+    batch.update(deviceDocRef, updatesWithTimestamp);
+  }
+
   // ==================== DEVICE CATEGORIES ====================
   getDeviceCategories(): DeviceCategory[] {
     return [
@@ -431,10 +526,7 @@ class FirestoreService {
   ): Promise<Unsubscribe> {
     try {
       const membersCollection = collection(db, 'familyMembers');
-      const q = query(
-        membersCollection,
-        orderBy('createdAt', 'asc')  
-      );
+      const q = query(membersCollection, orderBy('createdAt', 'asc'));
       return onSnapshot(q, (snapshot) => {
         const members = snapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as FamilyMember)
@@ -488,94 +580,103 @@ class FirestoreService {
     }
   }
 
-// ==================== CALENDAR EVENTS ====================
+  // ==================== CALENDAR EVENTS ====================
 
-/**
- * ✅ NOVÉ: Rodinné události - vidí všichni!
- * Jen "personal" události vidí pouze ten, kdo je vytvořil
- */
- async subscribeToEvents(
-  currentUserAuthUid: string,
-  callback: (events: CalendarEventData[]) => void
-): Promise<Unsubscribe> {
-  try {
-    // ✅ ZMĚNA: Načteme VŠECHNY události (bez filtru userId)
+  /**
+   * ✅ NOVÉ: Rodinné události - vidí všichni!
+   * Jen "personal" události vidí pouze ten, kdo je vytvořil
+   */
+  async subscribeToEvents(
+    currentUserAuthUid: string,
+    callback: (events: CalendarEventData[]) => void
+  ): Promise<Unsubscribe> {
+    try {
+      // ✅ ZMĚNA: Načteme VŠECHNY události (bez filtru userId)
+      const eventsRef = collection(db, 'calendarEvents');
+      const q = query(eventsRef, orderBy('date', 'asc'));
+
+      return onSnapshot(q, (snapshot) => {
+        const allEvents = snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
+        );
+
+        // ✅ FILTROVÁNÍ: Personal události vidí jen jejich autor
+        const visibleEvents = allEvents.filter((event) => {
+          // Pokud je to osobní událost
+          if (event.type === 'personal') {
+            // Vidí jen ten, kdo ji vytvořil
+            return (
+              event.createdBy === currentUserAuthUid ||
+              event.userId === currentUserAuthUid
+            );
+          }
+          // Všechny ostatní typy jsou sdílené
+          return true;
+        });
+
+        callback(visibleEvents);
+      });
+    } catch (error) {
+      console.error('Error subscribing to events:', error);
+      throw error;
+    }
+  }
+
+  async getEvents(currentUserAuthUid: string): Promise<CalendarEventData[]> {
     const eventsRef = collection(db, 'calendarEvents');
     const q = query(eventsRef, orderBy('date', 'asc'));
-    
-    return onSnapshot(q, (snapshot) => {
-      const allEvents = snapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
-      );
-      
-      // ✅ FILTROVÁNÍ: Personal události vidí jen jejich autor
-      const visibleEvents = allEvents.filter(event => {
-        // Pokud je to osobní událost
-        if (event.type === 'personal') {
-          // Vidí jen ten, kdo ji vytvořil
-          return event.createdBy === currentUserAuthUid || event.userId === currentUserAuthUid;
-        }
-        // Všechny ostatní typy jsou sdílené
-        return true;
-      });
-      
-      callback(visibleEvents);
+    const snapshot = await getDocs(q);
+
+    const allEvents = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
+    );
+
+    // Filtrování stejně jako u subscribe
+    return allEvents.filter((event) => {
+      if (event.type === 'personal') {
+        return (
+          event.createdBy === currentUserAuthUid ||
+          event.userId === currentUserAuthUid
+        );
+      }
+      return true;
     });
-  } catch (error) {
-    console.error('Error subscribing to events:', error);
-    throw error;
   }
-}
 
-async getEvents(currentUserAuthUid: string): Promise<CalendarEventData[]> {
-  const eventsRef = collection(db, 'calendarEvents');
-  const q = query(eventsRef, orderBy('date', 'asc'));
-  const snapshot = await getDocs(q);
-  
-  const allEvents = snapshot.docs.map(
-    (doc) => ({ id: doc.id, ...doc.data() } as CalendarEventData)
-  );
-  
-  // Filtrování stejně jako u subscribe
-  return allEvents.filter(event => {
-    if (event.type === 'personal') {
-      return event.createdBy === currentUserAuthUid || event.userId === currentUserAuthUid;
-    }
-    return true;
-  });
-}
+  async addEvent(
+    currentUserAuthUid: string,
+    event: Omit<
+      CalendarEventData,
+      'id' | 'createdAt' | 'updatedAt' | 'userId' | 'createdBy'
+    >
+  ): Promise<string> {
+    const eventsRef = collection(db, 'calendarEvents');
+    const newEvent = {
+      ...event,
+      userId: currentUserAuthUid, // Zachováme pro kompatibilitu
+      createdBy: currentUserAuthUid, // ✅ NOVÉ: Kdo událost vytvořil
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const docRef = await addDoc(eventsRef, newEvent);
+    return docRef.id;
+  }
 
-async addEvent(
-  currentUserAuthUid: string,
-  event: Omit<CalendarEventData, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'createdBy'>
-): Promise<string> {
-  const eventsRef = collection(db, 'calendarEvents');
-  const newEvent = {
-    ...event,
-    userId: currentUserAuthUid,      // Zachováme pro kompatibilitu
-    createdBy: currentUserAuthUid,   // ✅ NOVÉ: Kdo událost vytvořil
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  const docRef = await addDoc(eventsRef, newEvent);
-  return docRef.id;
-}
+  async updateEvent(
+    eventId: string,
+    updates: Partial<Omit<CalendarEventData, 'id' | 'userId' | 'createdBy'>>
+  ): Promise<void> {
+    const eventRef = doc(db, 'calendarEvents', eventId);
+    await updateDoc(eventRef, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+  }
 
-async updateEvent(
-  eventId: string,
-  updates: Partial<Omit<CalendarEventData, 'id' | 'userId' | 'createdBy'>>
-): Promise<void> {
-  const eventRef = doc(db, 'calendarEvents', eventId);
-  await updateDoc(eventRef, {
-    ...updates,
-    updatedAt: Date.now(),
-  });
-}
-
-async deleteEvent(eventId: string): Promise<void> {
-  const eventRef = doc(db, 'calendarEvents', eventId);
-  await deleteDoc(eventRef);
-}
+  async deleteEvent(eventId: string): Promise<void> {
+    const eventRef = doc(db, 'calendarEvents', eventId);
+    await deleteDoc(eventRef);
+  }
 
   // ==================== SCHEDULES (ROZVRHY) ====================
   async getSchedule(scheduleId: string): Promise<TimetableDay[]> {
@@ -665,7 +766,7 @@ async deleteEvent(eventId: string): Promise<void> {
   /**
    * Získá konfiguraci hlavičky pro rodinný tablet
    */
-   async getHeaderConfig(): Promise<HeaderSlotConfig> {
+  async getHeaderConfig(): Promise<HeaderSlotConfig> {
     try {
       const docRef = doc(db, 'allFamily', 'headerConfig');
       const docSnap = await getDoc(docRef);
@@ -687,7 +788,7 @@ async deleteEvent(eventId: string): Promise<void> {
       return defaultConfig;
     } catch (error) {
       console.error('❌ Chyba při načítání header config:', error);
-      
+
       // Fallback výchozí konfigurace
       return {
         left: 'greeting',

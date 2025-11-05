@@ -35,19 +35,21 @@ export interface TuyaDevice {
   notes?: string;
 
   // 🎨 NASTAVENÍ KARTY (jak se má zobrazovat)
-  cardSettings?: {
-    // Velikost karty
-    size?: 'small' | 'medium' | 'large'; // small=malá (150px), medium=normální (300px), large=velká (450px)
-
-    // Typ zobrazení
-    layout?: 'compact' | 'default'; // compact=úsporný (pro teplotu), default=normální
-
-    // Skryté ovládací prvky (co nechci vidět na hlavní kartě)
-    hiddenControls?: string[]; // např. ['switch_3'] = skryj třetí vypínač
-
-    // Co zobrazit POUZE v detailu (ne na hlavní kartě)
-    showInDetail?: string[]; // např. ['temp_set'] = nastavení teploty jen v detailu
+cardSettings?: {
+    size?: 'small' | 'medium' | 'large';      // Výška: small=150px, medium=300px, large=450px
+    layout?: 'compact' | 'default';           // Layout typ
+    hiddenControls?: string[];                 // Skryté ovládací prvky (např. ['switch_3'])
+    showInDetail?: string[];                   // Co zobrazit pouze v detailu
+    gridPosition?: { row: number; col: number }; // Pozice v gridu (pro budoucí D&D)
   };
+
+    // Grid pozice (pro react-grid-layout)
+    gridLayout?: {
+      x: number;      // Pozice sloupec (0, 1, 2, ...)
+      y: number;      // Pozice řádek (0, 1, 2, ...)
+      w: number;      // Šířka (1 = 1 karta, 2 = 2 karty, ...)
+      h: number;      // Výška (1 = malá, 2 = velká)
+    };
 
   // 🏠 MÍSTNOST (kde zařízení patří)
   roomAssignment?: {

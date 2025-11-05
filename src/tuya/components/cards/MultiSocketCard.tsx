@@ -4,12 +4,14 @@ import type { DeviceCardProps } from '../../../types';
 import { getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
-  device, 
-  onControl,
-  isDebugVisible = false 
-}) => {
+const MultiSocketCard: React.FC<
+  DeviceCardProps & { isDebugVisible?: boolean }
+> = ({ device, onControl, isDebugVisible = false }) => {
   const [loadingSwitch, setLoadingSwitch] = useState<string | null>(null);
+
+  // 🎨 Zjisti nastavení karty
+  const cardSize = device.cardSettings?.size || 'medium';
+  const cardLayout = device.cardSettings?.layout || 'default';
 
   // Získej status všech výstupů
   const switch1 = getStatusValue(device.status, 'switch_1');
@@ -18,12 +20,10 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
 
   const handleToggle = async (switchCode: string, currentValue: boolean) => {
     if (!onControl || !device.online) return;
-    
+
     setLoadingSwitch(switchCode);
     try {
-      await onControl(device.id, [
-        { code: switchCode, value: !currentValue }
-      ]);
+      await onControl(device.id, [{ code: switchCode, value: !currentValue }]);
     } catch (error) {
       console.error(`Chyba při přepínání ${switchCode}:`, error);
     } finally {
@@ -32,22 +32,40 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
   };
 
   return (
-    <div className={`tuya-device-card glass-socket ${device.online ? 'online' : 'offline'}`}>
+    <div
+      className={`tuya-device-card glass-socket ${
+        device.online ? 'online' : 'offline'
+      } size-${cardSize} layout-${cardLayout}`}
+    >
       {/* Header */}
       <div className="tuya-card-header">
         <div className="device-info">
           <span className="device-icon">🔌</span>
           <div className="device-names">
-            <h3 className="device-name">
-              {device.customName || device.name}
-            </h3>
+            <h3 className="device-name">{device.customName || device.name}</h3>
             <span className="device-category">Smart Socket</span>
           </div>
         </div>
-        
+
         <div className="device-status-indicator">
-          {device.sub && <span className="zigbee-badge" title="Zigbee zařízení">Z</span>}
-          <span className={`status-dot ${device.online ? 'online' : 'offline'}`}></span>
+          <div className="status-badges">
+            {device.sub && (
+              <span className="zigbee-badge" title="Zigbee zařízení">
+                Z
+              </span>
+            )}
+            <span
+              className={`status-dot ${device.online ? 'online' : 'offline'}`}
+            ></span>
+          </div>
+          {device.lastUpdated && (
+            <div className="last-updated-header">
+              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -56,7 +74,14 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
         <div className="glass-panel socket-panel">
           {/* WiFi symbol nahoře */}
           <div className="wifi-indicator">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
               <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
               <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
@@ -69,13 +94,32 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
             {/* Zásuvka 1 */}
             {switch1 !== undefined && (
               <button
-                className={`socket-button ${switch1 ? 'active' : ''} ${loadingSwitch === 'switch_1' ? 'loading' : ''}`}
+                className={`socket-button ${switch1 ? 'active' : ''} ${
+                  loadingSwitch === 'switch_1' ? 'loading' : ''
+                }`}
                 onClick={() => handleToggle('switch_1', switch1)}
                 disabled={!device.online || loadingSwitch === 'switch_1'}
               >
                 <div className="socket-circle">
-                  <svg className="socket-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <svg
+                    className="socket-icon"
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect
+                      x="5"
+                      y="2"
+                      width="14"
+                      height="20"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                     <line x1="9" y1="9" x2="9" y2="9.01"></line>
                     <line x1="15" y1="9" x2="15" y2="9.01"></line>
                     <line x1="9" y1="13" x2="15" y2="13"></line>
@@ -91,13 +135,32 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
             {/* Zásuvka 2 */}
             {switch2 !== undefined && (
               <button
-                className={`socket-button ${switch2 ? 'active' : ''} ${loadingSwitch === 'switch_2' ? 'loading' : ''}`}
+                className={`socket-button ${switch2 ? 'active' : ''} ${
+                  loadingSwitch === 'switch_2' ? 'loading' : ''
+                }`}
                 onClick={() => handleToggle('switch_2', switch2)}
                 disabled={!device.online || loadingSwitch === 'switch_2'}
               >
                 <div className="socket-circle">
-                  <svg className="socket-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <svg
+                    className="socket-icon"
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect
+                      x="5"
+                      y="2"
+                      width="14"
+                      height="20"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                     <line x1="9" y1="9" x2="9" y2="9.01"></line>
                     <line x1="15" y1="9" x2="15" y2="9.01"></line>
                     <line x1="9" y1="13" x2="15" y2="13"></line>
@@ -113,12 +176,24 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
             {/* USB Port */}
             {switchUsb1 !== undefined && (
               <button
-                className={`socket-button usb ${switchUsb1 ? 'active' : ''} ${loadingSwitch === 'switch_usb1' ? 'loading' : ''}`}
+                className={`socket-button usb ${switchUsb1 ? 'active' : ''} ${
+                  loadingSwitch === 'switch_usb1' ? 'loading' : ''
+                }`}
                 onClick={() => handleToggle('switch_usb1', switchUsb1)}
                 disabled={!device.online || loadingSwitch === 'switch_usb1'}
               >
                 <div className="socket-circle">
-                  <svg className="socket-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    className="socket-icon"
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <circle cx="10" cy="7" r="1"></circle>
                     <circle cx="4" cy="20" r="1"></circle>
                     <path d="M4.7 19.3 19 5"></path>
@@ -135,17 +210,6 @@ const MultiSocketCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
               </button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="tuya-card-footer">
-        <div className="device-control-info">
-          {device.lastUpdated && (
-            <span className="last-updated">
-              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ')}
-            </span>
-          )}
         </div>
       </div>
 

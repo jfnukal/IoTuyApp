@@ -1,0 +1,84 @@
+/* src/tuya/components/grid/DeviceGrid.css */
+
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+/* Toto je kontejner, který drží tvou kartu. 
+   Musí mít overflow: hidden, ale nic víc! */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+  /* VŠECHNY STYLY (background, radius, shadow) JSME SMAZALI */
+  overflow: hidden; /* Důležité, aby obsah nepřetékal */
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+}
+
+/* Při přetahování zvedneme kartu (toto může zůstat) */
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  /* Stín je lepší mít na kartě, ale tady ho můžeme nechat pro "zvednutí" */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Úchyt pro změnu velikosti (vpravo dole) */
+.react-grid-item .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  /* Přidáme mu trochu viditelnosti */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px 0 0 0;
+  opacity: 0.5;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 1;
+}
+
+/* Když je možné klikat (NEJSI v režimu úprav) */
+.grid-item-clickable {
+  cursor: pointer;
+}
+
+/* Když je možné přetahovat (JSI v režimu úprav) */
+.grid-item-draggable {
+  cursor: grab;
+}
+.grid-item-draggable:active {
+  cursor: grabbing;
+}
+
+.grid-item-draggable {
+  cursor: move;
+  border: 2px dashed rgba(102, 126, 234, 0.5) !important;
+  transition: all 0.2s;
+}
+
+.grid-item-draggable:hover {
+  border-color: rgba(102, 126, 234, 1) !important;
+  transform: scale(1.02);
+}
+
+.grid-item-clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.grid-item-clickable:hover {
+  transform: translateY(-4px);
+}

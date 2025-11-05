@@ -5,18 +5,23 @@ import { getTemperature, getHumidity, getBattery } from '../../utils/deviceHelpe
 import DebugSection from './DebugSection';
 
 const TempSensorCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, isDebugVisible = false }) => {
-  
+    
 // Získej hodnoty z status (univerzální - podporuje všechny varianty názvů)
 const temperature = getTemperature(device.status);
 const humidity = getHumidity(device.status);
 const battery = getBattery(device.status);
 
-  return (
-    <div
-      className={`tuya-device-card temp-sensor ${
-        device.online ? 'online' : 'offline'
-      }`}
-    >
+// Zjisti nastavení karty
+// 🎨 Zjisti nastavení karty - TempSensor má výchozí COMPACT
+const cardSize = device.cardSettings?.size || 'small';      // ✅ Změna: small místo medium
+const cardLayout = device.cardSettings?.layout || 'compact'; // ✅ Změna: compact místo default
+
+return (
+  <div
+    className={`tuya-device-card temp-sensor ${
+      device.online ? 'online' : 'offline'
+    } size-${cardSize} layout-${cardLayout}`}
+  >
       {/* Header */}
       <div className="tuya-card-header">
         <div className="device-info">
@@ -28,14 +33,24 @@ const battery = getBattery(device.status);
         </div>
 
         <div className="device-status-indicator">
-          {device.sub && (
-            <span className="zigbee-badge" title="Zigbee zařízení">
-              Z
-            </span>
+          <div className="status-badges">
+            {device.sub && (
+              <span className="zigbee-badge" title="Zigbee zařízení">
+                Z
+              </span>
+            )}
+            <span
+              className={`status-dot ${device.online ? 'online' : 'offline'}`}
+            ></span>
+          </div>
+          {device.lastUpdated && (
+            <div className="last-updated-header">
+              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
           )}
-          <span
-            className={`status-dot ${device.online ? 'online' : 'offline'}`}
-          ></span>
         </div>
       </div>
 
@@ -65,18 +80,6 @@ const battery = getBattery(device.status);
               <span className="stat-icon">🔋</span>
               <span className="stat-value">{battery}%</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="tuya-card-footer">
-        <div className="read-only-indicator">
-          <span className="info-text">📊 Pouze čtení</span>
-          {device.lastUpdated && (
-            <span className="last-updated">
-              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ')}
-            </span>
           )}
         </div>
       </div>

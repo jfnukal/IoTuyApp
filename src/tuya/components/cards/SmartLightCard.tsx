@@ -7,6 +7,10 @@ import DebugSection from './DebugSection';
 const SmartLightCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, onControl, isDebugVisible = false }) => {
   const [isAdjusting, setIsAdjusting] = useState(false);
 
+  // 🎨 Zjisti nastavení karty
+  const cardSize = device.cardSettings?.size || 'medium';
+  const cardLayout = device.cardSettings?.layout || 'default';
+
   // Získej hodnoty z status
   const switchLed = getStatusValue(device.status, 'switch_led');
   const workMode = getStatusValue(device.status, 'work_mode') || 'white';
@@ -76,7 +80,7 @@ const SmartLightCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> =
   };
 
   return (
-    <div className={`tuya-device-card smart-light ${device.online ? 'online' : 'offline'} ${switchLed ? 'active' : ''}`}>
+    <div className={`tuya-device-card smart-light ${device.online ? 'online' : 'offline'} ${switchLed ? 'active' : ''} size-${cardSize} layout-${cardLayout}`}>
       {/* Header */}
       <div className="tuya-card-header">
         <div className="device-info">
@@ -90,9 +94,25 @@ const SmartLightCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> =
         </div>
         
         <div className="device-status-indicator">
-          {device.sub && <span className="zigbee-badge" title="Zigbee zařízení">Z</span>}
-          <span className={`status-dot ${device.online ? 'online' : 'offline'}`}></span>
-        </div>
+  <div className="status-badges">
+    {device.sub && (
+      <span className="zigbee-badge" title="Zigbee zařízení">
+        Z
+      </span>
+    )}
+    <span
+      className={`status-dot ${device.online ? 'online' : 'offline'}`}
+    ></span>
+  </div>
+  {device.lastUpdated && (
+    <div className="last-updated-header">
+      {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}
+    </div>
+  )}
+</div>
       </div>
 
       {/* Body - Status a hodnoty */}

@@ -21,7 +21,7 @@ class TuyaService {
       console.warn(
         '⚠️ Nepodařilo se načíst Tuya test mode, použiju default (true)'
       );
-      return true;
+      return false;
     }
   }
 

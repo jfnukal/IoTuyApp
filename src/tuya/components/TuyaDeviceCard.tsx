@@ -167,7 +167,7 @@ const TuyaDeviceCard: React.FC<TuyaDeviceCardProps> = ({
       </div>
 
 {/* Footer - Ovládání */}
-<div className="tuya-card-footer">
+     <div className="tuya-card-footer">
         <div className="device-control">
           <div className="control-info">
             <span className="control-label">

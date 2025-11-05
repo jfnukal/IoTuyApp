@@ -6,6 +6,11 @@ import DebugSection from './DebugSection';
 
 const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, onToggle, isDebugVisible = false }) => {
   const [isLoading, setIsLoading] = useState(false);
+  
+
+  // 🎨 Zjisti nastavení karty
+  const cardSize = device.cardSettings?.size || 'medium';
+  const cardLayout = device.cardSettings?.layout || 'default';
 
   // Najdi switch_1 status (základní zapnuto/vypnuto)
   const switchStatus = getStatusValue(device.status, 'switch_1');
@@ -46,7 +51,7 @@ const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ d
     <div
       className={`tuya-device-card basic ${
         device.online ? 'online' : 'offline'
-      } ${isOn ? 'active' : ''}`}
+      } ${isOn ? 'active' : ''} size-${cardSize} layout-${cardLayout}`}
     >
       {/* Header */}
       <div className="tuya-card-header">
@@ -61,15 +66,25 @@ const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ d
         </div>
 
         <div className="device-status-indicator">
-          {device.sub && (
-            <span className="zigbee-badge" title="Zigbee zařízení">
-              Z
-            </span>
-          )}
-          <span
-            className={`status-dot ${device.online ? 'online' : 'offline'}`}
-          ></span>
-        </div>
+  <div className="status-badges">
+    {device.sub && (
+      <span className="zigbee-badge" title="Zigbee zařízení">
+        Z
+      </span>
+    )}
+    <span
+      className={`status-dot ${device.online ? 'online' : 'offline'}`}
+    ></span>
+  </div>
+  {device.lastUpdated && (
+    <div className="last-updated-header">
+      {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}
+    </div>
+  )}
+</div>
       </div>
 
       {/* Body - Základní statusy */}
@@ -110,44 +125,28 @@ const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ d
         )}
       </div>
 
-      {/* Footer - Ovládání */}
-      <div className="tuya-card-footer">
-        {switchStatus !== undefined ? (
-          <div className="device-control">
-            <div className="control-info">
-              <span className="control-label">
-                {isOn ? '🟢 Zapnuto' : '⚫ Vypnuto'}
-              </span>
-              {device.lastUpdated && (
-                <span className="last-updated">
-                  {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ')}
-                </span>
-              )}
-            </div>
+{/* Ovládání - bez footeru */}
+{switchStatus !== undefined && (
+  <div className="device-control-inline">
+    <div className="control-info">
+      <span className="control-label">
+        {isOn ? '🟢 Zapnuto' : '⚫ Vypnuto'}
+      </span>
+    </div>
 
-            <label className="device-toggle-switch">
-              <input
-                type="checkbox"
-                checked={isOn}
-                onChange={handleToggle}
-                disabled={!device.online || isLoading}
-              />
-              <span className="device-toggle-slider">
-                {isLoading && <span className="loading-spinner-small">⏳</span>}
-              </span>
-            </label>
-          </div>
-        ) : (
-          <div className="no-control">
-            <span className="info-text">📊 Žádné ovládání</span>
-            {device.lastUpdated && (
-              <span className="last-updated">
-                {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ')}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+    <label className="device-toggle-switch">
+      <input
+        type="checkbox"
+        checked={isOn}
+        onChange={handleToggle}
+        disabled={!device.online || isLoading}
+      />
+      <span className="device-toggle-slider">
+        {isLoading && <span className="loading-spinner-small">⏳</span>}
+      </span>
+    </label>
+  </div>
+)}
       {/* Debug Section */}
       <DebugSection device={device} isVisible={isDebugVisible} />
     </div>

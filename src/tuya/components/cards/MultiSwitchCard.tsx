@@ -11,6 +11,10 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
 }) => {
   const [loadingSwitch, setLoadingSwitch] = useState<string | null>(null);
 
+  // 🎨 Zjisti nastavení karty
+  const cardSize = device.cardSettings?.size || 'medium';
+  const cardLayout = device.cardSettings?.layout || 'default';
+
   // Získej status všech přepínačů
   const switch1 = getStatusValue(device.status, 'switch_1');
   const switch2 = getStatusValue(device.status, 'switch_2');
@@ -31,7 +35,7 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
   };
 
   return (
-    <div className={`tuya-device-card glass-switch ${device.online ? 'online' : 'offline'}`}>
+    <div className={`tuya-device-card glass-switch ${device.online ? 'online' : 'offline'} size-${cardSize} layout-${cardLayout}`}>
       {/* Header */}
       <div className="tuya-card-header">
         <div className="device-info">
@@ -45,9 +49,25 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
         </div>
         
         <div className="device-status-indicator">
-          {device.sub && <span className="zigbee-badge" title="Zigbee zařízení">Z</span>}
-          <span className={`status-dot ${device.online ? 'online' : 'offline'}`}></span>
-        </div>
+  <div className="status-badges">
+    {device.sub && (
+      <span className="zigbee-badge" title="Zigbee zařízení">
+        Z
+      </span>
+    )}
+    <span
+      className={`status-dot ${device.online ? 'online' : 'offline'}`}
+    ></span>
+  </div>
+  {device.lastUpdated && (
+    <div className="last-updated-header">
+      {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}
+    </div>
+  )}
+</div>
       </div>
 
       {/* Body - Skleněný panel s tlačítky */}
@@ -105,17 +125,6 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
               </button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="tuya-card-footer">
-        <div className="device-control-info">
-          {device.lastUpdated && (
-            <span className="last-updated">
-              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ')}
-            </span>
-          )}
         </div>
       </div>
 

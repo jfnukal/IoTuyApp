@@ -1,5 +1,6 @@
 /* src/tuya/components/TuyaDeviceCard.css */
 
+/* OPRÁVA PRO REACT-GRID-LAYOUT */
 .tuya-device-card {
   background: rgba(20, 20, 40, 0.85);
   backdrop-filter: blur(10px);
@@ -10,6 +11,15 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
+
+  /* 🎯 Karta musí vyplnit 100% buňky mřížky */
+  width: 100%;
+  height: 100%; /* <-- ZMĚNA (z min-height) */
+  box-sizing: border-box; /* <-- PŘIDÁNO (důležité kvůli paddingu) */
+
+  /* 📱 Grid friendly */
+  display: flex;
+  flex-direction: column;
 }
 
 .tuya-device-card::before {
@@ -52,8 +62,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -130,7 +140,10 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 0px;
-  min-height: 60px;
+  flex: 1; 
+  overflow-y: hidden; /* <-- ZMĚNA: Skryje scrollbar */
+  min-height: 0;
+  justify-content: center; /* <-- PŘIDÁNO: Vycentruje obsah vertikálně */
 }
 
 .device-stat {
@@ -183,7 +196,7 @@
   display: flex !important;
   flex-direction: column;
   gap: 10px;
-  padding-top: 12px;
+  padding-top: 1px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -476,7 +489,7 @@
   font-size: 0.75rem;
   color: #4ade80;
   border: 1px solid rgba(74, 222, 128, 0.2);
-  max-height: 400px;
+
   overflow-y: auto;
 }
 
@@ -484,10 +497,17 @@
 .temp-sensor-body {
   padding: 1.5rem;
   text-align: center;
+
+  /* === PŘIDAT TOTO === */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Vertikálně vycentruje obsah */
+  flex: 1; /* Roztáhne se, aby vyplnilo .tuya-card-body */
+  /* === KONEC PŘIDÁNÍ === */
 }
 
 .main-value {
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
 }
 
 .temperature-display {
@@ -514,7 +534,7 @@
   display: flex;
   justify-content: center;
   gap: 2rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .sensor-stat {
@@ -537,7 +557,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
+  padding: 0rem;
 }
 
 .info-text {
@@ -560,7 +580,7 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 1rem 0;
+  padding: 0.05rem 0;
   gap: 1rem;
 }
 
@@ -648,7 +668,7 @@
 .temp-slider-container,
 .brightness-control,
 .color-temp-control {
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 0.5rem;
 }
@@ -739,41 +759,16 @@
   margin-right: 0.5rem;
 }
 
+/* ==================== HEATING CARD - OPRAVY ==================== */
+
+
+
 /* Heating Card - Kompaktní layout */
 .heating-body-compact {
   padding: 1rem;
 }
 
-.heating-compact-layout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 0.5rem;
-}
-
-/* Vertikální posuvník vlevo */
-.vertical-temp-control {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  position: relative;
-}
-
-.temp-value-display {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffc107;
-  background: rgba(255, 193, 7, 0.15);
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  min-width: 70px;
-  text-align: center;
-}
-
-.vertical-slider {
+/* .vertical-slider {
   -webkit-appearance: slider-vertical;
   writing-mode: bt-lr;
   width: 8px;
@@ -784,7 +779,7 @@
   cursor: pointer;
   position: relative;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
-}
+} */
 
 .vertical-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -815,21 +810,10 @@
   transition: all 0.2s;
 }
 
-.slider-labels {
-  position: absolute;
-  left: -10px;
-  top: 40px;
-  height: 250px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .label-top,
 .label-bottom {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 0.2rem;
   font-size: 0.75rem;
@@ -838,10 +822,12 @@
 
 .label-top {
   order: 1;
+  padding-bottom: 3rem;
 }
 
 .label-bottom {
   order: 2;
+  padding-top: 3rem;
 }
 
 .label-top .emoji {
@@ -853,12 +839,187 @@
 }
 
 /* Kompaktní budík vpravo */
-.thermometer-compact {
+/* .thermometer-compact {
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   gap: 0.5rem;
+} */
+
+/* ==================== HEATING CARD - OPRAVY ==================== */
+
+
+
+/* Body - kompaktní layout */
+.heating-body-compact {
+  padding: 10rem 0.5rem;
+
+  display: flex;
+  align-items: stretch;
+}
+
+.heating-compact-layout {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Vertikální teplotní ovládání - vlevo */
+.vertical-temp-control {
+  flex: 0 0 80px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 0.3rem;
+  padding-top: 0rem; /* Odsazení nahoru */
+}
+
+/* .temp-value-display {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  padding: 0.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  min-width: 70px;
+  text-align: center;
+} */
+
+.vertical-slider {
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+  width: 5px;
+  height: 100%; /* <-- ZMĚNA: Donutí ho smrsknout se */
+  max-height: 200px; /* Bonus: Omezí max. velikost */
+  margin: 0;
+  padding: 0;
+}
+
+.slider-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* Termometr - vpravo */
+.thermometer-compact {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  position: relative;
+  padding-top: 0.9rem;
+  
+
+  justify-content: center; /* Vycentruje SVG a tlačítko */
+  min-height: 0; /* Reset pro flexbox */
+}
+
+.target-badge-compact {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 193, 7, 0.15);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.thermometer-svg-compact {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+
+/* Režim pod budíkem */
+.mode-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(74, 158, 255, 0.15);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  border-radius: 8px;
+  color: #4a9eff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-compact:hover:not(:disabled) {
+  background: rgba(74, 158, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.mode-compact:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Zmenšit mezery pro heating karty */
+.tuya-device-card.heating .tuya-card-header {
+  margin-bottom: 5px; /* Původně 16px */
+  padding-bottom: 5px; /* Původně 12px */
+}
+
+.tuya-device-card.heating .heating-body-compact {
+  padding: 0.1rem;
+  /* min-height: 280px; */ /* <-- SMAZAT NEBO ZAKOMENTOVAT */
+  flex: 1; /* <-- PŘIDAT (Donutí tělo, aby se roztáhlo/smrsklo) */
+  min-height: 0; /* <-- PŘIDAT (Resetuje výchozí min-height pro flexbox) */
+  display: flex; /* <-- PŘIDAT (Potřebujeme, aby vnitřní layout fungoval) */
+  flex-direction: column; /* <-- PŘIDAT */
+}
+
+.tuya-device-card.heating .heating-compact-layout {
+  gap: 0.5rem;
+  /* min-height: 250px; */ /* <-- SMAZAT NEBO ZAKOMENTOVAT */
+  padding: 0;
+  flex: 1; /* <-- PŘIDAT (Donutí layout, aby se roztáhl) */
+  min-height: 0; /* <-- PŘIDAT (Reset) */
+}
+
+/* Zvětšit SVG kruh */
+
+.tuya-device-card.heating .thermometer-svg-compact {
+  width: 100%; /* Donutí ho smrsknout se */
+  height: auto; /* Zachová poměr stran */
+  aspect-ratio: 1 / 1; /* Zajistí, že je to čtverec */
+  max-width: 180px; /* Omezí max. velikost */
+  margin: 0;
+}
+/* Zmenšit target badge */
+.tuya-device-card.heating .target-badge-compact {
+  top: 0;
+  right: 0;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
+/* Zmenšit mode button */
+.tuya-device-card.heating .mode-compact {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* Zmenšit footer */
+.tuya-device-card.heating .tuya-card-footer {
+  padding-top: 6px;
+  margin-top: 6px;
+
+}
+
+.tuya-device-card.heating .last-updated {
+  font-size: 0.65rem;
 }
 
 .target-badge-compact {
@@ -1157,27 +1318,25 @@
 
 /* Glass Socket Panel - Zásuvka */
 .glass-socket .glass-panel-body {
-  padding: 1.5rem;
+  padding: 0.2rem;
 }
 
-.socket-panel {
-  min-height: 220px;
-}
 
 .socket-buttons {
   display: flex;
   justify-content: space-around;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 2.5rem;
+  gap: 1.2rem;
+  padding-left: 0.5rem;
+  margin-top: 0.01rem;
 }
 
 .socket-button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.2rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -1416,4 +1575,141 @@
 
 .show-debug-toggle input[type='checkbox'] {
   cursor: pointer;
+}
+
+/* ==================== KOMPAKTNÍ LAYOUT ==================== */
+
+/* 🎨 KOMPAKTNÍ LAYOUT (horizontální - pro TempSensor) */
+.tuya-device-card.layout-compact .tuya-card-body {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+
+}
+
+.tuya-device-card.layout-compact .temp-sensor-body {
+  flex-direction: row;
+  padding: 12px;
+}
+
+/* Kompaktní teplota - vlevo */
+.tuya-device-card.layout-compact .main-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Kompaktní sekundární hodnoty - vpravo */
+.tuya-device-card.layout-compact .secondary-values {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ==================== TEMP SENSOR - KOMPAKTNÍ ==================== */
+
+/* Kompaktní teplota - horizontální obdélník */
+
+
+.tuya-device-card.temp-sensor.layout-compact .tuya-card-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .temp-sensor-body {
+  padding: 8px 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .tuya-card-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 2px;
+  gap: 70px;
+}
+
+/* Hlavní hodnota (teplota) - vlevo */
+.tuya-device-card.temp-sensor.layout-compact .main-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .temperature-display {
+  gap: 2px;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .temp-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #4a9eff;
+  line-height: 1;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .temp-unit {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 0;
+}
+
+/* Sekundární hodnoty (vlhkost, baterie) - vpravo */
+.tuya-device-card.temp-sensor.layout-compact .secondary-values {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tuya-device-card.temp-sensor.layout-compact .sensor-stat {
+  font-size: 0.9rem;
+}
+
+/* Skryj footer v kompaktním módu */
+.tuya-device-card.temp-sensor.layout-compact .tuya-card-footer {
+  display: none;
+}
+
+/* ==================== SCHOVAT FOOTER U VŠECH KARET ==================== */
+
+.tuya-card-footer {
+  display: none !important;
+}
+
+/* ==================== LAST UPDATED V HEADERU ==================== */
+
+.device-status-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.status-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.last-updated-header {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 1);
+  font-weight: 500;
+}
+
+/* ==================== INLINE CONTROL (BEZ FOOTERU) ==================== */
+
+.device-control-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }

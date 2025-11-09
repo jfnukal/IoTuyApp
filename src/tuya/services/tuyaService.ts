@@ -150,14 +150,14 @@ class TuyaService {
       const devices: TuyaDevice[] = data.devices.map((device: any) => ({
         id: device.id || device.device_id,
         name: device.customName || device.name || 'Neznámé zařízení',
-        local_key: device.localKey || '',
+        local_key: device.local_key || device.localKey || '',  // ← TAKÉ OPRAVA
         category: device.category || 'other',
-        product_id: device.productId || '',
-        product_name: device.productName || '',
+        product_id: device.product_id || device.productId || '',  // ← TAKÉ OPRAVA
+        product_name: device.product_name || device.productName || '',  // ← TAKÉ OPRAVA
         sub: device.sub || false,
         uuid: device.uuid || device.id,
         owner_id: device.owner_id || '',
-        online: device.isOnline !== undefined ? device.isOnline : false,
+        online: device.online !== undefined ? device.online : false,  // ← OPRAVENO!
         status: device.status || [],
         lastUpdated: Date.now(),
         isVisible: true,

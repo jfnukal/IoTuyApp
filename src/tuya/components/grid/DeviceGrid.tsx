@@ -48,7 +48,7 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
   
   const generateInitialLayout = (): Layout[] => {
     return devices.map((device, index) => {
-      const grid = device.cardSettings?.gridLayout;
+      const grid = device.gridLayout;
       let defaultW = 1;
       let defaultH = 1; 
       if (device.category === 'light') defaultH = 2;

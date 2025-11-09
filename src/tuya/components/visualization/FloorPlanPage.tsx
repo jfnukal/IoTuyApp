@@ -11,7 +11,7 @@ import './FloorPlanPage.css';
 
 const FloorPlanPage: React.FC = () => {
   const navigate = useNavigate();
-  const { devices, isLoading, error, toggleDevice, controlDevice } = useTuya();
+  const { devices, isLoading, error } = useTuya();
   const [selectedDevice, setSelectedDevice] = useState<TuyaDevice | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 

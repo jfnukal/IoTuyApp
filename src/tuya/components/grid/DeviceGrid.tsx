@@ -104,7 +104,7 @@ const handleLayoutSave = useCallback(
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
       cols={{ lg: 4, md: 3, sm: 2, xs: 1, xxs: 1 }}
       rowHeight={150}
-      onLayoutChange={(currentLayout, allLayouts) => {
+      onLayoutChange={(_currentLayout, allLayouts) => {
         if (allLayouts.lg) {
           handleLayoutSave(allLayouts.lg);
         }

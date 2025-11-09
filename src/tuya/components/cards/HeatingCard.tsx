@@ -20,7 +20,7 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   const tempSetRaw = getStatusValue(device.status, 'temp_set');
   const tempSet = tempSetRaw !== undefined ? tempSetRaw / 10 : 20;
   const mode = getStatusValue(device.status, 'mode') || 'auto';
-  const childLock = getStatusValue(device.status, 'child_lock') || false;
+  // const childLock = getStatusValue(device.status, 'child_lock') || false;
 
   const handleTemperatureChange = async (newTemp: number) => {
     if (!onControl || !device.online) return;

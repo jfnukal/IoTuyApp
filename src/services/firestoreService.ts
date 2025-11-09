@@ -163,7 +163,7 @@ class FirestoreService {
       throw new Error('Nepodařilo se přiřadit zařízení');
     }
   }
-  
+
   async subscribeToUserRooms(
     uid: string,
     callback: (rooms: Room[]) => void
@@ -293,6 +293,66 @@ class FirestoreService {
       throw new Error('Nepodařilo se odebrat zařízení z místnosti');
     }
   }
+
+  // ==================== FLOORS (PŮDORYSY) ====================
+
+/**
+ * Získá layout půdorysu (pozice místností)
+ */
+async getFloorLayout(floorId: string): Promise<any | null> {
+  try {
+    const docRef = doc(db, 'floors', floorId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting floor layout:', error);
+    throw new Error('Nepodařilo se načíst půdorys');
+  }
+}
+
+/**
+ * Uloží layout půdorysu (pozice místností)
+ */
+async saveFloorLayout(floorId: string, rooms: any[]): Promise<void> {
+  try {
+    const docRef = doc(db, 'floors', floorId);
+    await setDoc(
+      docRef,
+      {
+        rooms: rooms,
+        updatedAt: Date.now(),
+      },
+      { merge: true }
+    );
+    console.log(`✅ Floor layout "${floorId}" uložen`);
+  } catch (error) {
+    console.error('Error saving floor layout:', error);
+    throw new Error('Nepodařilo se uložit půdorys');
+  }
+}
+
+
+
+/**
+ * Subscribe k real-time změnám layoutu
+ */
+subscribeToFloorLayout(
+  floorId: string,
+  callback: (rooms: any[]) => void
+): Unsubscribe {
+  const docRef = doc(db, 'floors', floorId);
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      callback(data.rooms || []);
+    } else {
+      callback([]);
+    }
+  });
+}
 
   // ==================== DEVICES ====================
 
@@ -494,7 +554,7 @@ class FirestoreService {
         id: 'cover',
         name: 'cover',
         displayName: 'Žaluzie a Rolety',
-        icon: '🪟',
+        icon: '��',
         color: '#6f42c1',
         description: 'Motorové žaluzie, rolety a markýzy',
         defaultCommands: ['control', 'position'],

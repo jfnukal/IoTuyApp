@@ -5,6 +5,7 @@ import type { Room } from '../../../types/index';
 import type { Floor } from '../../../types/visualization';
 import type { TuyaDevice } from '../../../types';
 import { houseService } from '../../services/houseService';
+import FloorPlan1NP from '../visualization/FloorPlan1NP';
 import './FloorPlan.css';
 
 interface FloorPlanProps {

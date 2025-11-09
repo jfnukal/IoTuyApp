@@ -1,0 +1,420 @@
+/* src/tuya/components/visualization/FloorPlan1NP.css */
+
+.floor-plan-1np {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* === HEADER === */
+.floor-plan-header {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.floor-plan-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.floor-plan-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Editační tlačítko */
+.edit-mode-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.edit-mode-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.edit-mode-button.active {
+  background: white;
+  color: #667eea;
+}
+
+/* === EDITAČNÍ PANEL === */
+.edit-panel {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.edit-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #ddd;
+}
+
+.edit-panel-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.copy-code-button {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-code-button:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+}
+
+.rooms-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.room-editor {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.room-editor h4 {
+  margin: 0 0 1rem 0;
+  color: #667eea;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.room-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.control-group label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.control-group input[type='range'] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+}
+
+.control-group input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-group input[type='range']::-webkit-slider-thumb:hover {
+  background: #5568d3;
+  transform: scale(1.2);
+}
+
+.control-group input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.control-group input[type='range']::-moz-range-thumb:hover {
+  background: #5568d3;
+  transform: scale(1.2);
+}
+
+/* Editační režim - zobrazit všechny bordery */
+.room-zone.edit-mode {
+  cursor: default;
+}
+
+.room-zone.edit-mode .room-overlay {
+  pointer-events: none;
+}
+
+/* === CONTAINER === */
+.floor-plan-container {
+  flex: 1;
+  padding: 1rem;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.floor-plan-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 960px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* === MÍSTNOSTI - INTERAKTIVNÍ ZÓNY === */
+.room-zone {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-overlay {
+  transition: all 0.3s ease;
+}
+
+/* Jemný svítící efekt při hoveru */
+.room-zone.hovered .room-overlay {
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.5));
+}
+
+.room-label-group {
+  pointer-events: none;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.room-label-name {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* === ZAŘÍZENÍ === */
+
+.device-on-plan circle {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+}
+
+.device-on-plan text {
+  pointer-events: none;
+  user-select: none;
+}
+
+.device-on-plan circle {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* === DVEŘE === */
+.door {
+  cursor: help;
+}
+
+.door line {
+  transition: stroke 0.2s ease;
+}
+
+.door:hover line {
+  stroke: #a0522d;
+  stroke-width: 8;
+}
+
+/* === OKNA === */
+.window {
+  cursor: help;
+}
+
+.window rect {
+  transition: opacity 0.2s ease;
+}
+
+.window:hover rect {
+  opacity: 1;
+  fill: #4682b4;
+}
+
+/* === SPECIÁLNÍ PRVKY === */
+.fireplace {
+  cursor: help;
+}
+
+.fireplace rect {
+  transition: fill 0.2s ease;
+}
+
+.fireplace:hover rect {
+  fill: #a52a2a;
+}
+
+.bar-counter {
+  cursor: help;
+}
+
+.bar-counter line {
+  transition: stroke 0.2s ease;
+}
+
+.bar-counter:hover line {
+  stroke: #388e3c;
+  stroke-width: 10;
+}
+
+.stairs {
+  cursor: help;
+}
+
+.stairs rect {
+  transition: fill 0.2s ease;
+}
+
+.stairs:hover rect {
+  fill: #bdbdbd;
+}
+
+/* === INFO PANEL === */
+.floor-plan-info {
+  padding: 1rem 1.5rem;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .floor-plan-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .floor-plan-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .floor-plan-hint {
+    font-size: 0.85rem;
+  }
+
+  .header-right {
+    width: 100%;
+  }
+
+  .edit-mode-button {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .rooms-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-panel {
+    max-height: 300px;
+  }
+
+  .floor-plan-container {
+    padding: 0.5rem;
+  }
+
+  .floor-plan-info {
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+  }
+}
+
+/* === ZAŘÍZENÍ - KLIKACÍ === */
+.device-on-plan {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.device-on-plan:hover {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(102, 126, 234, 0.8));
+}
+
+/* Pouze text a ikony nemohou zachytit klik */
+.device-on-plan text,
+.device-on-plan circle {
+  pointer-events: none;
+}
+
+

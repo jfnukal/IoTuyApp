@@ -4,6 +4,7 @@ import { useRooms } from '../../hooks/useRooms';
 // import { useTuya } from '../../hooks/useTuya'; // <-- SMAZÁNO
 import type { TuyaDevice } from '../../../types';
 import './DeviceDetailModal.css';
+import { firestoreService } from '../../../services/firestoreService';
 
 interface DeviceDetailModalProps {
   device: TuyaDevice; // <-- ZMĚNA: Přijímáme celý objekt
@@ -143,18 +144,43 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
             </div>
           </form>
 
-          {device.roomId && (
-            <div className="form-actions-danger">
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={handleRemove}
-                disabled={isSaving}
-              >
-                🗑️ Odebrat z místnosti
-              </button>
-            </div>
-          )}
+          {(device.roomId || device.position) && (
+  <div className="form-actions-danger">
+    {device.roomId && (
+      <button
+        type="button"
+        className="btn-danger"
+        onClick={handleRemove}
+        disabled={isSaving}
+      >
+        🗑️ Odebrat z místnosti
+      </button>
+    )}
+    {device.position && (
+      <button
+        type="button"
+        className="btn-danger"
+        onClick={async () => {
+          if (window.confirm('Odebrat zařízení z půdorysu?')) {
+            setIsSaving(true);
+            try {
+              await firestoreService.updateDevicePosition(device.id, null as any);
+              onClose();
+            } catch (err) {
+              console.error('Chyba při odebírání pozice:', err);
+              setError('Nepodařilo se odebrat zařízení z půdorysu');
+            } finally {
+              setIsSaving(false);
+            }
+          }
+        }}
+        disabled={isSaving}
+      >
+        📍 Odebrat z půdorysu
+      </button>
+    )}
+  </div>
+)}
         </div>
       </div>
     </div>

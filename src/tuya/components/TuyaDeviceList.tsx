@@ -1,5 +1,6 @@
 // src/tuya/components/TuyaDeviceList.tsx
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTuya } from '../hooks/useTuya';
 import './TuyaDeviceList.css';
 import { DeviceGrid } from './grid/DeviceGrid';
@@ -19,6 +20,7 @@ type CategoryFilter =
   | 'other';
 
 const TuyaDeviceList: React.FC = () => {
+  const navigate = useNavigate();
   const {
     devices,
     onlineCount,
@@ -179,6 +181,16 @@ const TuyaDeviceList: React.FC = () => {
           >
             {isLayoutEditMode ? '✅ Uložit rozložení' : '✏️ Upravit rozložení'}
           </button>
+          {/* 🔽 DOČASNÉ TESTOVACÍ TLAČÍTKO 🔽 */}
+          <button
+            className="filter-button"
+            onClick={() => navigate('/floorplan')}
+            title="Zobrazit 1.NP"
+            style={{ backgroundColor: '#dc3545' }} // Výrazná barva
+          >
+            🏠 Půdorys 1.NP
+          </button>
+          {/* 🔼 KONEC TESTOVACÍHO TLAČÍTKA 🔼 */}
         </div>
 
         {/* Filters */}

@@ -4,7 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import { lazy, Suspense } from 'react';
 import { TuyaDeviceList } from './tuya';
-//
+import FloorPlanPage from './tuya/components/visualization/FloorPlanPage';
 
 // 🚀 Lazy loading pro SettingsPage - načte se až když uživatel otevře nastavení
 const SettingsPage = lazy(() => import('./components/Settings/SettingsPage'));
@@ -52,12 +52,17 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
           </Suspense>
         } 
       />
-      {/* 📱 Tuya zařízení */}
-        <Route 
-          path="/tuya" 
-          element={<TuyaDeviceList />} 
-        />
-      <Route path="*" element={<Navigate to="/" replace />} />
+{/* 📱 Tuya zařízení */}
+<Route 
+    path="/tuya" 
+    element={<TuyaDeviceList />} 
+  />
+  {/* 🏠 Půdorys 1.NP - Testovací stránka */}
+  <Route 
+    path="/floorplan" 
+    element={<FloorPlanPage />} 
+  />
+<Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

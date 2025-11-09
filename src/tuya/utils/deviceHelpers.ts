@@ -52,6 +52,13 @@ export const getCardIcon = (cardType: string): string => {
     'gateway': '🌐',
     'valve': '💧',
     'soil_sensor': '🌱',
+    'climate': '❄️',   
+    'security': '🔒',  
+    'cover': '🪟',     
+    'garden': '🌱',    
+    'switch': '🔌',    
+    'light': '💡',     
+    'sensor': '📡',    
     'basic': '⚙️',
   };
   return icons[cardType] || '⚙️';

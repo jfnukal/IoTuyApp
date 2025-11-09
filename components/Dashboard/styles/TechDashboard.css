@@ -1,0 +1,324 @@
+/* src/components/Dashboard/styles/TechDashboard.css */
+
+/* ==================== TECH DASHBOARD ==================== */
+.tech-dashboard {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==================== HEADER ==================== */
+.tech-dashboard-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+  padding: 20px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  gap: 20px !important;
+  text-align: left !important; /* Přepíše původní center */
+}
+
+.tech-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.tech-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+  color: white;
+}
+
+/* ==================== PŘEPÍNAČ ZOBRAZENÍ ==================== */
+.view-toggle {
+  display: flex !important;
+  gap: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  flex-shrink: 0 !important; /* Zabrání smrštění */
+  min-width: 250px !important; /* Minimální šířka */
+}
+
+.toggle-button {
+  padding: 10px 20px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.toggle-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.toggle-button.active {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Responsive pro přepínač */
+@media (max-width: 768px) {
+  .tech-dashboard-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .view-toggle {
+    width: 100% !important;
+  }
+
+  .toggle-button {
+    flex: 1 !important;
+    text-align: center !important;
+  }
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.tech-main-content {
+  width: 100%;
+  min-height: 400px;
+  margin-bottom: 30px;
+}
+
+/* ==================== WIDGETS GRID ==================== */
+.tech-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* ==================== TECH WIDGET ==================== */
+.tech-widget {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border-radius: 20px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  animation: slideUp 0.5s ease both;
+}
+
+.tech-widget:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.tech-widget:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.tech-widget:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.tech-widget:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tech-widget:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== WIDGET HEADER ==================== */
+.tech-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tech-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.tech-widget-icon {
+  font-size: 1.5rem;
+}
+
+.tech-widget-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* ==================== WIDGET CONTENT ==================== */
+.tech-widget-content {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tech-placeholder-text {
+  text-align: center;
+  opacity: 0.7;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================== COMING SOON SECTION ==================== */
+.tech-coming-soon {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.8s ease 0.5s both;
+}
+
+.coming-soon-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: swing 2s infinite;
+}
+
+@keyframes swing {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+.tech-coming-soon h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+}
+
+.tech-coming-soon p {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ==================== SPECIFIC WIDGET STYLES ==================== */
+
+/* Tuya Widget */
+.tuya-widget {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+/* Cameras Widget */
+.cameras-widget {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+/* Energy Widget */
+.energy-widget {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+/* System Widget */
+.system-widget {
+  background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .tech-widgets-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .tech-title {
+    font-size: 1.6rem;
+  }
+
+  .tech-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .tech-coming-soon {
+    padding: 40px 20px;
+  }
+
+  .coming-soon-icon {
+    font-size: 3rem;
+  }
+
+  .tech-coming-soon h3 {
+    font-size: 1.4rem;
+  }
+
+  .tech-coming-soon p {
+    font-size: 1rem;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.tech-widget:focus-within {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+.visualization-layout {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+.devices-sidebar {
+  width: 350px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.visualization-main {
+  flex: 1;
+  overflow-y: auto;
+}

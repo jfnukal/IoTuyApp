@@ -1,0 +1,286 @@
+/* src/components/Widgets/Calendar/styles/ReminderSelector.css */
+
+/* ==================== REMINDER SELECTOR ==================== */
+
+.reminder-selector {
+  margin: 16px 0;
+}
+
+.reminder-header {
+  margin-bottom: 12px;
+}
+
+.reminder-header .form-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--calendar-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==================== REMINDER LIST ==================== */
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* ==================== REMINDER ITEM ==================== */
+
+.reminder-item {
+  background: var(--calendar-bg-secondary, #f8f9fa);
+  border: 1px solid var(--calendar-border, #e0e0e0);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.reminder-item:hover {
+  border-color: var(--calendar-primary, #667eea);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
+}
+
+/* ==================== TIME SELECTION ==================== */
+
+.reminder-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.reminder-value-select,
+.reminder-unit-select {
+  padding: 6px 10px;
+  border: 1px solid var(--calendar-border, #ddd);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reminder-value-select {
+  width: 60px;
+}
+
+.reminder-unit-select {
+  width: 85px;
+}
+
+.reminder-value-select:hover,
+.reminder-unit-select:hover {
+  border-color: var(--calendar-primary, #667eea);
+}
+
+.reminder-value-select:focus,
+.reminder-unit-select:focus {
+  outline: none;
+  border-color: var(--calendar-primary, #667eea);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.before-label {
+  font-size: 0.85rem;
+  color: var(--calendar-text-secondary, #666);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ontime-label {
+  padding: 6px 12px;
+  background: var(--calendar-primary, #667eea);
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* ==================== TYPE BUTTONS - IKONKY BEZ RÁMEČKŮ ==================== */
+
+.reminder-type {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.type-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  opacity: 0.8;
+}
+
+.type-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.1);
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.type-btn.active {
+  opacity: 1;
+  transform: scale(1.15);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.type-btn:active {
+  transform: scale(1.05);
+}
+
+/* ==================== DELETE BUTTON ==================== */
+
+.reminder-delete-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #ff4444;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+.reminder-delete-btn:hover {
+  background: #fff0f0;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.reminder-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* ==================== ADD BUTTON ==================== */
+
+.add-reminder-btn {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed var(--calendar-border, #ddd);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--calendar-primary, #667eea);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-reminder-btn:hover {
+  background: var(--calendar-primary-light, #f0f2ff);
+  border-color: var(--calendar-primary, #667eea);
+  border-style: solid;
+}
+
+.add-reminder-btn:active {
+  transform: scale(0.98);
+}
+
+/* ==================== MAX REMINDERS NOTE ==================== */
+
+.max-reminders-note {
+  text-align: center;
+  padding: 8px;
+  background: var(--calendar-warning-bg, #fff8e1);
+  border: 1px solid var(--calendar-warning, #ffc107);
+  border-radius: 6px;
+  color: var(--calendar-warning-text, #856404);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ==================== MOBILE OPTIMIZATIONS ==================== */
+
+@media (max-width: 768px) {
+  .reminder-item {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .reminder-time {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .reminder-type {
+    flex: 1;
+    justify-content: flex-start;
+  }
+
+  .type-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1.6rem;
+  }
+
+  .reminder-delete-btn {
+    margin-left: auto;
+  }
+}
+
+/* ==================== DARK MODE SUPPORT ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .reminder-item {
+    background: var(--calendar-bg-secondary-dark, #dbdada);
+    border-color: var(--calendar-border-dark, #444);
+  }
+
+  .reminder-value-select,
+  .reminder-unit-select {
+    background: var(--calendar-bg-dark, #1a1a1a);
+    border-color: var(--calendar-border-dark, #444);
+    color: var(--calendar-text-dark, #e0e0e0);
+  }
+
+  .type-btn:hover {
+    background: rgba(102, 126, 234, 0.15);
+  }
+
+  .type-btn.active {
+    background: rgba(102, 126, 234, 0.25);
+  }
+
+  .reminder-delete-btn:hover {
+    background: rgba(255, 68, 68, 0.1);
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+.type-btn:focus,
+.reminder-delete-btn:focus,
+.add-reminder-btn:focus {
+  outline: 2px solid var(--calendar-primary, #667eea);
+  outline-offset: 2px;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .reminder-item,
+  .type-btn,
+  .reminder-delete-btn,
+  .add-reminder-btn {
+    transition: none;
+  }
+}

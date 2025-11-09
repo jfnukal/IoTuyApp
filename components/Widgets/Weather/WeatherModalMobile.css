@@ -1,0 +1,436 @@
+/* src/components/Widgets/Weather/WeatherModalMobile.css */
+
+/* ==================== MOBILE MODAL OVERLAY ==================== */
+.weather-modal-mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease;
+  padding: 10px;
+}
+
+/* ==================== MOBILE MODAL ==================== */
+.weather-modal-mobile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  color: white;
+  padding: 20px;
+  gap: 20px;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(50px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* ==================== ZAVÍRACÍ TLAČÍTKO MOBILE ==================== */
+.weather-modal-mobile-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 1);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.weather-modal-mobile-close:hover {
+  background: rgba(255, 100, 100, 0.9);
+  transform: scale(1.1);
+}
+
+.close-icon-mobile {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.weather-modal-mobile-close:hover .close-icon-mobile {
+  color: white;
+}
+
+/* ==================== MOBILE HEADER ==================== */
+.weather-mobile-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gps-mobile {
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+}
+
+/* ==================== HLAVNÍ POČASÍ MOBILE ==================== */
+.mobile-main-weather {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-temp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-temp {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-condition {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mobile-condition-text {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.mobile-feels-like {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.mobile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-weather-icon {
+  width: 70px;
+  height: 70px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ==================== MOBILE FORECAST COMPARISON ==================== */
+.mobile-forecast-comparison {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.mobile-day-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.mobile-day-temps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-temp-high {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.mobile-temp-low {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.mobile-rain {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.mobile-separator {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 16px;
+}
+
+/* ==================== MOBILE PLAYFUL COMMENT ==================== */
+.mobile-playful-comment {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.mobile-comment-text {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ==================== MOBILE STATS ==================== */
+.mobile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mobile-stat {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.mobile-stat-icon {
+  font-size: 1.5rem;
+}
+
+.mobile-stat-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.mobile-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ==================== MOBILE FOOTER ==================== */
+.mobile-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 16px;
+}
+
+.mobile-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  /* border: none; */
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.mobile-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-refresh-icon {
+  font-size: 1rem;
+  transition: transform 0.6s ease;
+}
+
+.mobile-refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.mobile-last-updated {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-align: right;
+  flex: 1;
+}
+
+/* ==================== EXTRA SMALL MOBILE ==================== */
+@media (max-width: 380px) {
+  .weather-modal-mobile {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .mobile-title {
+    font-size: 1.6rem;
+  }
+  
+  .mobile-temp {
+    font-size: 2.5rem;
+  }
+  
+  .mobile-weather-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .mobile-main-weather {
+    padding: 16px;
+  }
+  
+  .mobile-forecast-comparison {
+    padding: 12px;
+  }
+  
+  .mobile-separator {
+    margin: 0 12px;
+  }
+  
+  .mobile-stats {
+    gap: 10px;
+  }
+  
+  .mobile-stat {
+    padding: 12px 10px;
+  }
+  
+  .mobile-footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .mobile-last-updated {
+    text-align: center;
+  }
+}
+
+/* ==================== LANDSCAPE MOBILE ==================== */
+@media (max-height: 600px) and (orientation: landscape) {
+  .weather-modal-mobile {
+    max-height: 95vh;
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .mobile-main-weather {
+    padding: 12px;
+  }
+  
+  .mobile-temp {
+    font-size: 2.2rem;
+  }
+  
+  .mobile-weather-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mobile-forecast-comparison,
+  .mobile-playful-comment {
+    padding: 12px;
+  }
+  
+  .mobile-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .mobile-stat {
+    padding: 10px 8px;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.weather-modal-mobile:focus {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+.weather-modal-mobile-close:focus,
+.mobile-refresh-btn:focus {
+  outline: 2px solid #ffff00;
+  outline-offset: 2px;
+}
+
+/* ==================== REDUCED MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .weather-modal-mobile,
+  .weather-modal-mobile-close,
+  .mobile-refresh-btn,
+  .mobile-weather-icon {
+    animation: none;
+    transition: none;
+  }
+  
+  .mobile-refresh-icon.spinning {
+    animation: none;
+  }
+}

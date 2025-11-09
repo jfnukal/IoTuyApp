@@ -1,0 +1,275 @@
+/* Mobile Calendar Styles */
+.calendar-mobile {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.calendar-mobile-header {
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mobile-nav-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mobile-nav-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.mobile-month-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+/* Calendar Grid */
+.calendar-mobile-grid {
+  background: white;
+  padding: 0.5rem;
+}
+
+.mobile-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  padding: 0.5rem 0;
+}
+
+.mobile-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mobile-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.mobile-day.empty {
+  cursor: default;
+}
+
+.mobile-day-number {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.mobile-day.today {
+  background: #667eea;
+}
+
+.mobile-day.today .mobile-day-number {
+  color: white;
+  font-weight: 700;
+}
+
+.mobile-day.selected {
+  background: #e3e8ff;
+  box-shadow: 0 0 0 2px #667eea;
+}
+
+.mobile-day.holiday .mobile-day-number {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+/* Zvýraznění dnů s událostmi */
+.mobile-day.has-events {
+  background: rgba(102, 126, 234, 0.1);
+  font-weight: 600;
+}
+
+.mobile-day.has-events:not(.today):not(.selected) {
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.mobile-event-dot {
+  width: 4px;
+  height: 4px;
+  background: #667eea;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 4px;
+}
+
+.mobile-day.today .mobile-event-dot {
+  background: white;
+}
+
+/* Day Detail */
+.mobile-day-detail {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border-radius: 16px 16px 0 0;
+}
+
+.mobile-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.mobile-detail-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.mobile-add-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mobile-special-event {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.mobile-special-event.holiday {
+  background: #fff5f5;
+  color: #ff6b6b;
+}
+
+.mobile-special-event.nameday {
+  background: #f0f9ff;
+  color: #3b82f6;
+}
+
+.mobile-special-event.birthday {
+  background: #fef3c7;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.mobile-events-list {
+  margin-top: 1rem;
+}
+
+.mobile-event-item {
+  background: white;
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mobile-event-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-event-time {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-event-title {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-event-member {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.mobile-no-events {
+  text-align: center;
+  color: #999;
+  padding: 2rem 0;
+  font-size: 0.9rem;
+}
+
+/* Tlačítko zavření */
+.mobile-close-btn {
+  position: absolute;
+  top: 0rem;
+  right: 0rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 10;
+  line-height: 1;
+}
+
+.mobile-close-btn:active {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Header musí být relative pro positioning */
+.calendar-mobile-header {
+  position: relative;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

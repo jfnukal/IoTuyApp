@@ -1,0 +1,840 @@
+/* src/components/Widgets/Weather/WeatherMiniWidget.css */
+
+/* ==================== MAIN WEATHER WIDGET ==================== */
+.weather-mini-widget {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px;
+  padding: 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.weather-mini-widget:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+}
+
+.weather-mini-widget:active {
+  transform: translateY(-2px);
+}
+
+/* ==================== HEADER SECTION ==================== */
+.weather-mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.widget-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.widget-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-name {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==================== REFRESH BUTTON ==================== */
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.refresh-icon {
+  font-size: 24px;
+  transition: transform 0.6s ease;
+}
+
+.refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ==================== CURRENT WEATHER SECTION ==================== */
+.current-weather-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.current-temp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.current-temp {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.current-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.condition-text {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.feels-like {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.weather-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.weather-icon {
+  width: 80px;
+  height: 80px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ==================== FORECAST COMPARISON ==================== */
+.forecast-comparison {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.forecast-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.day-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.day-temps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+}
+
+.temp-high {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.temp-low {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.rain-chance {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.forecast-separator {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.3);
+  align-self: center;
+}
+
+/* ==================== PLAYFUL COMMENT ==================== */
+.playful-comment {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  line-height: 1.4;
+}
+
+/* ==================== QUICK STATS ==================== */
+.quick-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  font-size: 1.1rem;
+}
+
+.stat-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* ==================== FOOTER INFO ==================== */
+.last-updated {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.click-hint {
+  text-align: center;
+  margin-top: auto;
+}
+
+.click-hint span {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* ==================== LOADING STATE ==================== */
+.weather-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  color: #1976d2;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.weather-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(25, 118, 210, 0.3);
+  border-top-color: #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==================== ERROR STATE ==================== */
+.weather-error {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  color: #d32f2f;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.error-message {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.retry-btn {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #b71c1c;
+  transform: translateY(-2px);
+}
+
+/* ==================== WEATHER ANIMATIONS ==================== */
+.weather-animations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+/* Rain Animation */
+.rain-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.2)
+  );
+  border-radius: 1px;
+  animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+  from {
+    transform: translateY(-20px);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(300px);
+    opacity: 0;
+  }
+}
+
+/* Snow Animation */
+.snow-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.snowflake {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  animation: snowFall linear infinite;
+}
+
+@keyframes snowFall {
+  from {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(300px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Sun Animation */
+.sun-animation {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+}
+
+.sun-rays {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 215, 0, 0.3) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: sunRotate 10s linear infinite;
+}
+
+@keyframes sunRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .weather-mini-widget {
+    padding: 16px;
+    min-height: 260px;
+  }
+
+  .current-temp {
+    font-size: 3rem;
+  }
+
+  .weather-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .forecast-comparison {
+    gap: 12px;
+  }
+
+  .day-temps {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .weather-mini-widget {
+    padding: 14px;
+    min-height: 240px;
+  }
+
+  .current-temp {
+    font-size: 2.5rem;
+  }
+
+  .widget-title {
+    font-size: 1.1rem;
+  }
+
+  .weather-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .playful-comment {
+    padding: 10px 12px;
+  }
+
+  .comment-text {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==================== DARK MODE SUPPORT ==================== */
+@media (prefers-color-scheme: dark) {
+  .weather-loading {
+    background: linear-gradient(135deg, #1a237e, #283593);
+    color: #e3f2fd;
+  }
+
+  .weather-error {
+    background: linear-gradient(135deg, #b71c1c, #d32f2f);
+    color: #ffebee;
+  }
+}
+
+/* ==================== HIGH CONTRAST MODE ==================== */
+@media (prefers-contrast: high) {
+  .weather-mini-widget {
+    border: 3px solid white;
+    background: #000080 !important;
+  }
+
+  .weather-mini-widget:hover {
+    border-color: #ffff00;
+  }
+
+}
+
+/* ==================== REDUCED MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .weather-mini-widget,
+  .refresh-btn,
+  .weather-icon {
+    transition: none;
+    animation: none;
+  }
+
+  .click-hint span {
+    animation: none;
+  }
+
+  .weather-animations {
+    display: none;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.weather-mini-widget:focus {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+.refresh-btn:focus,
+.retry-btn:focus {
+  outline: 2px solid #ffff00;
+  outline-offset: 2px;
+}
+
+/* ==================== CONTRAST FIXES ==================== */
+
+/* Zlepšení kontrastu pro rain-chance */
+.rain-chance {
+  font-size: 0.8rem;
+  opacity: 1 !important; /* Force full opacity */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.3); /* Dark background for better contrast */
+  padding: 4px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+}
+
+.rain-icon {
+  font-size: 0.9rem;
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.rain-percentage {
+  font-weight: 700;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* ==================== WIDGET CLICK IMPROVEMENTS ==================== */
+
+/* Celý widget má být klikatelný */
+.weather-mini-widget {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.weather-mini-widget:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+}
+
+/* Click hint zlepšení */
+.click-hint {
+  text-align: center;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.click-hint span {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: gentle-pulse 3s infinite;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes gentle-pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+    background: rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* ==================== FORECAST COMPARISON IMPROVEMENTS ==================== */
+
+/* Zlepšení celkového kontrastu předpovědi */
+.forecast-comparison {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+}
+
+.forecast-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.day-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.temp-high,
+.temp-low {
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== RESPONSIVE IMPROVEMENTS ==================== */
+
+@media (max-width: 480px) {
+  .rain-chance {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+}
+
+/* ==================== MOBILNÍ KOMPAKTNÍ VERZE - ovlivnuje stary widget na mobilu!==================== */
+@media (max-width: 768px) {
+  .weather-mini-widget {
+    padding: 12px;
+    min-height: 120px; /* Mnohem menší! */
+    border-radius: 16px;
+  }
+
+  /* Skryj zbytečné sekce na mobilu */
+  .forecast-comparison,
+  .playful-comment,
+  .quick-stats,
+  .last-updated,
+  .click-hint {
+    display: none !important;
+  }
+
+  /* Header menší */
+  .weather-mini-header {
+    margin-bottom: 8px;
+  }
+
+  .widget-title {
+    font-size: 0.9rem;
+  }
+
+  .location-name {
+    font-size: 0.75rem;
+  }
+
+  /* Current weather kompaktní */
+  .current-weather-section {
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .current-temp {
+    font-size: 2rem; /* Menší teplota */
+  }
+
+  .current-details {
+    gap: 0;
+  }
+
+  .condition-text {
+    font-size: 0.8rem;
+  }
+
+  .feels-like {
+    font-size: 0.7rem;
+  }
+
+  .weather-icon {
+    width: 40px; /* Menší ikona */
+    height: 40px;
+  }
+
+  /* Tlačítka menší */
+  .refresh-btn {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+
+/* Extra malé mobily */
+@media (max-width: 480px) {
+  .weather-mini-widget {
+    padding: 10px;
+    min-height: 100px;
+  }
+
+  .current-temp {
+    font-size: 1.8rem;
+  }
+
+  .widget-title {
+    font-size: 0.85rem;
+  }
+}
+/* ==================== FORCE COMPACT MODE (FINÁLNÍ VELIKOST) ==================== */
+/* Aplikuje kompaktní mobilní vzhled, finálně zvětšený */
+
+.weather-mini-widget.force-compact-mode {
+  padding: 16px; /* (bylo 15px) */
+  min-height: 155px; /* (bylo 144px) */
+  border-radius: 16px;
+}
+
+/* Skryj zbytečné sekce */
+.weather-mini-widget.force-compact-mode .forecast-comparison,
+.weather-mini-widget.force-compact-mode .playful-comment,
+.weather-mini-widget.force-compact-mode .quick-stats,
+.weather-mini-widget.force-compact-mode .last-updated,
+.weather-mini-widget.force-compact-mode .click-hint {
+  display: none !important;
+}
+
+/* Header menší */
+.weather-mini-widget.force-compact-mode .weather-mini-header {
+  margin-bottom: 12px; /* (bylo 10px) */
+}
+.weather-mini-widget.force-compact-mode .widget-title {
+  font-size: 1.2rem; /* (bylo 1.1rem) */
+}
+.weather-mini-widget.force-compact-mode .location-name {
+  font-size: 1.0rem; /* (bylo 0.9rem) */
+}
+
+/* Current weather kompaktní */
+.weather-mini-widget.force-compact-mode .current-weather-section {
+  margin-bottom: 0;
+  gap: 12px; /* (bylo 10px) */
+}
+.weather-mini-widget.force-compact-mode .current-temp {
+  font-size: 2.6rem; /* (bylo 2.4rem) */
+}
+.weather-mini-widget.force-compact-mode .current-details {
+  gap: 3px; /* (bylo 2px) */
+}
+.weather-mini-widget.force-compact-mode .condition-text {
+  font-size: 1.1rem; /* (bylo 0.95rem) */
+}
+.weather-mini-widget.force-compact-mode .feels-like {
+  font-size: 0.9rem; /* (bylo 0.85rem) */
+}
+.weather-mini-widget.force-compact-mode .weather-icon {
+  width: 56px; /* (bylo 48px) */
+  height: 56px; /* (bylo 48px) */
+}
+
+/* Tlačítka menší */
+.weather-mini-widget.force-compact-mode .refresh-btn,
+.weather-mini-widget.force-compact-mode .close-widget-btn {
+  width: 34px; /* (bylo 32px) */
+  height: 34px; /* (bylo 32px) */
+}
+.weather-mini-widget.force-compact-mode .mickey-ear {
+  width: 12px; 
+  height: 12px;
+}
+

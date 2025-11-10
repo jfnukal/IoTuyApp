@@ -296,8 +296,6 @@ exports.handler = async function (event, context) {
               );
               return { ...device, status: [] };
             }
-          }
-          return { ...device, status: [] };
         })
       );
 
@@ -396,5 +394,6 @@ exports.handler = async function (event, context) {
     };
   }
 };
+
 
 

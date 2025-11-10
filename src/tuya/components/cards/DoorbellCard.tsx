@@ -141,39 +141,38 @@ const DoorbellCard: React.FC<
     };
   }, [streamUrl, showStream]);
 
-  // Funkce pro načtení live streamu
+// Funkce pro načtení live streamu
   const handleLoadStream = async () => {
     if (!device.online) return;
 
     setIsLoadingStream(true);
     setStreamError(null);
-
+    
     try {
       console.log('📡 Načítám stream pro zařízení:', device.id);
       const stream = await tuyaService.getDoorbellStream(device.id, 'hls');
-
+      
       console.log('✅ Stream získán:', stream);
       setStreamUrl(stream.url);
       setShowStream(true);
     } catch (error) {
       console.error('❌ Chyba při načítání streamu:', error);
-
-      const errorMessage =
-        error instanceof Error ? error.message : 'Neznámá chyba';
-
-      // Fallback na demo video v případě chyby
-      if (
-        errorMessage.includes('fetch') ||
-        errorMessage.includes('Failed to fetch')
-      ) {
-        console.warn('⚠️ Netlify funkce nedostupné, používám demo video');
-        setStreamUrl(
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-        );
+      
+      const errorMessage = error instanceof Error ? error.message : 'Neznámá chyba';
+      
+      // 🔴 KRITICKÁ CHYBA - Tuya API nepodporuje stream pro tento doorbell
+      if (errorMessage.includes('Failed to allocate stream')) {
+        console.warn('⚠️ Tuya API: Stream endpoint není podporován pro tento doorbell');
+        setStreamError('Video stream není dostupný pro tento zvonek.\n\nTuya API možná nepodporuje live stream pro model R9061.');
+        alert('⚠️ Video stream není dostupný\n\nTuya API nevrátilo stream URL pro tento doorbell.\nMůže to být kvůli:\n1. Model R9061 nepodporuje live streaming\n2. Předplatné Tuya Cloud neobsahuje video features\n3. Zařízení není správně nakonfigurované');
+      }
+      // Fallback na demo video při jiných chybách
+      else if (errorMessage.includes('fetch') || errorMessage.includes('HTTP error')) {
+        console.warn('⚠️ Netlify funkce problém, používám demo video');
+        setStreamUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
         setShowStream(true);
       } else {
         setStreamError(errorMessage);
-        alert(`Nepodařilo se načíst video stream:\n${errorMessage}`);
       }
     } finally {
       setIsLoadingStream(false);
@@ -346,3 +345,4 @@ const DoorbellCard: React.FC<
 };
 
 export default DoorbellCard;
+

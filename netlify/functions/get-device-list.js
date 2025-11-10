@@ -280,7 +280,7 @@ exports.handler = async function (event, context) {
       console.log('Step 3: Loading status for online devices...');
       const devicesWithStatus = await Promise.all(
         automaticDevices.map(async (device) => {
-          if (device.isOnline) {
+          if (device.Online) {
             try {
               const deviceId = device.id || device.device_id;
               const status = await getDeviceStatus(
@@ -396,3 +396,4 @@ exports.handler = async function (event, context) {
     };
   }
 };
+

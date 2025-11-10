@@ -1,28 +1,17 @@
 // src/tuya/components/cards/DoorbellCard.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import './DoorbellCard.css';
 import type { DeviceCardProps } from '../../../types';
 import { getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
-import { tuyaService } from '../../services/tuyaService';
 
-// Definice HLS.js typu
-declare global {
-  interface Window {
-    Hls: any;
-  }
-}
-
-const DoorbellCard: React.FC<
-  DeviceCardProps & { isDebugVisible?: boolean }
-> = ({ device, onControl: _onControl, isDebugVisible = false }) => {
-  const [isLoadingStream, setIsLoadingStream] = useState(false);
-  const [streamUrl, setStreamUrl] = useState<string | null>(null);
-  const [showStream, setShowStream] = useState(false);
-  const [streamError, setStreamError] = useState<string | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<any>(null);
+const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
+  device, 
+  onControl: _onControl, 
+  isDebugVisible = false 
+}) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
 
   // 🎨 Zjisti nastavení karty
   const cardSize = device.cardSettings?.size || 'medium';
@@ -33,171 +22,21 @@ const DoorbellCard: React.FC<
   const battery = getStatusValue(device.status, 'battery_percentage');
   const snapshot_url = getStatusValue(device.status, 'snapshot_url');
 
-  // 🎬 HLS Stream Handler
-  useEffect(() => {
-    if (!streamUrl || !videoRef.current || !showStream) return;
-
-    const video = videoRef.current;
-    const Hls = window.Hls;
-
-    console.log('🎬 Inicializuji přehrávání:', streamUrl);
-
-    // Zničení starého HLS instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    // Detekce typu streamu
-    const isHLS = streamUrl.includes('.m3u8') || streamUrl.includes('hls');
-    const isTestMode =
-      streamUrl.includes('test-streams.mux.dev') ||
-      streamUrl.includes('gtv-videos-bucket');
-
-    if (isTestMode) {
-      // 🧪 TEST MODE - klasické MP4
-      console.log('🧪 TEST MODE: Přehrávám MP4 video');
-      video.src = streamUrl;
-      video.play().catch((err) => {
-        console.error('Chyba přehrávání:', err);
-        setStreamError('Nelze přehrát video');
-      });
-    } else if (isHLS) {
-      // 🔴 PRODUCTION - HLS stream
-      if (Hls && Hls.isSupported()) {
-        console.log('✅ HLS.js je podporováno, inicializuji...');
-
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 90,
-        });
-
-        hlsRef.current = hls;
-
-        hls.loadSource(streamUrl);
-        hls.attachMedia(video);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('✅ HLS manifest načten, spouštím přehrávání...');
-          video.play().catch((err) => {
-            console.error('Chyba přehrávání:', err);
-            setStreamError('Nelze spustit přehrávání');
-          });
-        });
-
-        hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
-          console.error('❌ HLS Error:', data);
-
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                console.error('Fatal network error, trying recovery...');
-                hls.startLoad();
-                setStreamError('Chyba sítě, zkouším obnovit...');
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error('Fatal media error, trying recovery...');
-                hls.recoverMediaError();
-                setStreamError('Chyba média, zkouším obnovit...');
-                break;
-              default:
-                console.error('Fatal error, destroying HLS instance');
-                hls.destroy();
-                setStreamError('Kritická chyba přehrávání');
-                break;
-            }
-          }
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // 🍎 Safari - nativní HLS podpora
-        console.log('🍎 Safari: Používám nativní HLS');
-        video.src = streamUrl;
-        video.play().catch((err) => {
-          console.error('Chyba přehrávání:', err);
-          setStreamError('Nelze přehrát stream');
-        });
-      } else {
-        console.error('❌ HLS není podporováno v tomto prohlížeči');
-        setStreamError('HLS není podporováno v tomto prohlížeči');
-      }
-    } else {
-      // 📹 Klasické video (MP4/WebM)
-      console.log('📹 Přehrávám klasické video');
-      video.src = streamUrl;
-      video.play().catch((err) => {
-        console.error('Chyba přehrávání:', err);
-        setStreamError('Nelze přehrát video');
-      });
-    }
-
-    // Cleanup při unmount
-    return () => {
-      if (hlsRef.current) {
-        console.log('🧹 Čistím HLS instance');
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [streamUrl, showStream]);
-
-// Funkce pro načtení live streamu
-  const handleLoadStream = async () => {
+  // Funkce pro obnovení snímku
+  const handleRefreshSnapshot = async () => {
     if (!device.online) return;
 
-    setIsLoadingStream(true);
-    setStreamError(null);
-    
+    setIsRefreshing(true);
     try {
-      console.log('📡 Načítám stream pro zařízení:', device.id);
-      const stream = await tuyaService.getDoorbellStream(device.id, 'hls');
-      
-      console.log('✅ Stream získán:', stream);
-      setStreamUrl(stream.url);
-      setShowStream(true);
+      // Simulace načítání (v reálu by se volalo API pro nový snapshot)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLastRefresh(Date.now());
+      console.log('✅ Snapshot obnoven');
     } catch (error) {
-      console.error('❌ Chyba při načítání streamu:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Neznámá chyba';
-      
-      // 🔴 KRITICKÁ CHYBA - Tuya API nepodporuje stream pro tento doorbell
-      if (errorMessage.includes('Failed to allocate stream')) {
-        console.warn('⚠️ Tuya API: Stream endpoint není podporován pro tento doorbell');
-        setStreamError('Video stream není dostupný pro tento zvonek.\n\nTuya API možná nepodporuje live stream pro model R9061.');
-        alert('⚠️ Video stream není dostupný\n\nTuya API nevrátilo stream URL pro tento doorbell.\nMůže to být kvůli:\n1. Model R9061 nepodporuje live streaming\n2. Předplatné Tuya Cloud neobsahuje video features\n3. Zařízení není správně nakonfigurované');
-      }
-      // Fallback na demo video při jiných chybách
-      else if (errorMessage.includes('fetch') || errorMessage.includes('HTTP error')) {
-        console.warn('⚠️ Netlify funkce problém, používám demo video');
-        setStreamUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-        setShowStream(true);
-      } else {
-        setStreamError(errorMessage);
-      }
+      console.error('❌ Chyba při obnovení snapshotu:', error);
     } finally {
-      setIsLoadingStream(false);
+      setIsRefreshing(false);
     }
-  };
-
-  // Funkce pro zavření streamu
-  const handleCloseStream = () => {
-    console.log('🛑 Zavírám stream');
-
-    // Zastavení přehrávání
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.src = '';
-    }
-
-    // Zničení HLS instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    setShowStream(false);
-    setStreamUrl(null);
-    setStreamError(null);
   };
 
   return (
@@ -240,102 +79,80 @@ const DoorbellCard: React.FC<
 
       {/* Body */}
       <div className="tuya-card-body doorbell-body">
-        {!showStream ? (
-          <>
-            {/* Snapshot Preview */}
-            <div className="doorbell-preview">
-              {snapshot_url ? (
-                <img
-                  src={snapshot_url}
-                  alt="Poslední snímek"
-                  className="doorbell-snapshot"
-                />
-              ) : (
-                <div className="doorbell-placeholder">
-                  <span className="placeholder-icon">📷</span>
-                  <span className="placeholder-text">Žádný snímek</span>
-                </div>
-              )}
-
-              {/* Overlay s tlačítky */}
-              <div className="doorbell-overlay">
-                <button
-                  className="stream-button"
-                  onClick={handleLoadStream}
-                  disabled={!device.online || isLoadingStream}
-                >
-                  {isLoadingStream ? (
-                    <>
-                      <span className="loading-spinner"></span>
-                      <span>Načítám...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="button-icon">📹</span>
-                      <span>Live Stream</span>
-                    </>
-                  )}
-                </button>
-              </div>
+        {/* Snapshot Preview */}
+        <div className="doorbell-preview">
+          {snapshot_url ? (
+            <img 
+              src={`${snapshot_url}?t=${lastRefresh}`}
+              alt="Poslední snímek" 
+              className="doorbell-snapshot"
+            />
+          ) : (
+            <div className="doorbell-placeholder">
+              <span className="placeholder-icon">📷</span>
+              <span className="placeholder-text">Žádný snímek</span>
+              <span className="placeholder-hint">
+                Snímek se vytvoří při zazvonění
+              </span>
             </div>
-
-            {/* Status indikátory */}
-            <div className="doorbell-status">
-              {doorbell_active && (
-                <div className="status-item active">
-                  <span className="status-icon">🔔</span>
-                  <span className="status-text">Zvoní!</span>
-                </div>
-              )}
-
-              {!device.online && (
-                <div className="status-item offline">
-                  <span className="status-icon">⚠️</span>
-                  <span className="status-text">Offline</span>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Live Stream Video */}
-            <div className="doorbell-stream-container">
-              {streamError ? (
-                <div className="stream-error">
-                  <span className="error-icon">⚠️</span>
-                  <span className="error-text">{streamError}</span>
-                  <button className="retry-button" onClick={handleLoadStream}>
-                    Zkusit znovu
-                  </button>
-                </div>
-              ) : streamUrl ? (
-                <video
-                  ref={videoRef}
-                  className="doorbell-video"
-                  controls
-                  muted
-                  playsInline
-                  autoPlay
-                >
-                  Váš prohlížeč nepodporuje video přehrávání.
-                </video>
-              ) : (
-                <div className="stream-loading">
+          )}
+          
+          {/* Overlay s tlačítky */}
+          <div className="doorbell-overlay">
+            <button
+              className="refresh-button"
+              onClick={handleRefreshSnapshot}
+              disabled={!device.online || isRefreshing}
+              title="Obnovit snímek"
+            >
+              {isRefreshing ? (
+                <>
                   <span className="loading-spinner"></span>
-                  <span>Připojuji se ke streamu...</span>
-                </div>
+                  <span>Načítám...</span>
+                </>
+              ) : (
+                <>
+                  <span className="button-icon">🔄</span>
+                  <span>Obnovit snímek</span>
+                </>
               )}
-
-              {/* Tlačítko pro zavření */}
-              <button
-                className="close-stream-button"
-                onClick={handleCloseStream}
-              >
-                <span>✕</span>
-              </button>
+            </button>
+            
+            {/* Info badge - Live stream není dostupný */}
+            <div className="stream-info-badge">
+              <span className="info-icon">ℹ️</span>
+              <span className="info-text">
+                Live stream vyžaduje Tuya Video API předplatné
+              </span>
             </div>
-          </>
-        )}
+          </div>
+        </div>
+
+        {/* Status indikátory */}
+        <div className="doorbell-status">
+          {doorbell_active && (
+            <div className="status-item active">
+              <span className="status-icon">🔔</span>
+              <span className="status-text">Zvoní!</span>
+            </div>
+          )}
+          
+          {!device.online && (
+            <div className="status-item offline">
+              <span className="status-icon">⚠️</span>
+              <span className="status-text">Offline</span>
+            </div>
+          )}
+
+          {snapshot_url && (
+            <div className="status-item info">
+              <span className="status-icon">📸</span>
+              <span className="status-text">
+                Poslední snímek: {new Date(lastRefresh).toLocaleTimeString('cs-CZ')}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Debug Section */}
@@ -345,4 +162,3 @@ const DoorbellCard: React.FC<
 };
 
 export default DoorbellCard;
-

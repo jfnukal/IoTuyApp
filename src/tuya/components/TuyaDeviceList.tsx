@@ -37,7 +37,7 @@ const TuyaDeviceList: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showOffline, setShowOffline] = useState(true); 
+  const [showOffline, setShowOffline] = useState(false);
 
   // Stav pro "Režim úprav"
   const [isLayoutEditMode, setIsLayoutEditMode] = useState(false);
@@ -341,6 +341,5 @@ const TuyaDeviceList: React.FC = () => {
     </>
   );
 };
-
 
 export default TuyaDeviceList;

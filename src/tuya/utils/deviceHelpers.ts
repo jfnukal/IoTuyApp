@@ -14,6 +14,7 @@
   'wfcon': 'gateway',     // Zigbee Gateway
   'sfkzq': 'valve',       // Ventil zavlažování
   'zwjcy': 'soil_sensor', // Půdní senzor
+  'sp': 'doorbell',       // Video zvonek 🔔
 };
 
 /**
@@ -52,6 +53,7 @@ export const getCardIcon = (cardType: string): string => {
     'gateway': '🌐',
     'valve': '💧',
     'soil_sensor': '🌱',
+    'doorbell': '🔔',
     'climate': '❄️',   
     'security': '🔒',  
     'cover': '🪟',     

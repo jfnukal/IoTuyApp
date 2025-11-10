@@ -48,20 +48,27 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
   
   const generateInitialLayout = (): Layout[] => {
     return devices.map((device, index) => {
-      const grid = device.gridLayout;
+      // const grid = device.gridLayout;
       let defaultW = 1;
       let defaultH = 1; 
-      if (device.category === 'light') defaultH = 2;
-      if (device.category === 'heating') defaultH = 2;
-      if (device.category === 'multi_switch') defaultH = 2;
-      if (device.category === 'multi_socket') defaultH = 2;
+      if (device.category === 'wk') defaultH = 2;        // heating
+      if (device.category === 'wkcz') defaultH = 2;      // bojler
+      if (device.category === 'dj') defaultH = 2;        // light
+      if (device.category === 'kg') defaultH = 2;        // multi_switch
+      if (device.category === 'cz') defaultH = 2;        // socket
+      if (device.category === 'pc') defaultH = 2;        // socket
+      if (device.category === 'wsdcg') defaultH = 2;     // temp sensor
+
+      console.log(`📦 ${device.name} (${device.category}): h=${defaultH}`);
+      
       return {
         i: device.id,
-        x: grid?.x ?? (index % 4),
-        y: grid?.y ?? Math.floor(index / 4),
-        w: grid?.w ?? defaultW,
-        h: grid?.h ?? defaultH,
+        x: index % 4,
+        y: Math.floor(index / 4),
+        w: defaultW,
+        h: defaultH,
       };
+      
     });
   };
 
@@ -80,7 +87,7 @@ const handleLayoutSave = useCallback(
         batch, 
         currentUser!.uid, 
         deviceId, 
-        { 'cardSettings.gridLayout': newGridSettings }
+        { 'gridLayout': newGridSettings } 
       );
     });
     
@@ -93,9 +100,11 @@ const handleLayoutSave = useCallback(
   [currentUser, devices] // ← Závislosti
 );
 
-  const layouts = {
-    lg: generateInitialLayout(),
-  };
+const [layouts, setLayouts] = useState<{ lg: Layout[] }>({ lg: [] });
+
+useEffect(() => {
+  setLayouts({ lg: generateInitialLayout() });
+}, [devices]);
 
   return (
     <ResponsiveGridLayout

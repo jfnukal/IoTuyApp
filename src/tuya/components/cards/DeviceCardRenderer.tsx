@@ -9,6 +9,7 @@ import HeatingCard from './HeatingCard';
 import MultiSwitchCard from './MultiSwitchCard';
 import MultiSocketCard from './MultiSocketCard';
 import SmartLightCard from './SmartLightCard';
+import DoorbellCard from './DoorbellCard';
 import BasicCard from './BasicCard';
 
 interface DeviceCardRendererProps {
@@ -51,6 +52,9 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
     
     case 'smart_light':
       return <SmartLightCard {...commonProps} />;
+    
+    case 'doorbell':
+      return <DoorbellCard {...commonProps} />;
     
     case 'motion_sensor':
     case 'door_sensor':

@@ -157,7 +157,7 @@ class TuyaService {
         sub: device.sub || false,
         uuid: device.uuid || device.id,
         owner_id: device.owner_id || '',
-        online: device.online !== undefined ? device.online : false,  // ← OPRAVENO!
+        online: device.online !== undefined ? device.online : false,  // ← OPRAVENO
         status: device.status || [],
         lastUpdated: Date.now(),
         isVisible: true,
@@ -272,6 +272,57 @@ class TuyaService {
   async toggle(deviceId: string, currentState: boolean): Promise<boolean> {
     return currentState ? this.turnOff(deviceId) : this.turnOn(deviceId);
   }
+
+  /**
+   * Získá stream URL pro doorbell
+   */
+   async getDoorbellStream(deviceId: string, streamType: 'hls' | 'rtsp' = 'hls'): Promise<any> {
+    // 🧪 TEST MODE: Vrátí mock data
+    const testMode = await this.isTestMode();
+    if (testMode) {
+      console.log('🧪 TEST MODE: Simuluji doorbell stream');
+      return new Promise((resolve) => {
+        setTimeout(() => resolve({
+          url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+          expire_time: Date.now() + 3600000,
+        }), 500);
+      });
+    }
+
+    // 🚀 PRODUCTION: Volá Netlify funkci
+    try {
+      console.log(`📹 Získávám stream pro doorbell ${deviceId}...`);
+
+      const response = await fetch(`${this.baseUrl}/get-doorbell-stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId,
+          streamType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Nepodařilo se získat stream');
+      }
+
+      console.log('✅ Stream URL získána');
+      return data.stream;
+    } catch (error) {
+      console.error('❌ Chyba při získávání streamu:', error);
+      throw error;
+    }
+  }
 }
+
+
 
 export const tuyaService = new TuyaService();

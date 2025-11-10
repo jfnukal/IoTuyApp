@@ -1,0 +1,318 @@
+/* src/tuya/components/cards/DoorbellCard.css */
+
+/* ==================== ZÁKLADNÍ STRUKTURA ==================== */
+.tuya-device-card.doorbell {
+  min-height: 300px;
+}
+
+.tuya-device-card.doorbell .doorbell-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ==================== SNAPSHOT PREVIEW ==================== */
+.doorbell-preview {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doorbell-snapshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doorbell-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.doorbell-placeholder .placeholder-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.doorbell-placeholder .placeholder-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ==================== OVERLAY S TLAČÍTKY ==================== */
+.doorbell-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.stream-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.stream-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+}
+
+.stream-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stream-button .button-icon {
+  font-size: 18px;
+}
+
+.stream-button .loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== STATUS INDIKÁTORY ==================== */
+.doorbell-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-item.active {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.status-item.offline {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.status-item .status-icon {
+  font-size: 16px;
+}
+
+.status-item .status-text {
+  flex: 1;
+}
+
+/* ==================== LIVE STREAM VIDEO ==================== */
+.doorbell-stream-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doorbell-video {
+  width: 100%;
+  height: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.stream-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stream-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.close-stream-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.close-stream-button:hover {
+  background: rgba(255, 107, 107, 0.9);
+  transform: rotate(90deg);
+}
+
+/* ==================== BATTERY BADGE ==================== */
+.battery-badge {
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==================== RESPONZIVITA ==================== */
+@media (max-width: 768px) {
+  .doorbell-preview {
+    height: 180px;
+  }
+
+  .stream-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .doorbell-video {
+    max-height: 300px;
+  }
+}
+
+/* ==================== SIZE VARIANTY ==================== */
+.tuya-device-card.doorbell.size-small .doorbell-preview {
+  height: 150px;
+}
+
+.tuya-device-card.doorbell.size-large .doorbell-preview {
+  height: 280px;
+}
+
+.tuya-device-card.doorbell.size-large .doorbell-video {
+  max-height: 500px;
+}
+
+/* ==================== ANIMACE ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.doorbell-stream-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ==================== ERROR STAVY ==================== */
+.stream-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stream-error .error-icon {
+  font-size: 48px;
+}
+
+.stream-error .error-text {
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.retry-button {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+}

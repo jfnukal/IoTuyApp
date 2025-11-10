@@ -60,4 +60,67 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 
       {/* Body */}
       <div className="tuya-card-body doorbell-body">
-        {/* Snapshot Preview
+        {/* Snapshot Preview */}
+        <div className="doorbell-preview-wrapper">
+          {snapshot_url ? (
+            <img 
+              src={snapshot_url}
+              alt="Poslední snímek ze zvonku" 
+              className="doorbell-snapshot"
+            />
+          ) : (
+            <div className="doorbell-placeholder">
+              <span className="placeholder-icon">📷</span>
+              <span className="placeholder-text">Čekám na první zvonění</span>
+              <span className="placeholder-hint">
+                Snímek se vytvoří automaticky při zazvonění
+              </span>
+            </div>
+          )}
+          
+          {/* Badge - pouze informační */}
+          {doorbell_active && (
+            <div className="ringing-badge">
+              <span className="ring-icon">🔔</span>
+              <span className="ring-text">Zvoní!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Status sekce */}
+        <div className="doorbell-info-section">
+          {/* Online/Offline status */}
+          <div className="info-row">
+            <span className="info-label">Stav:</span>
+            <span className={`info-value ${device.online ? 'online-text' : 'offline-text'}`}>
+              {device.online ? '✅ Online' : '⚠️ Offline'}
+            </span>
+          </div>
+
+          {/* Poslední zvonění */}
+          {last_ring_time && (
+            <div className="info-row">
+              <span className="info-label">Poslední zvonění:</span>
+              <span className="info-value">
+                {new Date(last_ring_time).toLocaleString('cs-CZ')}
+              </span>
+            </div>
+          )}
+
+          {/* Live stream upozornění */}
+          <div className="info-row note">
+            <span className="note-icon">ℹ️</span>
+            <span className="note-text">
+              Live stream vyžaduje Tuya Video API předplatné
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Debug Section */}
+      <DebugSection device={device} isVisible={isDebugVisible} />
+    </div>
+  );
+};
+
+export default DoorbellCard;

@@ -14,27 +14,20 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
 
-// Získej status hodnoty
-const doorbell_active = getStatusValue(device.status, 'doorbell_active');
-const battery = getStatusValue(device.status, 'battery_percentage') || 
-                getStatusValue(device.status, 'wireless_electricity'); // Fallback na wireless_electricity
-// const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
-// const snapshot_url = rawSnapshotUrl ? tuyaService.getProxiedImageUrl(rawSnapshotUrl) : undefined;
-const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
-  
-  // 🔍 Zkusíme PŘÍMOU URL bez proxy (test)
+  // Získej status hodnoty
+  const doorbell_active = getStatusValue(device.status, 'doorbell_active');
+  const battery = getStatusValue(device.status, 'battery_percentage') || 
+                  getStatusValue(device.status, 'wireless_electricity');
+  const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
   const snapshot_url = rawSnapshotUrl || undefined;
-  
+  const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
+
   // 🔍 DEBUG: Vypíšeme URL
   React.useEffect(() => {
     if (rawSnapshotUrl) {
       console.log('🖼️ Zkouším načíst snapshot přímo z AWS S3:', rawSnapshotUrl);
     }
   }, [rawSnapshotUrl]);
-
-  //zde smazat vyse az po dalsi koment
-  
-  const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
   // 🔍 DEBUG - vypíšeme všechna data ze zvonku
   React.useEffect(() => {
@@ -51,7 +44,7 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
       doorbell_active: doorbell_active,
       last_ring_time: last_ring_time,
     });
-    // Extra debug pro snapshot
+    
     if (snapshot_url) {
       console.log('✅ SNAPSHOT NALEZEN:', snapshot_url);
     } else {
@@ -106,8 +99,8 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
               src={snapshot_url}
               alt="Poslední snímek ze zvonku" 
               className="doorbell-snapshot"
+              onLoad={() => console.log('✅ Obrázek NAČTEN!')}
               onError={(e) => {
-               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 
                 // Zabráň nekonečné smyčce
@@ -175,7 +168,7 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
             </div>
           )}
 
-                    {/* PŘIDEJ TOTO: Info o snapshotu */}
+          {/* Info o snapshotu */}
           {rawSnapshotUrl && (
             <div className="info-row">
               <span className="info-label">Snapshot z:</span>
@@ -202,7 +195,3 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
 };
 
 export default DoorbellCard;
-
-
-
-

@@ -16,18 +16,9 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 
   // Získej status hodnoty
   const doorbell_active = getStatusValue(device.status, 'doorbell_active');
-  const battery = getStatusValue(device.status, 'battery_percentage') || 
-                  getStatusValue(device.status, 'wireless_electricity');
-  const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
-  const snapshot_url = rawSnapshotUrl || undefined;
+  const battery = getStatusValue(device.status, 'battery_percentage');
+  const snapshot_url = getDoorbellSnapshotUrl(device.status);
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
-
-  // 🔍 DEBUG: Vypíšeme URL
-  React.useEffect(() => {
-    if (rawSnapshotUrl) {
-      console.log('🖼️ Zkouším načíst snapshot přímo z AWS S3:', rawSnapshotUrl);
-    }
-  }, [rawSnapshotUrl]);
 
   // 🔍 DEBUG - vypíšeme všechna data ze zvonku
   React.useEffect(() => {
@@ -44,7 +35,7 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
       doorbell_active: doorbell_active,
       last_ring_time: last_ring_time,
     });
-    
+    // Extra debug pro snapshot
     if (snapshot_url) {
       console.log('✅ SNAPSHOT NALEZEN:', snapshot_url);
     } else {
@@ -99,35 +90,6 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
               src={snapshot_url}
               alt="Poslední snímek ze zvonku" 
               className="doorbell-snapshot"
-              onLoad={() => console.log('✅ Obrázek NAČTEN!')}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                
-                // Zabráň nekonečné smyčce
-                if (target.src.startsWith('data:image/svg')) {
-                  return;
-                }
-                
-                console.error('❌ Chyba při načítání snapshotu:', snapshot_url);
-                
-                // SVG placeholder (inline, bez externího requestu)
-                const svgPlaceholder = `data:image/svg+xml,${encodeURIComponent(`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
-                    <rect width="640" height="480" fill="#1a1a2e"/>
-                    <text x="320" y="220" text-anchor="middle" fill="#667eea" font-size="24" font-family="Arial">
-                      📷
-                    </text>
-                    <text x="320" y="260" text-anchor="middle" fill="#667eea" font-size="16" font-family="Arial">
-                      Snapshot není dostupný
-                    </text>
-                    <text x="320" y="290" text-anchor="middle" fill="#999" font-size="12" font-family="Arial">
-                      (Starý nebo expirovaný)
-                    </text>
-                  </svg>
-                `)}`;
-                
-                target.src = svgPlaceholder;
-              }}
             />
           ) : (
             <div className="doorbell-placeholder">
@@ -164,16 +126,6 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
               <span className="info-label">Poslední zvonění:</span>
               <span className="info-value">
                 {new Date(last_ring_time).toLocaleString('cs-CZ')}
-              </span>
-            </div>
-          )}
-
-          {/* Info o snapshotu */}
-          {rawSnapshotUrl && (
-            <div className="info-row">
-              <span className="info-label">Snapshot z:</span>
-              <span className="info-value" style={{ fontSize: '11px', opacity: 0.7 }}>
-                7. ledna 2024 (starý snapshot)
               </span>
             </div>
           )}

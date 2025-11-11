@@ -2,7 +2,7 @@
 import React from 'react';
 import './DoorbellCard.css';
 import type { DeviceCardProps } from '../../../types';
-import { getStatusValue } from '../../utils/deviceHelpers';
+import { getStatusValue, getDoorbellSnapshotUrl } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
 const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
@@ -14,10 +14,10 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
 
-// Získej status hodnoty
+  // Získej status hodnoty
   const doorbell_active = getStatusValue(device.status, 'doorbell_active');
   const battery = getStatusValue(device.status, 'battery_percentage');
-  const snapshot_url = getStatusValue(device.status, 'snapshot_url');
+  const snapshot_url = getDoorbellSnapshotUrl(device.status);
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
   // 🔍 DEBUG - vypíšeme všechna data ze zvonku
@@ -35,7 +35,13 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
       doorbell_active: doorbell_active,
       last_ring_time: last_ring_time,
     });
-  }, [device.status]);
+    // Extra debug pro snapshot
+    if (snapshot_url) {
+      console.log('✅ SNAPSHOT NALEZEN:', snapshot_url);
+    } else {
+      console.warn('⚠️ SNAPSHOT NENALEZEN - zkontroluj movement_detect_pic');
+    }
+  }, [device.status, snapshot_url]);
 
   return (
     <div
@@ -141,4 +147,3 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 };
 
 export default DoorbellCard;
-

@@ -19,9 +19,23 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 const doorbell_active = getStatusValue(device.status, 'doorbell_active');
 const battery = getStatusValue(device.status, 'battery_percentage') || 
                 getStatusValue(device.status, 'wireless_electricity'); // Fallback na wireless_electricity
+// const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
+// const snapshot_url = rawSnapshotUrl ? tuyaService.getProxiedImageUrl(rawSnapshotUrl) : undefined;
 const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
-const snapshot_url = rawSnapshotUrl ? tuyaService.getProxiedImageUrl(rawSnapshotUrl) : undefined;
-const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
+  
+  // 🔍 Zkusíme PŘÍMOU URL bez proxy (test)
+  const snapshot_url = rawSnapshotUrl || undefined;
+  
+  // 🔍 DEBUG: Vypíšeme URL
+  React.useEffect(() => {
+    if (rawSnapshotUrl) {
+      console.log('🖼️ Zkouším načíst snapshot přímo z AWS S3:', rawSnapshotUrl);
+    }
+  }, [rawSnapshotUrl]);
+
+  //zde smazat vyse az po dalsi koment
+  
+  const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
   // 🔍 DEBUG - vypíšeme všechna data ze zvonku
   React.useEffect(() => {
@@ -150,3 +164,4 @@ const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 };
 
 export default DoorbellCard;
+

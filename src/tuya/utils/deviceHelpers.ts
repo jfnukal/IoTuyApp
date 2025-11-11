@@ -144,3 +144,71 @@ export const getBattery = (
     'va_battery',         // Čínská varianta
   ]);
 };
+
+/**
+ * Dekóduje snapshot URL z Tuya doorbell
+ * Tuya ukládá snapshot jako base64 encoded JSON v movement_detect_pic nebo doorbell_pic
+ */
+ export const getDoorbellSnapshotUrl = (
+  status: Array<{ code: string; value: any }> | null | undefined
+): string | undefined => {
+  if (!status || status.length === 0) return undefined;
+
+  // Hledáme tyto kódy (v pořadí priority)
+  const snapshotCodes = ['doorbell_pic', 'movement_detect_pic', 'alarm_message'];
+
+  for (const code of snapshotCodes) {
+    const value = getStatusValue(status, code);
+    
+    if (!value || value === '') continue;
+
+    try {
+      // Dekóduj base64
+      const decoded = atob(value);
+      const data = JSON.parse(decoded);
+
+      console.log(`📸 Dekódovaná data z ${code}:`, data);
+
+      // Extrahuj URL z JSON struktury
+      if (data.files && Array.isArray(data.files) && data.files.length > 0) {
+        const fileInfo = data.files[0];
+        
+        // Může být array [url, ""] nebo string
+        let relativePath = Array.isArray(fileInfo) ? fileInfo[0] : fileInfo;
+        
+        if (relativePath && typeof relativePath === 'string') {
+          // Pokud obsahuje bucket info, sestav plnou URL
+          if (data.bucket) {
+            // Tuya EU storage URL
+            const baseUrl = `https://${data.bucket}.s3.eu-central-1.amazonaws.com`;
+            const fullUrl = relativePath.startsWith('http') 
+              ? relativePath 
+              : `${baseUrl}${relativePath}`;
+            
+            console.log(`✅ Snapshot URL nalezena: ${fullUrl}`);
+            return fullUrl;
+          }
+          
+          // Už je to plná URL
+          if (relativePath.startsWith('http')) {
+            console.log(`✅ Snapshot URL nalezena: ${relativePath}`);
+            return relativePath;
+          }
+        }
+      }
+
+      // Zkus další formát (někdy je URL přímo v data.url)
+      if (data.url && typeof data.url === 'string') {
+        console.log(`✅ Snapshot URL nalezena: ${data.url}`);
+        return data.url;
+      }
+
+    } catch (error) {
+      console.warn(`⚠️ Nepodařilo se dekódovat ${code}:`, error);
+      continue;
+    }
+  }
+
+  console.warn('⚠️ Snapshot URL nenalezena v žádném z kódů');
+  return undefined;
+};

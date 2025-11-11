@@ -262,7 +262,7 @@ class TuyaService {
   /**
    * Vypne zařízení
    */
-  async turnOff(deviceId: string): Promise<boolean> {
+   async turnOff(deviceId: string): Promise<boolean> {
     return this.controlDevice(deviceId, [{ code: 'switch_1', value: false }]);
   }
 
@@ -274,33 +274,25 @@ class TuyaService {
   }
 
   /**
-   * Získá stream URL pro doorbell
+   * Získá snapshot z doorbell
    */
-   async getDoorbellStream(deviceId: string, streamType: 'hls' | 'rtsp' = 'hls'): Promise<any> {
-    // 🧪 TEST MODE: Vrátí mock data
+  async getDoorbellSnapshot(deviceId: string): Promise<string | null> {
     const testMode = await this.isTestMode();
     if (testMode) {
-      console.log('🧪 TEST MODE: Simuluji doorbell stream');
-      return new Promise((resolve) => {
-        setTimeout(() => resolve({
-          url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-          expire_time: Date.now() + 3600000,
-        }), 500);
-      });
+      console.log('🧪 TEST MODE: Simuluji doorbell snapshot');
+      return 'https://via.placeholder.com/640x480/667eea/ffffff?text=Demo+Doorbell+Snapshot';
     }
 
-    // 🚀 PRODUCTION: Volá Netlify funkci
     try {
-      console.log(`📹 Získávám stream pro doorbell ${deviceId}...`);
+      console.log(`📸 Získávám snapshot pro doorbell ${deviceId}...`);
 
-      const response = await fetch(`${this.baseUrl}/get-doorbell-stream`, {
+      const response = await fetch(`${this.baseUrl}/get-doorbell-snapshot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           deviceId,
-          streamType,
         }),
       });
 
@@ -311,18 +303,25 @@ class TuyaService {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || 'Nepodařilo se získat stream');
+        throw new Error(data.error || 'Nepodařilo se získat snapshot');
       }
 
-      console.log('✅ Stream URL získána');
-      return data.stream;
+      console.log('✅ Snapshot URL získána');
+      return data.snapshot?.url || null;
     } catch (error) {
-      console.error('❌ Chyba při získávání streamu:', error);
-      throw error;
+      console.error('❌ Chyba při získávání snapshotu:', error);
+      return null;
     }
   }
+
+  /**
+   * Proxy pro načítání obrázků (obchází CORS)
+   */
+  getProxiedImageUrl(originalUrl: string): string {
+    if (!originalUrl) return '';
+    const encodedUrl = encodeURIComponent(originalUrl);
+    return `${this.baseUrl}/image-proxy?url=${encodedUrl}`;
+  }
 }
-
-
 
 export const tuyaService = new TuyaService();

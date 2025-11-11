@@ -18,8 +18,12 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
   const doorbell_active = getStatusValue(device.status, 'doorbell_active');
   const battery = getStatusValue(device.status, 'battery_percentage') || 
                   getStatusValue(device.status, 'wireless_electricity');
-  const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
-  const snapshot_url = rawSnapshotUrl || undefined;
+const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
+  
+  // 🔄 Použij proxy pro obcházení CORS
+  const snapshot_url = rawSnapshotUrl 
+    ? `/.netlify/functions/image-proxy?url=${encodeURIComponent(rawSnapshotUrl)}`
+    : undefined;
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
   // 🔍 DEBUG: Vypíšeme URL
@@ -195,3 +199,4 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 };
 
 export default DoorbellCard;
+

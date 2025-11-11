@@ -14,11 +14,28 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
 
-  // Získej status hodnoty
+// Získej status hodnoty
   const doorbell_active = getStatusValue(device.status, 'doorbell_active');
   const battery = getStatusValue(device.status, 'battery_percentage');
   const snapshot_url = getStatusValue(device.status, 'snapshot_url');
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
+
+  // 🔍 DEBUG - vypíšeme všechna data ze zvonku
+  React.useEffect(() => {
+    console.log('🔔 DOORBELL DEBUG:', {
+      deviceId: device.id,
+      deviceName: device.name,
+      category: device.category,
+      productId: device.product_id,
+      hasStatus: !!device.status,
+      statusLength: device.status?.length || 0,
+      status: device.status,
+      snapshot_url: snapshot_url,
+      battery: battery,
+      doorbell_active: doorbell_active,
+      last_ring_time: last_ring_time,
+    });
+  }, [device.status]);
 
   return (
     <div
@@ -124,3 +141,4 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
 };
 
 export default DoorbellCard;
+

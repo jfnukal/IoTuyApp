@@ -1,214 +1,152 @@
-// src/tuya/utils/deviceHelpers.ts
+// src/tuya/components/cards/DoorbellCard.tsx
+import React from 'react';
+import './DoorbellCard.css';
+import type { DeviceCardProps } from '../../../types';
+import { getStatusValue, getDoorbellSnapshotUrl } from '../../utils/deviceHelpers';
+import DebugSection from './DebugSection';
+import { tuyaService } from '../../services/tuyaService';
 
-/**
- * Mapování Tuya kategorií na naše interní typy
- */
- export const DEVICE_CATEGORY_MAP: Record<string, string> = {
-  'wk': 'heating',        // Topení
-  'kg': 'multi_switch',   // 2-gang switch (světlo chodba)
-  'dj': 'smart_light',    // Chytré světlo s jasem
-  'cz': 'multi_socket',   // Multi-zásuvka
-  'wsdcg': 'temp_sensor', // Teplotní senzor
-  'pir': 'motion_sensor', // PIR senzor
-  'mcs': 'door_sensor',   // Dveřní senzor
-  'wfcon': 'gateway',     // Zigbee Gateway
-  'sfkzq': 'valve',       // Ventil zavlažování
-  'zwjcy': 'soil_sensor', // Půdní senzor
-  'sp': 'doorbell',       // Video zvonek 🔔
-};
+const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
+  device, 
+  onControl: _onControl, 
+  isDebugVisible = false 
+}) => {
+  // 🎨 Zjisti nastavení karty
+  const cardSize = device.cardSettings?.size || 'medium';
+  const cardLayout = device.cardSettings?.layout || 'default';
 
-/**
- * Převod teploty z Tuya formátu (235 → 23.5°C)
- */
-export const formatTemperature = (value: number): number => {
-  return value / 10;
-};
+// Získej status hodnoty
+const doorbell_active = getStatusValue(device.status, 'doorbell_active');
+const battery = getStatusValue(device.status, 'battery_percentage') || 
+                getStatusValue(device.status, 'wireless_electricity'); // Fallback na wireless_electricity
+const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
+const snapshot_url = rawSnapshotUrl ? tuyaService.getProxiedImageUrl(rawSnapshotUrl) : undefined;
+const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
-/**
- * Převod jasu z Tuya formátu (1000 → 100%)
- */
-export const formatBrightness = (value: number): number => {
-  return Math.round((value / 1000) * 100);
-};
-
-/**
- * Zjistí typ karty podle kategorie zařízení
- */
-export const getDeviceCardType = (category: string): string => {
-  return DEVICE_CATEGORY_MAP[category] || 'basic';
-};
-
-/**
- * Ikony podle typu karty
- */
-export const getCardIcon = (cardType: string): string => {
-  const icons: Record<string, string> = {
-    'heating': '🔥',
-    'multi_switch': '💡',
-    'smart_light': '💡',
-    'multi_socket': '🔌',
-    'temp_sensor': '🌡️',
-    'motion_sensor': '👁️',
-    'door_sensor': '🚪',
-    'gateway': '🌐',
-    'valve': '💧',
-    'soil_sensor': '🌱',
-    'doorbell': '🔔',
-    'climate': '❄️',   
-    'security': '🔒',  
-    'cover': '🪟',     
-    'garden': '🌱',    
-    'switch': '🔌',    
-    'light': '💡',     
-    'sensor': '📡',    
-    'basic': '⚙️',
-  };
-  return icons[cardType] || '⚙️';
-};
-
-/**
- * Najde hodnotu status kódu
- */
- export const getStatusValue = (
-  status: Array<{ code: string; value: any }> | null | undefined,
-  code: string
-): any => {
-  if (!status || status.length === 0) return undefined;
-  const found = status.find((s) => s.code === code);
-  return found?.value;
-};
-
-/**
- * Najde hodnotu status kódu - zkusí více variant názvů
- */
- export const getStatusValueMultiple = (
-  status: Array<{ code: string; value: any }> | null | undefined,
-  codes: string[]
-): any => {
-  if (!status || status.length === 0) return undefined;
-  
-  // Zkus všechny varianty kódů
-  for (const code of codes) {
-    const found = status.find((s) => s.code === code);
-    if (found !== undefined) return found.value;
-  }
-  
-  return undefined;
-};
-
-/**
- * Univerzální funkce pro získání teploty (podporuje všechny varianty)
- */
-export const getTemperature = (
-  status: Array<{ code: string; value: any }> | null | undefined
-): number | undefined => {
-  const tempRaw = getStatusValueMultiple(status, [
-    'va_temperature',    // Čínské senzory
-    'temp_current',      // Standardní Tuya
-    'temperature',       // Alternativa
-    'temp_value',        // Další varianta
-  ]);
-  
-  return tempRaw !== undefined ? formatTemperature(tempRaw) : undefined;
-};
-
-/**
- * Univerzální funkce pro získání vlhkosti (podporuje všechny varianty)
- */
-export const getHumidity = (
-  status: Array<{ code: string; value: any }> | null | undefined
-): number | undefined => {
-  const humidityRaw = getStatusValueMultiple(status, [
-    'va_humidity',       // Čínské senzory
-    'humidity_value',    // Standardní Tuya
-    'humidity',          // Alternativa
-    'humid_value',       // Další varianta
-  ]);
-  
-  // Pokud je hodnota > 100, formátuj jako teplotu (587 → 58.7%)
-  // Pokud je <= 100, vrať rovnou (je už v procentech)
-  if (humidityRaw === undefined) return undefined;
-  return humidityRaw > 100 ? formatTemperature(humidityRaw) : humidityRaw;
-};
-
-/**
- * Univerzální funkce pro získání baterie (podporuje všechny varianty)
- */
-export const getBattery = (
-  status: Array<{ code: string; value: any }> | null | undefined
-): number | undefined => {
-  return getStatusValueMultiple(status, [
-    'battery_percentage', // Standardní
-    'battery',            // Alternativa
-    'battery_value',      // Další varianta
-    'va_battery',         // Čínská varianta
-  ]);
-};
-
-/**
- * Dekóduje snapshot URL z Tuya doorbell
- * Tuya ukládá snapshot jako base64 encoded JSON v movement_detect_pic nebo doorbell_pic
- */
- export const getDoorbellSnapshotUrl = (
-  status: Array<{ code: string; value: any }> | null | undefined
-): string | undefined => {
-  if (!status || status.length === 0) return undefined;
-
-  // Hledáme tyto kódy (v pořadí priority)
-  const snapshotCodes = ['doorbell_pic', 'movement_detect_pic', 'alarm_message'];
-
-  for (const code of snapshotCodes) {
-    const value = getStatusValue(status, code);
-    
-    if (!value || value === '') continue;
-
-    try {
-      // Dekóduj base64
-      const decoded = atob(value);
-      const data = JSON.parse(decoded);
-
-      console.log(`📸 Dekódovaná data z ${code}:`, data);
-
-      // Extrahuj URL z JSON struktury
-      if (data.files && Array.isArray(data.files) && data.files.length > 0) {
-        const fileInfo = data.files[0];
-        
-        // Může být array [url, ""] nebo string
-        let relativePath = Array.isArray(fileInfo) ? fileInfo[0] : fileInfo;
-        
-        if (relativePath && typeof relativePath === 'string') {
-          // Pokud obsahuje bucket info, sestav plnou URL
-          if (data.bucket) {
-            // Tuya EU storage URL
-            const baseUrl = `https://${data.bucket}.s3.eu-central-1.amazonaws.com`;
-            const fullUrl = relativePath.startsWith('http') 
-              ? relativePath 
-              : `${baseUrl}${relativePath}`;
-            
-            console.log(`✅ Snapshot URL nalezena: ${fullUrl}`);
-            return fullUrl;
-          }
-          
-          // Už je to plná URL
-          if (relativePath.startsWith('http')) {
-            console.log(`✅ Snapshot URL nalezena: ${relativePath}`);
-            return relativePath;
-          }
-        }
-      }
-
-      // Zkus další formát (někdy je URL přímo v data.url)
-      if (data.url && typeof data.url === 'string') {
-        console.log(`✅ Snapshot URL nalezena: ${data.url}`);
-        return data.url;
-      }
-
-    } catch (error) {
-      console.warn(`⚠️ Nepodařilo se dekódovat ${code}:`, error);
-      continue;
+  // 🔍 DEBUG - vypíšeme všechna data ze zvonku
+  React.useEffect(() => {
+    console.log('🔔 DOORBELL DEBUG:', {
+      deviceId: device.id,
+      deviceName: device.name,
+      category: device.category,
+      productId: device.product_id,
+      hasStatus: !!device.status,
+      statusLength: device.status?.length || 0,
+      status: device.status,
+      snapshot_url: snapshot_url,
+      battery: battery,
+      doorbell_active: doorbell_active,
+      last_ring_time: last_ring_time,
+    });
+    // Extra debug pro snapshot
+    if (snapshot_url) {
+      console.log('✅ SNAPSHOT NALEZEN:', snapshot_url);
+    } else {
+      console.warn('⚠️ SNAPSHOT NENALEZEN - zkontroluj movement_detect_pic');
     }
-  }
+  }, [device.status, snapshot_url]);
 
-  console.warn('⚠️ Snapshot URL nenalezena v žádném z kódů');
-  return undefined;
+  return (
+    <div
+      className={`tuya-device-card doorbell ${
+        device.online ? 'online' : 'offline'
+      } size-${cardSize} layout-${cardLayout}`}
+    >
+      {/* Header */}
+      <div className="tuya-card-header">
+        <div className="device-info">
+          <span className="device-icon">🔔</span>
+          <div className="device-names">
+            <h3 className="device-name">{device.customName || device.name}</h3>
+            <span className="device-category">Video Zvonek</span>
+          </div>
+        </div>
+
+        <div className="device-status-indicator">
+          <div className="status-badges">
+            {battery !== undefined && (
+              <span className="battery-badge" title={`Baterie: ${battery}%`}>
+                🔋 {battery}%
+              </span>
+            )}
+            <span
+              className={`status-dot ${device.online ? 'online' : 'offline'}`}
+            ></span>
+          </div>
+          {device.lastUpdated && (
+            <div className="last-updated-header">
+              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="tuya-card-body doorbell-body">
+        {/* Snapshot Preview */}
+        <div className="doorbell-preview-wrapper">
+          {snapshot_url ? (
+            <img 
+              src={snapshot_url}
+              alt="Poslední snímek ze zvonku" 
+              className="doorbell-snapshot"
+            />
+          ) : (
+            <div className="doorbell-placeholder">
+              <span className="placeholder-icon">📷</span>
+              <span className="placeholder-text">Čekám na první zvonění</span>
+              <span className="placeholder-hint">
+                Snímek se vytvoří automaticky při zazvonění
+              </span>
+            </div>
+          )}
+          
+          {/* Badge - pouze informační */}
+          {doorbell_active && (
+            <div className="ringing-badge">
+              <span className="ring-icon">🔔</span>
+              <span className="ring-text">Zvoní!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Status sekce */}
+        <div className="doorbell-info-section">
+          {/* Online/Offline status */}
+          <div className="info-row">
+            <span className="info-label">Stav:</span>
+            <span className={`info-value ${device.online ? 'online-text' : 'offline-text'}`}>
+              {device.online ? '✅ Online' : '⚠️ Offline'}
+            </span>
+          </div>
+
+          {/* Poslední zvonění */}
+          {last_ring_time && (
+            <div className="info-row">
+              <span className="info-label">Poslední zvonění:</span>
+              <span className="info-value">
+                {new Date(last_ring_time).toLocaleString('cs-CZ')}
+              </span>
+            </div>
+          )}
+
+          {/* Live stream upozornění */}
+          <div className="info-row note">
+            <span className="note-icon">ℹ️</span>
+            <span className="note-text">
+              Live stream vyžaduje Tuya Video API předplatné
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Debug Section */}
+      <DebugSection device={device} isVisible={isDebugVisible} />
+    </div>
+  );
 };
+
+export default DoorbellCard;

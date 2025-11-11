@@ -107,6 +107,11 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
               src={snapshot_url}
               alt="Poslední snímek ze zvonku" 
               className="doorbell-snapshot"
+              onError={(e) => {
+                console.error('❌ Chyba při načítání snapshotu:', snapshot_url);
+                // Nastav placeholder
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/640x480/1a1a2e/667eea?text=Snapshot+Unavailable+(Old+or+Expired)';
+              }}
             />
           ) : (
             <div className="doorbell-placeholder">
@@ -147,6 +152,16 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
             </div>
           )}
 
+                    {/* PŘIDEJ TOTO: Info o snapshotu */}
+          {rawSnapshotUrl && (
+            <div className="info-row">
+              <span className="info-label">Snapshot z:</span>
+              <span className="info-value" style={{ fontSize: '11px', opacity: 0.7 }}>
+                7. ledna 2024 (starý snapshot)
+              </span>
+            </div>
+          )}
+
           {/* Live stream upozornění */}
           <div className="info-row note">
             <span className="note-icon">ℹ️</span>
@@ -164,4 +179,5 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
 };
 
 export default DoorbellCard;
+
 

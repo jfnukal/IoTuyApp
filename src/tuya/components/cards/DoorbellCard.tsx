@@ -4,6 +4,7 @@ import './DoorbellCard.css';
 import type { DeviceCardProps } from '../../../types';
 import { getStatusValue, getDoorbellSnapshotUrl } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
+import { tuyaService } from '../../services/tuyaService';
 
 const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
   device, 
@@ -14,11 +15,13 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
 
-  // Získej status hodnoty
-  const doorbell_active = getStatusValue(device.status, 'doorbell_active');
-  const battery = getStatusValue(device.status, 'battery_percentage');
-  const snapshot_url = getDoorbellSnapshotUrl(device.status);
-  const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
+// Získej status hodnoty
+const doorbell_active = getStatusValue(device.status, 'doorbell_active');
+const battery = getStatusValue(device.status, 'battery_percentage') || 
+                getStatusValue(device.status, 'wireless_electricity'); // Fallback na wireless_electricity
+const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
+const snapshot_url = rawSnapshotUrl ? tuyaService.getProxiedImageUrl(rawSnapshotUrl) : undefined;
+const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
   // 🔍 DEBUG - vypíšeme všechna data ze zvonku
   React.useEffect(() => {

@@ -4,7 +4,6 @@ import './DoorbellCard.css';
 import type { DeviceCardProps } from '../../../types';
 import { getStatusValue, getDoorbellSnapshotUrl } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
-import { tuyaService } from '../../services/tuyaService';
 
 const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
   device, 
@@ -179,5 +178,6 @@ const rawSnapshotUrl = getDoorbellSnapshotUrl(device.status);
 };
 
 export default DoorbellCard;
+
 
 

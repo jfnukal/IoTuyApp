@@ -69,20 +69,4 @@ exports.handler = async function (event, context) {
     };
   }
 };
-```
 
----
-
-## 🚀 Commit & Push
-
-1. **Ulož změny**
-2. **Commit & Push**
-3. **Netlify automaticky nasadí image-proxy funkci**
-4. **Obrázek by se měl načíst! 📸**
-
----
-
-## 🎯 Jak to funguje:
-```
-Prohlížeč → Netlify Proxy → AWS S3 → Netlify Proxy → Prohlížeč
-           (obchází CORS)

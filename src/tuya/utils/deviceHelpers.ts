@@ -3,7 +3,7 @@
 /**
  * Mapování Tuya kategorií na naše interní typy
  */
-export const DEVICE_CATEGORY_MAP: Record<string, string> = {
+ export const DEVICE_CATEGORY_MAP: Record<string, string> = {
   'wk': 'heating',        // Topení
   'kg': 'multi_switch',   // 2-gang switch (světlo chodba)
   'dj': 'smart_light',    // Chytré světlo s jasem
@@ -14,7 +14,7 @@ export const DEVICE_CATEGORY_MAP: Record<string, string> = {
   'wfcon': 'gateway',     // Zigbee Gateway
   'sfkzq': 'valve',       // Ventil zavlažování
   'zwjcy': 'soil_sensor', // Půdní senzor
-  'sp': 'doorbell',       // Video zvonek 🔔
+ // 'sp': 'doorbell',       // Video zvonek 🔔 // 'sp': rozlišuje se v getDeviceCardType() podle product_id  
 };
 
 /**
@@ -32,9 +32,21 @@ export const formatBrightness = (value: number): number => {
 };
 
 /**
- * Zjistí typ karty podle kategorie zařízení
+ * Zjistí typ karty podle kategorie zařízení a product_id
  */
-export const getDeviceCardType = (category: string): string => {
+ export const getDeviceCardType = (category: string, productId?: string): string => {
+  // Speciální případ: kategorie 'sp' může být doorbell NEBO kamera
+  if (category === 'sp' && productId) {
+    // Doorbell produkty
+    if (productId === 'kzatr9ohaiy4iokw') {
+      return 'doorbell';
+    }
+    // PTZ Camera produkty
+    if (productId === '2aancrpmmj91oxqb') {
+      return 'ptz_camera';
+    }
+  }
+  
   return DEVICE_CATEGORY_MAP[category] || 'basic';
 };
 
@@ -53,7 +65,8 @@ export const getCardIcon = (cardType: string): string => {
     'gateway': '🌐',
     'valve': '💧',
     'soil_sensor': '🌱',
-    'doorbell': '🔔',    // Přidáno
+    'doorbell': '🔔',
+    'ptz_camera': '📹', 
     'climate': '❄️',   
     'security': '🔒',  
     'cover': '🪟',     
@@ -69,7 +82,7 @@ export const getCardIcon = (cardType: string): string => {
 /**
  * Najde hodnotu status kódu
  */
-export const getStatusValue = (
+ export const getStatusValue = (
   status: Array<{ code: string; value: any }> | null | undefined,
   code: string
 ): any => {
@@ -81,7 +94,7 @@ export const getStatusValue = (
 /**
  * Najde hodnotu status kódu - zkusí více variant názvů
  */
-export const getStatusValueMultiple = (
+ export const getStatusValueMultiple = (
   status: Array<{ code: string; value: any }> | null | undefined,
   codes: string[]
 ): any => {
@@ -148,7 +161,7 @@ export const getBattery = (
 /**
  * Dekóduje snapshot URL z Tuya doorbell
  */
-export const getDoorbellSnapshotUrl = (
+ export const getDoorbellSnapshotUrl = (
   status: Array<{ code: string; value: any }> | null | undefined
 ): string | undefined => {
   if (!status || status.length === 0) return undefined;

@@ -1,0 +1,352 @@
+/* src/tuya/components/cards/PTZCameraCard.css */
+
+/* ==================== ZÁKLADNÍ STRUKTURA ==================== */
+.tuya-device-card.ptz-camera {
+  min-height: 400px;
+}
+
+.tuya-device-card.ptz-camera .ptz-camera-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ==================== CAMERA PREVIEW ==================== */
+.camera-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.camera-placeholder .placeholder-icon {
+  font-size: 64px;
+  opacity: 0.3;
+}
+
+.camera-placeholder .placeholder-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.camera-placeholder .placeholder-hint {
+  font-size: 12px;
+  opacity: 0.5;
+  line-height: 1.4;
+  max-width: 250px;
+}
+
+/* ==================== TRACKING BADGE ==================== */
+.tracking-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  animation: pulse-tracking 2s ease-in-out infinite;
+}
+
+@keyframes pulse-tracking {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.tracking-badge .tracking-icon {
+  font-size: 16px;
+}
+
+/* ==================== RECORDING BADGE ==================== */
+.recording-badge {
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse-rec 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-rec {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ==================== PTZ CONTROLS SECTION ==================== */
+.ptz-controls-section {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==================== PTZ JOYSTICK ==================== */
+.ptz-joystick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.ptz-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ptz-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.ptz-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.ptz-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ptz-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ==================== QUICK ACTIONS ==================== */
+.quick-actions-section {
+  padding: 0 16px 16px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: space-around;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.action-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action-icon {
+  font-size: 24px;
+}
+
+.action-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.action-info {
+  flex: 1;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==================== CAMERA INFO SECTION ==================== */
+.camera-info-section {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.info-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.info-value {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.info-value.active-text {
+  color: #4ade80;
+}
+
+.info-value.recording-text {
+  color: #ff6b6b;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ==================== NOTE ROW ==================== */
+.info-row.note {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.note-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.note-text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+  flex: 1;
+}
+
+/* ==================== RESPONZIVITA ==================== */
+@media (max-width: 768px) {
+  .camera-preview-wrapper {
+    height: 180px;
+  }
+
+  .ptz-joystick {
+    gap: 6px;
+    max-width: 180px;
+  }
+
+  .ptz-btn {
+    min-height: 45px;
+    font-size: 20px;
+  }
+
+  .action-buttons {
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 10px;
+  }
+
+  .action-icon {
+    font-size: 20px;
+  }
+}
+
+/* ==================== SIZE VARIANTY ==================== */
+.tuya-device-card.ptz-camera.size-small .camera-preview-wrapper {
+  height: 150px;
+}
+
+.tuya-device-card.ptz-camera.size-large .camera-preview-wrapper {
+  height: 280px;
+}
+
+/* ==================== ANIMACE ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ptz-camera-body {
+  animation: fadeIn 0.3s ease-out;
+}

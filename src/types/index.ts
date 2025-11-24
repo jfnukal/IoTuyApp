@@ -525,4 +525,26 @@ export type DeviceCardType =
   | 'gateway'
   | 'valve'
   | 'soil_sensor'
+  | 'doorbell'  
+  | 'ptz_camera'
   | 'basic';
+
+
+  // Na konec souboru před export
+export interface DoorbellEvent {
+  id: string;
+  userId: string;
+  deviceId: string;
+  timestamp: number;
+  snapshotUrl?: string;
+  answered: boolean;
+  duration?: number; // v sekundách
+}
+
+export interface DoorbellSnapshot {
+  id: string;
+  userId: string;
+  deviceId: string;
+  url: string;
+  timestamp: number;
+}

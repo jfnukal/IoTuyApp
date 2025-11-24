@@ -17,7 +17,6 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
   const cardLayout = device.cardSettings?.layout || 'default';
 
   // Získej status hodnoty
-  const ptzControl = getStatusValue(device.status, 'ptz_control');
   const motionTracking = getStatusValue(device.status, 'motion_tracking');
   const nightvisionMode = getStatusValue(device.status, 'nightvision_mode');
   const floodlightSwitch = getStatusValue(device.status, 'floodlight_switch');
@@ -25,7 +24,6 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
   const recordSwitch = getStatusValue(device.status, 'record_switch');
   const motionSwitch = getStatusValue(device.status, 'motion_switch');
   const sdStorage = getStatusValue(device.status, 'sd_storge');
-  const sdStatus = getStatusValue(device.status, 'sd_status');
 
   // PTZ kontrolní kódy
   const PTZ_COMMANDS = {
@@ -82,7 +80,6 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
     
     const total = parseInt(parts[0]);
     const used = parseInt(parts[1]);
-    const free = parseInt(parts[2]);
     
     if (total === 0) return null;
     

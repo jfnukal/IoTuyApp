@@ -10,6 +10,7 @@ import MultiSwitchCard from './MultiSwitchCard';
 import MultiSocketCard from './MultiSocketCard';
 import SmartLightCard from './SmartLightCard';
 import DoorbellCard from './DoorbellCard';
+import PTZCameraCard from './PTZCameraCard';
 import BasicCard from './BasicCard';
 
 interface DeviceCardRendererProps {
@@ -25,8 +26,8 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
   onControl,
   isDebugVisible = false,
 }) => {
-  // Zjisti typ karty podle kategorie
-  const cardType = getDeviceCardType(device.category);
+// Zjisti typ karty podle kategorie a product_id
+const cardType = getDeviceCardType(device.category, device.product_id);
 
   // Společné props pro všechny karty
   const commonProps = {
@@ -55,6 +56,9 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
     
     case 'doorbell':
       return <DoorbellCard {...commonProps} />;
+
+    case 'ptz_camera':
+      return <PTZCameraCard {...commonProps} />;  // ← Odkomentujeme po vytvoření
     
     case 'motion_sensor':
     case 'door_sensor':

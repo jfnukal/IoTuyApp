@@ -4,10 +4,11 @@ import type { DeviceCardProps } from '../../../types';
 import { getTemperature, getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
-  device, 
-  onControl, 
-  isDebugVisible = false 
+const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
+  device,
+  onControl,
+  isDebugVisible = false,
+  onHeaderClick, // NOVÉ
 }) => {
   const [isAdjusting, setIsAdjusting] = useState(false);
 
@@ -23,7 +24,7 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
     statusLength: device.status?.length,
     status: device.status,
   });
-  
+
   const tempCurrent = getTemperature(device.status);
   const tempSetRaw = getStatusValue(device.status, 'temp_set');
   const tempSet = tempSetRaw !== undefined ? tempSetRaw / 10 : 20;
@@ -32,12 +33,12 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const handleTemperatureChange = async (newTemp: number) => {
     if (!onControl || !device.online) return;
-    
+
     setIsAdjusting(true);
     try {
       // Tuya očekává teplotu * 10 (23.5 → 235)
       await onControl(device.id, [
-        { code: 'temp_set', value: Math.round(newTemp * 10) }
+        { code: 'temp_set', value: Math.round(newTemp * 10) },
       ]);
     } catch (error) {
       console.error('Chyba při nastavení teploty:', error);
@@ -48,11 +49,9 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const handleModeChange = async (newMode: string) => {
     if (!onControl || !device.online) return;
-    
+
     try {
-      await onControl(device.id, [
-        { code: 'mode', value: newMode }
-      ]);
+      await onControl(device.id, [{ code: 'mode', value: newMode }]);
     } catch (error) {
       console.error('Chyba při změně režimu:', error);
     }
@@ -60,9 +59,9 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const getModeLabel = (mode: string) => {
     const modes: Record<string, string> = {
-      'auto': 'Auto',
-      'manual': 'Manuál',
-      'off': 'Vypnuto'
+      auto: 'Auto',
+      manual: 'Manuál',
+      off: 'Vypnuto',
     };
     return modes[mode] || mode;
   };
@@ -70,39 +69,45 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   // return (
   //   <div className={`tuya-device-card heating ${device.online ? 'online' : 'offline'}`}>
   return (
-    <div className={`tuya-device-card heating ${device.online ? 'online' : 'offline'} size-${cardSize} layout-${cardLayout}`}>
-      {/* Header */}
-      <div className="tuya-card-header">
+    <div
+      className={`tuya-device-card heating ${
+        device.online ? 'online' : 'offline'
+      } size-${cardSize} layout-${cardLayout}`}
+    >
+      {/* Header - klikatelný pro otevření modalu */}
+      <div
+        className="tuya-card-header clickable-header"
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">🔥</span>
           <div className="device-names">
-            <h3 className="device-name">
-              {device.customName || device.name}
-            </h3>
+            <h3 className="device-name">{device.customName || device.name}</h3>
             <span className="device-category">Topení</span>
           </div>
         </div>
-        
+
         <div className="device-status-indicator">
-  <div className="status-badges">
-    {device.sub && (
-      <span className="zigbee-badge" title="Zigbee zařízení">
-        Z
-      </span>
-    )}
-    <span
-      className={`status-dot ${device.online ? 'online' : 'offline'}`}
-    ></span>
-  </div>
-  {device.lastUpdated && (
-    <div className="last-updated-header">
-      {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })}
-    </div>
-  )}
-</div>
+          <div className="status-badges">
+            {device.sub && (
+              <span className="zigbee-badge" title="Zigbee zařízení">
+                Z
+              </span>
+            )}
+            <span
+              className={`status-dot ${device.online ? 'online' : 'offline'}`}
+            ></span>
+          </div>
+          {device.lastUpdated && (
+            <div className="last-updated-header">
+              {new Date(device.lastUpdated).toLocaleTimeString('cs-CZ', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Body - Kompaktní layout s vertikálním posuvníkem */}
@@ -111,22 +116,22 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
           <div className="heating-compact-layout">
             {/* Levá strana - Vertikální posuvník */}
             <div className="vertical-temp-control">
-              <div className="temp-value-display">
-                {tempSet.toFixed(1)}°C
-              </div>
-              
+              <div className="temp-value-display">{tempSet.toFixed(1)}°C</div>
+
               <input
                 type="range"
                 min="5"
                 max="30"
                 step="0.5"
                 value={tempSet}
-                onChange={(e) => handleTemperatureChange(parseFloat(e.target.value))}
+                onChange={(e) =>
+                  handleTemperatureChange(parseFloat(e.target.value))
+                }
                 disabled={!device.online || isAdjusting}
                 className="vertical-slider"
-              //  orient="vertical"
+                //  orient="vertical"
               />
-              
+
               <div className="slider-labels">
                 <div className="label-top">
                   <span className="emoji">🔥</span>
@@ -147,74 +152,74 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
               </div>
 
               {/* SVG Kruhový ukazatel */}
-  {/* SVG Kruhový ukazatel */}
-<svg className="thermometer-svg-compact" viewBox="0 0 160 160">
-  {/* Pozadí kruhu */}
-  <circle
-    cx="80"
-    cy="80"
-    r="65"
-    fill="none"
-    stroke="rgba(255, 255, 255, 0.1)"
-    strokeWidth="12"
-  />
-  
-  {/* Aktivní oblouk (aktuální teplota) */}
-  <circle
-    cx="80"
-    cy="80"
-    r="65"
-    fill="none"
-    stroke="#ff6b6b"
-    strokeWidth="12"
-    strokeLinecap="round"
-    strokeDasharray={`${((tempCurrent - 5) / 25) * 408} 408`}
-    transform="rotate(-90 80 80)"
-    style={{
-      filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.5))',
-      transition: 'stroke-dasharray 0.5s ease'
-    }}
-  />
-  
-  {/* Cílová teplota značka (žlutá čárka) */}
-  <line
-    x1="80"
-    y1="15"
-    x2="80"
-    y2="30"
-    stroke="#ffc107"
-    strokeWidth="4"
-    strokeLinecap="round"
-    transform={`rotate(${((tempSet - 5) / 25) * 360} 80 80)`}
-    style={{
-      filter: 'drop-shadow(0 0 6px rgba(255, 193, 7, 0.8))'
-    }}
-  />
-  
-  {/* Prostřední text - aktuální teplota */}
-  <text
-    x="80"
-    y="85"
-    textAnchor="middle"
-    fontSize="36"
-    fontWeight="700"
-    fill="#ff6b6b"
-  >
-    {tempCurrent.toFixed(1)}
-  </text>
-  <text
-    x="80"
-    y="105"
-    textAnchor="middle"
-    fontSize="16"
-    fill="#888"
-  >
-    °C
-  </text>
-</svg>
+              {/* SVG Kruhový ukazatel */}
+              <svg className="thermometer-svg-compact" viewBox="0 0 160 160">
+                {/* Pozadí kruhu */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="65"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="12"
+                />
+
+                {/* Aktivní oblouk (aktuální teplota) */}
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="65"
+                  fill="none"
+                  stroke="#ff6b6b"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray={`${((tempCurrent - 5) / 25) * 408} 408`}
+                  transform="rotate(-90 80 80)"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.5))',
+                    transition: 'stroke-dasharray 0.5s ease',
+                  }}
+                />
+
+                {/* Cílová teplota značka (žlutá čárka) */}
+                <line
+                  x1="80"
+                  y1="15"
+                  x2="80"
+                  y2="30"
+                  stroke="#ffc107"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  transform={`rotate(${((tempSet - 5) / 25) * 360} 80 80)`}
+                  style={{
+                    filter: 'drop-shadow(0 0 6px rgba(255, 193, 7, 0.8))',
+                  }}
+                />
+
+                {/* Prostřední text - aktuální teplota */}
+                <text
+                  x="80"
+                  y="85"
+                  textAnchor="middle"
+                  fontSize="36"
+                  fontWeight="700"
+                  fill="#ff6b6b"
+                >
+                  {tempCurrent.toFixed(1)}
+                </text>
+                <text
+                  x="80"
+                  y="105"
+                  textAnchor="middle"
+                  fontSize="16"
+                  fill="#888"
+                >
+                  °C
+                </text>
+              </svg>
 
               {/* Režim pod budíkem - KLIKATELNÝ */}
-              <button 
+              <button
                 className="mode-compact clickable"
                 onClick={() => {
                   const modes = ['auto', 'manual', 'off'];

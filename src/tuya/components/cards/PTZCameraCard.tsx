@@ -5,11 +5,9 @@ import type { DeviceCardProps } from '../../../types';
 import { getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
-  device, 
-  onControl,
-  isDebugVisible = false 
-}) => {
+const PTZCameraCard: React.FC<
+  DeviceCardProps & { isDebugVisible?: boolean }
+> = ({ device, onControl, isDebugVisible = false, onHeaderClick }) => {
   const [isPtzActive, setIsPtzActive] = useState(false);
 
   // 🎨 Zjisti nastavení karty
@@ -43,9 +41,7 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
 
     setIsPtzActive(true);
     try {
-      await onControl(device.id, [
-        { code: 'ptz_control', value: direction }
-      ]);
+      await onControl(device.id, [{ code: 'ptz_control', value: direction }]);
     } catch (error) {
       console.error('❌ Chyba při PTZ ovládání:', error);
     } finally {
@@ -64,9 +60,7 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
     if (!onControl || !device.online) return;
 
     try {
-      await onControl(device.id, [
-        { code: code, value: !currentValue }
-      ]);
+      await onControl(device.id, [{ code: code, value: !currentValue }]);
     } catch (error) {
       console.error(`❌ Chyba při přepínání ${code}:`, error);
     }
@@ -77,15 +71,15 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
     if (!sdStorage) return null;
     const parts = sdStorage.split('|');
     if (parts.length !== 3) return null;
-    
+
     const total = parseInt(parts[0]);
     const used = parseInt(parts[1]);
-    
+
     if (total === 0) return null;
-    
+
     const usedPercent = Math.round((used / total) * 100);
     const totalGB = (total / 1024).toFixed(1);
-    
+
     return { total: totalGB, used: usedPercent };
   };
 
@@ -97,8 +91,12 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
         device.online ? 'online' : 'offline'
       } size-${cardSize} layout-${cardLayout}`}
     >
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">📹</span>
           <div className="device-names">
@@ -153,7 +151,7 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
         {/* PTZ Controls */}
         <div className="ptz-controls-section">
           <div className="section-title">🎮 PTZ Ovládání</div>
-          
+
           <div className="ptz-joystick">
             {/* Horní tlačítka */}
             <button
@@ -190,9 +188,7 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
             >
               ⬅️
             </button>
-            <div className="ptz-center">
-              {isPtzActive ? '🎯' : '📹'}
-            </div>
+            <div className="ptz-center">{isPtzActive ? '🎯' : '📹'}</div>
             <button
               className="ptz-btn ptz-right"
               onClick={() => handlePTZ(PTZ_COMMANDS.RIGHT)}
@@ -233,12 +229,14 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
         {/* Quick Actions */}
         <div className="quick-actions-section">
           <div className="section-title">⚡ Rychlé akce</div>
-          
+
           <div className="action-buttons">
             {/* Reflektor */}
             <button
               className={`action-btn ${floodlightSwitch ? 'active' : ''}`}
-              onClick={() => handleToggle('floodlight_switch', floodlightSwitch)}
+              onClick={() =>
+                handleToggle('floodlight_switch', floodlightSwitch)
+              }
               disabled={!device.online}
               title="Reflektor"
             >
@@ -258,10 +256,17 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
             </button>
 
             {/* Noční vidění - zobrazí jako info, ne tlačítko */}
-            <div className="action-info" title={`Noční vidění: ${nightvisionMode}`}>
+            <div
+              className="action-info"
+              title={`Noční vidění: ${nightvisionMode}`}
+            >
               <span className="action-icon">🌙</span>
               <span className="action-label">
-                {nightvisionMode === 'auto' ? 'Auto' : nightvisionMode === 'on' ? 'Zapnuto' : 'Vypnuto'}
+                {nightvisionMode === 'auto'
+                  ? 'Auto'
+                  : nightvisionMode === 'on'
+                  ? 'Zapnuto'
+                  : 'Vypnuto'}
               </span>
             </div>
           </div>
@@ -290,7 +295,9 @@ const PTZCameraCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = 
           {/* Recording Status */}
           <div className="info-row">
             <span className="info-label">Nahrávání:</span>
-            <span className={`info-value ${recordSwitch ? 'recording-text' : ''}`}>
+            <span
+              className={`info-value ${recordSwitch ? 'recording-text' : ''}`}
+            >
               {recordSwitch ? '🔴 Aktivní' : '⚪ Vypnuto'}
             </span>
           </div>

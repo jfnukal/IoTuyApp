@@ -4,7 +4,7 @@ import type { DeviceCardProps } from '../../../types';
 import { getTemperature, getHumidity, getBattery } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const TempSensorCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, isDebugVisible = false }) => {
+const TempSensorCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, isDebugVisible = false, onHeaderClick }) => {
     
 // Získej hodnoty z status (univerzální - podporuje všechny varianty názvů)
 const temperature = getTemperature(device.status);
@@ -22,8 +22,12 @@ return (
       device.online ? 'online' : 'offline'
     } size-${cardSize} layout-${cardLayout}`}
   >
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">🌡️</span>
           <div className="device-names">

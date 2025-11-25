@@ -6,7 +6,7 @@ import DebugSection from './DebugSection';
 
 const MultiSocketCard: React.FC<
   DeviceCardProps & { isDebugVisible?: boolean }
-> = ({ device, onControl, isDebugVisible = false }) => {
+> = ({ device, onControl, isDebugVisible = false, onHeaderClick}) => {
   const [loadingSwitch, setLoadingSwitch] = useState<string | null>(null);
 
   // 🎨 Zjisti nastavení karty
@@ -37,8 +37,12 @@ const MultiSocketCard: React.FC<
         device.online ? 'online' : 'offline'
       } size-${cardSize} layout-${cardLayout}`}
     >
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">🔌</span>
           <div className="device-names">

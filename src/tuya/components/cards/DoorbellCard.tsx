@@ -2,14 +2,15 @@
 import React from 'react';
 import './DoorbellCard.css';
 import type { DeviceCardProps } from '../../../types';
-import { getStatusValue, getDoorbellSnapshotUrl } from '../../utils/deviceHelpers';
+import {
+  getStatusValue,
+  getDoorbellSnapshotUrl,
+} from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
-  device, 
-  onControl: _onControl, 
-  isDebugVisible = false 
-}) => {
+const DoorbellCard: React.FC<
+  DeviceCardProps & { isDebugVisible?: boolean }
+> = ({ device, onControl: _onControl, isDebugVisible = false, onHeaderClick }) => {
   // 🎨 Zjisti nastavení karty
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
@@ -49,8 +50,12 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
         device.online ? 'online' : 'offline'
       } size-${cardSize} layout-${cardLayout}`}
     >
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">🔔</span>
           <div className="device-names">
@@ -86,9 +91,9 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
         {/* Snapshot Preview */}
         <div className="doorbell-preview-wrapper">
           {snapshot_url ? (
-            <img 
+            <img
               src={snapshot_url}
-              alt="Poslední snímek ze zvonku" 
+              alt="Poslední snímek ze zvonku"
               className="doorbell-snapshot"
             />
           ) : (
@@ -100,7 +105,7 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
               </span>
             </div>
           )}
-          
+
           {/* Badge - pouze informační */}
           {doorbell_active && (
             <div className="ringing-badge">
@@ -115,7 +120,11 @@ const DoorbellCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = (
           {/* Online/Offline status */}
           <div className="info-row">
             <span className="info-label">Stav:</span>
-            <span className={`info-value ${device.online ? 'online-text' : 'offline-text'}`}>
+            <span
+              className={`info-value ${
+                device.online ? 'online-text' : 'offline-text'
+              }`}
+            >
               {device.online ? '✅ Online' : '⚠️ Offline'}
             </span>
           </div>

@@ -18,6 +18,7 @@ interface DeviceCardRendererProps {
   onToggle: (deviceId: string) => Promise<void>;
   onControl?: (deviceId: string, commands: { code: string; value: any }[]) => Promise<void>;
   isDebugVisible?: boolean;
+  onHeaderClick?: () => void; // NOVÉ - callback pro klik na hlavičku
 }
 
 const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
@@ -25,6 +26,7 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
   onToggle,
   onControl,
   isDebugVisible = false,
+  onHeaderClick, // NOVÉ
 }) => {
 // Zjisti typ karty podle kategorie a product_id
 const cardType = getDeviceCardType(device.category, device.product_id);
@@ -35,6 +37,7 @@ const cardType = getDeviceCardType(device.category, device.product_id);
     onToggle,
     onControl,
     isDebugVisible,
+    onHeaderClick, // NOVÉ - předáváme do všech karet
   };
 
   // Vyber správnou kartu podle typu

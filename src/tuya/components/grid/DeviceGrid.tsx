@@ -129,18 +129,16 @@ useEffect(() => {
       measureBeforeMount={false}
     >
       {devices.map(device => (
-        // --- ZMĚNA ZDE ---
         <div
           key={device.id}
-          onClick={() => onCardClick(device)} // Posíláme celý objekt
           className={isLayoutEditMode ? 'grid-item-draggable' : 'grid-item-clickable'}
         >
-        {/* --- KONEC ZMĚNY --- */}
           <DeviceCardRenderer
             device={device}
             onToggle={onToggle}
             onControl={onControl}
             isDebugVisible={isDebugVisible}
+            onHeaderClick={isLayoutEditMode ? undefined : () => onCardClick(device)}
           />
         </div>
       ))}

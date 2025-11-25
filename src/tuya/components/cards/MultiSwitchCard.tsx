@@ -7,7 +7,8 @@ import DebugSection from './DebugSection';
 const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
   device, 
   onControl,
-  isDebugVisible = false 
+  isDebugVisible = false,
+  onHeaderClick 
 }) => {
   const [loadingSwitch, setLoadingSwitch] = useState<string | null>(null);
 
@@ -36,8 +37,12 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
 
   return (
     <div className={`tuya-device-card glass-switch ${device.online ? 'online' : 'offline'} size-${cardSize} layout-${cardLayout}`}>
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">💡</span>
           <div className="device-names">

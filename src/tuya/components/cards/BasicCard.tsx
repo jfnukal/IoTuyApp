@@ -4,7 +4,7 @@ import type { DeviceCardProps } from '../../../types';
 import { getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
 
-const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, onToggle, isDebugVisible = false }) => {
+const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ device, onToggle, isDebugVisible = false, onHeaderClick }) => {
   const [isLoading, setIsLoading] = useState(false);
   
 
@@ -53,8 +53,12 @@ const BasicCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ d
         device.online ? 'online' : 'offline'
       } ${isOn ? 'active' : ''} size-${cardSize} layout-${cardLayout}`}
     >
-      {/* Header */}
-      <div className="tuya-card-header">
+{/* Header - klikatelný pro otevření modalu */}
+<div 
+        className="tuya-card-header clickable-header" 
+        onClick={onHeaderClick}
+        style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
+      >
         <div className="device-info">
           <span className="device-icon">
             {getCategoryIcon(device.category)}

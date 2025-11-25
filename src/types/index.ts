@@ -502,13 +502,14 @@ export interface HeaderConfigDoc {
 /**
  * Props pro jednotlivé karty zařízení
  */
-export interface DeviceCardProps {
+ export interface DeviceCardProps {
   device: TuyaDevice;
   onToggle: (deviceId: string) => Promise<void>;
   onControl?: (
     deviceId: string,
     commands: { code: string; value: any }[]
   ) => Promise<void>;
+  onHeaderClick?: () => void; // NOVÉ - callback pro klik na hlavičku karty (otevře modal)
 }
 
 /**

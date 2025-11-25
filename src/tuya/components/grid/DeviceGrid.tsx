@@ -48,7 +48,19 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
   
   const generateInitialLayout = (): Layout[] => {
     return devices.map((device, index) => {
-      // const grid = device.gridLayout;
+      // ✅ Pokud má uložený layout, použij ho
+      if (device.gridLayout) {
+        console.log(`📦 ${device.name}: Načítám uložený layout`, device.gridLayout);
+        return {
+          i: device.id,
+          x: device.gridLayout.x,
+          y: device.gridLayout.y,
+          w: device.gridLayout.w,
+          h: device.gridLayout.h,
+        };
+      }
+
+      // ⚙️ Jinak použij výchozí hodnoty podle kategorie
       let defaultW = 1;
       let defaultH = 1; 
       if (device.category === 'wk') defaultH = 2;        // heating
@@ -59,7 +71,7 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
       if (device.category === 'pc') defaultH = 2;        // socket
       if (device.category === 'wsdcg') defaultH = 2;     // temp sensor
 
-      console.log(`📦 ${device.name} (${device.category}): h=${defaultH}`);
+      console.log(`📦 ${device.name} (${device.category}): Výchozí layout h=${defaultH}`);
       
       return {
         i: device.id,
@@ -68,7 +80,6 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
         w: defaultW,
         h: defaultH,
       };
-      
     });
   };
 

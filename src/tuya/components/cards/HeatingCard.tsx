@@ -70,12 +70,11 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const getModeLabel = (mode: string) => {
     const modes: Record<string, string> = {
-      'manual': 'Ruční',
-      'program': 'Program',
-      'comfort': 'Komfort',
+      'comfortable': 'Komfort',
+      'auto': 'Auto',
       'holiday': 'Dovolená',
       'eco': 'ECO',
-      'boost': 'BOOST'
+      'manual': 'Ruční' // Pro zpětnou kompatibilitu, pokud se vrací ze zařízení
     };
     return modes[mode] || mode;
   };
@@ -236,9 +235,11 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
               <button 
                 className="mode-compact clickable"
                 onClick={() => {
-                  const modes = ['manual', 'program', 'comfort', 'holiday', 'eco', 'boost'];
+                  const modes = ['comfortable', 'auto', 'holiday', 'eco'];
                   const currentIndex = modes.indexOf(mode);
-                  const nextMode = modes[(currentIndex + 1) % modes.length];
+                  // Pokud aktuální režim není v seznamu (např. 'manual'), začni od začátku
+                  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
+                  const nextMode = modes[nextIndex];
                   console.log('🔥 Měním režim z', mode, 'na', nextMode);
                   handleModeChange(nextMode);
                 }}

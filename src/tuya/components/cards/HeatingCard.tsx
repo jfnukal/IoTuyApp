@@ -49,19 +49,33 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const handleModeChange = async (newMode: string) => {
     if (!onControl || !device.online) return;
-
+    
+    console.log('🔥 HEATING: Odesílám změnu režimu:', {
+      deviceId: device.id,
+      deviceName: device.name,
+      currentMode: mode,
+      newMode: newMode,
+      command: { code: 'mode', value: newMode }
+    });
+    
     try {
-      await onControl(device.id, [{ code: 'mode', value: newMode }]);
+      await onControl(device.id, [
+        { code: 'mode', value: newMode }
+      ]);
+      console.log('✅ HEATING: Režim úspěšně změněn');
     } catch (error) {
-      console.error('Chyba při změně režimu:', error);
+      console.error('❌ HEATING: Chyba při změně režimu:', error);
     }
   };
 
   const getModeLabel = (mode: string) => {
     const modes: Record<string, string> = {
-      auto: 'Auto',
-      manual: 'Manuál',
-      off: 'Vypnuto',
+      'manual': 'Ruční',
+      'program': 'Program',
+      'comfort': 'Komfort',
+      'holiday': 'Dovolená',
+      'eco': 'ECO',
+      'boost': 'BOOST'
     };
     return modes[mode] || mode;
   };
@@ -219,12 +233,13 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
               </svg>
 
               {/* Režim pod budíkem - KLIKATELNÝ */}
-              <button
+              <button 
                 className="mode-compact clickable"
                 onClick={() => {
-                  const modes = ['auto', 'manual', 'off'];
+                  const modes = ['manual', 'program', 'comfort', 'holiday', 'eco', 'boost'];
                   const currentIndex = modes.indexOf(mode);
                   const nextMode = modes[(currentIndex + 1) % modes.length];
+                  console.log('🔥 Měním režim z', mode, 'na', nextMode);
                   handleModeChange(nextMode);
                 }}
                 disabled={!device.online}

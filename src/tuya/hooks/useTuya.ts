@@ -20,7 +20,6 @@ export const useTuya = () => {
       return;
     }
 
-    console.log('🔌 Tuya: Připojuji k Firestore...');
     let unsubscribe: (() => void) | null = null;
 
     const setupSubscription = async () => {
@@ -31,7 +30,6 @@ export const useTuya = () => {
         unsubscribe = await firestoreService.subscribeToUserDevices(
           currentUser.uid,
           (devicesFromDB) => {
-            console.log(`✅ Tuya: Načteno ${devicesFromDB.length} zařízení z DB`);
             setDevices(devicesFromDB);
             setIsLoading(false);
           }
@@ -47,7 +45,6 @@ export const useTuya = () => {
 
     return () => {
       if (unsubscribe) {
-        console.log('🔌 Tuya: Odpojuji od Firestore');
         unsubscribe();
       }
     };
@@ -64,11 +61,9 @@ export const useTuya = () => {
     try {
       setIsSyncing(true);
       setError(null);
-      console.log('🔄 Tuya: Spouštím synchronizaci...');
 
       await tuyaService.syncToFirestore(currentUser.uid);
 
-      console.log('✅ Tuya: Synchronizace dokončena');
     } catch (err: any) {
       console.error('❌ Tuya: Chyba při synchronizaci:', err);
       setError(err.message || 'Nepodařilo se synchronizovat zařízení');
@@ -81,25 +76,21 @@ export const useTuya = () => {
   /**
    * 🎮 Ovládání zařízení (obecné)
    */
-  const controlDevice = useCallback(
+const controlDevice = useCallback(
     async (deviceId: string, commands: { code: string; value: any }[]) => {
       try {
         setError(null);
         await tuyaService.controlDevice(deviceId, commands);
-
-        // Po ovládání refreshni data (asynchronně)
-        setTimeout(() => {
-          if (currentUser) {
-            tuyaService.syncToFirestore(currentUser.uid).catch(console.error);
-          }
-        }, 1000);
+        // ✅ ODSTRANĚNO: Plná synchronizace po každé akci
+        // Firestore se aktualizuje automaticky přes real-time listener
+        // Pokud chceš refresh, použij manuálně syncDevices()
       } catch (err: any) {
         console.error('❌ Tuya: Chyba při ovládání:', err);
         setError(err.message || 'Nepodařilo se ovládat zařízení');
         throw err;
       }
     },
-    [currentUser]
+    []
   );
 
   /**
@@ -189,4 +180,5 @@ export const useTuya = () => {
     getDevice,
     getDevicesByCategory,
   };
+
 };

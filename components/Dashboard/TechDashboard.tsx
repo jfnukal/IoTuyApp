@@ -1,27 +1,10 @@
 // src/components/Dashboard/TechDashboard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TuyaDeviceList, HouseVisualization, RoomManager } from '../../tuya';
 import './styles/TechDashboard.css';
 
 const TechDashboard: React.FC = () => {
   const [view, setView] = useState<'list' | 'visualization' | 'rooms'>('list');
-
-  // 🔍 DEBUG - mount komponenty
-  useEffect(() => {
-    console.log('🔧 TechDashboard mounted!');
-    console.log('📦 TuyaDeviceList:', TuyaDeviceList);
-    console.log('🏠 HouseVisualization:', HouseVisualization);
-    return () => {
-      console.log('🔧 TechDashboard unmounted');
-    };
-  }, []);
-
-  // 🔍 DEBUG - změna view
-  useEffect(() => {
-    console.log('👁️ View changed to:', view);
-  }, [view]);
-
-  console.log('🔄 TechDashboard rendering, view:', view);
 
   return (
     <div className="tech-dashboard">
@@ -35,28 +18,19 @@ const TechDashboard: React.FC = () => {
         <div className="view-toggle">
           <button
             className={`toggle-button ${view === 'list' ? 'active' : ''}`}
-            onClick={() => {
-              console.log('🖱️ Clicked SEZNAM button');
-              setView('list');
-            }}
+            onClick={() => setView('list')}
           >
             📋 Seznam
           </button>
           <button
             className={`toggle-button ${view === 'visualization' ? 'active' : ''}`}
-            onClick={() => {
-              console.log('🖱️ Clicked VIZUALIZACE button');
-              setView('visualization');
-            }}
+            onClick={() => setView('visualization')}
           >
             🏠 Vizualizace
           </button>
           <button
             className={`toggle-button ${view === 'rooms' ? 'active' : ''}`}
-            onClick={() => {
-              console.log('🖱️ Clicked MÍSTNOSTI button');
-              setView('rooms');
-            }}
+            onClick={() => setView('rooms')}
           >
             🚪 Místnosti
           </button>
@@ -65,35 +39,20 @@ const TechDashboard: React.FC = () => {
 
       {/* Hlavní obsah */}
       <div className="tech-main-content">
-        {(() => { console.log('🎨 Rendering content for view:', view); return null; })()}
-        
-        {view === 'list' && (
-          <>
-            {(() => { console.log('📋 Rendering TuyaDeviceList'); return null; })()}
-            <TuyaDeviceList />
-          </>
-        )}
+        {view === 'list' && <TuyaDeviceList />}
 
         {view === 'visualization' && (
-          <>
-            {(() => { console.log('🏠 Rendering Visualization Layout'); return null; })()}
-            <div className="visualization-layout">
-              <div className="devices-sidebar">
-                <TuyaDeviceList />
-              </div>
-              <div className="visualization-main">
-                <HouseVisualization />
-              </div>
+          <div className="visualization-layout">
+            <div className="devices-sidebar">
+              <TuyaDeviceList />
             </div>
-          </>
+            <div className="visualization-main">
+              <HouseVisualization />
+            </div>
+          </div>
         )}
 
-        {view === 'rooms' && (
-          <>
-            {(() => { console.log('🚪 Rendering RoomManager'); return null; })()}
-            <RoomManager />
-          </>
-        )}
+        {view === 'rooms' && <RoomManager />}
       </div>
 
       {/* Další widgety */}

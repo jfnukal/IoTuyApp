@@ -21,30 +21,7 @@ const DoorbellCard: React.FC<
   const snapshot_url = getDoorbellSnapshotUrl(device.status);
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
-  // 🔍 DEBUG - vypíšeme všechna data ze zvonku
-  React.useEffect(() => {
-    console.log('🔔 DOORBELL DEBUG:', {
-      deviceId: device.id,
-      deviceName: device.name,
-      category: device.category,
-      productId: device.product_id,
-      hasStatus: !!device.status,
-      statusLength: device.status?.length || 0,
-      status: device.status,
-      snapshot_url: snapshot_url,
-      battery: battery,
-      doorbell_active: doorbell_active,
-      last_ring_time: last_ring_time,
-    });
-    // Extra debug pro snapshot
-    if (snapshot_url) {
-      console.log('✅ SNAPSHOT NALEZEN:', snapshot_url);
-    } else {
-      console.warn('⚠️ SNAPSHOT NENALEZEN - zkontroluj movement_detect_pic');
-    }
-  }, [device.status, snapshot_url]);
-
-  return (
+ return (
     <div
       className={`tuya-device-card doorbell ${
         device.online ? 'online' : 'offline'
@@ -156,3 +133,4 @@ const DoorbellCard: React.FC<
 };
 
 export default DoorbellCard;
+

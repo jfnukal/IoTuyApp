@@ -161,7 +161,7 @@ export const getBattery = (
 /**
  * Dekóduje snapshot URL z Tuya doorbell
  */
- export const getDoorbellSnapshotUrl = (
+export const getDoorbellSnapshotUrl = (
   status: Array<{ code: string; value: any }> | null | undefined
 ): string | undefined => {
   if (!status || status.length === 0) return undefined;
@@ -169,15 +169,12 @@ export const getBattery = (
   const value = getStatusValue(status, 'movement_detect_pic');
   
   if (!value || value === '') {
-    console.warn('⚠️ movement_detect_pic není k dispozici');
     return undefined;
   }
 
   try {
     const decoded = atob(value);
     const data = JSON.parse(decoded);
-
-    console.log('📸 Dekódovaná data z movement_detect_pic:', data);
 
     if (data.files && Array.isArray(data.files) && data.files.length > 0) {
       const fileInfo = data.files[0];
@@ -186,19 +183,16 @@ export const getBattery = (
       if (relativePath && typeof relativePath === 'string') {
         // Pokud už je to plná URL
         if (relativePath.startsWith('http')) {
-          console.log(`✅ Snapshot URL (plná): ${relativePath}`);
           return relativePath;
         }
 
         // Sestav plnou URL s AWS S3
-        const fullUrl = `https://${data.bucket}.s3.eu-central-1.amazonaws.com${relativePath}`;
-        console.log(`✅ Snapshot URL sestavena: ${fullUrl}`);
-        return fullUrl;
+        return `https://${data.bucket}.s3.eu-central-1.amazonaws.com${relativePath}`;
       }
     }
 
   } catch (error) {
-    console.error('❌ Chyba při dekódování movement_detect_pic:', error);
+    // Tiché selhání - snapshot prostě nebude k dispozici
   }
 
   return undefined;

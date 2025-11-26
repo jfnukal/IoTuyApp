@@ -50,7 +50,6 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
     return devices.map((device, index) => {
       // ✅ Pokud má uložený layout, použij ho
       if (device.gridLayout) {
-        console.log(`📦 ${device.name}: Načítám uložený layout`, device.gridLayout);
         return {
           i: device.id,
           x: device.gridLayout.x,
@@ -71,8 +70,6 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
       if (device.category === 'pc') defaultH = 2;        // socket
       if (device.category === 'wsdcg') defaultH = 2;     // temp sensor
 
-      console.log(`📦 ${device.name} (${device.category}): Výchozí layout h=${defaultH}`);
-      
       return {
         i: device.id,
         x: index % 4,
@@ -156,3 +153,4 @@ useEffect(() => {
     </ResponsiveGridLayout>
   );
 };
+

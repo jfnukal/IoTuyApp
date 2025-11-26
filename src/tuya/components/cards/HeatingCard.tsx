@@ -17,14 +17,6 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   const cardLayout = device.cardSettings?.layout || 'default';
 
   // Získej hodnoty z status (univerzální)
-
-  console.log('🔥 HEATING DEBUG:', {
-    deviceName: device.name,
-    hasStatus: !!device.status,
-    statusLength: device.status?.length,
-    status: device.status,
-  });
-
   const tempCurrent = getTemperature(device.status);
   const tempSetRaw = getStatusValue(device.status, 'temp_set');
   const tempSet = tempSetRaw !== undefined ? tempSetRaw / 10 : 20;
@@ -50,19 +42,12 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   const handleModeChange = async (newMode: string) => {
     if (!onControl || !device.online) return;
     
-    console.log('🔥 HEATING: Odesílám změnu režimu:', {
-      deviceId: device.id,
-      deviceName: device.name,
-      currentMode: mode,
-      newMode: newMode,
-      command: { code: 'mode', value: newMode }
-    });
+// console.log('🔥 HEATING: Odesílám změnu režimu:', newMode);
     
     try {
       await onControl(device.id, [
         { code: 'mode', value: newMode }
       ]);
-      console.log('✅ HEATING: Režim úspěšně změněn');
     } catch (error) {
       console.error('❌ HEATING: Chyba při změně režimu:', error);
     }
@@ -263,3 +248,4 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 };
 
 export default HeatingCard;
+

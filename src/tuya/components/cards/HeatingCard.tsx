@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import type { DeviceCardProps } from '../../../types';
 import { getTemperature, getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
+import './HeatingCard.css';
 
 const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   device,
@@ -309,3 +310,4 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 };
 
 export default HeatingCard;
+

@@ -1,0 +1,180 @@
+/* src/tuya/components/cards/HeatingCard.css */
+
+/* ==================== HEATING CARD ==================== */
+
+.tuya-device-card.heating .tuya-card-header {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+}
+
+/* Body - kompaktní layout */
+.heating-body-compact {
+  padding: 0.5rem;
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+.heating-compact-layout {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ==================== SLIDER VLEVO ==================== */
+
+.vertical-temp-control {
+  flex: 0 0 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0;
+}
+
+.temp-value-display {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  padding: 0.3rem 0.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vertical-slider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: slider-vertical;
+  width: 8px;
+  height: 120px;
+  margin: 0.5rem 0;
+  background: linear-gradient(to top, #4a9eff 0%, #ff6b6b 100%);
+  border-radius: 4px;
+  outline: none;
+  cursor: grab;
+}
+
+.vertical-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ff6b6b;
+}
+
+.vertical-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.vertical-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ff6b6b;
+}
+
+.slider-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  height: 100%;
+}
+
+.label-top,
+.label-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.label-top .emoji,
+.label-bottom .emoji {
+  font-size: 1.2rem;
+}
+
+/* ==================== TERMOMETR VPRAVO ==================== */
+
+.thermometer-compact {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  min-height: 0;
+}
+
+.target-badge-compact {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.target-badge-compact strong {
+  color: #ffc107;
+}
+
+.thermometer-svg-compact {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* ==================== TLAČÍTKO REŽIMU ==================== */
+
+.mode-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-compact:hover:not(:disabled) {
+  background: rgba(74, 158, 255, 0.15);
+  border-color: rgba(74, 158, 255, 0.5);
+}
+
+.mode-compact:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-icon {
+  font-size: 1rem;
+}
+
+.mode-text {
+  color: #fff;
+  font-weight: 500;
+}

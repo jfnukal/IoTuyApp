@@ -57,9 +57,7 @@ class FCMService {
         );
 
         await navigator.serviceWorker.ready;
-        console.log('✅ Service Worker zaregistrován:', registration.scope);
       } catch (swError) {
-        console.error('❌ Chyba při registraci Service Workeru:', swError);
         return null;
       }
 
@@ -128,3 +126,4 @@ class FCMService {
 }
 
 export const fcmService = new FCMService();
+

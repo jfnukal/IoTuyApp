@@ -17,6 +17,11 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   const cardLayout = device.cardSettings?.layout || 'default';
 
   // Získej hodnoty z status (univerzální)
+
+  // Debug log - pouze při prvním renderování nebo změně statusu
+  // console.log('🔥 HEATING DEBUG:', { deviceName: device.name, status: device.status });
+
+
   const tempCurrent = getTemperature(device.status);
   const tempSetRaw = getStatusValue(device.status, 'temp_set');
   const tempSet = tempSetRaw !== undefined ? tempSetRaw / 10 : 20;
@@ -55,11 +60,15 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const getModeLabel = (mode: string) => {
     const modes: Record<string, string> = {
-      'comfortable': 'Komfort',
-      'auto': 'Auto',
+      'comfort': 'Komfort',
+      'auto': 'Program',
       'holiday': 'Dovolená',
       'eco': 'ECO',
-      'manual': 'Ruční' // Pro zpětnou kompatibilitu, pokud se vrací ze zařízení
+      'manual': 'Ruční',
+      'BOOST': 'BOOST',
+      // Fallback pro staré/neznámé hodnoty
+      'comfortable': 'Komfort',
+      'temp_auto': 'Program',
     };
     return modes[mode] || mode;
   };
@@ -220,9 +229,9 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
               <button 
                 className="mode-compact clickable"
                 onClick={() => {
-                  const modes = ['comfortable', 'auto', 'holiday', 'eco'];
+                  // Skutečné hodnoty které termostat podporuje
+                  const modes = ['comfort', 'auto', 'holiday', 'eco', 'manual', 'BOOST'];
                   const currentIndex = modes.indexOf(mode);
-                  // Pokud aktuální režim není v seznamu (např. 'manual'), začni od začátku
                   const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
                   const nextMode = modes[nextIndex];
                   console.log('🔥 Měním režim z', mode, 'na', nextMode);
@@ -248,4 +257,3 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 };
 
 export default HeatingCard;
-

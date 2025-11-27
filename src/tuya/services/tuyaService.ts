@@ -161,8 +161,6 @@ class TuyaService {
         ...(device.customName && { customName: device.customName }),
       }));
 
-      console.log('✅ ZMAPOVANÁ ZAŘÍZENÍ:', JSON.stringify(devices, null, 2));
-
       return devices;
     } catch (error) {
       console.error('❌ Chyba při načítání Tuya zařízení:', error);
@@ -322,3 +320,4 @@ class TuyaService {
 }
 
 export const tuyaService = new TuyaService();
+

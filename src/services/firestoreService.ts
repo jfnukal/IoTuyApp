@@ -1,3 +1,4 @@
+//src/services/firestoreService.ts
 import {
   doc,
   getDoc,
@@ -403,21 +404,59 @@ subscribeToFloorLayout(
       const batch = writeBatch(db);
       const devicesRef = collection(db, 'devices');
 
+      // ✅ NOVÉ: Nejprve načti existující zařízení pro zachování uživatelských nastavení
       const q = query(devicesRef, where('userId', '==', uid));
-      const existingDevices = await getDocs(q);
-      existingDevices.forEach((doc) => {
-        batch.delete(doc.ref);
+      const existingDevicesSnapshot = await getDocs(q);
+      
+      // Vytvoř mapu existujících zařízení pro rychlý přístup
+      const existingDevicesMap = new Map<string, any>();
+      existingDevicesSnapshot.forEach((docSnap) => {
+        existingDevicesMap.set(docSnap.id, docSnap.data());
       });
+
+      // Sleduj která zařízení zpracováváme (pro mazání starých)
+      const processedIds = new Set<string>();
 
       devices.forEach((device) => {
         const docRef = doc(devicesRef, device.id);
+        const existingData = existingDevicesMap.get(device.id);
+        
+        // ✅ Zachovej uživatelská nastavení z existujícího dokumentu
+        const preservedSettings = existingData ? {
+          gridLayout: existingData.gridLayout,
+          cardSettings: existingData.cardSettings,
+          customName: existingData.customName,
+          customIcon: existingData.customIcon,
+          customColor: existingData.customColor,
+          notes: existingData.notes,
+          roomId: existingData.roomId,
+          position: existingData.position,
+        } : {};
+
+        // Odstraň undefined hodnoty z preservedSettings
+        const cleanPreservedSettings = Object.fromEntries(
+          Object.entries(preservedSettings).filter(([_, v]) => v !== undefined)
+        );
+
         batch.set(docRef, {
           ...device,
+          ...cleanPreservedSettings, // ✅ Přepíše daty z Tuya, ale zachová uživatelská nastavení
           userId: uid,
           lastUpdated: Date.now(),
         });
+        
+        processedIds.add(device.id);
       });
+
+      // Smaž zařízení která už v Tuya nejsou (volitelné - můžeš zakomentovat)
+      existingDevicesSnapshot.forEach((docSnap) => {
+        if (!processedIds.has(docSnap.id)) {
+          batch.delete(docSnap.ref);
+        }
+      });
+
       await batch.commit();
+      console.log(`✅ Uloženo ${devices.length} zařízení (s preserved settings)`);
     } catch (error) {
       console.error('Error saving user devices:', error);
       throw new Error('Nepodařilo se uložit zařízení');
@@ -554,7 +593,7 @@ subscribeToFloorLayout(
         id: 'cover',
         name: 'cover',
         displayName: 'Žaluzie a Rolety',
-        icon: '��',
+        icon: '🪟',
         color: '#6f42c1',
         description: 'Motorové žaluzie, rolety a markýzy',
         defaultCommands: ['control', 'position'],

@@ -7,7 +7,7 @@ import type { Room } from '../../../types/index';
 import './HouseVisualization.css';
 
 const HouseVisualization: React.FC = () => {
-  console.log('🏠 HouseVisualization component rendering...');
+ // console.log('🏠 HouseVisualization component rendering...');
 
   const {
     house,
@@ -22,20 +22,6 @@ const HouseVisualization: React.FC = () => {
 
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-
-  // 🔍 DEBUG - mount
-  useEffect(() => {
-    console.log('🏠 HouseVisualization mounted!');
-    console.log('  📦 House:', house);
-    console.log('  🏢 Floors:', floors);
-    console.log('  📱 Devices:', devices);
-    console.log('  ⏳ Loading:', houseLoading);
-    console.log('  ❌ Error:', houseError);
-
-    return () => {
-      console.log('🏠 HouseVisualization unmounted');
-    };
-  }, []);
 
   const handleDeviceDrop = async (deviceId: string, roomId: string) => {
     try {

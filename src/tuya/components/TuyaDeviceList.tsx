@@ -47,10 +47,8 @@ const TuyaDeviceList: React.FC = () => {
   // Handler pro kliknutí na kartu (přijímá celý objekt)
   const handleCardClick = (device: TuyaDevice) => {
     if (!isLayoutEditMode) {
-      console.log('Otevírám modal pro zařízení:', device.name);
       setSelectedDevice(device); // Ukládáme celý objekt
     } else {
-      console.log('Režim úprav je aktivní, kliknutí ignorováno.');
     }
   };
 
@@ -341,5 +339,6 @@ const TuyaDeviceList: React.FC = () => {
     </>
   );
 };
+
 
 export default TuyaDeviceList;

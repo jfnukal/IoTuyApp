@@ -1,5 +1,5 @@
 // src/tuya/components/cards/HeatingCard.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { DeviceCardProps } from '../../../types';
 import { getTemperature, getStatusValue } from '../../utils/deviceHelpers';
 import DebugSection from './DebugSection';
@@ -8,51 +8,68 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   device,
   onControl,
   isDebugVisible = false,
-  onHeaderClick, // NOVÉ
+  onHeaderClick,
 }) => {
   const [isAdjusting, setIsAdjusting] = useState(false);
+
+  // 🆕 Lokální state pro slider - umožní plynulý pohyb bez čekání na API
+  const [localTempSet, setLocalTempSet] = useState<number | null>(null);
+  const isDragging = useRef(false);
 
   // 🎨 Zjisti nastavení karty
   const cardSize = device.cardSettings?.size || 'medium';
   const cardLayout = device.cardSettings?.layout || 'default';
 
-  // Získej hodnoty z status (univerzální)
-
-  // Debug log - pouze při prvním renderování nebo změně statusu
-  // console.log('🔥 HEATING DEBUG:', { deviceName: device.name, status: device.status });
-
-
+  // Získej hodnoty z status
   const tempCurrent = getTemperature(device.status);
   const tempSetRaw = getStatusValue(device.status, 'temp_set');
   const tempSet = tempSetRaw !== undefined ? tempSetRaw / 10 : 20;
   const mode = getStatusValue(device.status, 'mode') || 'auto';
-  // const childLock = getStatusValue(device.status, 'child_lock') || false;
+  const valve = getStatusValue(device.status, 'valve'); // 🆕 Stav ventilu
 
-  const handleTemperatureChange = async (newTemp: number) => {
-    if (!onControl || !device.online) return;
+  // 🆕 Zobrazovaná teplota - buď lokální (při táhnutí) nebo z API
+  const displayTempSet = localTempSet !== null ? localTempSet : tempSet;
+
+  // 🆕 Handler pro pohyb sliderem (jen lokální změna)
+  const handleSliderChange = (newTemp: number) => {
+    isDragging.current = true;
+    setLocalTempSet(newTemp);
+  };
+
+  // 🆕 Handler pro puštění slideru (odeslání do API)
+  const handleSliderRelease = async () => {
+    if (!onControl || !device.online || localTempSet === null) {
+      setLocalTempSet(null);
+      isDragging.current = false;
+      return;
+    }
 
     setIsAdjusting(true);
     try {
-      // Tuya očekává teplotu * 10 (23.5 → 235)
+      // Pošli teplotu A změň režim na manual
       await onControl(device.id, [
-        { code: 'temp_set', value: Math.round(newTemp * 10) },
+        { code: 'temp_set', value: Math.round(localTempSet * 10) },
+        { code: 'mode', value: 'manual' },
       ]);
+      console.log(
+        '🌡️ Teplota nastavena na',
+        localTempSet,
+        '+ režim změněn na manual'
+      );
     } catch (error) {
       console.error('Chyba při nastavení teploty:', error);
     } finally {
       setIsAdjusting(false);
+      setLocalTempSet(null);
+      isDragging.current = false;
     }
   };
 
   const handleModeChange = async (newMode: string) => {
     if (!onControl || !device.online) return;
-    
-// console.log('🔥 HEATING: Odesílám změnu režimu:', newMode);
-    
+
     try {
-      await onControl(device.id, [
-        { code: 'mode', value: newMode }
-      ]);
+      await onControl(device.id, [{ code: 'mode', value: newMode }]);
     } catch (error) {
       console.error('❌ HEATING: Chyba při změně režimu:', error);
     }
@@ -60,21 +77,32 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
   const getModeLabel = (mode: string) => {
     const modes: Record<string, string> = {
-      'comfort': 'Komfort',
-      'auto': 'Program',
-      'holiday': 'Dovolená',
-      'eco': 'ECO',
-      'manual': 'Ruční',
-      'BOOST': 'BOOST',
-      // Fallback pro staré/neznámé hodnoty
-      'comfortable': 'Komfort',
-      'temp_auto': 'Program',
+      comfort: 'Komfort',
+      auto: 'Program',
+      holiday: 'Dovolená',
+      eco: 'ECO',
+      manual: 'Ruční',
+      BOOST: 'BOOST',
+      temp_auto: 'Dočasná',
+      comfortable: 'Komfort',
     };
     return modes[mode] || mode;
   };
 
-  // return (
-  //   <div className={`tuya-device-card heating ${device.online ? 'online' : 'offline'}`}>
+  // 🆕 Ikona podle režimu
+  const getModeIcon = (mode: string) => {
+    const icons: Record<string, string> = {
+      comfort: '😊',
+      auto: '📅',
+      holiday: '🏖️',
+      eco: '🌿',
+      manual: '✋',
+      BOOST: '🚀',
+      temp_auto: '⏱️',
+    };
+    return icons[mode] || '🔄';
+  };
+
   return (
     <div
       className={`tuya-device-card heating ${
@@ -123,20 +151,25 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
           <div className="heating-compact-layout">
             {/* Levá strana - Vertikální posuvník */}
             <div className="vertical-temp-control">
-              <div className="temp-value-display">{tempSet.toFixed(1)}°C</div>
+              <div className="temp-value-display">
+                {displayTempSet.toFixed(1)}°C
+                {localTempSet !== null && (
+                  <span style={{ fontSize: '0.6em', opacity: 0.7 }}> ⏳</span>
+                )}
+              </div>
 
               <input
                 type="range"
                 min="5"
                 max="30"
                 step="0.5"
-                value={tempSet}
-                onChange={(e) =>
-                  handleTemperatureChange(parseFloat(e.target.value))
-                }
-                disabled={!device.online || isAdjusting}
+                value={displayTempSet}
+                onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
+                onMouseUp={handleSliderRelease}
+                onTouchEnd={handleSliderRelease}
+                disabled={!device.online}
                 className="vertical-slider"
-                //  orient="vertical"
+                style={{ cursor: device.online ? 'grab' : 'not-allowed' }}
               />
 
               <div className="slider-labels">
@@ -155,10 +188,20 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
             <div className="thermometer-compact">
               {/* Cíl v rohu */}
               <div className="target-badge-compact">
-                Cíl: <strong>{tempSet.toFixed(1)}°C</strong>
+                Cíl: <strong>{displayTempSet.toFixed(1)}°C</strong>
+                {valve !== undefined && (
+                  <span
+                    style={{
+                      marginLeft: '8px',
+                      fontSize: '0.85em',
+                      opacity: 0.8,
+                    }}
+                  >
+                    | Ventil: {valve}%
+                  </span>
+                )}
               </div>
 
-              {/* SVG Kruhový ukazatel */}
               {/* SVG Kruhový ukazatel */}
               <svg className="thermometer-svg-compact" viewBox="0 0 160 160">
                 {/* Pozadí kruhu */}
@@ -197,7 +240,9 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
                   stroke="#ffc107"
                   strokeWidth="4"
                   strokeLinecap="round"
-                  transform={`rotate(${((tempSet - 5) / 25) * 360} 80 80)`}
+                  transform={`rotate(${
+                    ((displayTempSet - 5) / 25) * 360
+                  } 80 80)`}
                   style={{
                     filter: 'drop-shadow(0 0 6px rgba(255, 193, 7, 0.8))',
                   }}
@@ -229,18 +274,25 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
               <button 
                 className="mode-compact clickable"
                 onClick={() => {
-                  // Skutečné hodnoty které termostat podporuje
-                  const modes = ['comfort', 'auto', 'holiday', 'eco', 'manual', 'BOOST'];
+                  const modes = [
+                    'comfort',
+                    'auto',
+                    'holiday',
+                    'eco',
+                    'manual',
+                    'BOOST',
+                  ];
                   const currentIndex = modes.indexOf(mode);
-                  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
+                  const nextIndex =
+                    currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
                   const nextMode = modes[nextIndex];
                   console.log('🔥 Měním režim z', mode, 'na', nextMode);
                   handleModeChange(nextMode);
                 }}
-                disabled={!device.online}
+                disabled={!device.online || isAdjusting}
                 title="Klikni pro změnu režimu"
               >
-                <span className="mode-icon">🔄</span>
+                <span className="mode-icon">{getModeIcon(mode)}</span>
                 <span className="mode-text">{getModeLabel(mode)}</span>
               </button>
             </div>

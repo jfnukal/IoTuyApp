@@ -30,6 +30,7 @@ export const useTuya = () => {
         unsubscribe = await firestoreService.subscribeToUserDevices(
           currentUser.uid,
           (devicesFromDB) => {
+            console.log(`✅ Tuya: Načteno ${devicesFromDB.length} zařízení z DB`);
             setDevices(devicesFromDB);
             setIsLoading(false);
           }
@@ -64,6 +65,7 @@ export const useTuya = () => {
 
       await tuyaService.syncToFirestore(currentUser.uid);
 
+      console.log('✅ Tuya: Synchronizace dokončena');
     } catch (err: any) {
       console.error('❌ Tuya: Chyba při synchronizaci:', err);
       setError(err.message || 'Nepodařilo se synchronizovat zařízení');
@@ -73,24 +75,38 @@ export const useTuya = () => {
     }
   }, [currentUser]);
 
-  /**
-   * 🎮 Ovládání zařízení (obecné)
-   */
-const controlDevice = useCallback(
+  const controlDevice = useCallback(
     async (deviceId: string, commands: { code: string; value: any }[]) => {
       try {
         setError(null);
         await tuyaService.controlDevice(deviceId, commands);
-        // ✅ ODSTRANĚNO: Plná synchronizace po každé akci
-        // Firestore se aktualizuje automaticky přes real-time listener
-        // Pokud chceš refresh, použij manuálně syncDevices()
+        
+        // ✅ NOVÉ: Optimistická aktualizace - aktualizuj status v Firestore okamžitě
+        const device = devices.find(d => d.id === deviceId);
+        if (device) {
+          const updatedStatus = [...(device.status || [])];
+          
+          commands.forEach(cmd => {
+            const statusIndex = updatedStatus.findIndex(s => s.code === cmd.code);
+            if (statusIndex !== -1) {
+              // Aktualizuj existující status
+              updatedStatus[statusIndex] = { ...updatedStatus[statusIndex], value: cmd.value };
+            } else {
+              // Přidej nový status
+              updatedStatus.push({ code: cmd.code, value: cmd.value });
+            }
+          });
+          
+          // Aktualizuj Firestore - real-time listener to zachytí a UI se aktualizuje
+          await firestoreService.updateDevice(deviceId, { status: updatedStatus });
+        }
       } catch (err: any) {
         console.error('❌ Tuya: Chyba při ovládání:', err);
         setError(err.message || 'Nepodařilo se ovládat zařízení');
         throw err;
       }
     },
-    []
+    [devices]  // ✅ DŮLEŽITÉ: přidej devices do dependencies
   );
 
   /**
@@ -180,5 +196,4 @@ const controlDevice = useCallback(
     getDevice,
     getDevicesByCategory,
   };
-
 };

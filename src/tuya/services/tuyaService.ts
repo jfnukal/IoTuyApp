@@ -143,10 +143,7 @@ class TuyaService {
       console.log(`✅ Načteno ${data.devices.length} zařízení`);
 
       // Mapování dat z Tuya API na naše typy
-      console.log(
-        '📋 PRVNÍ ZAŘÍZENÍ Z API:',
-        JSON.stringify(data.devices[0], null, 2)
-      );
+
       const devices: TuyaDevice[] = data.devices.map((device: any) => ({
         id: device.id || device.device_id,
         name: device.customName || device.name || 'Neznámé zařízení',

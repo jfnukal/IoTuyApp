@@ -26,7 +26,6 @@ class HouseService {
    * 🏠 Vytvoří ukázkový dům pro nového uživatele
    */
   async createDefaultHouse(userId: string): Promise<House> {
-    console.log('🏗️ Vytvářím ukázkový dům...');
 
     const houseId = `house-${userId}`;
     const now = Date.now();
@@ -127,8 +126,6 @@ class HouseService {
         room
       );
     }
-
-    console.log('✅ Ukázkový dům vytvořen');
     return house;
   }
 
@@ -393,9 +390,7 @@ class HouseService {
         updatedAt: Date.now(),
       });
 
-      console.log(`✅ Zařízení ${deviceId} odstraněno`);
     } catch (error) {
-      console.error('❌ Chyba při odstraňování zařízení:', error);
       throw error;
     }
   }

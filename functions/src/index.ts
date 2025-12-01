@@ -3,6 +3,9 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
+// ✅ Inicializace Firebase Admin SDK
+admin.initializeApp();
+
 function calculateReminderTime(
   eventDate: string,
   reminderValue: number,
@@ -194,3 +197,4 @@ export const checkReminders = functions
       return null;
     }
   });
+

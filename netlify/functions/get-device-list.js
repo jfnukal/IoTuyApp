@@ -277,36 +277,36 @@ exports.handler = async function (event, context) {
       );
 
       // Načti status JEN pro online zařízení (rychlejší)
-console.log('Step 3: Loading status for online devices...');
-const devicesWithStatus = await Promise.all(
-    automaticDevices.map(async (device) => {
-        // ✅ DEBUG LOG
-        const isOnline = device.online;
-        const isSub = device.sub;
-        const deviceId = device.id || device.device_id;
-        
-        console.log(`🔍 Device: ${device.name}`, {
-            id: deviceId,
-            online: isOnline,
-            sub: isSub,
-            willFetchStatus: isOnline && !isSub
-        });
-        
-        if (device.online) {
-            try {
-                console.log(`📡 Fetching status for: ${device.name} (${deviceId})`);
-                const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
-                console.log(`✅ Status received for ${device.name}:`, status);
-                return { ...device, status };
-            } catch (error) {
-                console.log(`❌ Failed to get status for ${device.name}: ${error.message}`);
-                return { ...device, status: [] };
-            }
-        }
-        console.log(`⏭️ Skipping status fetch for ${device.name} (offline or sub)`);
-        return { ...device, status: [] };
-    })
-);
+      console.log('Step 3: Loading status for online devices...');
+      const devicesWithStatus = await Promise.all(
+          automaticDevices.map(async (device) => {
+              // ✅ DEBUG LOG
+              const isOnline = device.online;
+              const isSub = device.sub;
+              const deviceId = device.id || device.device_id;
+              
+              console.log(`🔍 Device: ${device.name}`, {
+                  id: deviceId,
+                  online: isOnline,
+                  sub: isSub,
+                  willFetchStatus: isOnline && !isSub
+              });
+              
+              if (device.online) {
+                  try {
+                      console.log(`📡 Fetching status for: ${device.name} (${deviceId})`);
+                      const status = await getDeviceStatus(deviceId, clientId, clientSecret, accessToken);
+                      console.log(`✅ Status received for ${device.name}:`, status);
+                      return { ...device, status };
+                  } catch (error) {
+                      console.log(`❌ Failed to get status for ${device.name}: ${error.message}`);
+                      return { ...device, status: [] };
+                  }
+              }
+              console.log(`⏭️ Skipping status fetch for ${device.name} (offline or sub)`);
+              return { ...device, status: [] };
+          })
+      );
 
       console.log(
         `Status loaded for ${
@@ -403,8 +403,3 @@ const devicesWithStatus = await Promise.all(
     };
   }
 };
-
-
-
-
-

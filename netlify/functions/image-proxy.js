@@ -1,6 +1,7 @@
 exports.handler = async function (event, context) {
   console.log('=== IMAGE PROXY REQUEST ===');
 
+  // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -24,6 +25,7 @@ exports.handler = async function (event, context) {
       };
     }
 
+    // Získej URL z query parametru
     const imageUrl = event.queryStringParameters?.url;
 
     if (!imageUrl) {
@@ -36,21 +38,26 @@ exports.handler = async function (event, context) {
 
     console.log('Fetching image from:', imageUrl);
 
+    // Stáhni obrázek
     const response = await fetch(imageUrl);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);
     }
 
+    // Získej content type
     const contentType = response.headers.get('content-type') || 'image/jpeg';
+    
+    // Získej obrázek jako buffer
     const buffer = await response.arrayBuffer();
 
+    // Vrať obrázek
     return {
       statusCode: 200,
       headers: {
         ...headers,
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=3600', // Cache na 1 hodinu
       },
       body: Buffer.from(buffer).toString('base64'),
       isBase64Encoded: true,
@@ -69,4 +76,3 @@ exports.handler = async function (event, context) {
     };
   }
 };
-

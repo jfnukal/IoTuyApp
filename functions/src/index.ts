@@ -1,4 +1,4 @@
-// /functions/src/checkReminders.ts
+// /functions/src/index.ts
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
@@ -9,8 +9,8 @@ function calculateReminderTime(
   reminderUnit: string,
   eventTime?: string
 ): number {
-  const [year, month, day] = eventDate.split('-').map(Number);
-  const eventDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const [year, monthNum, day] = eventDate.split('-').map(Number);
+  const eventDateTime = new Date(year, monthNum - 1, day, 0, 0, 0, 0);
 
   if (eventTime && typeof eventTime === 'string') {
     const [hours, minutes] = eventTime.split(':').map(Number);
@@ -19,8 +19,12 @@ function calculateReminderTime(
     eventDateTime.setHours(8, 0, 0, 0);
   }
 
-  // ✅ PRAGUE TIMEZONE OFFSET: UTC+2 (letní čas)
-  const pragueOffsetMinutes = -120;
+  // ✅ PRAGUE TIMEZONE: Automatická detekce letního/zimního času
+  const eventMonth = eventDateTime.getMonth(); // 0-11
+  // Letní čas v ČR: duben-říjen = UTC+2, listopad-březen = UTC+1
+  const isSummerTime = eventMonth >= 3 && eventMonth <= 9;
+  const pragueOffsetMinutes = isSummerTime ? -120 : -60;
+
   const serverOffsetMinutes = eventDateTime.getTimezoneOffset();
   const offsetDifference = pragueOffsetMinutes - -serverOffsetMinutes;
   eventDateTime.setMinutes(eventDateTime.getMinutes() + offsetDifference);

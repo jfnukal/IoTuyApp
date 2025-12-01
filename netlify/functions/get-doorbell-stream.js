@@ -1,22 +1,5 @@
+const axios = require('axios');
 const crypto = require('crypto');
-
-// Funkce pro HTTP požadavky pomocí fetch
-async function fetchWithTimeout(url, options, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    throw error;
-  }
-}
 
 // Funkce pro získání access tokenu
 async function getTuyaAccessToken(clientId, clientSecret) {
@@ -46,21 +29,16 @@ async function getTuyaAccessToken(clientId, clientSecret) {
     'Content-Type': 'application/json',
   };
 
-  const response = await fetchWithTimeout(
+  const response = await axios.get(
     'https://openapi.tuyaeu.com/v1.0/token?grant_type=1',
-    { 
-      method: 'GET',
-      headers 
-    }
+    { headers }
   );
 
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(`Failed to get access token: ${data.msg}`);
+  if (!response.data.success) {
+    throw new Error(`Failed to get access token: ${response.data.msg}`);
   }
 
-  return data.result.access_token;
+  return response.data.result.access_token;
 }
 
 // Funkce pro vytvoření signature s access tokenem
@@ -103,7 +81,7 @@ async function allocateStream(
 ) {
   const url = `/v1.0/devices/${deviceId}/stream/actions/allocate`;
   const body = JSON.stringify({
-    type: streamType,
+    type: streamType, // 'rtsp' nebo 'hls'
   });
 
   const headers = {
@@ -125,74 +103,84 @@ async function allocateStream(
   headers.nonce = nonce;
   headers.sign = signature;
 
-  const response = await fetchWithTimeout(
+  const response = await axios.post(
     `https://openapi.tuyaeu.com${url}`,
-    {
-      method: 'POST',
-      headers,
-      body,
-    }
+    { type: streamType },
+    { headers }
   );
 
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(`Failed to allocate stream: ${data.msg || JSON.stringify(data)}`);
+  if (!response.data.success) {
+    throw new Error(`Failed to allocate stream: ${response.data.msg}`);
   }
 
-  return data.result;
+  return response.data.result;
+}
+
+// Funkce pro získání snapshot (poslední snímek)
+async function getSnapshot(deviceId, clientId, clientSecret, accessToken) {
+  const url = `/v1.0/devices/${deviceId}/door-lock/door-records`;
+
+  const headers = {
+    client_id: clientId,
+    access_token: accessToken,
+    sign_method: 'HMAC-SHA256',
+    'Content-Type': 'application/json',
+  };
+
+  const { timestamp, nonce, signature } = createSignatureWithToken(
+    'GET',
+    url,
+    headers,
+    '',
+    clientSecret
+  );
+
+  headers.t = timestamp;
+  headers.nonce = nonce;
+  headers.sign = signature;
+
+  try {
+    const response = await axios.get(`https://openapi.tuyaeu.com${url}`, {
+      headers,
+    });
+
+    if (response.data.success && response.data.result) {
+      return response.data.result;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Failed to get snapshot:', error.message);
+    return null;
+  }
 }
 
 exports.handler = async function (event, context) {
   console.log('=== DOORBELL STREAM REQUEST ===');
-
-  // CORS pre-flight
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: '',
-    };
-  }
 
   try {
     if (event.httpMethod !== 'POST') {
       return {
         statusCode: 405,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          success: false,
-          error: 'Method not allowed' 
-        }),
+        body: JSON.stringify({ error: 'Method not allowed' }),
       };
     }
 
-    const { deviceId, streamType = 'hls' } = JSON.parse(event.body || '{}');
+    const { deviceId, streamType = 'hls' } = JSON.parse(event.body);
 
     if (!deviceId) {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          success: false,
-          error: 'Missing deviceId' 
-        }),
+        body: JSON.stringify({ error: 'Missing deviceId' }),
       };
     }
 
     if (!process.env.TUYA_ACCESS_ID || !process.env.TUYA_ACCESS_SECRET) {
-      console.error('Missing TUYA environment variables');
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          success: false,
-          error: 'Missing environment variables' 
-        }),
+        body: JSON.stringify({ error: 'Missing environment variables' }),
       };
     }
 
@@ -201,9 +189,8 @@ exports.handler = async function (event, context) {
 
     console.log('Getting access token...');
     const accessToken = await getTuyaAccessToken(clientId, clientSecret);
-    console.log('Access token obtained');
 
-    console.log('Allocating stream for device:', deviceId, 'Type:', streamType);
+    console.log('Allocating stream for device:', deviceId);
     const streamData = await allocateStream(
       deviceId,
       streamType,
@@ -212,7 +199,13 @@ exports.handler = async function (event, context) {
       accessToken
     );
 
-    console.log('Stream allocated successfully:', streamData);
+    console.log('Getting snapshot...');
+    const snapshot = await getSnapshot(
+      deviceId,
+      clientId,
+      clientSecret,
+      accessToken
+    );
 
     return {
       statusCode: 200,
@@ -225,12 +218,16 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({
         success: true,
         stream: streamData,
+        snapshot: snapshot,
       }),
     };
   } catch (error) {
     console.error('=== DOORBELL STREAM ERROR ===');
     console.error('Error:', error.message);
-    console.error('Stack:', error.stack);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
 
     return {
       statusCode: 500,
@@ -239,10 +236,9 @@ exports.handler = async function (event, context) {
         'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
-        success: false,
         error: 'Doorbell Stream Error',
         message: error.message,
-        details: error.toString(),
+        details: error.response?.data,
       }),
     };
   }

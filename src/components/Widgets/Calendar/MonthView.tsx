@@ -34,11 +34,6 @@ const MonthView: React.FC<MonthViewProps> = ({
 
   const isTabletDevice = isTablet();
 
-  // ✅ DEBUG - vypiš do konzole
-  console.log('🔍 isTablet():', isTabletDevice);
-  console.log('📱 Screen width:', window.innerWidth);
-  console.log('📱 User Agent:', navigator.userAgent);
-
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
     const currentlyMarked = isNamedayMarked(date);

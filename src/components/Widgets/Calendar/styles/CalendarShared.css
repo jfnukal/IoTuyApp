@@ -135,7 +135,7 @@
 .event-form-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--calendar-text);
+  color: var(--calendar-text) !important;
   margin: 0;
 }
 
@@ -143,16 +143,16 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--calendar-text-secondary);
+  color: var(--calendar-text-secondary) !important;
   cursor: pointer;
   padding: 5px;
   border-radius: 50%;
-  transition: var(--calendar-transition);
+  transition: var(--calendar-transition) !important;
 }
 
 .close-button:hover {
   background: #f8f9fa;
-  color: var(--calendar-text);
+  color: var(--calendar-text) !important;
 }
 
 .form-group {
@@ -162,7 +162,7 @@
 .form-label {
   display: block;
   font-weight: 600;
-  color: var(--calendar-text);
+  color: var(--calendar-text) !important;
   margin-bottom: 8px;
   font-size: 0.9rem;
 }
@@ -412,4 +412,41 @@
   .fab-add-event-modal {
     display: none;
   }
+}
+
+/* === EVENT FORM STYLY (vysoká specifičnost pro přebití globálních stylů) === */
+.event-form-overlay .event-form .form-group label,
+.event-form-overlay .event-form .form-label {
+  display: block;
+  font-weight: 600;
+  color: var(--calendar-text);
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.event-form-overlay .event-form .form-input,
+.event-form-overlay .event-form .form-textarea,
+.event-form-overlay .event-form .form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: var(--calendar-transition);
+  background: white;
+  color: var(--calendar-text);
+  font-family: var(--calendar-font-base);
+}
+
+.event-form-overlay .event-form .form-input:focus,
+.event-form-overlay .event-form .form-textarea:focus,
+.event-form-overlay .event-form .form-select:focus {
+  outline: none;
+  border-color: var(--calendar-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.event-form-overlay .event-form .form-input::placeholder,
+.event-form-overlay .event-form .form-textarea::placeholder {
+  color: #adb5bd;
 }

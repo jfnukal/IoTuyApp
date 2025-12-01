@@ -16,7 +16,10 @@ import BasicCard from './BasicCard';
 interface DeviceCardRendererProps {
   device: TuyaDevice;
   onToggle: (deviceId: string) => Promise<void>;
-  onControl?: (deviceId: string, commands: { code: string; value: any }[]) => Promise<void>;
+  onControl?: (
+    deviceId: string,
+    commands: { code: string; value: any }[]
+  ) => Promise<void>;
   isDebugVisible?: boolean;
   onHeaderClick?: () => void; // NOVÉ - callback pro klik na hlavičku
 }
@@ -28,8 +31,8 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
   isDebugVisible = false,
   onHeaderClick, // NOVÉ
 }) => {
-// Zjisti typ karty podle kategorie a product_id
-const cardType = getDeviceCardType(device.category, device.product_id);
+  // Zjisti typ karty podle kategorie a product_id
+  const cardType = getDeviceCardType(device.category, device.product_id);
 
   // Společné props pro všechny karty
   const commonProps = {
@@ -44,25 +47,25 @@ const cardType = getDeviceCardType(device.category, device.product_id);
   switch (cardType) {
     case 'temp_sensor':
       return <TempSensorCard {...commonProps} />;
-    
+
     case 'heating':
       return <HeatingCard {...commonProps} />;
-    
+
     case 'multi_switch':
       return <MultiSwitchCard {...commonProps} />;
-    
+
     case 'multi_socket':
       return <MultiSocketCard {...commonProps} />;
-    
+
     case 'smart_light':
       return <SmartLightCard {...commonProps} />;
-    
+
     case 'doorbell':
       return <DoorbellCard {...commonProps} />;
 
     case 'ptz_camera':
-      return <PTZCameraCard {...commonProps} />;  // ← Odkomentujeme po vytvoření
-    
+      return <PTZCameraCard {...commonProps} />; // ← Odkomentujeme po vytvoření
+
     case 'motion_sensor':
     case 'door_sensor':
     case 'gateway':

@@ -41,6 +41,9 @@ cardSettings?: {
     hiddenControls?: string[];                 // Skryté ovládací prvky (např. ['switch_3'])
     showInDetail?: string[];                   // Co zobrazit pouze v detailu
     gridPosition?: { row: number; col: number }; // Pozice v gridu (pro budoucí D&D)
+    showName?: boolean;                       // Zobrazovat název zařízení
+    showCustomName?: boolean;                 // Zobrazovat vlastní název
+    hidden?: boolean;                         // Skrýt kartu v gridu/listu
   };
 
     // Grid pozice (pro react-grid-layout)

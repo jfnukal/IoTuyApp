@@ -18,6 +18,32 @@
 };
 
 /**
+ * Mapování Tuya kategorií na české názvy pro zobrazení
+ */
+ export const DEVICE_CATEGORY_LABELS: Record<string, string> = {
+  'wk': 'Topení',
+  'wkcz': 'Bojler',
+  'kg': 'Vypínač',
+  'dj': 'Chytré světlo',
+  'cz': 'Zásuvka',
+  'pc': 'Zásuvka',
+  'wsdcg': 'Teplotní senzor',
+  'pir': 'PIR senzor',
+  'mcs': 'Dveřní senzor',
+  'wfcon': 'Zigbee Gateway',
+  'sfkzq': 'Ventil',
+  'zwjcy': 'Půdní senzor',
+  'sp': 'Kamera',
+};
+
+/**
+ * Získá český název kategorie
+ */
+export const getCategoryLabel = (category: string): string => {
+  return DEVICE_CATEGORY_LABELS[category] || category;
+};
+
+/**
  * Převod teploty z Tuya formátu (235 → 23.5°C)
  */
 export const formatTemperature = (value: number): number => {

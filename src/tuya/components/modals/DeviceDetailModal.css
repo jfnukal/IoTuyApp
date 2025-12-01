@@ -95,7 +95,7 @@
 }
 
 .device-icon {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
 }
 
 .device-names h3 {
@@ -209,4 +209,104 @@
 .form-actions-danger {
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ==================== NASTAVENÍ ZOBRAZENÍ ==================== */
+
+.device-modal .settings-group {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.device-modal .settings-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.device-modal .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  background: rgba(74, 158, 255, 0.1) !important;
+  border: 1px solid rgba(74, 158, 255, 0.2) !important;
+}
+
+.device-modal .checkbox-label:hover {
+  background: rgba(74, 158, 255, 0.2) !important;
+}
+
+/* Custom checkbox */
+.device-modal .checkbox-label input[type="checkbox"] {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 4px !important;
+  background: rgba(30, 30, 40, 0.8) !important;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.device-modal .checkbox-label input[type="checkbox"]:checked {
+  background: #4a9eff !important;
+  border-color: #4a9eff !important;
+}
+
+.device-modal .checkbox-label input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.device-modal .checkbox-label input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.device-modal .checkbox-label span {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.3;
+}
+
+/* Danger checkbox (skrýt kartu) */
+.device-modal .checkbox-label.checkbox-danger {
+  background: rgba(255, 107, 107, 0.1) !important;
+  border: 1px solid rgba(255, 107, 107, 0.3) !important;
+}
+
+.device-modal .checkbox-label.checkbox-danger:hover {
+  background: rgba(255, 107, 107, 0.2) !important;
+}
+
+.device-modal .checkbox-label.checkbox-danger input[type="checkbox"]:checked {
+  background: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+
+.device-modal .checkbox-label.checkbox-danger span {
+  color: #ff8a8a !important;
+}
+
+.device-modal .device-category-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  margin: 0;
 }

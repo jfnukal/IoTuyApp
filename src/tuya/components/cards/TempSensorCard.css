@@ -1,0 +1,29 @@
+/* ==================== KOMPAKTNÍ HEADER ==================== */
+.device-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.device-category {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.subtitle-separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.device-room {
+  color: rgba(74, 158, 255, 0.9);
+  font-weight: 500;
+}
+
+/* Centrování subtitle když není název */
+.tuya-device-card.heating .device-names.no-title {
+  justify-content: center;
+}
+
+.tuya-device-card.heating .device-names.no-title .device-subtitle {
+  font-size: 0.9rem;
+}

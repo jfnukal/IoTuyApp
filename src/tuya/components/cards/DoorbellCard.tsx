@@ -21,7 +21,7 @@ const DoorbellCard: React.FC<
   const snapshot_url = getDoorbellSnapshotUrl(device.status);
   const last_ring_time = getStatusValue(device.status, 'doorbell_ring');
 
- return (
+  return (
     <div
       className={`tuya-device-card doorbell ${
         device.online ? 'online' : 'offline'
@@ -133,4 +133,3 @@ const DoorbellCard: React.FC<
 };
 
 export default DoorbellCard;
-

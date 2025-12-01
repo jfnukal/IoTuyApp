@@ -1046,7 +1046,7 @@
 }
 
 .tuya-device-card.temp-sensor.layout-compact .temp-value {
-  font-size: 3rem;
+  font-size: rem;
   font-weight: 700;
   color: #4a9eff;
   line-height: 1;
@@ -1112,3 +1112,4 @@
   margin-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+

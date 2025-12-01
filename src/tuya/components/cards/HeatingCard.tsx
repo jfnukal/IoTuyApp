@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import type { DeviceCardProps } from '../../../types';
 import { getTemperature, getStatusValue } from '../../utils/deviceHelpers';
+import { useRooms } from '../../hooks/useRooms';
 import DebugSection from './DebugSection';
 import './HeatingCard.css';
 
@@ -12,6 +13,10 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
   onHeaderClick,
 }) => {
   const [isAdjusting, setIsAdjusting] = useState(false);
+
+  // 🏠 Načti místnosti pro zobrazení názvu
+  const { rooms } = useRooms();
+  const room = rooms.find(r => r.id === device.roomId);
 
   // 🆕 Lokální state pro slider - umožní plynulý pohyb bez čekání na API
   const [localTempSet, setLocalTempSet] = useState<number | null>(null);
@@ -90,6 +95,34 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
     return modes[mode] || mode;
   };
 
+// 🆕 Sestavení názvu podle nastavení
+const getDisplayName = (): string | null => {
+  const showName = device.cardSettings?.showName !== false;
+  const showCustomName = device.cardSettings?.showCustomName !== false;
+  
+  const parts: string[] = [];
+  
+  // Přidej customName, pokud existuje a má se zobrazit
+  if (showCustomName && device.customName) {
+    parts.push(device.customName);
+  }
+  
+  // Přidej originální název, pokud se má zobrazit
+  if (showName && device.name) {
+    // Nepřidávej duplicitu
+    if (!parts.includes(device.name)) {
+      parts.push(device.name);
+    }
+  }
+  
+  // Pokud není co zobrazit, vrať null
+  if (parts.length === 0) {
+    return null;
+  }
+  
+  return parts.join(' | ');
+};
+
   // 🆕 Ikona podle režimu
   const getModeIcon = (mode: string) => {
     const icons: Record<string, string> = {
@@ -112,15 +145,25 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
     >
       {/* Header - klikatelný pro otevření modalu */}
       <div
-        className="tuya-card-header clickable-header"
+        className="tuya-card-header heating-header clickable-header"
         onClick={onHeaderClick}
         style={{ cursor: onHeaderClick ? 'pointer' : 'default' }}
       >
         <div className="device-info">
           <span className="device-icon">🔥</span>
-          <div className="device-names">
-            <h3 className="device-name">{device.customName || device.name}</h3>
-            <span className="device-category">Topení</span>
+          <div className={`device-names ${!getDisplayName() ? 'no-title' : ''}`}>
+            {getDisplayName() && (
+              <h3 className="device-name">{getDisplayName()}</h3>
+            )}
+            <div className="device-subtitle">
+              <span className="device-category">Topení</span>
+              {room && (
+                <>
+                  <span className="subtitle-separator">•</span>
+                  <span className="device-room">{room.icon} {room.name}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -310,4 +353,3 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 };
 
 export default HeatingCard;
-

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import type { DeviceCardProps } from '../../../types';
 import { getStatusValue } from '../../utils/deviceHelpers';
+import { useRooms } from '../../hooks/useRooms';
 import DebugSection from './DebugSection';
 
 const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({ 
@@ -11,6 +12,38 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
   onHeaderClick 
 }) => {
   const [loadingSwitch, setLoadingSwitch] = useState<string | null>(null);
+
+  // 🆕 Sestavení názvu podle nastavení
+  const getDisplayName = (): string | null => {
+    const showName = device.cardSettings?.showName !== false;
+    const showCustomName = device.cardSettings?.showCustomName !== false;
+    
+    const parts: string[] = [];
+    
+    // Přidej customName, pokud existuje a má se zobrazit
+    if (showCustomName && device.customName) {
+      parts.push(device.customName);
+    }
+    
+    // Přidej originální název, pokud se má zobrazit
+    if (showName && device.name) {
+      // Nepřidávej duplicitu
+      if (!parts.includes(device.name)) {
+        parts.push(device.name);
+      }
+    }
+    
+    // Pokud není co zobrazit, vrať null
+    if (parts.length === 0) {
+      return null;
+    }
+    
+    return parts.join(' | ');
+  };
+
+      // 🏠 Načti místnosti pro zobrazení názvu
+      const { rooms } = useRooms();
+      const room = rooms.find(r => r.id === device.roomId);
 
   // 🎨 Zjisti nastavení karty
   const cardSize = device.cardSettings?.size || 'medium';
@@ -46,13 +79,23 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
         <div className="device-info">
           <span className="device-icon">💡</span>
           <div className="device-names">
-            <h3 className="device-name">
-              {device.customName || device.name}
-            </h3>
+          <div className={`device-names ${!getDisplayName() ? 'no-title' : ''}`}>
+            {getDisplayName() && (
+              <h3 className="device-name">{getDisplayName()}</h3>
+            )}
+            <div className="device-subtitle">
             <span className="device-category">Touch Switch</span>
+            {room && (
+                <>
+                  <span className="subtitle-separator">•</span>
+                  <span className="device-room">{room.icon} {room.name}</span>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        
+         </div>
+         </div>
+
         <div className="device-status-indicator">
   <div className="status-badges">
     {device.sub && (

@@ -30,8 +30,8 @@
 .vertical-temp-control {
   flex: 0 0 70px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row-reverse;
+  align-items: flex-start;
   gap: 0.3rem;
   padding: 0.5rem 0;
 }
@@ -52,7 +52,7 @@
   direction: rtl;
   -webkit-appearance: slider-vertical;
   width: 8px;
-  height: 120px;
+  height: 160px;
   margin: 0.5rem 0;
   background: linear-gradient(to top, #4a9eff 0%, #ff6b6b 100%);
   border-radius: 4px;
@@ -123,14 +123,14 @@
 }
 
 .target-badge-compact {
-  position: absolute;
+  position: relative;
   top: 0;
   right: 0;
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.8);
   background: rgba(255, 193, 7, 0.2);
   border: 1px solid rgba(255, 193, 7, 0.4);
-  padding: 0.2rem 0.4rem;
+  padding: .2rem 0.4rem;
   border-radius: 4px;
 }
 
@@ -151,7 +151,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
+  padding: 0.1rem 0.4rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(74, 158, 255, 0.3);
   border-radius: 6px;
@@ -177,4 +177,45 @@
 .mode-text {
   color: #fff;
   font-weight: 500;
+}
+
+/* ==================== KOMPAKTNÍ HEADER ==================== */
+
+.tuya-device-card.heating .heating-header {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+
+.tuya-device-card.heating .device-name {
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.device-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.device-category {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.subtitle-separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.device-room {
+  color: rgba(74, 158, 255, 0.9);
+  font-weight: 500;
+}
+
+/* Centrování subtitle když není název */
+.tuya-device-card.heating .device-names.no-title {
+  justify-content: center;
+}
+
+.tuya-device-card.heating .device-names.no-title .device-subtitle {
+  font-size: 0.9rem;
 }

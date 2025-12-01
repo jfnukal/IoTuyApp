@@ -29,9 +29,6 @@ export const useRooms = () => {
         unsubscribe = await firestoreService.subscribeToUserRooms(
           currentUser.uid,
           (roomsFromDB) => {
-            console.log(
-              `✅ Rooms: Načteno ${roomsFromDB.length} místností z DB`
-            );
             setRooms(roomsFromDB);
             setIsLoading(false);
           }
@@ -64,12 +61,12 @@ export const useRooms = () => {
 
       try {
         setError(null);
-        console.log('🏠 Vytvářím místnost:', roomData.name);
+        // console.log('🏠 Vytvářím místnost:', roomData.name);
         const roomId = await firestoreService.createRoom(
           currentUser.uid,
           roomData
         );
-        console.log('✅ Místnost vytvořena:', roomId);
+        // console.log('✅ Místnost vytvořena:', roomId);
         return roomId;
       } catch (err: any) {
         console.error('❌ Chyba při vytváření místnosti:', err);
@@ -87,9 +84,9 @@ export const useRooms = () => {
     async (roomId: string, updates: Partial<Room>) => {
       try {
         setError(null);
-        console.log('🏠 Aktualizuji místnost:', roomId);
+        // console.log('🏠 Aktualizuji místnost:', roomId);
         await firestoreService.updateRoom(roomId, updates);
-        console.log('✅ Místnost aktualizována');
+        // console.log('✅ Místnost aktualizována');
       } catch (err: any) {
         console.error('❌ Chyba při aktualizaci místnosti:', err);
         setError(err.message || 'Nepodařilo se aktualizovat místnost');
@@ -105,9 +102,9 @@ export const useRooms = () => {
   const deleteRoom = useCallback(async (roomId: string) => {
     try {
       setError(null);
-      console.log('🏠 Mažu místnost:', roomId);
+      // console.log('🏠 Mažu místnost:', roomId);
       await firestoreService.deleteRoom(roomId);
-      console.log('✅ Místnost smazána');
+      // console.log('✅ Místnost smazána');
     } catch (err: any) {
       console.error('❌ Chyba při mazání místnosti:', err);
       setError(err.message || 'Nepodařilo se smazat místnost');
@@ -129,11 +126,6 @@ export const useRooms = () => {
 
       try {
         setError(null);
-        console.log('🏠 Přesouvám zařízení...', {
-          deviceId,
-          newRoomId,
-          oldRoomId,
-        });
 
         // Zavoláme naši novou atomickou funkci
         await firestoreService.assignDeviceToRoom(
@@ -142,7 +134,7 @@ export const useRooms = () => {
           oldRoomId
         );
 
-        console.log('✅ Zařízení úspěšně přesunuto');
+        // console.log('✅ Zařízení úspěšně přesunuto');
       } catch (err: any) {
         console.error('❌ Chyba při přesouvání zařízení:', err);
         setError(err.message || 'Nepodařilo se přesunout zařízení');

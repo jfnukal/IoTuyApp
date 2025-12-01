@@ -320,4 +320,3 @@ class TuyaService {
 }
 
 export const tuyaService = new TuyaService();
-

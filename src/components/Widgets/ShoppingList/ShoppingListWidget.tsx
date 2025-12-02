@@ -3,11 +3,7 @@ import React, { useState } from 'react';
 import { useShoppingList } from '../../../contexts/ShoppingListContext';
 import './ShoppingList.css';
 
-interface ShoppingListWidgetProps {
-  selectedMember?: string | null;
-}
-
-const ShoppingListWidget: React.FC<ShoppingListWidgetProps> = ({ selectedMember }) => {
+const ShoppingListWidget: React.FC = () => {
   const { items, loading, addItem, toggleItem, deleteItem, clearCompleted, getShareText } = useShoppingList();
   const [newItemText, setNewItemText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -232,5 +228,6 @@ const ShoppingListWidget: React.FC<ShoppingListWidgetProps> = ({ selectedMember 
     </div>
   );
 };
+
 
 export default ShoppingListWidget;

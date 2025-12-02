@@ -197,4 +197,3 @@ export const checkReminders = functions
       return null;
     }
   });
-

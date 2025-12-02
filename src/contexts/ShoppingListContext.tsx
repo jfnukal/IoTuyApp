@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { firestoreService } from '../services/firestoreService';
 import { useAuth } from './AuthContext';
-import type { ShoppingItem, ShoppingList, FamilyMember } from '../types';
+import type { ShoppingItem, FamilyMember } from '../types';
 
 interface ShoppingListContextType {
   items: ShoppingItem[];
@@ -167,4 +167,5 @@ export const useShoppingList = (): ShoppingListContextType => {
     throw new Error('useShoppingList musí být použit uvnitř ShoppingListProvider');
   }
   return context;
+
 };

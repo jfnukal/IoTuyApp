@@ -23,7 +23,10 @@ import { fetchImageForQuery } from '../../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 import { useAuth } from '../../../contexts/AuthContext';
 import { firestoreService } from '../../../services/firestoreService';
-import { getEventsForDate as getRecurringEventsForDate } from '../../../utils/recurrenceUtils';
+import { 
+  getEventsForDate as getRecurringEventsForDate,
+  clearRecurrenceCache 
+} from '../../../utils/recurrenceUtils';
 
 interface CalendarContextType {
   currentDate: Date;
@@ -138,7 +141,6 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     }
     const unsubscribe = firestoreService.subscribeToNamedayPreferences(
       currentUser.uid,
-      // OPRAVA: Explicitně jsme řekli, jakého typu je parametr 'prefs'
       (prefs: NamedayPreferenceDoc | null) => {
         setMarkedNamedays(new Set(prefs?.markedDates || []));
       }
@@ -171,44 +173,47 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   // --- CRUD OPERACE PRO UDÁLOSTI ---
   const addEvent = useCallback(
     async (
-      eventData: Omit<
+      eventData: Omit <
         CalendarEventData,
         'id' | 'userId' | 'createdAt' | 'updatedAt'
       >
     ) => {
-      if (!currentUser) return;
-      try {
-        await firestoreService.addEvent(currentUser.uid, eventData);
-      } catch (error) {
-        console.error('Error adding event:', error);
-      }
-    },
-    [currentUser]
-  );
+    if (!currentUser) return;
+    try {
+      await firestoreService.addEvent(currentUser.uid, eventData);
+      clearRecurrenceCache(); // ← PŘIDEJ
+    } catch (error) {
+      console.error('Error adding event:', error);
+    }
+  },
+  [currentUser]
+);
 
-  const updateEvent = useCallback(
-    async (id: string, updates: Partial<CalendarEventData>) => {
-      if (!currentUser) return;
-      try {
-        await firestoreService.updateEvent(id, updates);
-      } catch (error) {
-        console.error('Error updating event:', error);
-      }
-    },
-    [currentUser]
-  );
+const updateEvent = useCallback(
+  async (id: string, updates: Partial<CalendarEventData>) => {
+    if (!currentUser) return;
+    try {
+      await firestoreService.updateEvent(id, updates);
+      clearRecurrenceCache(); // ← PŘIDEJ
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
+  },
+  [currentUser]
+);
 
-  const deleteEvent = useCallback(
-    async (id: string) => {
-      if (!currentUser) return;
-      try {
-        await firestoreService.deleteEvent(id);
-      } catch (error) {
-        console.error('Error deleting event:', error);
-      }
-    },
-    [currentUser]
-  );
+const deleteEvent = useCallback(
+  async (id: string) => {
+    if (!currentUser) return;
+    try {
+      await firestoreService.deleteEvent(id);
+      clearRecurrenceCache(); // ← PŘIDEJ
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  },
+  [currentUser]
+);
 
   // --- NOVÉ FUNKCE PRO JMENINY ---
   const isNamedayMarked = useCallback(

@@ -8,6 +8,8 @@ import type {
 } from '../../../types/index';
 import ReminderSelector from './ReminderSelector';
 import RecipientSelector from '../../Notifications/RecipientSelector';
+import RecurrenceSelector from './RecurrenceSelector';
+import './styles/RecurrenceSelector.css';
 
 interface EventFormProps {
   event: CalendarEventData | null;
@@ -70,6 +72,7 @@ const EventForm: React.FC<EventFormProps> = ({
         isMultiDay: !!event.endDate,
         endDate: event.endDate ? new Date(event.endDate + 'T00:00:00') : null,
         reminderRecipients: event.reminderRecipients || [],
+        recurring: event.recurring || null,
       };
     }
     const initialDate = date || new Date();
@@ -89,6 +92,7 @@ const EventForm: React.FC<EventFormProps> = ({
       isMultiDay: false,
       endDate: initialDate,
       reminderRecipients: [],
+      recurring: null,
     };
   });
 
@@ -108,6 +112,7 @@ const EventForm: React.FC<EventFormProps> = ({
         isMultiDay: !!event.endDate,
         endDate: event.endDate ? new Date(event.endDate + 'T00:00:00') : null,
         reminderRecipients: event.reminderRecipients || [],
+        recurring: event.recurring || null,
       });
     }
   }, [event]);
@@ -150,6 +155,36 @@ const EventForm: React.FC<EventFormProps> = ({
       eventData.reminderRecipients = formData.reminderRecipients;
     }
 
+// ✅ Přidej recurring pattern - vyčisti undefined hodnoty
+if (formData.recurring) {
+  const cleanRecurring: any = {
+    frequency: formData.recurring.frequency,
+    interval: formData.recurring.interval,
+    endType: formData.recurring.endType,
+  };
+  
+  // Přidej pouze definované hodnoty
+  if (formData.recurring.daysOfWeek && formData.recurring.daysOfWeek.length > 0) {
+    cleanRecurring.daysOfWeek = formData.recurring.daysOfWeek;
+  }
+  if (formData.recurring.dayOfMonth !== undefined) {
+    cleanRecurring.dayOfMonth = formData.recurring.dayOfMonth;
+  }
+  if (formData.recurring.endDate) {
+    cleanRecurring.endDate = formData.recurring.endDate;
+  }
+  if (formData.recurring.endCount) {
+    cleanRecurring.endCount = formData.recurring.endCount;
+  }
+  if (formData.recurring.exceptions && formData.recurring.exceptions.length > 0) {
+    cleanRecurring.exceptions = formData.recurring.exceptions;
+  }
+  
+  eventData.recurring = cleanRecurring;
+} else {
+  eventData.recurring = null;
+}
+
     onSave(eventData);
   };
 
@@ -178,6 +213,46 @@ const EventForm: React.FC<EventFormProps> = ({
     handleInputChange('reminderRecipients', recipients);
   };
 
+  // Kontrola, zda opakování nepřekračuje limity
+const hasRecurrenceError = (): boolean => {
+  if (!formData.recurring) return false;
+
+  const limits: Record<string, number> = {
+    daily: 365,
+    weekly: 104,
+    biweekly: 52,
+    monthly: 48,
+    yearly: 4,
+    custom: 104,
+  };
+
+  const limit = limits[formData.recurring.frequency] || 100;
+
+  if (formData.recurring.endType === 'count' && formData.recurring.endCount) {
+    return formData.recurring.endCount > limit;
+  }
+
+  if (formData.recurring.endType === 'date' && formData.recurring.endDate) {
+    const start = formData.date;
+    const end = new Date(formData.recurring.endDate);
+    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+    let estimated = 0;
+    switch (formData.recurring.frequency) {
+      case 'daily': estimated = diffDays; break;
+      case 'weekly': estimated = Math.ceil(diffDays / 7); break;
+      case 'biweekly': estimated = Math.ceil(diffDays / 14); break;
+      case 'monthly': estimated = Math.ceil(diffDays / 30); break;
+      case 'yearly': estimated = Math.ceil(diffDays / 365); break;
+      case 'custom': estimated = Math.ceil(diffDays / 7); break;
+    }
+
+    return estimated > limit;
+  }
+
+  return false;
+};
+
   const eventTypes = [
     { value: 'personal', label: 'Osobní', icon: '👤' },
     { value: 'work', label: 'Pracovní', icon: '💼' },
@@ -204,6 +279,7 @@ const EventForm: React.FC<EventFormProps> = ({
     '#ee5a24',
     '#0abde3',
   ];
+ 
 
   return (
     <div
@@ -341,6 +417,13 @@ const EventForm: React.FC<EventFormProps> = ({
             </label>
           </div>
 
+          {/* 🔄 Opakování */}
+          <RecurrenceSelector
+            value={formData.recurring}
+            onChange={(pattern) => handleInputChange('recurring', pattern)}
+            startDate={formData.date}
+          />
+
           {/* Časy */}
           {!formData.isAllDay && (
             <div className="form-row">
@@ -448,7 +531,11 @@ const EventForm: React.FC<EventFormProps> = ({
             <button type="button" className="btn btn-outline" onClick={onClose}>
               Zrušit
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={hasRecurrenceError()}
+            >
               💾 {event ? 'Uložit' : 'Vytvořit'}
             </button>
           </div>

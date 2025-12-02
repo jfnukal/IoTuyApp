@@ -6,16 +6,14 @@ import { useWidgetSettings } from '../../hooks/useWidgetSettings';
 import HeaderInfo from './HeaderInfo';
 import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
 import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
-
-// 🆕 PŘIDEJTE IMPORT SKUTEČNÉHO WIDGETU
 import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
-
-// 🆕 PŘIDEJTE IMPORT STYLŮ PRO MODÁL
 import '../Widgets/SchoolSchedule/SchoolScheduleModal.css';
 import SchoolScheduleHeaderWidget from '../Widgets/SchoolSchedule/SchoolScheduleHeaderWidget';
-
 import type { FamilyMember, HeaderWidgetType } from '../../types';
 import './styles/HeaderSlots.css';
+import { ShoppingListProvider } from '../../contexts/ShoppingListContext';
+import ShoppingListCompact from '../Widgets/ShoppingList/ShoppingListCompact';
+import ShoppingListModal from '../Widgets/ShoppingList/ShoppingListModal';
 
 interface HeaderSlotsProps {
   familyMembers: FamilyMember[];
@@ -25,6 +23,7 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
   const { headerConfig, loading } = useHeaderConfig();
   const { settings } = useWidgetSettings();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showShoppingModal, setShowShoppingModal] = useState(false); 
 
   // Funkce pro vykreslení widgetu podle typu
   const renderWidget = (
@@ -144,9 +143,19 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
 
   return (
     <div className="header-slots">
-      {/* LEVÝ SLOT */}
+      {/* LEVÝ SLOT - obsahuje greeting + nákupní seznam */}
       <div className="header-slot header-slot-left">
-        {renderWidget(headerConfig.left, 'left')}
+        <div className="header-left-stack">
+          {renderWidget(headerConfig.left, 'left')}
+          
+          {/* 🛒 Nákupní seznam - samostatný widget */}
+          <ShoppingListProvider familyMembers={familyMembers}>
+          <ShoppingListCompact
+              maxItems={3}
+              onOpenFull={() => setShowShoppingModal(true)}
+            />
+          </ShoppingListProvider>
+        </div>
       </div>
 
       {/* PROSTŘEDNÍ SLOT */}
@@ -159,12 +168,18 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
         {renderWidget(headerConfig.right, 'right')}
       </div>
 
-      {/* 🆕 PŘIDEJTE TENTO ŘÁDEK */}
+      {/* 🛒 Shopping List Modal */}
+      {showShoppingModal && (
+        <ShoppingListModal
+          isOpen={showShoppingModal}
+          onClose={() => setShowShoppingModal(false)}
+          familyMembers={familyMembers}
+        />
+      )}
+
       {showScheduleModal && renderScheduleModal()}
     </div>
   );
 };
 
-// 🚀 React.memo - komponenta se překreslí POUZE když se změní familyMembers, headerConfig nebo settings
-// HeaderSlots obsahuje několik widgetů, takže optimalizace má velký dopad na výkon
 export default memo(HeaderSlots);

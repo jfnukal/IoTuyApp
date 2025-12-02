@@ -1,3 +1,4 @@
+// src/components/Widgets/Calendar/CalendarHeader.tsx
 import React from 'react';
 import type { CalendarView } from '../../../types/index';
 

@@ -1,3 +1,4 @@
+// src/components/Widgets/Calendar/CalendarProvider.tsx
 import React, {
   createContext,
   useContext,
@@ -22,6 +23,7 @@ import { fetchImageForQuery } from '../../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 import { useAuth } from '../../../contexts/AuthContext';
 import { firestoreService } from '../../../services/firestoreService';
+import { getEventsForDate as getRecurringEventsForDate } from '../../../utils/recurrenceUtils';
 
 interface CalendarContextType {
   currentDate: Date;
@@ -248,9 +250,10 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
 
   const getEventsByDate = useCallback(
     (date: Date) => {
-      return events.filter((event) => isSameDay(event.date, date));
+      // Použij novou utilitu která zahrnuje opakované události
+      return getRecurringEventsForDate(events, date);
     },
-    [events, isSameDay]
+    [events]
   );
 
   // Funkce pro získání pouze narozeninových událostí

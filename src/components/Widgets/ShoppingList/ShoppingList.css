@@ -1,0 +1,821 @@
+/* src/components/Widgets/ShoppingList/ShoppingList.css */
+
+/* ==================== COMPACT WIDGET ==================== */
+.shopping-compact {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.shopping-compact.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.loading-spinner {
+  font-size: 1.5rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Header */
+.shopping-compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shopping-compact-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.shopping-compact-title:hover {
+  opacity: 0.8;
+}
+
+.shopping-icon {
+  font-size: 1.3rem;
+}
+
+.shopping-count {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.shopping-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopping-add-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Quick add form */
+.shopping-quick-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shopping-quick-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.shopping-quick-input:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 1px;
+}
+
+.shopping-quick-input::placeholder {
+  color: #999;
+}
+
+.shopping-quick-submit {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #4CAF50;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-quick-submit:hover {
+  background: #43A047;
+  transform: scale(1.05);
+}
+
+/* Seznam položek */
+.shopping-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shopping-compact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-compact-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(4px);
+}
+
+.item-checkbox {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.item-text {
+  flex: 1;
+  color: white;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-author {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+/* Prázdný stav */
+.shopping-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+.shopping-empty-icon {
+  font-size: 1.2rem;
+}
+
+/* Více položek */
+.shopping-more {
+  text-align: center;
+  padding: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-more:hover {
+  color: white;
+}
+
+/* Footer */
+.shopping-compact-footer {
+  text-align: center;
+  padding-top: 10px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-compact-footer:hover {
+  color: white;
+}
+
+/* ==================== COMPLETED ITEMS ==================== */
+.shopping-compact-item.completed {
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shopping-compact-item.completed .item-text {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.shopping-compact-item.completed .item-checkbox {
+  color: #4CAF50;
+}
+
+/* ==================== DELETE BUTTON ==================== */
+.item-delete-btn {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.shopping-compact-item:hover .item-delete-btn {
+  opacity: 0.7;
+}
+
+.item-delete-btn:hover {
+  opacity: 1 !important;
+  background: rgba(255, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+/* Na dotykovych zarizenich vzdy zobrazit */
+@media (hover: none) {
+  .item-delete-btn {
+    opacity: 0.7;
+  }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .shopping-compact {
+    padding: 12px;
+    margin-top: 10px;
+  }
+
+  .shopping-compact-title {
+    font-size: 1rem;
+  }
+
+  .shopping-compact-item {
+    padding: 6px 10px;
+  }
+
+  .item-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* ==================== FULL WIDGET ==================== */
+.shopping-widget {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px;
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.shopping-widget.loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  text-align: center;
+  color: white;
+}
+
+.loading-content p {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+/* Widget Header */
+.shopping-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-right: 50px; /* Prostor pro křížek v modalu */
+}
+
+.shopping-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+}
+
+.shopping-widget-title .shopping-icon {
+  font-size: 1.6rem;
+}
+
+.shopping-widget-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.shopping-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopping-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* ==================== MOBILE FLOATING ADD BUTTON ==================== */
+@media (max-width: 768px) {
+  .shopping-widget-header {
+    padding-right: 0;
+  }
+
+  .shopping-widget-header .shopping-widget-actions {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+  }
+
+  .shopping-widget-header .shopping-action-btn.add {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #4CAF50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    font-size: 1.5rem;
+  }
+
+  .shopping-widget-header .shopping-action-btn.add:hover {
+    background: #43A047;
+    transform: scale(1.1);
+  }
+}
+
+/* Add Form */
+.shopping-add-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  animation: slideDown 0.2s ease;
+}
+
+.shopping-add-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 1rem;
+  color: #333;
+}
+
+.shopping-add-input:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.shopping-add-submit {
+  padding: 12px 24px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-add-submit:hover {
+  background: #43A047;
+  transform: scale(1.02);
+}
+
+/* Filters */
+.shopping-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.shopping-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.shopping-filter-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.filter-btn.active {
+  background: white;
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Widget List */
+.shopping-widget-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  padding-right: 5px;
+}
+
+.shopping-widget-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shopping-widget-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.shopping-widget-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+/* Widget Item */
+.shopping-widget-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.shopping-widget-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.shopping-widget-item.completed {
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shopping-widget-item.completed .item-text {
+  text-decoration: line-through;
+}
+
+.item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  cursor: pointer;
+}
+
+.shopping-widget-item .item-checkbox {
+  font-size: 1.3rem;
+  color: white;
+}
+
+.shopping-widget-item.completed .item-checkbox {
+  color: #4CAF50;
+}
+
+.shopping-widget-item .item-text {
+  font-size: 1rem;
+  color: white;
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-meta .item-author {
+  font-size: 1.1rem;
+}
+
+.item-completed-by {
+  font-size: 0.8rem;
+  color: #4CAF50;
+}
+
+.item-meta .item-delete {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s;
+  padding: 4px;
+}
+
+.item-meta .item-delete:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Empty State */
+.shopping-empty-full {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  padding: 40px;
+}
+
+.shopping-empty-full .shopping-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.shopping-empty-full p {
+  font-size: 1.1rem;
+  margin: 0 0 20px 0;
+}
+
+.shopping-add-first {
+  padding: 12px 30px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shopping-add-first:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Footer */
+.shopping-widget-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shopping-share-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.share-btn.whatsapp {
+  background: #25D366;
+  color: white;
+}
+
+.share-btn.email {
+  background: #EA4335;
+  color: white;
+}
+
+.share-btn.copy {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.share-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.shopping-clear-btn {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopping-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 768px) {
+  .shopping-clear-btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    margin-bottom: 70px; /* Prostor pro floating button */
+  }
+}
+
+.shopping-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ==================== RESPONSIVE (FULL WIDGET) ==================== */
+@media (max-width: 768px) {
+  .shopping-widget {
+    padding: 20px;
+  }
+
+  .shopping-widget-title {
+    font-size: 1.2rem;
+  }
+
+  .shopping-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .shopping-share-buttons {
+    flex-direction: column;
+  }
+
+  .share-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ==================== SHOPPING LIST MODAL ==================== */
+.shopping-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.shopping-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  border-radius: 24px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shopping-modal-content .shopping-widget {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.shopping-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopping-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Mobile optimalizace */
+@media (max-width: 768px) {
+  .shopping-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .shopping-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
+    animation: slideUpMobile 0.3s ease;
+  }
+
+  .shopping-modal-content .shopping-widget {
+    padding-bottom: 100px; /* Prostor pro floating button */
+  }
+
+  .shopping-modal-close {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

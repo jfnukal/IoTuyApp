@@ -153,3 +153,19 @@
     min-height: 120px;
   }
 }
+
+/* ==================== LEFT STACK (Greeting + Shopping) ==================== */
+.header-left-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.header-left-stack > .header-info {
+  flex-shrink: 0;
+}
+
+.header-left-stack > .shopping-compact {
+  flex-shrink: 0;
+}

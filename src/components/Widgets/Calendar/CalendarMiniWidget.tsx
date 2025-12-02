@@ -1,3 +1,4 @@
+// src/components/Widgets/Calendar/CalendarMiniWidget.tsx
 import React, { useState } from 'react';
 import './styles/CalendarMini.css';
 import { useCalendar } from './CalendarProvider';

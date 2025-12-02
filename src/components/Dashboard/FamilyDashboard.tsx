@@ -1,6 +1,8 @@
 // src/components/Dashboard/FamilyDashboard.tsx
 import React, { lazy, Suspense } from 'react';
-import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
+//import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
+import ShoppingListWidget from '../Widgets/ShoppingList/ShoppingListWidget';
+import { ShoppingListProvider } from '../../contexts/ShoppingListContext';
 import BusScheduleWidget from '../Widgets/SchoolSchedule/BusScheduleWidget';
 import type { FamilyMember } from '../../types/index';
 import './styles/FamilyDashboard.css';
@@ -74,13 +76,21 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           </div>
         )}
 
-        {/* Sticky Notes Widget */}
+        {/* Sticky Notes Widget
         {settings?.widgets.stickyNotes.enabled && (
           <div className="widget-container stickynotes-container">
             <StickyNotesWidget selectedMember={selectedMember} />
           </div>
-        )}
+        )} */}
 
+        {/* 🛒 Nákupní seznam Widget */}
+        {settings?.widgets.stickyNotes.enabled && (
+          <div className="widget-container shopping-list-container">
+            <ShoppingListProvider familyMembers={familyMembers}>
+              <ShoppingListWidget selectedMember={selectedMember} />
+            </ShoppingListProvider>
+          </div>
+        )}
         {/* Bus Schedule Widget */}
         {settings?.widgets.busSchedule.enabled && (
           <div className="widget-card">

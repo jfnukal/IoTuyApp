@@ -31,6 +31,8 @@ import type {
   NamedayPreferenceDoc,
   HeaderConfigDoc,
   HeaderSlotConfig,
+  ShoppingItem,
+  ShoppingList,
 } from '../types/index';
 
 class FirestoreService {
@@ -946,6 +948,177 @@ subscribeToFloorLayout(
 
     return unsubscribe;
   }
+
+  // ==================== SHOPPING LIST ====================
+
+  /**
+   * Získá nákupní seznam (sdílený pro celou rodinu)
+   */
+   async getShoppingList(): Promise<ShoppingList | null> {
+    try {
+      const docRef = doc(db, 'allFamily', 'shoppingList');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as ShoppingList;
+      }
+      
+      // Vytvoř prázdný seznam, pokud neexistuje
+      const emptyList: Omit<ShoppingList, 'id'> = {
+        items: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await setDoc(docRef, emptyList);
+      return { id: 'shoppingList', ...emptyList };
+    } catch (error) {
+      console.error('❌ Chyba při načítání nákupního seznamu:', error);
+      throw new Error('Nepodařilo se načíst nákupní seznam');
+    }
+  }
+
+ /**
+   * Přidá položku do nákupního seznamu
+   */
+  async addShoppingItem(item: Omit<ShoppingItem, 'id' | 'addedAt' | 'completed'>): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'shoppingList');
+      const newItem: ShoppingItem = {
+        ...item,
+        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        addedAt: Date.now(),
+        completed: false,
+      };
+      
+      // Nejprve zkontroluj, jestli dokument existuje
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        // Dokument existuje - přidej položku
+        await updateDoc(docRef, {
+          items: arrayUnion(newItem),
+          updatedAt: Date.now(),
+        });
+      } else {
+        // Dokument neexistuje - vytvoř ho s první položkou
+        await setDoc(docRef, {
+          items: [newItem],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      }
+      
+      console.log('✅ Položka přidána do nákupního seznamu');
+    } catch (error) {
+      console.error('❌ Chyba při přidávání položky:', error);
+      throw new Error('Nepodařilo se přidat položku');
+    }
+  }
+  
+  /**
+   * Aktualizuje položku v nákupním seznamu (např. completed)
+   */
+  async updateShoppingItem(itemId: string, updates: Partial<ShoppingItem>): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'shoppingList');
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        throw new Error('Nákupní seznam neexistuje');
+      }
+      
+      const data = docSnap.data() as ShoppingList;
+      const updatedItems = data.items.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item
+      );
+      
+      await updateDoc(docRef, {
+        items: updatedItems,
+        updatedAt: Date.now(),
+      });
+      
+      console.log('✅ Položka aktualizována');
+    } catch (error) {
+      console.error('❌ Chyba při aktualizaci položky:', error);
+      throw new Error('Nepodařilo se aktualizovat položku');
+    }
+  }
+
+  /**
+   * Smaže položku z nákupního seznamu
+   */
+  async deleteShoppingItem(itemId: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'shoppingList');
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        throw new Error('Nákupní seznam neexistuje');
+      }
+      
+      const data = docSnap.data() as ShoppingList;
+      const filteredItems = data.items.filter((item) => item.id !== itemId);
+      
+      await updateDoc(docRef, {
+        items: filteredItems,
+        updatedAt: Date.now(),
+      });
+      
+      console.log('✅ Položka smazána');
+    } catch (error) {
+      console.error('❌ Chyba při mazání položky:', error);
+      throw new Error('Nepodařilo se smazat položku');
+    }
+  }
+
+  /**
+   * Smaže všechny dokončené položky
+   */
+  async clearCompletedItems(): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'shoppingList');
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) return;
+      
+      const data = docSnap.data() as ShoppingList;
+      const activeItems = data.items.filter((item) => !item.completed);
+      
+      await updateDoc(docRef, {
+        items: activeItems,
+        updatedAt: Date.now(),
+      });
+      
+      console.log('✅ Dokončené položky smazány');
+    } catch (error) {
+      console.error('❌ Chyba při mazání dokončených položek:', error);
+      throw new Error('Nepodařilo se smazat dokončené položky');
+    }
+  }
+
+  /**
+   * Real-time poslouchání změn v nákupním seznamu
+   */
+  subscribeToShoppingList(callback: (list: ShoppingList | null) => void): Unsubscribe {
+    const docRef = doc(db, 'allFamily', 'shoppingList');
+    
+    return onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          callback({ id: docSnap.id, ...docSnap.data() } as ShoppingList);
+        } else {
+          callback(null);
+        }
+      },
+      (error) => {
+        console.error('❌ Chyba při poslechu nákupního seznamu:', error);
+        callback(null);
+      }
+    );
+  }
 }
+
+
 
 export const firestoreService = new FirestoreService();

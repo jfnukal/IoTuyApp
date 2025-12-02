@@ -1,3 +1,4 @@
+//src/types/index.ts
 export interface User {
   uid: string;
   email: string;
@@ -353,6 +354,10 @@ export interface CalendarEventData {
   recurring?: RecurringPattern; // Zachováno z tvé verze
   createdAt: number; // Potřebné pro DB
   updatedAt: number; // Potřebné pro DB
+    // Pro instance opakovaných událostí
+    isRecurringInstance?: boolean;
+    originalEventId?: string;
+    instanceIndex?: number;
 }
 
 export type EventType =
@@ -384,11 +389,25 @@ export interface FileAttachment {
   size: number;
 }
 
+// ==================== RECURRING EVENTS ====================
+
+export type RecurrenceFrequency = 
+  | 'daily'           // Každý den
+  | 'weekly'          // Každý týden
+  | 'biweekly'        // Každé 2 týdny
+  | 'monthly'         // Každý měsíc
+  | 'yearly'          // Každý rok
+  | 'custom';         // Vlastní (konkrétní dny v týdnu)
+
 export interface RecurringPattern {
-  type: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  interval: number;
-  endDate?: string; // Použijeme string pro datum
-  count?: number;
+  frequency: RecurrenceFrequency;
+  interval: number;                    // Každých X (dní/týdnů/měsíců)
+  daysOfWeek?: number[];               // Pro custom: 0=Ne, 1=Po, 2=Út... 6=So
+  dayOfMonth?: number;                 // Pro monthly: den v měsíci (1-31)
+  endType: 'never' | 'date' | 'count'; // Kdy končí opakování
+  endDate?: string;                    // Koncové datum (YYYY-MM-DD)
+  endCount?: number;                   // Po X opakováních
+  exceptions?: string[];               // Data, kdy se událost NEKONÁ (YYYY-MM-DD)
 }
 
 export interface Holiday {
@@ -551,4 +570,26 @@ export interface DoorbellSnapshot {
   deviceId: string;
   url: string;
   timestamp: number;
+}
+
+// ==================== SHOPPING LIST ====================
+
+export interface ShoppingItem {
+  id: string;
+  text: string;
+  addedBy: string;           // ID člena rodiny (dad, mom, jarecek...)
+  addedByEmoji: string;      // 👨, 👩, 👦...
+  addedByName: string;       // Táta, Máma, Jareček...
+  addedAt: number;           // timestamp
+  completed: boolean;
+  completedBy?: string | null;
+  completedByName?: string | null;
+  completedAt?: number | null; 
+}
+
+export interface ShoppingList {
+  id: string;
+  items: ShoppingItem[];
+  createdAt: number;
+  updatedAt: number;
 }

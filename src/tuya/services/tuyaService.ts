@@ -5,101 +5,11 @@ import type { TuyaDevice } from '../../types';
 class TuyaService {
   private baseUrl = '/.netlify/functions';
 
-  /**
-   * 🧪 Mock data pro development/testování
-   */
-  private getMockDevices(): TuyaDevice[] {
-    console.log('🧪 Generuji mock Tuya data');
-    return [
-      {
-        id: 'bfae2da6e578cdd1b0',
-        name: 'Světlo chodba',
-        local_key: 'mock_key_1',
-        category: 'light',
-        product_id: 'mock_product_1',
-        product_name: 'Smart Light',
-        sub: false,
-        uuid: 'mock_uuid_1',
-        owner_id: 'mock_owner',
-        online: true,
-        status: [
-          { code: 'switch_1', value: true },
-          { code: 'bright_value', value: 75 },
-        ],
-        lastUpdated: Date.now(),
-        isVisible: true,
-      },
-      {
-        id: 'bffbfe2dad8680b2a8a9',
-        name: 'Garážové světlo',
-        local_key: 'mock_key_2',
-        category: 'light',
-        product_id: 'mock_product_2',
-        product_name: 'Garage Light',
-        sub: false,
-        uuid: 'mock_uuid_2',
-        owner_id: 'mock_owner',
-        online: true,
-        status: [
-          { code: 'switch_1', value: false },
-          { code: 'bright_value', value: 0 },
-        ],
-        lastUpdated: Date.now(),
-        isVisible: true,
-      },
-      {
-        id: '31311065c44f33b75eaf',
-        name: 'Hl.zásuvka-roz',
-        local_key: 'mock_key_3',
-        category: 'switch',
-        product_id: 'mock_product_3',
-        product_name: 'Smart Socket',
-        sub: false,
-        uuid: 'mock_uuid_3',
-        owner_id: 'mock_owner',
-        online: true,
-        status: [
-          { code: 'switch_1', value: true },
-          { code: 'cur_power', value: 45 },
-        ],
-        lastUpdated: Date.now(),
-        isVisible: true,
-      },
-      {
-        id: 'bf0f8692301eaff1f6',
-        name: 'Temperature and humidity sensor',
-        local_key: 'mock_key_4',
-        category: 'sensor',
-        product_id: 'mock_product_4',
-        product_name: 'Temp Sensor',
-        sub: false,
-        uuid: 'mock_uuid_4',
-        owner_id: 'mock_owner',
-        online: true,
-        status: [
-          { code: 'temp_current', value: 22 },
-          { code: 'humidity_value', value: 55 },
-        ],
-        lastUpdated: Date.now(),
-        isVisible: true,
-      },
-    ];
-  }
-
+  
   /**
    * Načte všechna Tuya zařízení ze serveru
    */
-  async fetchDevices(): Promise<TuyaDevice[]> {
-    // 🧪 TEST MODE: Vrátí mock data
-    const testMode = await this.isTestMode();
-    if (testMode) {
-      console.log('🧪 TEST MODE: Používám mock Tuya data');
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(this.getMockDevices()), 500);
-      });
-    }
-
-    // 🚀 PRODUCTION: Volá skutečné Netlify funkce
+   async fetchDevices(): Promise<TuyaDevice[]> {
     try {
       console.log('📡 Načítám Tuya zařízení ze serveru...');
 
@@ -151,23 +61,10 @@ class TuyaService {
   /**
    * Ovládá zařízení (zapne/vypne/změna hodnoty)
    */
-  async controlDevice(
+   async controlDevice(
     deviceId: string,
     commands: { code: string; value: any }[]
   ): Promise<boolean> {
-    // 🧪 TEST MODE: Simuluj úspěch
-    const testMode = await this.isTestMode();
-    if (testMode) {
-      console.log(
-        `🧪 TEST MODE: Simuluji ovládání zařízení ${deviceId}:`,
-        commands
-      );
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(true), 300);
-      });
-    }
-
-    // 🚀 PRODUCTION: Volá skutečné Netlify funkce
     try {
       console.log(`🎮 Ovládám zařízení ${deviceId}:`, commands);
 
@@ -251,13 +148,7 @@ class TuyaService {
   /**
    * Získá snapshot z doorbell
    */
-  async getDoorbellSnapshot(deviceId: string): Promise<string | null> {
-    const testMode = await this.isTestMode();
-    if (testMode) {
-      console.log('🧪 TEST MODE: Simuluji doorbell snapshot');
-      return 'https://via.placeholder.com/640x480/667eea/ffffff?text=Demo+Doorbell+Snapshot';
-    }
-
+   async getDoorbellSnapshot(deviceId: string): Promise<string | null> {
     try {
       console.log(`📸 Získávám snapshot pro doorbell ${deviceId}...`);
 

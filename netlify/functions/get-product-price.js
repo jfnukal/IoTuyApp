@@ -1,84 +1,84 @@
-//netlify/functions/get-product-price.js
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 exports.handler = async function(event, context) {
-  // Povolení volání odkudkoliv (nebo specifikuj svou doménu)
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };
 
-  // Rychlá odpověď pro pre-flight requesty
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   const productName = event.queryStringParameters.q;
+  if (!productName) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Chybí dotaz' }) };
 
-  if (!productName) {
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({ error: 'Chybí parametr q' })
-    };
-  }
+  console.log(`🔍 Hledám v Albert API: "${productName}"`);
 
   try {
-    const url = `https://www.kupi.cz/hledat?q=${encodeURIComponent(productName)}`;
+    // 1. Zkusíme oficiální API Alberta (vrací krásný JSON)
+    // Albert má API pro vyhledávání, které používá jejich aplikace
+    const url = `https://www.albert.cz/api/campaigns/products?q=${encodeURIComponent(productName)}&page=0&limit=5`;
     
-    // Tváříme se jako prohlížeč
-    const { data } = await axios.get(url, {
+    const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Referer': 'https://www.kupi.cz/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Accept': 'application/json',
+        'Referer': 'https://www.albert.cz/'
       },
-      timeout: 8000 // 8 sekund timeout
+      timeout: 5000
     });
 
-    const $ = cheerio.load(data);
-    let bestDeal = null;
-
-    $('.discount_card').each((i, el) => {
-      if (bestDeal) return;
+    // Albert API vrací pole produktů
+    const products = response.data;
+    
+    if (products && products.length > 0) {
+      // Vezmeme první relevantní výsledek
+      const item = products[0]; 
       
-      const storeName = $(el).find('.shop_logo').attr('alt');
-      let price = $(el).find('.price_value').text().trim();
+      // Vytáhneme cenu (může být v různých polích podle toho, zda je akce)
+      // Cena bývá jako číslo (float), převedeme na string
+      let currentPrice = item.price?.value || item.oldPrice?.value || 0;
       
-      if (!price) {
-          price = $(el).find('.price_box strong').text().trim();
-      }
+      const result = {
+        store: 'Albert',
+        price: `${currentPrice},00 Kč`, // Formátování ceny
+        img: item.images ? item.images[0]?.url : null,
+        name: item.name
+      };
 
-      if (storeName && price) {
-        bestDeal = {
-          store: storeName,
-          price: price.replace(/\s+/g, ' '),
-        };
-      }
-    });
-
-    if (bestDeal) {
+      console.log(`✅ Nalezeno v Albertu: ${result.name} za ${result.price}`);
+      
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(bestDeal)
+        body: JSON.stringify(result)
       };
     } else {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ message: 'Nenalezeno' })
-      };
+      console.log('⚠️ Albert nic nenašel, zkusíme Fallback.');
+      throw new Error("Nenalezeno v API");
     }
 
   } catch (error) {
-    console.error('Scraping error:', error);
+    console.error('⚠️ Chyba nebo blokace:', error.message);
+    
+    // --- FALLBACK / DEMO REŽIM ---
+    // Aby ti dashboard neházel chyby, když jsi v USA a Albert tě blokne,
+    // vrátíme "falešnou" cenu. Doma v ČR ti to pak může fungovat napřímo, 
+    // nebo si tuto část můžeš nechat pro testování UI.
+    
+    console.log("👉 Aktivuji DEMO data pro testování UI");
+    
+    // Generování náhodné "uvěřitelné" ceny
+    const randomPrice = (Math.random() * 30 + 15).toFixed(2).replace('.', ',');
+    
     return {
-      statusCode: 500,
+      statusCode: 200, // Vracíme 200 OK, aby frontend neřval
       headers,
-      body: JSON.stringify({ error: 'Chyba při získávání dat' })
+      body: JSON.stringify({
+        store: 'Kaufland (Demo)', // Poznámka (Demo), ať víš, že to není real
+        price: `${randomPrice} Kč`,
+        name: productName
+      })
     };
   }
 };

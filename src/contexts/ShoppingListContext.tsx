@@ -167,5 +167,4 @@ export const useShoppingList = (): ShoppingListContextType => {
     throw new Error('useShoppingList musí být použit uvnitř ShoppingListProvider');
   }
   return context;
-
 };

@@ -4,7 +4,6 @@ import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
 import Login from './components/Login';
 import { firestoreService } from './services/firestoreService';
-import type { TuyaDevice } from './types';
 import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -24,19 +23,14 @@ function App() {
 
   // Firestore hooks
   const {
-    devices,
     events: calendarEvents,
     loading: firebaseLoading,
     error: firebaseError,
-    syncDevices,
   } = useFirestore();
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [error, setError] = useState<string | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
-  const [showNotification, setShowNotification] = useState(false);
   const [familyMemberId, setFamilyMemberId] = useState<string | null>(null);
 
   // 🔐 Remote Config initialization - MUSÍ BÝT PRVNÍ!
@@ -124,11 +118,7 @@ function App() {
     };
 
     loadFamilyMember();
-
-    if (devices && devices.length > 0) {
-      // Zde můžeš přidat další logiku pokud potřebuješ
-    }
-  }, [currentUser, devices, firebaseLoading]);
+  }, [currentUser, firebaseLoading]);
 
   // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
   useEffect(() => {
@@ -163,129 +153,10 @@ function App() {
     return <Login />;
   }
 
-  // Mock Tuya API - později nahradit skutečným
-  const fetchTuyaDevices = async (): Promise<TuyaDevice[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockDevices: TuyaDevice[] = [
-          {
-            id: 'bf631b96e11e658088nljp',
-            name: 'Chytrá zásuvka - Obývák',
-            local_key: 'mock_key_1',
-            category: 'switch',
-            product_id: 'mock_product_1',
-            product_name: 'Smart Socket',
-            sub: false,
-            uuid: 'mock_uuid_1',
-            owner_id: 'mock_owner_1',
-            online: true,
-            status: [
-              { code: 'switch_1', value: Math.random() > 0.5 },
-              { code: 'cur_power', value: Math.round(Math.random() * 100) },
-            ],
-            lastUpdated: Date.now(),
-            isVisible: true,
-            customName: 'Zásuvka u TV',
-            customColor: '#007bff',
-          },
-          {
-            id: 'bf631b96e11e658088nljq',
-            name: 'LED pásek - Kuchyň',
-            local_key: 'mock_key_2',
-            category: 'light',
-            product_id: 'mock_product_2',
-            product_name: 'LED Strip',
-            sub: false,
-            uuid: 'mock_uuid_2',
-            owner_id: 'mock_owner_2',
-            online: Math.random() > 0.2,
-            status: [
-              { code: 'switch_led', value: Math.random() > 0.3 },
-              { code: 'bright_value', value: Math.round(Math.random() * 100) },
-              { code: 'colour_data', value: '#ff6600' },
-            ],
-            lastUpdated: Date.now(),
-            isVisible: true,
-          },
-          {
-            id: 'bf631b96e11e658088nljr',
-            name: 'Teplotní senzor - Ložnice',
-            local_key: 'mock_key_3',
-            category: 'sensor',
-            product_id: 'mock_product_3',
-            product_name: 'Temperature Sensor',
-            sub: false,
-            uuid: 'mock_uuid_3',
-            owner_id: 'mock_owner_3',
-            online: true,
-            status: [
-              {
-                code: 'temp_current',
-                value: Math.round(Math.random() * 10 + 20),
-              },
-              {
-                code: 'humidity_value',
-                value: Math.round(Math.random() * 40 + 40),
-              },
-            ],
-            lastUpdated: Date.now(),
-            isVisible: true,
-            customName: 'Senzor u postele',
-          },
-          {
-            id: 'bf631b96e11e658088nljs',
-            name: 'Chytrý vypínač - Zahrada',
-            local_key: 'mock_key_4',
-            category: 'garden',
-            product_id: 'mock_product_4',
-            product_name: 'Garden Switch',
-            sub: false,
-            uuid: 'mock_uuid_4',
-            owner_id: 'mock_owner_4',
-            online: Math.random() > 0.1,
-            status: [
-              { code: 'switch_1', value: Math.random() > 0.6 },
-              { code: 'timer_1', value: '08:00' },
-            ],
-            lastUpdated: Date.now(),
-            isVisible: true,
-            notes: 'Ovládá zahradní osvětlení',
-          },
-        ];
-        resolve(mockDevices);
-      }, 1000);
-    });
-  };
+  
 
-  const syncTuyaWithFirebase = async () => {
-    if (!currentUser) return;
-
-    try {
-      // setIsLoading(true);
-      setError(null);
-
-      setNotification('Synchronizuji zařízení...');
-      setShowNotification(true);
-
-      const tuyaDevices = await fetchTuyaDevices();
-
-      await syncDevices(tuyaDevices);
-
-      setNotification('✓ Synchronizace dokončena');
-
-      setTimeout(() => {
-        setShowNotification(false);
-        setTimeout(() => setNotification(null), 300);
-      }, 3000);
-    } catch (err: any) {
-      console.error('Sync error:', err);
-      setError(err.message || 'Nepodařilo se synchronizovat data');
-      setNotification('✗ Chyba při synchronizaci');
-      setTimeout(() => setShowNotification(false), 5000);
-    }
-  };
-
-  if (error || firebaseError) {
+  
+  if (firebaseError) {
     return (
       <div className="app-layout">
         <div className="modern-error-state">
@@ -295,19 +166,12 @@ function App() {
           </div>
           <h2 className="error-title">Něco se pokazilo</h2>
           <p className="error-description">
-            Nepodařilo se načíst data: {error || firebaseError}
+            Nepodařilo se načíst data: {firebaseError}
           </p>
           <div className="error-actions">
             <button
-              onClick={syncTuyaWithFirebase}
-              className="btn btn-modern btn-primary error-retry-btn"
-            >
-              <span className="btn-icon">🔄</span>
-              Zkusit znovu
-            </button>
-            <button
               onClick={() => window.location.reload()}
-              className="btn btn-modern btn-outline-secondary"
+              className="btn btn-modern btn-primary error-retry-btn"
             >
               <span className="btn-icon">↻</span>
               Obnovit stránku
@@ -328,21 +192,6 @@ function App() {
           <AppRoutes familyMemberId={familyMemberId} />
 
           <div id="modal-root"></div>
-
-          {/* Modern Notification */}
-          {notification && (
-            <div
-              className={`modern-notification ${
-                showNotification ? 'show' : ''
-              }`}
-            >
-              <div className="notification-content">
-                <span className="notification-icon">✓</span>
-                <span className="notification-text">{notification}</span>
-              </div>
-              <div className="notification-progress"></div>
-            </div>
-          )}
         </div>
       </NotificationProvider>
     </CalendarProvider>

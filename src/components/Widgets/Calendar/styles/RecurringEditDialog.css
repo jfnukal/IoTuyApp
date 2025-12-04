@@ -1,0 +1,186 @@
+/* src/components/Widgets/Calendar/styles/RecurringEditDialog.css */
+
+.recurring-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100001;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.recurring-dialog {
+  background: white;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recurring-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.recurring-dialog-icon {
+  font-size: 1.5rem;
+}
+
+.recurring-dialog-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.recurring-dialog-content {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.recurring-dialog-event-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.recurring-dialog-date {
+  font-size: 0.95rem;
+  color: #667eea;
+  margin: 0 0 16px 0;
+}
+
+.recurring-dialog-question {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.recurring-dialog-options {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurring-dialog-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.recurring-dialog-btn:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.recurring-dialog-btn .btn-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.recurring-dialog-btn .btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recurring-dialog-btn .btn-text strong {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.recurring-dialog-btn .btn-text small {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Barevné varianty */
+.recurring-dialog-btn.option-this:hover {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.1);
+}
+
+.recurring-dialog-btn.option-future:hover {
+  border-color: #feca57;
+  background: rgba(254, 202, 87, 0.1);
+}
+
+.recurring-dialog-btn.option-all:hover {
+  border-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.recurring-dialog-footer {
+  padding: 12px 16px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.recurring-dialog-cancel {
+  padding: 10px 24px;
+  border: none;
+  background: #f1f3f4;
+  border-radius: 8px;
+  color: #666;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.recurring-dialog-cancel:hover {
+  background: #e2e6ea;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .recurring-dialog-overlay {
+    padding: 15px;
+    align-items: flex-end;
+  }
+
+  .recurring-dialog {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .recurring-dialog-btn {
+    padding: 16px;
+  }
+}

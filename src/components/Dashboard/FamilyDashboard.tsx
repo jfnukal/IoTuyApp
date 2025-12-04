@@ -87,7 +87,7 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         {settings?.widgets.stickyNotes.enabled && (
           <div className="widget-container shopping-list-container">
             <ShoppingListProvider familyMembers={familyMembers}>
-              <ShoppingListWidget />
+            <ShoppingListWidget />
             </ShoppingListProvider>
           </div>
         )}
@@ -131,4 +131,3 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
 };
 
 export default FamilyDashboard;
-

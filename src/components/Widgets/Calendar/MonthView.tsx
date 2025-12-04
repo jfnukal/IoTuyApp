@@ -1,7 +1,12 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+//src/components/Widgets/Calendar/MonthView.tsx
+
+import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import type { CalendarEventData, FamilyMember } from '../../../types/index';
 import { useCalendar } from './CalendarProvider';
 import { isTablet } from '../../../tuya/utils/deviceDetection';
+import RecurringEditDialog, {
+  type RecurringEditAction,
+} from './RecurringEditDialog';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -30,9 +35,125 @@ const MonthView: React.FC<MonthViewProps> = ({
     isNamedayMarked,
     markNameday,
     events,
+    updateEvent,
   } = useCalendar();
 
   const isTabletDevice = isTablet();
+
+  // State pro dialog při mazání opakované události
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    event: CalendarEventData | null;
+    instanceDate: string;
+  }>({
+    isOpen: false,
+    event: null,
+    instanceDate: '',
+  });
+
+  // Zpracování mazání události
+  const handleDeleteClick = useCallback(
+    (event: CalendarEventData, e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      // Pokud je to instance opakované události, zobraz dialog
+      if (event.isRecurringInstance && event.originalEventId) {
+        setDeleteDialog({
+          isOpen: true,
+          event,
+          instanceDate: event.date,
+        });
+      } else if (event.recurring && event.recurring.frequency) {
+        // Pokud je to originální opakovaná událost (první výskyt)
+        setDeleteDialog({
+          isOpen: true,
+          event,
+          instanceDate: event.date,
+        });
+      } else {
+        // Běžná událost - smaž rovnou s potvrzením
+        if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+          onDeleteEvent(event.id);
+        }
+      }
+    },
+    [onDeleteEvent]
+  );
+
+  // Zpracování výběru z dialogu
+  const handleDeleteDialogSelect = useCallback(
+    async (action: RecurringEditAction) => {
+      const { event, instanceDate } = deleteDialog;
+
+      if (action === 'cancel' || !event) {
+        setDeleteDialog({ isOpen: false, event: null, instanceDate: '' });
+        return;
+      }
+
+      // Najdi originální událost
+      const originalEventId = event.originalEventId || event.id;
+      const originalEvent = events.find((e) => e.id === originalEventId);
+
+      if (!originalEvent) {
+        console.error('Originální událost nenalezena');
+        setDeleteDialog({ isOpen: false, event: null, instanceDate: '' });
+        return;
+      }
+
+      try {
+        switch (action) {
+          case 'this':
+            // Přidej toto datum do výjimek
+            const currentExceptions = originalEvent.recurring?.exceptions || [];
+            await updateEvent(originalEventId, {
+              recurring: {
+                ...originalEvent.recurring!,
+                exceptions: [...currentExceptions, instanceDate],
+              },
+            });
+            break;
+
+          case 'future':
+            // Ukonči opakování den PŘED tímto datem
+            const dayBefore = new Date(instanceDate + 'T00:00:00');
+            dayBefore.setDate(dayBefore.getDate() - 1);
+            const endDateStr = `${dayBefore.getFullYear()}-${(
+              dayBefore.getMonth() + 1
+            )
+              .toString()
+              .padStart(2, '0')}-${dayBefore
+              .getDate()
+              .toString()
+              .padStart(2, '0')}`;
+
+            await updateEvent(originalEventId, {
+              recurring: {
+                ...originalEvent.recurring!,
+                endType: 'date',
+                endDate: endDateStr,
+              },
+            });
+            break;
+
+          case 'all':
+            // Smaž celou sérii
+            if (
+              window.confirm(
+                `Opravdu smazat VŠECHNY výskyty "${originalEvent.title}"?`
+              )
+            ) {
+              onDeleteEvent(originalEventId);
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('Chyba při mazání opakované události:', error);
+      }
+
+      setDeleteDialog({ isOpen: false, event: null, instanceDate: '' });
+    },
+    [deleteDialog, events, updateEvent, onDeleteEvent]
+  );
 
   const handleNamedayClick = (date: Date, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -155,12 +276,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                 {isFirstDay && (
                   <button
                     className="quick-delete-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
-                        onDeleteEvent(event.id);
-                      }
-                    }}
+                    onClick={(e) => handleDeleteClick(event, e)}
                     title="Smazat událost"
                   >
                     ×
@@ -437,16 +553,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                             {isFirstDay && (
                               <button
                                 className="quick-delete-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (
-                                    window.confirm(
-                                      `Opravdu smazat "${event.title}"?`
-                                    )
-                                  ) {
-                                    onDeleteEvent(event.id);
-                                  }
-                                }}
+                                onClick={(e) => handleDeleteClick(event, e)}
                                 title="Smazat událost"
                               >
                                 ×
@@ -472,6 +579,16 @@ const MonthView: React.FC<MonthViewProps> = ({
           );
         })}
       </div>
+
+      {/* Dialog pro mazání opakované události */}
+      <RecurringEditDialog
+        isOpen={deleteDialog.isOpen}
+        mode="delete"
+        eventTitle={deleteDialog.event?.title || ''}
+        instanceDate={deleteDialog.instanceDate}
+        onSelect={handleDeleteDialogSelect}
+      />
+
       {/* ✅ FAB tlačítko pro tablet */}
       {isTabletDevice && (
         <button

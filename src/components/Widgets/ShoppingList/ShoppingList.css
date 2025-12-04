@@ -144,6 +144,19 @@
   gap: 6px;
 }
 
+.shopping-widget-item .item-main {
+  display: flex;
+  align-items: center; /* Zarovná checkbox, text i cenu na střed řádku */
+  flex: 1;
+  cursor: pointer;
+  gap: 8px; /* Mezera mezi elementy */
+}
+
+/* Aby text zabíral místo, ale neodsouval cenu pryč, pokud je dlouhý */
+.item-text {
+  flex: 0 1 auto;
+}
+
 .shopping-compact-item {
   display: flex;
   align-items: center;

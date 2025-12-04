@@ -255,7 +255,6 @@ const deleteEvent = useCallback(
 
   const getEventsByDate = useCallback(
     (date: Date) => {
-      // Použij novou utilitu která zahrnuje opakované události
       return getRecurringEventsForDate(events, date);
     },
     [events]

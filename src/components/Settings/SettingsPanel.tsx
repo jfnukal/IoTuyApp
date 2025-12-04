@@ -511,19 +511,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <p className="setting-description">
           📝 Zapnout/vypnout Firebase notifikace
         </p>
-
-        <ToggleSwitch
-          label="Tuya Test Mode"
-          checked={settings.systemSettings.tuyaTestMode}
-          onChange={(val) => {
-            const newSettings = { ...settings };
-            newSettings.systemSettings.tuyaTestMode = val;
-            onSettingsChange(newSettings);
-          }}
-        />
-        <p className="setting-description">
-          🧪 Použít mock data místo skutečných Tuya zařízení (pro testování v StackBlitz)
-        </p>
       </div>
     </div>
   );

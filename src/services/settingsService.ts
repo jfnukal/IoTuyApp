@@ -70,7 +70,6 @@ export interface AppSettings {
     apiCheckIntervalMinutes: number;
     autoCheckEnabled: boolean;
     fcmEnabled: boolean; // 🆕 Zapnout/vypnout Firebase notifikace
-    tuyaTestMode: boolean; // 🆕 Test mode pro Tuya (mock data)
   };
 }
 
@@ -131,7 +130,6 @@ const DEFAULT_SETTINGS: AppSettings = {
     apiCheckIntervalMinutes: 30, // Default 30 minut
     autoCheckEnabled: false, // Defaultně vypnuto
     fcmEnabled: true, // 🆕 Defaultně zapnuto
-    tuyaTestMode: true, // 🆕 Defaultně zapnuto pro testování
   },
 };
 

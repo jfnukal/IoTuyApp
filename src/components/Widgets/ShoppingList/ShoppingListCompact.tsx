@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useShoppingList } from '../../../contexts/ShoppingListContext';
 import './ShoppingList.css';
+import { PriceBadge } from './PriceBadge';
 
 interface ShoppingListCompactProps {
   onOpenFull?: () => void;
@@ -62,7 +63,9 @@ const ShoppingListCompact: React.FC<ShoppingListCompactProps> = ({
           <span className="shopping-icon">🛒</span>
           <span>Nákupní seznam</span>
           {items.length > 0 && (
-            <span className="shopping-count">{items.filter(i => !i.completed).length}/{items.length}</span>
+            <span className="shopping-count">
+              {items.filter((i) => !i.completed).length}/{items.length}
+            </span>
           )}
         </div>
         <button
@@ -105,13 +108,18 @@ const ShoppingListCompact: React.FC<ShoppingListCompactProps> = ({
             {displayItems.map((item) => (
               <div
                 key={item.id}
-                className={`shopping-compact-item ${item.completed ? 'completed' : ''}`}
+                className={`shopping-compact-item ${
+                  item.completed ? 'completed' : ''
+                }`}
                 onClick={(e) => handleToggle(e, item.id)}
               >
                 <span className="item-checkbox">
                   {item.completed ? '☑' : '☐'}
                 </span>
                 <span className="item-text">{item.text}</span>
+                {/* --- NOVÝ KÓD ZAČÁTEK --- */}
+                {!item.completed && <PriceBadge itemName={item.text} />}
+                {/* --- NOVÝ KÓD KONEC --- */}
                 <span className="item-author">{item.addedByEmoji}</span>
                 <button
                   className="item-delete-btn"
@@ -122,7 +130,7 @@ const ShoppingListCompact: React.FC<ShoppingListCompactProps> = ({
                 </button>
               </div>
             ))}
-            
+
             {remainingCount > 0 && (
               <div className="shopping-more" onClick={onOpenFull}>
                 +{remainingCount} další...

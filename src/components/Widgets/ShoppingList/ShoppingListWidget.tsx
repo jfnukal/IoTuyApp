@@ -2,9 +2,18 @@
 import React, { useState } from 'react';
 import { useShoppingList } from '../../../contexts/ShoppingListContext';
 import './ShoppingList.css';
+import { PriceBadge } from './PriceBadge';
 
 const ShoppingListWidget: React.FC = () => {
-  const { items, loading, addItem, toggleItem, deleteItem, clearCompleted, getShareText } = useShoppingList();
+  const {
+    items,
+    loading,
+    addItem,
+    toggleItem,
+    deleteItem,
+    clearCompleted,
+    getShareText,
+  } = useShoppingList();
   const [newItemText, setNewItemText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
@@ -38,13 +47,19 @@ const ShoppingListWidget: React.FC = () => {
 
   const handleShare = async (method: 'whatsapp' | 'email' | 'copy') => {
     const text = getShareText();
-    
+
     switch (method) {
       case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(text)}`,
+          '_blank'
+        );
         break;
       case 'email':
-        window.open(`mailto:?subject=Nákupní seznam&body=${encodeURIComponent(text)}`, '_blank');
+        window.open(
+          `mailto:?subject=Nákupní seznam&body=${encodeURIComponent(text)}`,
+          '_blank'
+        );
         break;
       case 'copy':
         await navigator.clipboard.writeText(text);
@@ -157,23 +172,36 @@ const ShoppingListWidget: React.FC = () => {
           filteredItems.map((item) => (
             <div
               key={item.id}
-              className={`shopping-widget-item ${item.completed ? 'completed' : ''}`}
+              className={`shopping-widget-item ${
+                item.completed ? 'completed' : ''
+              }`}
             >
-              <div
-                className="item-main"
-                onClick={() => toggleItem(item.id)}
-              >
+              <div className="item-main" onClick={() => toggleItem(item.id)}>
                 <span className="item-checkbox">
                   {item.completed ? '☑' : '☐'}
                 </span>
                 <span className="item-text">{item.text}</span>
+                {/* --- NOVÝ KÓD ZAČÁTEK --- */}
+                {/* Zobrazíme cenu jen u aktivních položek */}
+                {!item.completed && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <PriceBadge itemName={item.text} />
+                  </div>
+                )}
+                {/* --- NOVÝ KÓD KONEC --- */}
               </div>
               <div className="item-meta">
-                <span className="item-author" title={`Přidal/a: ${item.addedByName}`}>
+                <span
+                  className="item-author"
+                  title={`Přidal/a: ${item.addedByName}`}
+                >
                   {item.addedByEmoji}
                 </span>
                 {item.completed && item.completedByName && (
-                  <span className="item-completed-by" title={`Koupil/a: ${item.completedByName}`}>
+                  <span
+                    className="item-completed-by"
+                    title={`Koupil/a: ${item.completedByName}`}
+                  >
                     ✓
                   </span>
                 )}
@@ -215,12 +243,9 @@ const ShoppingListWidget: React.FC = () => {
             📋 Kopírovat
           </button>
         </div>
-        
+
         {completedCount > 0 && (
-          <button
-            className="shopping-clear-btn"
-            onClick={clearCompleted}
-          >
+          <button className="shopping-clear-btn" onClick={clearCompleted}>
             🧹 Smazat koupené ({completedCount})
           </button>
         )}
@@ -228,6 +253,5 @@ const ShoppingListWidget: React.FC = () => {
     </div>
   );
 };
-
 
 export default ShoppingListWidget;

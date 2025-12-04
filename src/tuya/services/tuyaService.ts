@@ -6,26 +6,6 @@ class TuyaService {
   private baseUrl = '/.netlify/functions';
 
   /**
-   * Načte Test Mode z nastavení
-   */
-  private async isTestMode(): Promise<boolean> {
-    try {
-      const { settingsService } = await import(
-        '../../services/settingsService'
-      );
-      const settings = await settingsService.loadSettings();
-      const testMode = settings.systemSettings.tuyaTestMode;
-      console.log('🔍 Tuya Test Mode:', testMode); // ✅ Debug log
-      return testMode;
-    } catch (error) {
-      console.warn(
-        '⚠️ Nepodařilo se načíst Tuya test mode, použiju default (true)'
-      );
-      return false;
-    }
-  }
-
-  /**
    * 🧪 Mock data pro development/testování
    */
   private getMockDevices(): TuyaDevice[] {

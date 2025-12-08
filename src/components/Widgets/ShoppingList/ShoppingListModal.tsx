@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import ShoppingListWidget from './ShoppingListWidget';
 import { ShoppingListProvider } from '../../../contexts/ShoppingListContext';
 import type { FamilyMember } from '../../../types';
+import './ShoppingListModal.css';
 import './ShoppingList.css';
 
 interface ShoppingListModalProps {

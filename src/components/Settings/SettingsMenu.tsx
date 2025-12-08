@@ -6,6 +6,7 @@ export type MenuSection =
   | 'dashboard'
   | 'family-widgets'
   | 'family-general'
+  | 'shopping-aliases'
   | 'notifications'
   | 'api-weather'
   | 'api-unsplash'
@@ -40,6 +41,11 @@ const menuItems: MenuItem[] = [
       { id: 'family-widgets', label: 'Widgety', icon: '🧩' },
       { id: 'family-general', label: 'Obecné', icon: '⚙️' },
     ],
+  },
+  {
+    id: 'shopping-aliases',
+    label: 'Nákupní seznam',
+    icon: '🛒',
   },
   {
     id: 'notifications',

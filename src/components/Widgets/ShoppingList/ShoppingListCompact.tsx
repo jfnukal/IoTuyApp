@@ -107,15 +107,18 @@ const ShoppingListCompact: React.FC<ShoppingListCompactProps> = ({
           <>
             {displayItems.map((item) => (
               <div
-                key={item.id}
-                className={`shopping-compact-item ${
-                  item.completed ? 'completed' : ''
-                }`}
-                onClick={(e) => handleToggle(e, item.id)}
-              >
-                <span className="item-checkbox">
-                  {item.completed ? '☑' : '☐'}
-                </span>
+  key={item.id}
+  className={`shopping-compact-item ${
+    item.completed ? 'completed' : ''
+  }`}
+>
+  <span 
+    className="item-checkbox"
+    onClick={(e) => handleToggle(e, item.id)}
+    style={{ cursor: 'pointer' }}
+  >
+    {item.completed ? '☑' : '☐'}
+  </span>
                 <span className="item-text">{item.text}</span>
                 {/* --- NOVÝ KÓD ZAČÁTEK --- */}
                 {!item.completed && <PriceBadge itemName={item.text} />}

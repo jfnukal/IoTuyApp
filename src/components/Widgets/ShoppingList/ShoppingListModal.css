@@ -1,0 +1,299 @@
+/* ===== PRICE DETAIL MODAL ===== */
+.price-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+}
+
+.price-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.price-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.price-modal-close:hover {
+  background: #e0e0e0;
+}
+
+.price-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.price-modal-icon {
+  font-size: 24px;
+}
+
+.price-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.price-modal-search-term {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.price-modal-best {
+  background: linear-gradient(135deg, #FFF9C4 0%, #FFEB3B 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.price-modal-product-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.price-modal-best-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.price-modal-store {
+  font-weight: 600;
+  color: #1976D2;
+}
+
+.price-modal-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.price-modal-unit {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.price-modal-price-per-unit {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.price-modal-validity {
+  font-size: 0.85rem;
+  color: #E65100;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.price-modal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1976D2;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.price-modal-link:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.price-modal-others {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+.price-modal-others-title {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.price-modal-other-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.price-modal-other-item:last-child {
+  border-bottom: none;
+}
+
+.price-modal-other-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price-modal-other-store {
+  font-weight: 500;
+  color: #555;
+}
+
+.price-modal-other-price {
+  font-weight: 600;
+  color: #333;
+}
+
+.price-modal-other-unit {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.price-modal-other-validity {
+  font-size: 0.75rem;
+  color: #E65100;
+  margin-top: 4px;
+}
+
+.price-modal-more-info {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e0e0e0;
+}
+
+/* ===== PRICE MODAL - MOBILE FIXES ===== */
+@media (max-width: 480px) {
+  .price-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .price-modal-content {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 16px 24px;
+    animation: slideUpModal 0.3s ease;
+  }
+
+  @keyframes slideUpModal {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .price-modal-header {
+    margin-bottom: 12px;
+  }
+
+  .price-modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .price-modal-search-term {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+  }
+
+  .price-modal-best {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .price-modal-product-name {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .price-modal-price {
+    font-size: 1.3rem;
+  }
+
+  .price-modal-link {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  /* Tlačítka pod sebou na mobilu */
+  .price-modal-best > div:last-child {
+    flex-direction: column !important;
+  }
+
+  .price-modal-best > div:last-child button {
+    width: 100% !important;
+    padding: 12px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .price-modal-others {
+    padding-top: 12px;
+  }
+
+  .price-modal-other-item {
+    padding: 8px 0;
+  }
+
+  .price-modal-close {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* Extra malé obrazovky */
+@media (max-width: 360px) {
+  .price-modal-content {
+    padding: 12px 12px 20px;
+  }
+
+  .price-modal-product-name {
+    font-size: 0.95rem;
+  }
+
+  .price-modal-price {
+    font-size: 1.2rem;
+  }
+}

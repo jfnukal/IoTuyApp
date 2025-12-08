@@ -23,8 +23,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Header */
@@ -124,7 +128,7 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: #4CAF50;
+  background: #4caf50;
   border: none;
   color: white;
   font-size: 1.1rem;
@@ -133,7 +137,7 @@
 }
 
 .shopping-quick-submit:hover {
-  background: #43A047;
+  background: #43a047;
   transform: scale(1.05);
 }
 
@@ -249,7 +253,7 @@
 }
 
 .shopping-compact-item.completed .item-checkbox {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* ==================== DELETE BUTTON ==================== */
@@ -391,13 +395,13 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #4CAF50;
+    background: #4caf50;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     font-size: 1.5rem;
   }
 
   .shopping-widget-header .shopping-action-btn.add:hover {
-    background: #43A047;
+    background: #43a047;
     transform: scale(1.1);
   }
 }
@@ -427,7 +431,7 @@
 
 .shopping-add-submit {
   padding: 12px 24px;
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   border: none;
   border-radius: 12px;
@@ -437,7 +441,7 @@
 }
 
 .shopping-add-submit:hover {
-  background: #43A047;
+  background: #43a047;
   transform: scale(1.02);
 }
 
@@ -547,7 +551,7 @@
 }
 
 .shopping-widget-item.completed .item-checkbox {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .shopping-widget-item .item-text {
@@ -567,7 +571,7 @@
 
 .item-completed-by {
   font-size: 0.8rem;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .item-meta .item-delete {
@@ -652,12 +656,12 @@
 }
 
 .share-btn.whatsapp {
-  background: #25D366;
+  background: #25d366;
   color: white;
 }
 
 .share-btn.email {
-  background: #EA4335;
+  background: #ea4335;
   color: white;
 }
 
@@ -741,8 +745,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .shopping-modal-content {
@@ -795,40 +803,197 @@
   transform: scale(1.1);
 }
 
-/* Mobile optimalizace */
+/* Mobile optimalizace - FULL SCREEN */
 @media (max-width: 768px) {
   .shopping-modal-overlay {
     padding: 0;
-    align-items: flex-end;
+    align-items: stretch;
   }
 
   .shopping-modal-content {
     max-width: 100%;
-    max-height: 95vh;
-    border-radius: 24px 24px 0 0;
-    animation: slideUpMobile 0.3s ease;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    animation: fadeInModal 0.2s ease;
   }
 
-  .shopping-modal-content .shopping-widget {
-    padding-bottom: 100px; /* Prostor pro floating button */
-  }
-
-  .shopping-modal-close {
-    top: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-  }
-
-  @keyframes slideUpMobile {
+  @keyframes fadeInModal {
     from {
       opacity: 0;
-      transform: translateY(100%);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
     }
+  }
+
+  .shopping-modal-content .shopping-widget {
+    height: 100vh;
+    max-height: 100vh;
+    padding: 16px;
+    padding-bottom: 80px;
+    border-radius: 0;
+  }
+
+  .shopping-modal-close {
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  /* Kompaktnější header */
+  .shopping-widget-header {
+    margin-bottom: 10px;
+    padding-right: 40px;
+  }
+
+  .shopping-widget-title {
+    font-size: 1.15rem;
+  }
+
+  .shopping-widget-title .shopping-icon {
+    font-size: 1.3rem;
+  }
+
+  /* Kompaktnější statistiky a filtry */
+  .shopping-filters {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .shopping-stats {
+    font-size: 0.8rem;
+    gap: 10px;
+  }
+
+  .filter-btn {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  /* SEZNAM - maximální prostor */
+  .shopping-widget-list {
+    flex: 1;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .shopping-widget-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .shopping-widget-item .item-text {
+    font-size: 0.95rem;
+  }
+
+  .shopping-widget-item .item-checkbox {
+    font-size: 1.1rem;
+  }
+
+  /* FOOTER - kompaktní share ikony */
+  .shopping-widget-footer {
+    padding-top: 10px;
+    gap: 8px;
+  }
+
+  .shopping-share-buttons {
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .share-btn {
+    width: 44px !important;
+    height: 44px;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    font-size: 0 !important; /* Skryje text */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Zobrazíme jen emoji před textem */
+  .share-btn::before {
+    font-size: 1.3rem;
+  }
+
+  .share-btn.whatsapp::before {
+    content: '💬';
+  }
+
+  .share-btn.email::before {
+    content: '📧';
+  }
+
+  .share-btn.copy::before {
+    content: '📋';
+  }
+
+  .shopping-clear-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    margin-bottom: 60px;
+  }
+
+  /* Floating + button - více vpravo a dole */
+  .shopping-widget-header .shopping-widget-actions {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .shopping-widget-header .shopping-action-btn.add {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+  }
+
+  /* Kompaktnější add form */
+  .shopping-add-form {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .shopping-add-input {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+
+  .shopping-add-submit {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra malé obrazovky */
+@media (max-width: 380px) {
+  .shopping-modal-content .shopping-widget {
+    padding: 12px;
+    padding-bottom: 75px;
+  }
+
+  .shopping-widget-title {
+    font-size: 1.05rem;
+  }
+
+  .shopping-stats {
+    font-size: 0.75rem;
+  }
+
+  .filter-btn {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+
+  .shopping-widget-item {
+    padding: 8px 10px;
+  }
+
+  .share-btn {
+    width: 40px !important;
+    height: 40px;
   }
 }

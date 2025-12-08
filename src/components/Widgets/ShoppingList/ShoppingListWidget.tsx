@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useShoppingList } from '../../../contexts/ShoppingListContext';
 import './ShoppingList.css';
 import { PriceBadge } from './PriceBadge';
+import { ShoppingRecommendation } from './ShoppingRecommendation';
 
 const ShoppingListWidget: React.FC = () => {
   const {
@@ -144,6 +145,11 @@ const ShoppingListWidget: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Doporučení obchodu */}
+      {activeCount >= 2 && (
+        <ShoppingRecommendation items={items.map(i => ({ text: i.text, completed: i.completed }))} />
+      )}
 
       {/* Seznam položek */}
       <div className="shopping-widget-list">

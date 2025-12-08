@@ -6,9 +6,6 @@ import { settingsService } from '../../services/settingsService';
 import ToggleSwitch from './ToggleSwitch';
 import NumberInput from './NumberInput';
 import './SettingsPanel.css';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
-import { clearAliasCache } from '../../api/aliasesAPI';
 import ShoppingAliasesPanel from './ShoppingAliasesPanel';
 
 interface SettingsPanelProps {
@@ -518,107 +515,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
     </div>
   );
-
-  const renderShoppingAliases = () => {
-    const [aliases, setAliases] = React.useState<Array<{id: string; alias: string; canonical: string; count: number}>>([]);
-    const [loading, setLoading] = React.useState(true);
-
-    React.useEffect(() => {
-      loadAliases();
-    }, []);
-
-    const loadAliases = async () => {
-      setLoading(true);
-      try {
-        const aliasesRef = collection(db, 'productAliases');
-        const snapshot = await getDocs(aliasesRef);
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Array<{id: string; alias: string; canonical: string; count: number}>;
-        
-        data.sort((a, b) => b.count - a.count);
-        setAliases(data);
-      } catch (error) {
-        console.error('Chyba při načítání aliasů:', error);
-      }
-      setLoading(false);
-    };
-
-    const handleDelete = async (aliasId: string) => {
-      if (!confirm('Opravdu smazat tento alias?')) return;
-      
-      try {
-        await deleteDoc(doc(db, 'productAliases', aliasId));
-        clearAliasCache();
-        setAliases(prev => prev.filter(a => a.id !== aliasId));
-      } catch (error) {
-        console.error('Chyba při mazání:', error);
-        alert('Nepodařilo se smazat alias');
-      }
-    };
-
-    return (
-      <div className="settings-section">
-        <h2>🛒 Nákupní seznam - Aliasy</h2>
-        
-        <div className="widget-group">
-          <h3>🧠 Naučené aliasy</h3>
-          <p className="setting-description">
-            Když napíšeš slovo vlevo, systém automaticky hledá i slovo vpravo.
-            Aliasy se vytváří kliknutím na "Toto je správný produkt" v detailu ceny.
-          </p>
-          
-          {loading ? (
-            <p>Načítám...</p>
-          ) : aliases.length === 0 ? (
-            <p style={{ color: '#888', fontStyle: 'italic' }}>
-              Zatím žádné aliasy. Přidej položku do nákupního seznamu, klikni na cenu a potvrď správný produkt.
-            </p>
-          ) : (
-            <div style={{ marginTop: '16px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                    <th style={{ padding: '8px' }}>Hledaný výraz</th>
-                    <th style={{ padding: '8px' }}>→</th>
-                    <th style={{ padding: '8px' }}>Skutečný produkt</th>
-                    <th style={{ padding: '8px', textAlign: 'center' }}>Použito</th>
-                    <th style={{ padding: '8px' }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aliases.map(alias => (
-                    <tr key={alias.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '8px', fontWeight: 600 }}>{alias.alias}</td>
-                      <td style={{ padding: '8px', color: '#888' }}>→</td>
-                      <td style={{ padding: '8px', color: '#2196F3' }}>{alias.canonical}</td>
-                      <td style={{ padding: '8px', textAlign: 'center', color: '#888' }}>{alias.count}×</td>
-                      <td style={{ padding: '8px' }}>
-                        <button
-                          onClick={() => handleDelete(alias.id)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#e53935',
-                            cursor: 'pointer',
-                            fontSize: '1rem'
-                          }}
-                          title="Smazat alias"
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   switch (section) {
     case 'dashboard':

@@ -1,12 +1,13 @@
 // src/components/Dashboard/DashboardLayout.tsx
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useFirestore } from '../../hooks/useFirestore';
 import FamilyDashboard from './FamilyDashboard';
-import TechDashboard from './TechDashboard';
-// import HeaderInfo from './HeaderInfo';
 import HeaderSlots from './HeaderSlots';
 import './styles/DashboardLayout.css';
-import SendMessagePanel from '../Notifications/SendMessagePanel';
+const TechDashboard = lazy(() => import('./TechDashboard'));
+const SendMessagePanel = lazy(() =>
+  import('../Notifications/SendMessagePanel')
+);
 import { useNotificationContext } from '../Notifications/NotificationProvider';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -204,7 +205,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             familyMembers={familyMembers}
           />
         ) : (
-          <TechDashboard />
+          <Suspense
+            fallback={
+              <div className="loading-dashboard">
+                🔧 Načítám technický dashboard...
+              </div>
+            }
+          >
+            <TechDashboard />
+          </Suspense>
         )}
       </div>
 
@@ -215,11 +224,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             className="notification-overlay"
             onClick={() => setIsMessagePanelOpen(false)}
           />
-          <SendMessagePanel
-            senderName={getCurrentMember().name}
-            onClose={() => setIsMessagePanelOpen(false)}
-            familyMembers={familyMembers}
-          />
+          <Suspense fallback={<div className="loading-panel">Načítám...</div>}>
+            <SendMessagePanel
+              senderName={getCurrentMember().name}
+              onClose={() => setIsMessagePanelOpen(false)}
+              familyMembers={familyMembers}
+            />
+          </Suspense>
         </>
       )}
     </div>

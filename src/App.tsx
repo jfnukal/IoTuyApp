@@ -1,4 +1,6 @@
-import React, { useState, useEffect, Suspense } from 'react';
+// src/App.tsx
+import { useState, useEffect, Suspense } from 'react';
+
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
@@ -10,7 +12,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AppRoutes } from './routes';
 
 // 🆕 Komponenta pro načítání (Spinner)
-// Zobrazí se okamžitě, když uživatel klikne na stránku, která se teprve stahuje
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen w-full" style={{ minHeight: '50vh' }}>
     <div className="text-center">
@@ -97,9 +98,6 @@ function App() {
     }
 
     const loadFamilyMember = async () => {
-      // Fallback ID (volitelně odstranit, pokud není potřeba)
-      // setFamilyMemberId('dad'); 
-
       try {
         const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
         if (member) {
@@ -171,7 +169,7 @@ function App() {
         familyMemberId={familyMemberId || null}
       >
         <div className="app-layout">
-          {/* 🚀 ZDE JE TA ZMĚNA: Suspense obaluje AppRoutes */}
+          {/* 🚀 Suspense obaluje AppRoutes */}
           <Suspense fallback={<PageLoader />}>
             <AppRoutes familyMemberId={familyMemberId} />
           </Suspense>

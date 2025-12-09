@@ -1,5 +1,5 @@
 // src/components/Widgets/HandwritingNotes/CanvasDrawing.tsx
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { CanvasSettings } from './types';
 import { DEFAULT_CANVAS_SETTINGS } from './types';
 import './CanvasDrawing.css';
@@ -16,130 +16,172 @@ const CanvasDrawing: React.FC<CanvasDrawingProps> = ({
   settings: customSettings,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  
+  // Sloučíme nastavení, ale width/height budeme ignorovat ve prospěch dynamické velikosti
   const [settings] = useState<CanvasSettings>({
     ...DEFAULT_CANVAS_SETTINGS,
     ...customSettings,
   });
 
-// Inicializace canvasu
-useEffect(() => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
+  // State pro aktuální velikost canvasu
+  const [canvasSize, setCanvasSize] = useState({ width: settings.width, height: settings.height });
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  // Funkce pro získání souřadnic (mys a dotyk)
+  const getCoordinates = (event: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
 
-  // Nastavení pozadí (papírová barva)
-  ctx.fillStyle = settings.backgroundColor;
-  ctx.fillRect(0, 0, settings.width, settings.height);
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
 
-  // 🆕 KRESLENÍ LINEK (jako notes)
-  const lineSpacing = 40; // Vzdálenost mezi řádky
-  ctx.strokeStyle = '#e0e0e0'; // Světle šedá
-  ctx.lineWidth = 1;
-  
-  for (let y = lineSpacing; y < settings.height; y += lineSpacing) {
-    ctx.beginPath();
-    ctx.moveTo(20, y); // Začátek čáry (20px od kraje)
-    ctx.lineTo(settings.width - 20, y); // Konec čáry
-    ctx.stroke();
-  }
+    if ('touches' in event) {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else {
+      clientX = (event as React.MouseEvent).clientX;
+      clientY = (event as React.MouseEvent).clientY;
+    }
 
-  // Červená okrajová čára (jako notes)
-  ctx.strokeStyle = '#ff6b6b';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(60, 0);
-  ctx.lineTo(60, settings.height);
-  ctx.stroke();
-
-  // Nastavení stylu kreslení pera
-  ctx.strokeStyle = settings.strokeColor;
-  ctx.lineWidth = settings.strokeWidth;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  setContext(ctx);
-}, [settings]);
-
-
- // Začátek kreslení
- const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-  if (!context) return;
-
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const rect = canvas.getBoundingClientRect();
-  
-  // Správný přepočet s přihlédnutím k scaling
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-  
-  const x = (clientX - rect.left) * scaleX;
-  const y = (clientY - rect.top) * scaleY;
-
-  context.beginPath();
-  context.moveTo(x, y);
-  setIsDrawing(true);
-};
-
-// Kreslení
-const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-  if (!isDrawing || !context) return;
-
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const rect = canvas.getBoundingClientRect();
-  
-  // Správný přepočet s přihlédnutím k scaling
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-  
-  const x = (clientX - rect.left) * scaleX;
-  const y = (clientY - rect.top) * scaleY;
-
-  context.lineTo(x, y);
-  context.stroke();
-};
-
-  // Konec kreslení
-  const stopDrawing = () => {
-    setIsDrawing(false);
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
   };
 
-  // Vymazání canvasu
-  const clearCanvas = () => {
-    if (!context) return;
-    context.fillStyle = settings.backgroundColor;
-    context.fillRect(0, 0, settings.width, settings.height);
-  };
+  // Inicializace a nastavení velikosti podle okna (Responzivita)
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        // Na mobilu chceme využít skoro celou šířku, ale nechat okraje
+        const maxWidth = window.innerWidth - 32; // 16px padding z každé strany
+        const maxHeight = window.innerHeight * 0.7; // 70% výšky obrazovky
+        
+        setCanvasSize({
+          width: Math.min(settings.width, maxWidth),
+          height: Math.min(settings.height, maxHeight)
+        });
+      }
+    };
 
-  // Uložení jako base64
-  const handleSave = () => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [settings.width, settings.height]);
+
+  // Vykreslení mřížky a inicializace kontextu při změně velikosti
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const imageData = canvas.toDataURL('image/png');
-    onSave(imageData);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Nastavení rozměrů canvasu (opravuje rozmazání)
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
+
+    // Pozadí
+    ctx.fillStyle = settings.backgroundColor;
+    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+
+    // Linky
+    const lineSpacing = 40;
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
+    
+    for (let y = lineSpacing; y < canvasSize.height; y += lineSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(20, y);
+      ctx.lineTo(canvasSize.width - 20, y);
+      ctx.stroke();
+    }
+
+    // Okrajová čára
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(60, 0);
+    ctx.lineTo(60, canvasSize.height);
+    ctx.stroke();
+
+    // Reset stylu pro kreslení
+    ctx.strokeStyle = settings.strokeColor;
+    ctx.lineWidth = settings.strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+  }, [canvasSize, settings]);
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    
+    // Znovu nastavíme styl, kdyby se něco změnilo
+    ctx.strokeStyle = settings.strokeColor;
+    ctx.lineWidth = settings.strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const { x, y } = getCoordinates(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+
+    const { x, y } = getCoordinates(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) ctx.beginPath(); // Důležité: uzavřít cestu
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    // Překreslení celého canvasu vyvoláním efektu změny velikosti
+    // Nebo jednoduše:
+    ctx.fillStyle = settings.backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Znovu nakreslit linky (zkopírováno z useEffect - ideálně vyčlenit do funkce)
+    const lineSpacing = 40;
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
+    for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
+      ctx.beginPath(); ctx.moveTo(20, y); ctx.lineTo(canvas.width - 20, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(60, canvas.height); ctx.stroke();
+  };
+
+  const handleSave = () => {
+    if (!canvasRef.current) return;
+    onSave(canvasRef.current.toDataURL('image/png'));
   };
 
   return (
-    <div className="canvas-drawing-container">
+    <div className="canvas-drawing-container" ref={containerRef}>
+      <div className="canvas-header-mobile">
+        <h3>Nová poznámka</h3>
+        <button className="btn-close-mobile" onClick={onCancel}>✕</button>
+      </div>
+
       <div className="canvas-wrapper">
         <canvas
           ref={canvasRef}
-          width={settings.width}
-          height={settings.height}
           className="drawing-canvas"
           onMouseDown={startDrawing}
           onMouseMove={draw}
@@ -148,18 +190,20 @@ const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanv
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
+          // Důležité: touch-action none v CSS nestačí vždy, preventDefault může být potřeba
+          style={{ touchAction: 'none' }}
         />
       </div>
 
       <div className="canvas-controls">
         <button className="btn btn-secondary" onClick={clearCanvas}>
-          🗑️ Vymazat
+          🗑️ <span className="btn-text">Vymazat</span>
         </button>
-        <button className="btn btn-outline" onClick={onCancel}>
+        <button className="btn btn-outline desktop-only" onClick={onCancel}>
           ❌ Zrušit
         </button>
         <button className="btn btn-primary" onClick={handleSave}>
-          ✅ Uložit a rozpoznat
+          ✅ Uložit
         </button>
       </div>
     </div>

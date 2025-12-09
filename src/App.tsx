@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';
@@ -8,6 +8,17 @@ import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppRoutes } from './routes';
+
+// 🆕 Komponenta pro načítání (Spinner)
+// Zobrazí se okamžitě, když uživatel klikne na stránku, která se teprve stahuje
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen w-full" style={{ minHeight: '50vh' }}>
+    <div className="text-center">
+      <div className="spinner" style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔄</div>
+      <p style={{ color: 'var(--text-secondary)' }}>Načítám aplikaci...</p>
+    </div>
+  </div>
+);
 
 declare global {
   interface Window {
@@ -33,23 +44,20 @@ function App() {
 
   const [familyMemberId, setFamilyMemberId] = useState<string | null>(null);
 
-  // 🔐 Remote Config initialization - MUSÍ BÝT PRVNÍ!
+  // 🔐 Remote Config initialization
   useEffect(() => {
     const initRemoteConfig = async () => {
       try {
-        const { remoteConfigService } = await import(
-          './services/remoteConfigService.ts'
-        );
+        const { remoteConfigService } = await import('./services/remoteConfigService.ts');
         await remoteConfigService.initialize();
       } catch (error) {
         console.error('❌ Chyba při inicializaci Remote Config:', error);
       }
     };
-
     initRemoteConfig();
   }, []);
 
-  // Theme initialization - useEffect
+  // Theme initialization
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -63,14 +71,12 @@ function App() {
 
     const runDailyCleanup = async () => {
       try {
-        const { familyMessagingService } = await import(
-          './services/familyMessagingService'
-        );
-
-      // Načíst ze settings
-      const { settingsService } = await import('./services/settingsService');
-      const settings = await settingsService.loadSettings();
-      const daysToKeep = settings.widgets.messageHistory.deleteAfterDays;
+        // Dynamický import pro úsporu výkonu při startu
+        const { familyMessagingService } = await import('./services/familyMessagingService');
+        const { settingsService } = await import('./services/settingsService');
+        
+        const settings = await settingsService.loadSettings();
+        const daysToKeep = settings.widgets.messageHistory.deleteAfterDays;
 
         await familyMessagingService.runCleanup(daysToKeep);
       } catch (error) {
@@ -78,15 +84,12 @@ function App() {
       }
     };
 
-    // Spustit cleanup při startu
     runDailyCleanup();
-
-    // Spustit každých 24 hodin
     const intervalId = setInterval(runDailyCleanup, 24 * 60 * 60 * 1000);
-
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
+  // Načtení Family Member
   useEffect(() => {
     if (!currentUser) {
       setFamilyMemberId(null);
@@ -94,23 +97,15 @@ function App() {
     }
 
     const loadFamilyMember = async () => {
-      setFamilyMemberId('dad');
+      // Fallback ID (volitelně odstranit, pokud není potřeba)
+      // setFamilyMemberId('dad'); 
 
       try {
-        // Najdi family member podle authUid
-        const member = await firestoreService.getFamilyMemberByAuthUid(
-          currentUser.uid
-        );
-
+        const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
         if (member) {
           setFamilyMemberId(member.id);
         } else {
-          console.warn(
-            `⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`
-          );
-          console.warn(
-            '⚠️ Zkontroluj, že máš v Firestore přidané pole authUid'
-          );
+          console.warn(`⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`);
         }
       } catch (error) {
         console.error('❌ Chyba při načítání family member:', error);
@@ -120,17 +115,13 @@ function App() {
     loadFamilyMember();
   }, [currentUser, firebaseLoading]);
 
-  // ✅ BACK BUTTON HANDLER - useEffect zůstává kde je (kolem řádku 172)
+  // ✅ BACK BUTTON HANDLER
   useEffect(() => {
     window.history.pushState(null, '', window.location.href);
 
     const handleBackButton = (e: PopStateEvent) => {
-      // ✅ KONTROLA: Pokud je otevřený modal, nech ho zpracovat back button
       const modalOpen = document.querySelector('.calendar-modal-overlay');
-      if (modalOpen) {
-        // Modal si to vyřeší sám
-        return;
-      }
+      if (modalOpen) return; // Modal si to vyřeší sám
 
       e.preventDefault();
 
@@ -138,24 +129,17 @@ function App() {
         window.history.pushState(null, '', window.location.href);
         return;
       }
-
       navigate(-1);
     };
 
     window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-    };
+    return () => window.removeEventListener('popstate', handleBackButton);
   }, [navigate, location]);
 
   if (!currentUser) {
     return <Login />;
   }
 
-  
-
-  
   if (firebaseError) {
     return (
       <div className="app-layout">
@@ -165,9 +149,7 @@ function App() {
             <div className="error-pulse"></div>
           </div>
           <h2 className="error-title">Něco se pokazilo</h2>
-          <p className="error-description">
-            Nepodařilo se načíst data: {firebaseError}
-          </p>
+          <p className="error-description">Nepodařilo se načíst data: {firebaseError}</p>
           <div className="error-actions">
             <button
               onClick={() => window.location.reload()}
@@ -189,7 +171,10 @@ function App() {
         familyMemberId={familyMemberId || null}
       >
         <div className="app-layout">
-          <AppRoutes familyMemberId={familyMemberId} />
+          {/* 🚀 ZDE JE TA ZMĚNA: Suspense obaluje AppRoutes */}
+          <Suspense fallback={<PageLoader />}>
+            <AppRoutes familyMemberId={familyMemberId} />
+          </Suspense>
 
           <div id="modal-root"></div>
         </div>

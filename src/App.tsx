@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import './styles/index.css';
 import { useAuth } from './contexts/AuthContext';
 import { useFirestore } from './hooks/useFirestore';

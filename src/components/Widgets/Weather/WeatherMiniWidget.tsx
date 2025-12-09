@@ -113,13 +113,18 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
 
   if (isLoading && !primaryWeather) {
     return (
-      <div className={`weather-mini-widget weather-loading ${className}`}>
+      <div className={`weather-mini-widget weather-skeleton ${className}`}>
         <div className="weather-mini-header">
           <h3 className="widget-title">🌤️ Počasí</h3>
+          <div className="skeleton-location"></div>
         </div>
-        <div className="loading-content">
-          <div className="weather-spinner"></div>
-          <p>Načítám počasí...</p>
+        <div className="skeleton-content">
+          <div className="skeleton-temp"></div>
+          <div className="skeleton-icon"></div>
+        </div>
+        <div className="skeleton-forecast">
+          <div className="skeleton-day"></div>
+          <div className="skeleton-day"></div>
         </div>
       </div>
     );

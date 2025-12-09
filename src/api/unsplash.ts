@@ -33,25 +33,57 @@ async function getUnsplashClient() {
 export const fetchImageForQuery = async (
   query: string
 ): Promise<string | null> => {
+  // 🆕 CACHE - klíč podle dotazu
+  const cacheKey = `unsplash_${query.replace(/\s+/g, '_')}`;
+  const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hodin v ms
+
+  // 🆕 Zkusit načíst z cache
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { url, timestamp } = JSON.parse(cached);
+      const isExpired = Date.now() - timestamp > cacheExpiry;
+      
+      if (!isExpired && url) {
+        console.log('📷 Unsplash: použita cache pro', query);
+        return url;
+      }
+    }
+  } catch (e) {
+    // Cache error - pokračujeme bez cache
+  }
+
+  // 🔄 Načíst z API (původní kód)
   try {
     const unsplash = await getUnsplashClient();
 
     const result = await unsplash.search.getPhotos({
       query: query,
       page: 1,
-      perPage: 5, // Získáme 5 obrázků, abychom měli z čeho vybrat
-      orientation: 'landscape', // Chceme obrázky na šířku pro hlavičku
+      perPage: 5,
+      orientation: 'landscape',
     });
 
     if (result.response && result.response.results.length > 0) {
-      // Z výsledků vybereme náhodný obrázek
       const randomIndex = Math.floor(
         Math.random() * result.response.results.length
       );
       const randomPhoto = result.response.results[randomIndex];
-      // Vrátíme optimalizovaný obrázek (WebP, 1200x400, kvalita 80)
-      // Parametry: w=šířka, h=výška, fit=crop (ořízne), q=kvalita, fm=webp (formát)
-      return `${randomPhoto.urls.raw}&w=1200&h=400&fit=crop&q=80&fm=webp`;
+      // 🆕 Snížená kvalita pro rychlejší načítání
+      const imageUrl = `${randomPhoto.urls.raw}&w=800&h=300&fit=crop&q=70&fm=webp`;
+
+      // 🆕 Uložit do cache
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          url: imageUrl,
+          timestamp: Date.now()
+        }));
+        console.log('📷 Unsplash: uloženo do cache', query);
+      } catch (e) {
+        // localStorage plný - ignorujeme
+      }
+
+      return imageUrl;
     }
     return null;
   } catch (error) {

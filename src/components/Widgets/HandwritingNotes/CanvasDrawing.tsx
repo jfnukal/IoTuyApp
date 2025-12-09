@@ -1,5 +1,5 @@
 // src/components/Widgets/HandwritingNotes/CanvasDrawing.tsx
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { CanvasSettings } from './types';
 import { DEFAULT_CANVAS_SETTINGS } from './types';
 import './CanvasDrawing.css';

@@ -31,8 +31,9 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
   const viewBoxWidth = 1200;
   const viewBoxHeight = 1000;
 
-  // Cesta k obrázku půdorysu
-  const floorPlanImage = '/images/prizemi.png';
+// Cesta k obrázku půdorysu (WebP pro lepší výkon, PNG jako fallback)
+const floorPlanImage = '/images/prizemi.webp';
+const floorPlanImageFallback = '/images/prizemi.png';
 
   // Výchozí pozice místností (použijí se jen pokud není nic v DB)
   const defaultRooms = [
@@ -406,6 +407,10 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
             height={viewBoxHeight}
             preserveAspectRatio="xMidYMid slice"
             opacity="1"
+            onError={(e) => {
+              // Fallback na PNG pokud WebP není podporován
+              (e.target as SVGImageElement).setAttribute('href', floorPlanImageFallback);
+            }}
           />
 
           {/* Interaktivní zóny místností */}

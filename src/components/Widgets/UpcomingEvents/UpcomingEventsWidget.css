@@ -360,6 +360,17 @@
   .no-events-title {
     font-size: 1.5rem;
   }
+
+  /* 🆕 Header slot - kompaktní verze s pevnou výškou pro CLS prevenci */
+.upcoming-widget-header .upcoming-events-widget {
+  min-height: 350px; /* Rezervuje místo v header slotu */
+}
+
+@media (max-width: 768px) {
+  .upcoming-widget-header .upcoming-events-widget {
+    min-height: 200px;
+  }
+ }
 }
 
 /* --- STYLY PRO OVLÁDACÍ PRVKY WIDGETU --- */

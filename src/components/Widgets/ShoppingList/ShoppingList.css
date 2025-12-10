@@ -8,13 +8,14 @@
   padding: 15px;
   margin-top: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  min-height: 180px; /* 🆕 Prevence CLS - rezervuje místo pro obsah */
 }
 
 .shopping-compact.loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80px;
+  min-height: 180px; /* 🆕 Stejná výška jako normální stav */
 }
 
 .loading-spinner {

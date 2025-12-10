@@ -360,17 +360,6 @@
   .no-events-title {
     font-size: 1.5rem;
   }
-
-  /* 🆕 Header slot - kompaktní verze s pevnou výškou pro CLS prevenci */
-.upcoming-widget-header .upcoming-events-widget {
-  min-height: 350px; /* Rezervuje místo v header slotu */
-}
-
-@media (max-width: 768px) {
-  .upcoming-widget-header .upcoming-events-widget {
-    min-height: 200px;
-  }
- }
 }
 
 /* --- STYLY PRO OVLÁDACÍ PRVKY WIDGETU --- */
@@ -448,5 +437,16 @@
 @media (max-width: 768px) {
   .today-events-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== CLS PREVENCE PRO HEADER SLOT ==================== */
+.upcoming-widget-header .upcoming-events-widget {
+  min-height: 350px; /* Rezervuje místo v header slotu - DESKTOP */
+}
+
+@media (max-width: 768px) {
+  .upcoming-widget-header .upcoming-events-widget {
+    min-height: 200px; /* Menší výška na mobilu */
   }
 }

@@ -271,6 +271,7 @@
   margin: 0 auto;
   padding: 0 20px 40px 20px;
   animation: fadeIn 0.5s ease;
+  min-height: 600px; /* 🆕 Prevence CLS - rezervuje místo pro widgety */
 }
 
 @keyframes fadeIn {

@@ -758,8 +758,12 @@
     width: 28px;
     height: 28px;
   }
-}
 
+  /* Skeleton na mobilu */
+  .weather-mini-widget.weather-skeleton {
+    min-height: 120px;
+  }
+}
 
 /* Extra malé mobily */
 @media (max-width: 480px) {
@@ -841,7 +845,12 @@
 /* ===== SKELETON LOADER ===== */
 .weather-mini-widget.weather-skeleton {
   background: linear-gradient(135deg, #87CEEB, #B0C4DE);
-  min-height: 200px;
+  min-height: 280px; /* Stejná výška jako normální widget - prevence CLS */
+}
+
+/* Skeleton v compact módu */
+.weather-mini-widget.weather-skeleton.force-compact-mode {
+  min-height: 155px; /* Stejná jako force-compact-mode */
 }
 
 .weather-skeleton .skeleton-location {

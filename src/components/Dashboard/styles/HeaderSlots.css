@@ -41,6 +41,15 @@
   flex-direction: column;
 }
 
+/* 🆕 Prevence CLS - rezervované místo pro widgety */
+.weather-widget-header-compact {
+  min-height: 155px; /* Výška compact weather widgetu */
+}
+
+.header-left-stack {
+  min-height: 400px; /* Greeting (~200px) + Shopping (~180px) + gap */
+}
+
 /* Stack pro pravý slot - 2 widgety nad sebou */
 .header-widget-stack {
   display: flex;
@@ -152,6 +161,25 @@
   .header-slot {
     min-height: 120px;
   }
+
+  /* 🆕 Mobilní CLS prevence */
+  .header-left-stack {
+    min-height: 320px;
+  }
+
+  .weather-widget-header-compact {
+    min-height: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-left-stack {
+    min-height: 280px;
+  }
+
+  .weather-widget-header-compact {
+    min-height: 100px;
+  }
 }
 
 /* ==================== LEFT STACK (Greeting + Shopping) ==================== */
@@ -160,6 +188,7 @@
   flex-direction: column;
   gap: 15px;
   width: 100%;
+  min-height: 400px; /* 🆕 Prevence CLS */
 }
 
 .header-left-stack > .header-info {

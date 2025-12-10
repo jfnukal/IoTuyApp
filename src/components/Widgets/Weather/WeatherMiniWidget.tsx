@@ -193,10 +193,13 @@ if (headerMode) {
           </div>
           
           <div className="weather-icon-container">
-            <img 
+          <img 
               src={primaryWeather.current.iconUrl} 
               alt={primaryWeather.current.condition}
               className="weather-icon"
+              width={80}
+              height={80}
+              loading="eager"
             />
           </div>
         </div>
@@ -345,10 +348,13 @@ if (headerMode) {
           </div>
           
           <div className="weather-icon-container">
-            <img 
+          <img 
               src={primaryWeather.current.iconUrl} 
               alt={primaryWeather.current.condition}
               className="weather-icon"
+              width={80}
+              height={80}
+              loading="eager"
             />
           </div>
         </div>

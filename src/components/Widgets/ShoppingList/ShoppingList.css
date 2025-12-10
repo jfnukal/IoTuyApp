@@ -147,6 +147,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-height: 120px; /* 🆕 CLS prevence - prostor pro 3 položky */
 }
 
 .shopping-widget-item .item-main {
@@ -171,6 +172,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 40px; /* 🆕 CLS prevence */
 }
 
 .shopping-compact-item:hover {

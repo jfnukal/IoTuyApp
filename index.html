@@ -3,8 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512x512.png" />
+    <link rel="icon" type="image/webp" sizes="192x192" href="/images/icon-192x192.webp" />
+    <link rel="icon" type="image/webp" sizes="512x512" href="/images/icon-512x512.webp" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="google" content="notranslate" />
     <meta http-equiv="Content-Language" content="cs" />
@@ -19,9 +21,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
-  href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap"
   rel="stylesheet"
+  media="print"
+  onload="this.media='all'"
 />
+<noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" rel="stylesheet" />
+</noscript>
   </head>
   <body>
     <div id="root"></div>

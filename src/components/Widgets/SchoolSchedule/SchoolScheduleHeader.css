@@ -50,9 +50,10 @@
 /* ==================== KIDS TABS (VERTIKÁLNÍ) ==================== */
 .schedule-kids-tabs-vertical {
   display: flex;
-  flex-direction: column; /* 🆕 Taby pod sebou */
-  gap: 4px; /* Mezera mezi taby */
-  align-items: flex-end; /* Taby zarovnané doprava */
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  min-height: 60px; /* 🆕 CLS prevence - prostor pro 2 taby */
 }
 
 .kid-tab {
@@ -192,7 +193,9 @@
   opacity: 0.8;
   text-align: center;
   padding: 10px;
+  min-height: 300px; /* 🆕 CLS prevence - stejná výška jako obsah */
 }
+
 .schedule-error p {
   margin: 0 0 10px 0;
 }

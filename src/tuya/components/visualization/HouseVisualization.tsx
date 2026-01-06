@@ -15,7 +15,7 @@ const HouseVisualization: React.FC = () => {
     isLoading: houseLoading,
     error: houseError,
     initializeHouse,
-    placeDevice, // ✅ PŘIDEJ
+    placeDevice, 
   } = useHouse();
 
   const { devices } = useTuya();

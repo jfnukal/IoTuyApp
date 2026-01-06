@@ -1,339 +1,383 @@
-/* src/tuya/components/FloorPlanPage.css */
+/* src/tuya/components/visualization/FloorPlanPage.css */
 
+/* ===== ZÁKLADNÍ LAYOUT ===== */
 .floorplan-page {
   width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: hidden;
 }
 
-/* === HEADER === */
+/* ===== KOMPAKTNÍ HEADER ===== */
 .floorplan-header {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  height: 56px;
+  flex-shrink: 0;
 }
 
-.back-button {
-  padding: 0.75rem 1.5rem;
+/* Levá část - Zpět + Název */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.btn-back {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-back:hover {
+  background: #5568d3;
+  transform: translateX(-2px);
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Střed - Přepínač pater */
+.floor-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.floor-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.floor-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.1);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: #667eea;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.floor-tab:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.floor-tab.active {
+  background: var(--floor-color, #667eea);
+  color: white;
+  border-color: var(--floor-color, #667eea);
+}
+
+.floor-tab-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.floor-tab-label {
+  font-size: 0.85rem;
+}
+
+/* Pravá část - Statistiky + Toggle */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.header-stats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-stats .stat {
+  padding: 0.35rem 0.6rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.btn-toggle-sidebar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #667eea;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.back-button:hover {
+.btn-toggle-sidebar:hover {
   background: #5568d3;
-  transform: translateX(-4px);
 }
 
-.back-button:active {
-  transform: translateX(-2px);
-}
-
-.header-info {
-  flex: 1;
-}
-
-.header-info h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.75rem;
-  color: #333;
-}
-
-.header-subtitle {
-  margin: 0;
-  color: #666;
-  font-size: 1rem;
-}
-
-/* === INFO BANNER === */
-.floorplan-info-banner {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 1rem 2rem;
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-  align-items: center;  
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.info-section {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.info-icon {
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.info-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.info-content strong {
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.info-content p {
-  margin: 0;
-  color: #666;
-  font-size: 0.85rem;
-}
-
-.device-stats {
-  display: flex;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 0.25rem;
-}
-
-.separator {
-  color: #ccc;
-}
-
-/* ===== HLAVNÍ LAYOUT ===== */
+/* ===== HLAVNÍ OBSAH ===== */
 .floorplan-content {
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
-/* Levý panel s miniaturami */
-.miniatures-sidebar {
-  width: 400px !important;
-  min-width: 400px !important;
-  flex-shrink: 0;
+/* Sidebar */
+.floorplan-sidebar {
+  width: 280px;
+  min-width: 280px;
   background: white;
-  border-right: 2px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
   overflow: hidden;
-  transition: width 0.3s ease, min-width 0.3s ease; 
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
-/* Pravá strana - Půdorys */
+.floorplan-sidebar.closed {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+}
+
+/* Půdorys - hlavní oblast */
 .floorplan-main {
-  flex: 1; 
-  min-width: 0 !important;
-  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .floorplan-content {
-    flex-direction: column;
-  }
-
-  .miniatures-sidebar {
-    width: 100%;
-    min-width: unset;
-    height: 250px;
-    border-right: none;
-    border-bottom: 2px solid #e0e0e0;
-  }
-
-  .floorplan-main {
-    flex: 1;
-    min-height: 0;
-  }
-}
-
-/* === DEBUG INFO === */
-.debug-info {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 1rem 2rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.debug-info details {
-  cursor: pointer;
-}
-
-.debug-info summary {
-  font-weight: 600;
-  color: #667eea;
-  padding: 0.5rem 0;
-  user-select: none;
-}
-
-.debug-info summary:hover {
-  color: #5568d3;
-}
-
-.debug-content {
-  padding: 1rem 0 0 0;
-  color: #333;
-}
-
-.debug-content h4 {
-  margin: 1rem 0 0.5rem 0;
-  color: #666;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.debug-content ul {
-  margin: 0;
-  padding-left: 1.5rem;
-  list-style: disc;
-}
-
-.debug-content li {
-  margin: 0.25rem 0;
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.debug-content p {
-  color: #999;
-  font-style: italic;
-  margin: 0.5rem 0;
-}
-
-/* === LOADING & ERROR STATES === */
-.loading-state,
-.error-state {
+/* ===== LOADING / ERROR / EMPTY STATES ===== */
+.floorplan-loading,
+.floorplan-error,
+.floorplan-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  text-align: center;
+  flex: 1;
+  gap: 1rem;
   color: white;
+  text-align: center;
+  padding: 2rem;
 }
 
-.loading-spinner-large {
-  font-size: 4rem;
-  animation: spin 2s linear infinite;
-  margin-bottom: 1rem;
+.floorplan-loading .loading-spinner {
+  font-size: 3rem;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.error-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+.floorplan-error .error-icon {
+  font-size: 3rem;
 }
 
-.error-state h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
+.floorplan-error h3 {
+  margin: 0;
+  font-size: 1.25rem;
 }
 
-.error-state p {
-  margin: 0 0 1.5rem 0;
+.floorplan-error p {
+  margin: 0;
   opacity: 0.9;
 }
 
-.error-state .back-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid white;
-}
-
-.error-state .back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* === RESPONSIVE === */
-@media (max-width: 768px) {
-  .floorplan-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
-  }
-
-  .header-info h1 {
-    font-size: 1.25rem;
-  }
-
-  .header-subtitle {
-    font-size: 0.85rem;
-  }
-
-  .floorplan-info-banner {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  .floorplan-content {
-    padding: 1rem;
-  }
-
-  .debug-info {
-    padding: 1rem;
-  }
-}
-
-/* === ROZDĚLOVACÍ ČÁ
-RA === */
-.miniatures-sidebar {
-  position: relative;
-  width: 300px;
-  min-width: 300px;
-  flex-shrink: 0;
-  background: white;
-  border-right: none; /* Smaž border */
-  overflow: hidden;
-  transition: width 0.3s ease, min-width 0.3s ease;
-}
-
-.miniatures-sidebar.collapsed {
-  width: 0;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* === SIDEBAR TOGGLE === */
-.sidebar-toggle-btn {
+.floorplan-error button {
   padding: 0.75rem 1.5rem;
-  background: #667eea;  /* ← FIALOVÉ */
-  color: white;  /* ← BEZ ZMĚNY */
-  border: 2px solid #667eea;  /* ← FIALOVÝ BORDER */
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
-  order: -1;
 }
 
-.sidebar-toggle-btn:hover {
-  background: #5568d3;  /* ← TMAVŠÍ PŘI HOVERU */
-  border-color: #5568d3;
-  transform: translateY(-2px);
+.floorplan-error button:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.miniatures-sidebar.collapsed {
-  width: 0;
-  min-width: 0;
-  padding: 0;
-  border: none;
+.floorplan-empty span {
+  font-size: 3rem;
+}
+
+.floorplan-empty p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+/* ===== TABLET (768px - 1024px) ===== */
+@media (max-width: 1024px) {
+  .floorplan-header {
+    padding: 0.5rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
+  }
+
+  .floor-tab {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .floor-tab-label {
+    display: none;
+  }
+
+  .floor-tab-icon {
+    font-size: 1.2rem;
+  }
+
+  .header-stats .stat {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .floorplan-sidebar {
+    width: 240px;
+    min-width: 240px;
+  }
+}
+
+/* ===== MOBIL (< 768px) ===== */
+@media (max-width: 768px) {
+  .floorplan-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .header-left {
+    order: 1;
+  }
+
+  .header-right {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .floor-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.25rem 0;
+    gap: 0.4rem;
+  }
+
+  .floor-tab {
+    padding: 0.4rem 0.6rem;
+    flex: 1;
+    justify-content: center;
+    max-width: 80px;
+  }
+
+  .header-stats {
+    display: none;
+  }
+
+  .btn-back,
+  .btn-toggle-sidebar {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  /* Sidebar jako overlay na mobilu */
+  .floorplan-content {
+    position: relative;
+  }
+
+  .floorplan-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    min-width: 280px;
+    z-index: 100;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .floorplan-sidebar.closed {
+    transform: translateX(-100%);
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .floorplan-main {
+    width: 100%;
+  }
+}
+
+/* ===== MALÝ MOBIL (< 480px) ===== */
+@media (max-width: 480px) {
+  .floor-tab {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .floor-tab-icon {
+    font-size: 1.1rem;
+  }
+
+  .header-title {
+    font-size: 0.9rem;
+  }
+
+  .floorplan-sidebar {
+    width: 100%;
+    min-width: 100%;
+  }
 }

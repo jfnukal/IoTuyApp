@@ -31,11 +31,11 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
   const viewBoxWidth = 1200;
   const viewBoxHeight = 1000;
 
-// Cesta k obrázku půdorysu (WebP pro lepší výkon, PNG jako fallback)
-const floorPlanImage = '/images/prizemi.webp';
-const floorPlanImageFallback = '/images/prizemi.png';
+  // Cesta k obrázku půdorysu
+  const floorPlanImage = '/images/prizemi.webp';
+  const floorPlanImageFallback = '/images/prizemi.png';
 
-  // Výchozí pozice místností (použijí se jen pokud není nic v DB)
+  // Výchozí pozice místností
   const defaultRooms = [
     {
       id: 'pracovna',
@@ -131,7 +131,7 @@ const floorPlanImageFallback = '/images/prizemi.png';
     }
   }, [rooms, isLoading]);
 
-  // Handler pro změnu pozice/velikosti místnosti s auto-save (debounce 1s)
+  // Handler pro změnu pozice/velikosti místnosti s auto-save
   const handleRoomChange = (
     roomId: string,
     field: 'x' | 'y' | 'width' | 'height',
@@ -140,14 +140,11 @@ const floorPlanImageFallback = '/images/prizemi.png';
     const updatedRooms = localRooms.map((room) =>
       room.id === roomId ? { ...room, [field]: value } : room
     );
-
     setLocalRooms(updatedRooms);
 
-    // Debounce auto-save (čeká 1s po poslední změně)
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-
     saveTimeoutRef.current = setTimeout(() => {
       saveLayout(updatedRooms);
     }, 1000);
@@ -163,38 +160,27 @@ const floorPlanImageFallback = '/images/prizemi.png';
     }
   };
 
-  // Kopírování finálního kódu do schránky
+  // Kopírování kódu
   const copyRoomsCode = () => {
     const code = `const rooms = ${JSON.stringify(localRooms, null, 2)};`;
     navigator.clipboard.writeText(code);
-    alert('✅ Kód místností zkopírován do schránky!');
+    alert('✅ Kód zkopírován!');
   };
 
-  // 🎯 Handler pro drop zařízení na půdorys
+  // Handler pro drop zařízení
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-
     if (!svgRef.current || !onDeviceDrop) return;
 
     const deviceId = e.dataTransfer.getData('deviceId');
-    const deviceName = e.dataTransfer.getData('deviceName');
-
     if (!deviceId) return;
 
-    // Získání SVG souřadnic
     const svg = svgRef.current;
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
-
     const svgCoords = pt.matrixTransform(svg.getScreenCTM()?.inverse());
 
-    console.log(`📍 Drop zařízení "${deviceName}" na pozici:`, {
-      x: Math.round(svgCoords.x),
-      y: Math.round(svgCoords.y),
-    });
-
-    // Zavoláme callback pro uložení pozice
     onDeviceDrop(deviceId, Math.round(svgCoords.x), Math.round(svgCoords.y));
   };
 
@@ -206,87 +192,69 @@ const floorPlanImageFallback = '/images/prizemi.png';
   // Loading state
   if (isLoading) {
     return (
-      <div className="floor-plan-1np">
-        <div className="floor-plan-header">
-          <h2>🏠 Načítám půdorys...</h2>
-        </div>
+      <div className="floor-plan-1np loading">
+        <div className="loading-spinner">🔄</div>
+        <p>Načítám půdorys...</p>
       </div>
     );
   }
 
-  // Filtrujeme zařízení, která mají pozici
   const devicesWithPosition = devices.filter((d) => d.position);
 
   return (
     <div className="floor-plan-1np">
-      <div className="floor-plan-header">
-        <div className="header-left">
-          <h2>🏠 Půdorys 1. NP</h2>
-          <p className="floor-plan-hint">
-            {isEditMode
-              ? '✏️ Upravte rozvržení místností pomocí posuvníků'
-              : isDeviceEditMode
-              ? '🖱️ Přetáhněte zařízení na novou pozici'
-              : 'Přetáhněte zařízení z levého panelu na půdorys'}
-          </p>
+      {/* ===== KOMPAKTNÍ TOOLBAR ===== */}
+      <div className="floorplan-toolbar">
+        <div className="toolbar-left">
+          <span className="toolbar-info">
+            📍 {devicesWithPosition.length}/{devices.length} umístěno
+          </span>
         </div>
-        <div className="header-right">
+        <div className="toolbar-right">
           <button
-            className={`edit-mode-button ${isEditMode ? 'active' : ''}`}
+            className={`toolbar-btn ${isEditMode ? 'active' : ''}`}
             onClick={() => {
               setIsEditMode(!isEditMode);
               if (isDeviceEditMode) setIsDeviceEditMode(false);
             }}
-            title={
-              isEditMode ? 'Ukončit editaci' : 'Změnit rozvržení místností'
-            }
+            title="Upravit rozvržení místností"
           >
-            {isEditMode ? '✅ Hotovo' : '🏠 Rozvržení místností'}
+            🏠 {isEditMode ? 'Hotovo' : 'Místnosti'}
           </button>
-
           <button
-            className={`edit-mode-button ${isDeviceEditMode ? 'active' : ''}`}
+            className={`toolbar-btn ${isDeviceEditMode ? 'active' : ''}`}
             onClick={() => {
               setIsDeviceEditMode(!isDeviceEditMode);
               if (isEditMode) setIsEditMode(false);
             }}
-            title={
-              isDeviceEditMode ? 'Ukončit editaci' : 'Upravit pozici zařízení'
-            }
+            title="Upravit pozice zařízení"
           >
-            {isDeviceEditMode ? '✅ Hotovo' : '📍 Pozice zařízení'}
+            📍 {isDeviceEditMode ? 'Hotovo' : 'Pozice'}
           </button>
         </div>
       </div>
 
-      {/* Editační panel */}
+      {/* ===== EDITAČNÍ PANEL ===== */}
       {isEditMode && (
         <div className="edit-panel">
           <div className="edit-panel-header">
-            <h3>⚙️ Úprava pozic místností</h3>
-            <button
-              className="copy-code-button"
-              onClick={copyRoomsCode}
-              title="Zkopírovat finální kód"
-            >
-              📋 Kopírovat kód
-            </button>
-            <button
-              className="copy-code-button"
-              onClick={handleSave}
-              title="Uložit do Firebase"
-              style={{ marginLeft: '0.5rem', background: '#28a745' }}
-            >
-              💾 Uložit
-            </button>
+            <h3>⚙️ Úprava místností</h3>
+            <div className="edit-panel-actions">
+              <button className="btn-small" onClick={copyRoomsCode}>
+                📋 Kopírovat
+              </button>
+              <button className="btn-small btn-success" onClick={handleSave}>
+                💾 Uložit
+              </button>
+            </div>
           </div>
           <div className="rooms-editor">
             {localRooms.map((room) => (
               <div key={room.id} className="room-editor">
                 <h4>{room.name}</h4>
                 <div className="room-controls">
-                  <div className="control-group">
-                    <label>X: {room.x}px</label>
+                  <div className="control-row">
+                    <label>X: {room.x}</label>
                     <input
                       type="range"
                       min="0"
@@ -297,8 +265,8 @@ const floorPlanImageFallback = '/images/prizemi.png';
                       }
                     />
                   </div>
-                  <div className="control-group">
-                    <label>Y: {room.y}px</label>
+                  <div className="control-row">
+                    <label>Y: {room.y}</label>
                     <input
                       type="range"
                       min="0"
@@ -309,8 +277,8 @@ const floorPlanImageFallback = '/images/prizemi.png';
                       }
                     />
                   </div>
-                  <div className="control-group">
-                    <label>Šířka: {room.width}px</label>
+                  <div className="control-row">
+                    <label>Š: {room.width}</label>
                     <input
                       type="range"
                       min="50"
@@ -325,8 +293,8 @@ const floorPlanImageFallback = '/images/prizemi.png';
                       }
                     />
                   </div>
-                  <div className="control-group">
-                    <label>Výška: {room.height}px</label>
+                  <div className="control-row">
+                    <label>V: {room.height}</label>
                     <input
                       type="range"
                       min="50"
@@ -348,6 +316,7 @@ const floorPlanImageFallback = '/images/prizemi.png';
         </div>
       )}
 
+      {/* ===== SVG PŮDORYS ===== */}
       <div className="floor-plan-container">
         <svg
           ref={svgRef}
@@ -363,8 +332,6 @@ const floorPlanImageFallback = '/images/prizemi.png';
               pt.x = e.clientX;
               pt.y = e.clientY;
               const coords = pt.matrixTransform(svg.getScreenCTM()?.inverse());
-
-              // Najít zařízení a přesunout ho
               const deviceElement = document.querySelector(
                 `[data-device-id="${draggedDeviceId}"]`
               );
@@ -383,12 +350,6 @@ const floorPlanImageFallback = '/images/prizemi.png';
               pt.x = e.clientX;
               pt.y = e.clientY;
               const coords = pt.matrixTransform(svg.getScreenCTM()?.inverse());
-
-              console.log(
-                '📍 Nová pozice:',
-                Math.round(coords.x),
-                Math.round(coords.y)
-              );
               onDeviceDrop(
                 draggedDeviceId,
                 Math.round(coords.x),
@@ -398,7 +359,7 @@ const floorPlanImageFallback = '/images/prizemi.png';
             }
           }}
         >
-          {/* Obrázek půdorysu jako podklad */}
+          {/* Obrázek půdorysu */}
           <image
             href={floorPlanImage}
             x="0"
@@ -406,10 +367,11 @@ const floorPlanImageFallback = '/images/prizemi.png';
             width={viewBoxWidth}
             height={viewBoxHeight}
             preserveAspectRatio="xMidYMid slice"
-            opacity="1"
             onError={(e) => {
-              // Fallback na PNG pokud WebP není podporován
-              (e.target as SVGImageElement).setAttribute('href', floorPlanImageFallback);
+              (e.target as SVGImageElement).setAttribute(
+                'href',
+                floorPlanImageFallback
+              );
             }}
           />
 
@@ -422,16 +384,13 @@ const floorPlanImageFallback = '/images/prizemi.png';
               } ${isEditMode ? 'edit-mode' : ''}`}
               onMouseEnter={() => !isEditMode && setHoveredRoom(room.id)}
               onMouseLeave={() => setHoveredRoom(null)}
-              // ✅ Ponech pointer events pro hover
             >
-              {/* Průhledný obdélník místnosti */}
               <rect
                 x={room.x}
                 y={room.y}
                 width={room.width}
                 height={room.height}
                 fill={isEditMode ? 'rgba(102, 126, 234, 0.1)' : 'transparent'}
-                opacity="1"
                 stroke={
                   hoveredRoom === room.id || isEditMode
                     ? '#667eea'
@@ -445,31 +404,25 @@ const floorPlanImageFallback = '/images/prizemi.png';
                 }
                 className="room-overlay"
               />
-
-              {/* Popisek místnosti */}
               {(hoveredRoom === room.id || isEditMode) && (
                 <g className="room-label-group" pointerEvents="none">
-                  {' '}
-                  // ← PŘIDEJ
                   <rect
-                    x={room.x + room.width / 2 - 70}
+                    x={room.x + room.width / 2 - 60}
                     y={room.y + 5}
-                    width="140"
-                    height="30"
+                    width="120"
+                    height="26"
                     fill="white"
                     stroke="#667eea"
                     strokeWidth="2"
-                    rx="6"
+                    rx="4"
                     opacity="0.95"
-                    filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
                   />
                   <text
                     x={room.x + room.width / 2}
-                    y={room.y + 25}
-                    className="room-label-name"
+                    y={room.y + 22}
                     textAnchor="middle"
                     fill="#333"
-                    fontSize="14"
+                    fontSize="12"
                     fontWeight="600"
                   >
                     {room.name}
@@ -479,7 +432,7 @@ const floorPlanImageFallback = '/images/prizemi.png';
             </g>
           ))}
 
-          {/* === ZAŘÍZENÍ NA PŮDORYSU === */}
+          {/* Zařízení na půdorysu */}
           {devicesWithPosition.map((device) => {
             const deviceType = getDeviceCardType(device.category);
             const icon = device.customIcon || getCardIcon(deviceType);
@@ -502,70 +455,52 @@ const floorPlanImageFallback = '/images/prizemi.png';
                   x="-30"
                   y="-30"
                   width="60"
-                  height="70"
+                  height="80"
                   fill="transparent"
                   style={{ pointerEvents: 'auto' }}
                   onMouseDown={(e: any) => {
                     if (isDeviceEditMode) {
                       e.stopPropagation();
                       setDraggedDeviceId(device.id);
-                      console.log('🖱️ Začínám táhnout:', device.customName);
                     }
                   }}
                   onClick={(e: any) => {
                     if (!isDeviceEditMode) {
                       e.stopPropagation();
-                      console.log('👆 Klik na zařízení:', device.customName);
                       onDeviceClick?.(device);
                     }
                   }}
                 />
-
                 <circle
-                  r="20"
+                  r="30"
                   fill={device.online ? '#4CAF50' : '#9E9E9E'}
                   stroke="#fff"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   pointerEvents="none"
                 />
                 <text
                   textAnchor="middle"
-                  dy="6"
-                  fontSize="20"
+                  dy="7"
+                  fontSize="24"
                   fill="white"
                   pointerEvents="none"
                 >
                   {icon}
                 </text>
-
                 <text
-                  y="35"
+                  y="42"
                   textAnchor="middle"
-                  fontSize="12"
+                  fontSize="16"
                   fill="#333"
-                  fontWeight="500"
+                  fontWeight="600"
                   pointerEvents="none"
                 >
-                  {device.customName || device.name}
+                  {(device.customName || device.name).substring(0, 15)}
                 </text>
               </g>
             );
           })}
         </svg>
-      </div>
-
-      {/* Info panel */}
-      <div className="floor-plan-info">
-        <div className="info-item">
-          <span className="info-label">Zařízení na půdorysu:</span>
-          <span className="info-value">
-            {devicesWithPosition.length} / {devices.length}
-          </span>
-        </div>
-        <div className="info-item">
-          <span className="info-label">Místností:</span>
-          <span className="info-value">{localRooms.length}</span>
-        </div>
       </div>
     </div>
   );

@@ -6,14 +6,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 0.35rem;
+  padding: 0.5rem;
   background: white;
   border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: grab;
   transition: all 0.2s ease;
-  min-width: 100px;
+  min-height: 70px;
   user-select: none;
 }
 
@@ -30,17 +30,17 @@
 
 /* Ikona */
 .miniature-icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
 /* Status indikátor */
 .miniature-status {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 12px;
-  height: 12px;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
 }
 
 .miniature-status .status-dot {
@@ -54,22 +54,18 @@
 
 .miniature-status.online .status-dot {
   background: #4CAF50;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.5);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* Název */
 .miniature-name {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: #333;
   text-align: center;
@@ -77,6 +73,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 /* Offline stav */
@@ -89,41 +86,53 @@
   color: #999;
 }
 
-/* Indikátor umístění na půdorysu */
+/* Indikátor umístění */
 .miniature-placed-indicator {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 20px;
-  height: 20px;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
   background: #4CAF50;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .device-miniature.placed {
   border-color: #4CAF50;
-  background: #f0f8f0;
+  background: #f8fff8;
 }
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .device-miniature {
-    min-width: 80px;
-    padding: 0.5rem;
+    min-height: 60px;
+    padding: 0.4rem;
+    border-radius: 8px;
   }
 
   .miniature-icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .miniature-name {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
+  }
+
+  .miniature-status {
+    width: 8px;
+    height: 8px;
+  }
+
+  .miniature-placed-indicator {
+    width: 14px;
+    height: 14px;
+    font-size: 0.55rem;
   }
 }

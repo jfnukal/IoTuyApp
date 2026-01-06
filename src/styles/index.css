@@ -27,21 +27,8 @@
 /* 5. Komponenty - tlačítka, karty, formuláře */
 @import './05-components.css';
 
-/* 6. Room management - ARCHIVOVÁNO */
-/* @import './06-rooms.css'; */
-
-/* 8. Dashboard - ARCHIVOVÁNO (styly jsou teď přímo u komponent) */
-/* @import './08-dashboard.css'; */
-
-/* 9. Sidebar - ARCHIVOVÁNO */
-/* @import './09-sidebar.css'; */
-
 /* 7. Utility třídy - pomocné třídy s nejvyšší prioritou */
 @import './07-utilities.css';
-
-/* Kalendář: */
-/* @import './Calendar.css'; */
-/* @import '../../../src/components/Widgets/Calendar/CalendarShared.css';  */
 
 /* ==================== CUSTOM PROPERTIES OVERRIDE ==================== */
 /* Místo pro override CSS variables pro různé konfigurace */
@@ -243,33 +230,4 @@
   border-radius: 3px;
 }
 
-/* ==================== CSS ARCHITECTURE NOTES ==================== */
-/*
- * DŮLEŽITÉ POZNÁMKY PRO BUDOUCÍ ROZŠÍŘENÍ:
- * 
- * 1. CSS Variables jsou centralizovány v 02-variables.css
- * 2. Všechny komponenty používají konzistentní naming (BEM-like)
- * 3. Responsive je mobile-first
- * 4. Accessibility je zabudována od začátku
- * 5. Dark/Light mode je připraven
- * 6. Print styly jsou implementovány
- * 7. Performance optimalizace jsou připraveny
- * 8. Drag & Drop placeholder existuje
- * 9. 2D/3D view je připraven
- * 10. Error boundaries mají styly
- * 
- * PŘIDÁVÁNÍ NOVÝCH KOMPONENT:
- * - Přidej do příslušného souboru (05-components.css)
- * - Používej CSS variables
- * - Dodržuj naming konvenci
- * - Přidej responsive varianty
- * - Testuj s accessibility
- * 
- * ÚPRAVA BAREV/SPACING:
- * - Uprav pouze 02-variables.css
- * - Nepoužívej hardcoded hodnoty
- * 
- * DEBUGGING:
- * - Přidej .debug-mode třídu na body
- * - Použij .debug-red, .debug-blue, .debug-green
- */
+

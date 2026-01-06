@@ -1,34 +1,100 @@
 // src/tuya/components/modals/DeviceDetailModal.tsx
 import React, { useState } from 'react';
 import { useRooms } from '../../hooks/useRooms';
+import DeviceCardRenderer from '../cards/DeviceCardRenderer';
+import { useTuya } from '../../hooks/useTuya';
 import type { TuyaDevice } from '../../../types';
-import { getCategoryLabel, getCardIcon } from '../../utils/deviceHelpers';
-import './DeviceDetailModal.css';
+import {
+  getCategoryLabel,
+  getCardIcon,
+  getDeviceCardType,
+} from '../../utils/deviceHelpers';
 import { firestoreService } from '../../../services/firestoreService';
+import './DeviceDetailModal.css';
+import DebugSection from '../cards/DebugSection';
+
+// Dostupné ikony pro výběr - IoT zařízení
+const AVAILABLE_ICONS = [
+  // Světla
+  '💡',
+  '🔆',
+  '🌟',
+  '🕯️',
+  '🔦',
+  '💫',
+  '☀️',
+  '🌙',
+  // Zásuvky a napájení
+  '🔌',
+  '⚡',
+  '🔋',
+  '🪫',
+  '⏻',
+  // Klima a topení
+  '🌡️',
+  '❄️',
+  '🔥',
+  '💨',
+  '🌬️',
+  '♨️',
+  // Senzory
+  '📡',
+  '📶',
+  '🎚️',
+  '🔔',
+  '🚨',
+  // Bezpečnost
+  '📹',
+  '🔒',
+  '🔓',
+  '🚪',
+  '🪟',
+  '🛡️',
+  // Spotřebiče
+  '📺',
+  '🖥️',
+  '🧺',
+  '🧊',
+  '🚿',
+  '🚰',
+  // Venkovní
+  '🌳',
+  '🚗',
+  '🏠',
+  '⛽',
+  '🔧',
+  // Místnosti
+  '🛏️',
+  '🛋️',
+  '🍳',
+  '🚽',
+  '🛁',
+];
 
 interface DeviceDetailModalProps {
-  device: TuyaDevice; // <-- ZMĚNA: Přijímáme celý objekt
+  device: TuyaDevice;
   onClose: () => void;
 }
+
+type TabType = 'info' | 'settings' | 'debug';
 
 const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
   device,
   onClose,
 }) => {
-  // useRooms zde necháme, seznam místností potřebujeme
   const { rooms, isLoading: roomsLoading } = useRooms();
-
-  // Funkce, které budeme implementovat v dalším kroku
   const { assignDeviceToRoom } = useRooms();
+  const { controlDevice } = useTuya();
 
-  // Stavy jsou nyní jednoduché
+  // Aktivní tab
+  const [activeTab, setActiveTab] = useState<TabType>('info');
+
+  // Stavy pro nastavení
   const [selectedRoomId, setSelectedRoomId] = useState<string>(
     device.roomId || ''
   );
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // 🆕 Stavy pro nastavení karty
+  const [customIcon, setCustomIcon] = useState<string>(device.customIcon || '');
+  const [showIconPicker, setShowIconPicker] = useState(false);
   const [showName, setShowName] = useState<boolean>(
     device.cardSettings?.showName ?? true
   );
@@ -39,32 +105,37 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     device.cardSettings?.hidden ?? false
   );
 
-  // useEffect pro načítání zařízení je SMAZÁN, už ho máme v props.
+  // Stavy pro akce
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 1. Handler pro uložení
+  // Ikona zařízení
+  const deviceType = getDeviceCardType(device.category);
+  const displayIcon =
+    customIcon || device.customIcon || getCardIcon(deviceType);
+
+  // Handler pro uložení nastavení
   const handleSave = async () => {
-    const oldRoomId = device.roomId;
-    const newRoomId = selectedRoomId;
-
     setIsSaving(true);
     setError(null);
 
     try {
-      // Ulož nastavení karty
-      const newCardSettings = {
-        ...device.cardSettings,
-        showName,
-        showCustomName,
-        hidden: hiddenCard,
-      };
-      
       await firestoreService.updateDevice(device.id, {
-        cardSettings: newCardSettings,
+        customIcon: customIcon || undefined,
+        cardSettings: {
+          ...device.cardSettings,
+          showName,
+          showCustomName,
+          hidden: hiddenCard,
+        },
       });
 
-      // Pokud se změnila místnost, aktualizuj ji
-      if (oldRoomId !== newRoomId) {
-        await assignDeviceToRoom(device.id, newRoomId, oldRoomId);
+      if (device.roomId !== selectedRoomId) {
+        await assignDeviceToRoom(
+          device.id,
+          selectedRoomId || null,
+          device.roomId || null
+        );
       }
 
       onClose();
@@ -76,170 +147,311 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     }
   };
 
-  // 2. Handler pro odebrání
-  const handleRemove = async () => {
+  // Handler pro odebrání z místnosti
+  const handleRemoveFromRoom = async () => {
     if (!device.roomId) return;
-
     setIsSaving(true);
-    setError(null);
-
     try {
-      // Odebrání je jen "přiřazení" do místnosti 'null'
       await assignDeviceToRoom(device.id, null, device.roomId);
       onClose();
-    } catch (err: any) {
-      // TADY BYLA CHYBA (chyběly složené závorky)
-      console.error(err);
-      setError('Nepodařilo se odebrat zařízení z místnosti.');
+    } catch (err) {
+      setError('Nepodařilo se odebrat z místnosti.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Bloky pro isLoading a error jsou pryč, protože device máme hned.
+  // Handler pro odebrání z půdorysu
+  const handleRemoveFromFloorplan = async () => {
+    if (!device.position) return;
+    if (!window.confirm('Odebrat zařízení z půdorysu?')) return;
+    setIsSaving(true);
+    try {
+      await firestoreService.updateDevicePosition(device.id, null as any);
+      onClose();
+    } catch (err) {
+      setError('Nepodařilo se odebrat z půdorysu.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="device-modal-overlay" onClick={onClose}>
       <div className="device-modal" onClick={(e) => e.stopPropagation()}>
+        {/* ===== HEADER ===== */}
         <div className="device-modal-header">
-          <h2>Přiřadit zařízení</h2>
+          <div className="header-device-info">
+            <span className="header-icon">{displayIcon}</span>
+            <div className="header-text">
+              <h2>{device.customName || device.name}</h2>
+              <span
+                className={`status-badge ${
+                  device.online ? 'online' : 'offline'
+                }`}
+              >
+                {device.online ? '🟢 Online' : '🔴 Offline'}
+              </span>
+            </div>
+          </div>
           <button className="close-btn" onClick={onClose} disabled={isSaving}>
             ✕
           </button>
         </div>
 
+        {/* ===== TABS ===== */}
+        <div className="modal-tabs">
+          <button
+            className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`}
+            onClick={() => setActiveTab('info')}
+          >
+            📊 Info
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            ⚙️ Nastavení
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'debug' ? 'active' : ''}`}
+            onClick={() => setActiveTab('debug')}
+          >
+            🔧 Debug
+          </button>
+        </div>
+
+        {/* ===== BODY ===== */}
         <div className="device-modal-body">
           {error && <div className="error-message">{error}</div>}
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-          >
-            <div className="device-info-header">
-              <span className="device-icon">{getCardIcon(device.category)}</span>
-              <div className="device-names">
-                <h3>{device.customName || device.name}</h3>
-                <p className="device-category-label">{getCategoryLabel(device.category)}</p>
+  {/* ===== TAB: INFO ===== */}
+{activeTab === 'info' && (
+  <div className="tab-content tab-info">
+    {/* Embedded karta s ovládáním */}
+    <div className="embedded-device-card">
+      <DeviceCardRenderer
+        device={device}
+        onToggle={async () => {}}
+        onControl={controlDevice}
+        isDebugVisible={false}
+      />
+    </div>
+
+    {/* Všechny statusy */}
+    {device.status && device.status.length > 0 && (
+      <div className="status-section">
+        <h3>Stav zařízení</h3>
+        <div className="status-list">
+          {device.status.map((s) => (
+            <div key={s.code} className="status-item">
+              <span className="status-code">{s.code}</span>
+              <span className="status-value">
+                {typeof s.value === 'boolean'
+                  ? s.value
+                    ? '✅ Ano'
+                    : '❌ Ne'
+                  : String(s.value)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Základní info */}
+    <div className="info-section">
+      <h3>Základní informace</h3>
+      <div className="info-grid">
+        <div className="info-row">
+          <span className="info-label">Kategorie:</span>
+          <span className="info-value">
+            {getCategoryLabel(device.category)}
+          </span>
+        </div>
+        <div className="info-row">
+          <span className="info-label">Místnost:</span>
+          <span className="info-value">
+            {rooms.find((r) => r.id === device.roomId)?.name ||
+              'Nepřiřazeno'}
+          </span>
+        </div>
+        {device.position && (
+          <div className="info-row">
+            <span className="info-label">Pozice:</span>
+            <span className="info-value">
+              X: {device.position.x}, Y: {device.position.y}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+          {/* ===== TAB: NASTAVENÍ ===== */}
+          {activeTab === 'settings' && (
+            <div className="tab-content tab-settings">
+              {/* Ikona */}
+              <div className="settings-section">
+                <h3>Ikona zařízení</h3>
+                <div className="icon-selector">
+                  <button
+                    className="current-icon-btn"
+                    onClick={() => setShowIconPicker(!showIconPicker)}
+                  >
+                    <span className="icon-preview">
+                      {customIcon || displayIcon}
+                    </span>
+                    <span className="icon-change-text">
+                      {showIconPicker ? 'Zavřít' : 'Změnit ikonu'}
+                    </span>
+                  </button>
+                  {showIconPicker && (
+                    <div className="device-modal-icon-picker">
+                      <button
+                        className={`device-modal-icon-option ${
+                          !customIcon ? 'selected' : ''
+                        }`}
+                        onClick={() => {
+                          setCustomIcon('');
+                          setShowIconPicker(false);
+                        }}
+                        title="Výchozí"
+                      >
+                        {getCardIcon(deviceType)}
+                      </button>
+                      {AVAILABLE_ICONS.map((icon) => (
+                        <button
+                          key={icon}
+                          className={`device-modal-icon-option ${
+                            customIcon === icon ? 'selected' : ''
+                          }`}
+                          onClick={() => {
+                            setCustomIcon(icon);
+                            setShowIconPicker(false);
+                          }}
+                        >
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="room-select">Přiřadit do místnosti:</label>
-              <select
-                id="room-select"
-                value={selectedRoomId}
-                onChange={(e) => setSelectedRoomId(e.target.value)}
-                disabled={isSaving}
-              >
-                <option value="">-- Nezařazeno --</option>
-                {roomsLoading && <option disabled>Načítám místnosti...</option>}
-                {!roomsLoading && rooms.length === 0 && (
-                  <option disabled>Žádné místnosti nebyly nalezeny...</option>
-                )}
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.icon} {room.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 🆕 Nastavení zobrazení */}
-            <div className="form-group settings-group">
-              <label className="settings-label">Nastavení zobrazení:</label>
-              
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={showName}
-                  onChange={(e) => setShowName(e.target.checked)}
+              {/* Místnost */}
+              <div className="settings-section">
+                <h3>Místnost</h3>
+                <select
+                  value={selectedRoomId}
+                  onChange={(e) => setSelectedRoomId(e.target.value)}
                   disabled={isSaving}
-                />
-                <span>Zobrazovat název ({device.name})</span>
-              </label>
+                  className="room-select"
+                >
+                  <option value="">-- Nepřiřazeno --</option>
+                  {roomsLoading && <option disabled>Načítám...</option>}
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.icon} {room.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              {device.customName && (
+              {/* Zobrazení */}
+              <div className="settings-section">
+                <h3>Zobrazení v seznamu</h3>
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={showCustomName}
-                    onChange={(e) => setShowCustomName(e.target.checked)}
+                    checked={showName}
+                    onChange={(e) => setShowName(e.target.checked)}
                     disabled={isSaving}
                   />
-                  <span>Zobrazovat vlastní název ({device.customName})</span>
+                  <span>Zobrazovat název ({device.name})</span>
                 </label>
+                {device.customName && (
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={showCustomName}
+                      onChange={(e) => setShowCustomName(e.target.checked)}
+                      disabled={isSaving}
+                    />
+                    <span>Zobrazovat vlastní název ({device.customName})</span>
+                  </label>
+                )}
+                <label className="checkbox-label checkbox-danger">
+                  <input
+                    type="checkbox"
+                    checked={hiddenCard}
+                    onChange={(e) => setHiddenCard(e.target.checked)}
+                    disabled={isSaving}
+                  />
+                  <span>🙈 Skrýt kartu v seznamu</span>
+                </label>
+              </div>
+
+              {/* Danger zone */}
+              {(device.roomId || device.position) && (
+                <div className="settings-section danger-zone">
+                  <h3>⚠️ Nebezpečná zóna</h3>
+                  <div className="danger-buttons">
+                    {device.roomId && (
+                      <button
+                        className="btn-danger"
+                        onClick={handleRemoveFromRoom}
+                        disabled={isSaving}
+                      >
+                        🗑️ Odebrat z místnosti
+                      </button>
+                    )}
+                    {device.position && (
+                      <button
+                        className="btn-danger"
+                        onClick={handleRemoveFromFloorplan}
+                        disabled={isSaving}
+                      >
+                        📍 Odebrat z půdorysu
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
-
-              <label className="checkbox-label checkbox-danger">
-                <input
-                  type="checkbox"
-                  checked={hiddenCard}
-                  onChange={(e) => setHiddenCard(e.target.checked)}
-                  disabled={isSaving}
-                />
-                <span>🙈 Skrýt kartu v gridu/listu</span>
-              </label>
             </div>
+          )}
 
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={isSaving}
-              >
-                {isSaving ? 'Ukládám...' : '💾 Uložit'}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={onClose}
-                disabled={isSaving}
-              >
-                Zrušit
-              </button>
+          {/* ===== TAB: DEBUG ===== */}
+          {activeTab === 'debug' && (
+            <div className="tab-content tab-debug">
+              {/* Použijeme existující DebugSection s isVisible=true */}
+              <div className="embedded-debug-section">
+                <DebugSection device={device} isVisible={true} />
+              </div>
             </div>
-          </form>
-
-          {(device.roomId || device.position) && (
-  <div className="form-actions-danger">
-    {device.roomId && (
-      <button
-        type="button"
-        className="btn-danger"
-        onClick={handleRemove}
-        disabled={isSaving}
-      >
-        🗑️ Odebrat z místnosti
-      </button>
-    )}
-    {device.position && (
-      <button
-        type="button"
-        className="btn-danger"
-        onClick={async () => {
-          if (window.confirm('Odebrat zařízení z půdorysu?')) {
-            setIsSaving(true);
-            try {
-              await firestoreService.updateDevicePosition(device.id, null as any);
-              onClose();
-            } catch (err) {
-              console.error('Chyba při odebírání pozice:', err);
-              setError('Nepodařilo se odebrat zařízení z půdorysu');
-            } finally {
-              setIsSaving(false);
-            }
-          }
-        }}
-        disabled={isSaving}
-      >
-        📍 Odebrat z půdorysu
-      </button>
-    )}
-  </div>
-)}
+          )}
         </div>
+
+        {/* ===== FOOTER ===== */}
+        {activeTab === 'settings' && (
+          <div className="device-modal-footer">
+            <button
+              className="btn-secondary"
+              onClick={onClose}
+              disabled={isSaving}
+            >
+              Zrušit
+            </button>
+            <button
+              className="btn-primary"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Ukládám...' : '💾 Uložit'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

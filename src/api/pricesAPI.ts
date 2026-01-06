@@ -306,10 +306,4 @@ export { learnAlias } from './aliasesAPI';
  * - Preferované jednotky (např. jen 0.5l, 1l, 1.5l)
  * - Maximální počet variant na produkt
  * - Preferované obchody
- * 
- * TODO: Přidat AI matching pro lidské názvy:
- * - "Plzeň" → "Pilsner Urquell"
- * - "Radek" → "Radegast"
- * - "Kofča" → "Kofola"
- * Implementovat jako learning system, který se učí z uživatelských voleb.
  */

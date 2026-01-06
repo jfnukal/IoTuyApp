@@ -347,6 +347,7 @@ export interface CalendarEventData {
   familyMemberId?: string;
   reminderRecipients?: string[];
   color?: string;
+  icon?: string;  
   reminders?: ReminderItem[];
   sentReminders?: string[];
   isAllDay?: boolean;
@@ -367,7 +368,8 @@ export type EventType =
   | 'birthday'
   | 'holiday'
   | 'nameday'
-  | 'reminder';
+  | 'reminder'
+  | 'school';
 // export type ReminderType =
 //   | 'none'
 //   | '5min'
@@ -593,3 +595,48 @@ export interface ShoppingList {
   createdAt: number;
   updatedAt: number;
 }
+
+// ==================== DISHWASHER WIDGET ====================
+// TODO: Možnost konfigurovat kolik dní/položek historie uchovávat
+
+export interface DishwasherPerson {
+  id: string;
+  name: string;
+  emoji: string;
+}
+
+export interface DishwasherHistoryItem {
+  id: string;
+  personId: string;               // ID člena, který myl (jarecek/johanka)
+  personName: string;             // Jméno (Jareček, Johanka)
+  personEmoji: string;            // Emoji (👦, 👧)
+  completedAt: number;            // Kdy to udělal
+}
+
+export interface DishwasherState {
+  id: string;
+  // Kdo je AKTUÁLNĚ na řadě
+  nextPersonId: string;
+  nextPersonName: string;
+  nextPersonEmoji: string;
+  // Poslední, kdo myl
+  lastCompletedBy: string;
+  lastCompletedByName: string;
+  lastCompletedByEmoji: string;
+  lastCompletedAt: number | null;
+  // Historie (max 10)
+  history: DishwasherHistoryItem[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Hardcoded děti pro myčku (můžeš později změnit v nastavení)
+export const DISHWASHER_PEOPLE: DishwasherPerson[] = [
+  { id: 'jarecek', name: 'Jareček', emoji: '👦' },
+  { id: 'johanka', name: 'Johanka', emoji: '👧' },
+];
+
+// TODO: Dishwasher Widget - přidat možnost konfigurace:
+// - Kolik položek historie uchovávat (aktuálně max 10)
+// - Nebo alternativně: kolik dnů zpětně uchovávat historii
+// - Nastavení přidat do SettingsPanel nebo přímo do widgetu

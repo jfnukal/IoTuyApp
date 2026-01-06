@@ -12,10 +12,17 @@ import { AppRoutes } from './routes';
 // 🆕 Komponenta pro načítání (Spinner)
 // Zobrazí se okamžitě, když uživatel klikne na stránku, která se teprve stahuje
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen w-full" style={{ minHeight: '50vh' }}>
+  <div 
+    className="flex items-center justify-center w-full" 
+    style={{ 
+      minHeight: '100vh',
+      height: '100vh',  /* Fixní výška pro prevenci CLS */
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }}
+  >
     <div className="text-center">
       <div className="spinner" style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔄</div>
-      <p style={{ color: 'var(--text-secondary)' }}>Načítám aplikaci...</p>
+      <p style={{ color: 'rgba(255,255,255,0.9)' }}>Načítám aplikaci...</p>
     </div>
   </div>
 );

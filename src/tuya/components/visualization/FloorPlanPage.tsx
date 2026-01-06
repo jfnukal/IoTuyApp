@@ -1,184 +1,169 @@
-// src/tuya/components/Visualization/FloorPlanPage.tsx
-import React, { useState } from 'react';
+// src/tuya/components/visualization/FloorPlanPage.tsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTuya } from '../../hooks/useTuya';
-import { firestoreService } from '../../../services/firestoreService'; // ← PŘIDEJ
-import FloorPlan1NP from '../visualization/FloorPlan1NP';
-import DeviceMiniatures from '../visualization/DeviceMiniatures'; // ← PŘIDEJ
+import { useHouse } from '../../hooks/useHouse';
+import { firestoreService } from '../../../services/firestoreService';
+import FloorPlan1NP from './FloorPlan1NP';
+import DeviceMiniatures from './DeviceMiniatures';
 import DeviceDetailModal from '../modals/DeviceDetailModal';
 import type { TuyaDevice } from '../../../types';
 import './FloorPlanPage.css';
 
 const FloorPlanPage: React.FC = () => {
   const navigate = useNavigate();
-  const { devices, isLoading, error } = useTuya();
-  const [selectedDevice, setSelectedDevice] = useState<TuyaDevice | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { devices, isLoading: devicesLoading, error: devicesError } = useTuya();
+  const { floors, isLoading: houseLoading } = useHouse();
 
-  // Handler pro kliknutí na zařízení v půdorysu
+  const [selectedDevice, setSelectedDevice] = useState<TuyaDevice | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
+
+  // Automaticky vyber první patro (přízemí preferovaně)
+  useEffect(() => {
+    if (floors.length > 0 && !selectedFloorId) {
+      const groundFloor = floors.find((f) => f.level === 0);
+      setSelectedFloorId(groundFloor?.id || floors[0].id);
+    }
+  }, [floors, selectedFloorId]);
+
+  // Aktuální patro
+  const currentFloor = floors.find((f) => f.id === selectedFloorId);
+
+  // Handler pro kliknutí na zařízení
   const handleDeviceClick = (device: TuyaDevice) => {
-    console.log('🎯 FloorPlanPage handleDeviceClick volán!', device);
-    console.log('🎯 Device data:', device.name, device.id);
-    console.log('🎯 Nastavuji selectedDevice...');
     setSelectedDevice(device);
-    console.log('🎯 selectedDevice nastaven!');
   };
 
-  // 📍 Handler pro drop zařízení na půdorys
+  // Handler pro drop zařízení na půdorys
   const handleDeviceDrop = async (deviceId: string, x: number, y: number) => {
     try {
-      console.log(`💾 Ukládám pozici zařízení ${deviceId}:`, { x, y });
-
       await firestoreService.updateDevicePosition(deviceId, { x, y });
-
-      console.log('✅ Pozice zařízení uložena!');
     } catch (error) {
       console.error('❌ Chyba při ukládání pozice:', error);
-      alert('Nepodařilo se uložit pozici zařízení');
     }
   };
 
-  if (isLoading) {
+  // Statistiky
+  const stats = {
+    total: devices.length,
+    online: devices.filter((d) => d.online).length,
+    placed: devices.filter((d) => d.position).length,
+  };
+
+  // Loading state
+  if (devicesLoading || houseLoading) {
     return (
       <div className="floorplan-page">
-        <div className="loading-state">
-          <div className="loading-spinner-large">🔄</div>
-          <p>Načítám zařízení...</p>
+        <div className="floorplan-loading">
+          <div className="loading-spinner">🔄</div>
+          <p>Načítám data...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Error state
+  if (devicesError) {
     return (
       <div className="floorplan-page">
-        <div className="error-state">
-          <div className="error-icon">⚠️</div>
-          <h3>Chyba při načítání zařízení</h3>
-          <p>{error}</p>
-          <button
-            className="back-button"
-            onClick={() => navigate('/tuya')}
-            title="Zpět na seznam zařízení"
-          >
-            ← Zpět
-          </button>
-
-          <button
-            className="sidebar-toggle-btn"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            title={isSidebarCollapsed ? 'Zobrazit panel' : 'Schovat panel'}
-          >
-            {isSidebarCollapsed ? '▶ Zobrazit panel' : '◀ Schovat panel'}
-          </button>
+        <div className="floorplan-error">
+          <span className="error-icon">⚠️</span>
+          <h3>Chyba při načítání</h3>
+          <p>{devicesError}</p>
+          <button onClick={() => navigate('/?mode=tech')}>← Zpět</button>
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="floorplan-page">
-        {/* Header s tlačítkem zpět */}
-        <div className="floorplan-header">
+    <div className="floorplan-page">
+      {/* ===== KOMPAKTNÍ HEADER ===== */}
+      <header className="floorplan-header">
+        {/* Levá část - Zpět + Název */}
+        <div className="header-left">
           <button
-            className="back-button"
-            onClick={() => navigate('/tuya')}
-            title="Zpět na seznam zařízení"
+            className="btn-back"
+            onClick={() => navigate('/?mode=tech')}
+            title="Zpět na dashboard"
           >
-            ← Zpět
+            ←
           </button>
-          <div className="header-info">
-            <h1>🏠 Půdorys 1. Nadzemního Podlaží</h1>
-            <p className="header-subtitle">
-              Testovací režim - Kontrola zobrazení místností a prvků
-            </p>
-          </div>
+          <h1 className="header-title">{currentFloor?.name || 'Půdorys'}</h1>
         </div>
 
-        {/* Info panel */}
-        <div className="floorplan-info-banner">
-          <div className="info-section">
-            <span className="info-icon">📊</span>
-            <div className="info-content">
-              <strong>Statistika zařízení:</strong>
-              <div className="device-stats">
-                <span>Celkem: {devices.length}</span>
-                <span className="separator">|</span>
-                <span>
-                  S pozicí: {devices.filter((d) => d.position).length}
+        {/* Střed - Přepínač pater */}
+        <nav className="floor-tabs">
+          {floors
+            .sort((a, b) => a.level - b.level)
+            .map((floor) => (
+              <button
+                key={floor.id}
+                className={`floor-tab ${
+                  floor.id === selectedFloorId ? 'active' : ''
+                }`}
+                onClick={() => setSelectedFloorId(floor.id)}
+                style={{ '--floor-color': floor.color } as React.CSSProperties}
+              >
+                <span className="floor-tab-icon">
+                  {getFloorIcon(floor.level)}
                 </span>
-                <span className="separator">|</span>
-                <span>Online: {devices.filter((d) => d.online).length}</span>
-              </div>
-            </div>
-          </div>
+                <span className="floor-tab-label">{floor.name}</span>
+              </button>
+            ))}
+        </nav>
 
-          <div className="info-section">
-            <span className="info-icon">ℹ️</span>
-            <div className="info-content">
-              <strong>Testovací funkce:</strong>
-              <p>Zobrazení základního půdorysu s místnostmi</p>
-            </div>
+        {/* Pravá část - Statistiky + Toggle */}
+        <div className="header-right">
+          <div className="header-stats">
+            <span className="stat" title="Celkem zařízení">
+              📱 {stats.total}
+            </span>
+            <span className="stat" title="Online">
+              🟢 {stats.online}
+            </span>
+            <span className="stat" title="Umístěno">
+              📍 {stats.placed}
+            </span>
           </div>
-
           <button
-            className="sidebar-toggle-btn"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="btn-toggle-sidebar"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            title={isSidebarOpen ? 'Schovat panel' : 'Zobrazit panel'}
           >
-            {isSidebarCollapsed ? '▶ Zobrazit panel' : '◀ Schovat panel'}
+            {isSidebarOpen ? '✕' : '☰'}
           </button>
         </div>
+      </header>
 
-        {/* Hlavní layout - Panel + Půdorys */}
-        <div className="floorplan-content">
-          {/* Levý panel s miniaturami */}
-          <aside
-            className={`miniatures-sidebar ${
-              isSidebarCollapsed ? 'collapsed' : ''
-            }`}
-          >
-            {!isSidebarCollapsed && (
-              <DeviceMiniatures
-                devices={devices}
-                onDeviceClick={handleDeviceClick}
-              />
-            )}
-          </aside>
+      {/* ===== HLAVNÍ OBSAH ===== */}
+      <div className="floorplan-content">
+        {/* Sidebar se zařízeními */}
+        <aside
+          className={`floorplan-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}
+        >
+          <DeviceMiniatures
+            devices={devices}
+            onDeviceClick={handleDeviceClick}
+          />
+        </aside>
 
-          {/* Pravá strana - Půdorys */}
-          <main className="floorplan-main">
+        {/* Půdorys */}
+        <main className="floorplan-main">
+          {currentFloor ? (
             <FloorPlan1NP
               devices={devices}
               onDeviceClick={handleDeviceClick}
               onDeviceDrop={handleDeviceDrop}
             />
-          </main>
-        </div>
-
-        {/* Debug informace */}
-        <div className="debug-info">
-          <details>
-            <summary>🔍 Debug informace</summary>
-            <div className="debug-content">
-              <h4>Zařízení s pozicí:</h4>
-              {devices.filter((d) => d.position).length > 0 ? (
-                <ul>
-                  {devices
-                    .filter((d) => d.position)
-                    .map((d) => (
-                      <li key={d.id}>
-                        <strong>{d.customName || d.name}</strong> - x=
-                        {d.position?.x}, y={d.position?.y}
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p>Zatím žádná zařízení.</p>
-              )}
+          ) : (
+            <div className="floorplan-empty">
+              <span>🏠</span>
+              <p>Vyberte patro pro zobrazení půdorysu</p>
             </div>
-          </details>
-        </div>
+          )}
+        </main>
       </div>
 
       {/* Modal pro detail zařízení */}
@@ -188,8 +173,22 @@ const FloorPlanPage: React.FC = () => {
           onClose={() => setSelectedDevice(null)}
         />
       )}
-    </>
+    </div>
   );
 };
+
+// Helper - ikona pro patro
+function getFloorIcon(level: number): string {
+  switch (level) {
+    case -1:
+      return '⬇️';
+    case 0:
+      return '🏠';
+    case 1:
+      return '⬆️';
+    default:
+      return level < 0 ? '⬇️' : '⬆️';
+  }
+}
 
 export default FloorPlanPage;

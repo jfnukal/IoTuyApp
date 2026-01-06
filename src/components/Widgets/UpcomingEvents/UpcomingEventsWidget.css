@@ -291,7 +291,10 @@
   font-weight: 800;
   text-transform: uppercase;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  /* 🆕 Animace POUZE po načtení - ne při prvním renderingu */
   animation: pulse 2s infinite;
+  animation-delay: 2s; /* Počká až se stránka ustálí */
+  will-change: transform; /* Optimalizace pro animaci */
 }
 
 @keyframes pulse {

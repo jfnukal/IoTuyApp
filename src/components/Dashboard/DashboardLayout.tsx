@@ -3,17 +3,18 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useFirestore } from '../../hooks/useFirestore';
 import FamilyDashboard from './FamilyDashboard';
 import HeaderSlots from './HeaderSlots';
+import DishwasherFAB from '../Widgets/Dishwasher/DishwasherFAB';
 import './styles/DashboardLayout.css';
 const TechDashboard = lazy(() => import('./TechDashboard'));
 const SendMessagePanel = lazy(() =>
   import('../Notifications/SendMessagePanel')
 );
+
 import { useNotificationContext } from '../Notifications/NotificationProvider';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 type DashboardMode = 'family' | 'tech';
-
 interface DashboardLayoutProps {
   familyMemberId: string | null; // ← PŘIDEJ
   onNavigateToSettings?: () => void;
@@ -25,7 +26,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { familyMembers } = useFirestore();
-  const [mode, setMode] = useState<DashboardMode>('family');
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode') === 'tech' ? 'tech' : 'family';
+  const [mode, setMode] = useState<DashboardMode>(initialMode);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
@@ -195,6 +198,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <span className="unread-badge-fab">{unreadCount}</span>
         )}
       </button>
+
+      {/* 🍽️ FAB - Myčka nádobí */}
+      <DishwasherFAB />
 
       {/* Obsah podle režimu */}
       <div className="dashboard-content">

@@ -23,7 +23,6 @@ export const DEFAULT_CANVAS_SETTINGS: CanvasSettings = {
   width: 1000,
   height: 600,
   strokeColor: '#1a1a1a',
-  strokeWidth: 1.5,
+  strokeWidth: 2,
   backgroundColor: '#fffef7',
 };
-

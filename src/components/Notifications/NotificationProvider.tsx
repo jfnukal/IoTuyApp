@@ -1,6 +1,6 @@
 // src/components/Notifications/NotificationProvider.tsx
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react'; // 👈 Přidán useMemo
 import { useNotifications } from '../../hooks/useNotifications';
 import type { FamilyMessage } from '../../types/notifications';
 
@@ -45,10 +45,48 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   familyMemberId,
   children,
 }) => {
-  const notificationData = useNotifications(authUid, familyMemberId);
+  // 1. Získáme data z hooku
+  const {
+    permission,
+    isSupported,
+    messages,
+    unreadCount,
+    requestPermission,
+    sendMessage,
+    markAsRead,
+    deleteMessage,
+    deleteReadMessages,
+  } = useNotifications(authUid, familyMemberId);
+
+  // 2. 🚀 OPTIMALIZACE: Zabalíme to do useMemo
+  // Kontext se změní POUZE tehdy, když se změní data nebo funkce, ne při každém renderu rodiče.
+  const contextValue = useMemo(
+    () => ({
+      permission,
+      isSupported,
+      messages,
+      unreadCount,
+      requestPermission,
+      sendMessage,
+      markAsRead,
+      deleteMessage,
+      deleteReadMessages,
+    }),
+    [
+      permission,
+      isSupported,
+      messages,
+      unreadCount,
+      requestPermission,
+      sendMessage,
+      markAsRead,
+      deleteMessage,
+      deleteReadMessages,
+    ]
+  );
 
   return (
-    <NotificationContext.Provider value={notificationData}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   );

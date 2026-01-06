@@ -27,7 +27,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
   const effectiveDaysAhead =
     daysAhead ?? settings?.widgets?.calendar?.upcomingEventsDays ?? 60;
   const effectiveMaxEvents =
-    maxEvents ?? settings?.widgets?.calendar?.maxEvents ?? 5;
+    maxEvents ?? settings?.widgets?.calendar?.maxEvents ?? 8;
 
   const [upcomingEvents, setUpcomingEvents] = useState<
     Array<CalendarEventData & { displayDate: Date }>
@@ -39,6 +39,11 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
     const loadEvents = () => {
       const today = new Date();
       const events: Array<CalendarEventData & { displayDate: Date }> = [];
+
+      console.log('📊 UpcomingEventsWidget - DEBUG:');
+      console.log('  - Dnes:', today.toLocaleDateString('cs'));
+      console.log('  - Hledám dní dopředu:', effectiveDaysAhead);
+      console.log('  - Max událostí:', effectiveMaxEvents);
 
       // Načti dnešní události (filtruj typ "personal")
       const todayEvents = getEventsByDate(today);
@@ -66,15 +71,30 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
         .sort((a, b) => a.displayDate.getTime() - b.displayDate.getTime())
         .slice(0, effectiveMaxEvents);
 
+      console.log('  - Nalezeno celkem:', events.length);
+      console.log('  - Po seřazení a limitu:', sorted.length);
+      console.log(
+        '  - Události:',
+        sorted.map(
+          (e) => `${e.title} (${e.displayDate.toLocaleDateString('cs')})`
+        )
+      );
+
       setUpcomingEvents(sorted);
     };
 
     loadEvents();
   }, [getEventsByDate, effectiveDaysAhead, effectiveMaxEvents]);
 
-  // Ikony podle typu události
-  const getEventIcon = (type: string) => {
-    switch (type) {
+  // Ikony podle typu události - s podporou vlastní ikony
+  const getEventIcon = (event: CalendarEventData) => {
+    // Pokud má událost vlastní ikonu, použij ji
+    if (event.icon) {
+      return event.icon;
+    }
+
+    // Jinak fallback podle typu
+    switch (event.type) {
       case 'birthday':
         return '🎂';
       case 'holiday':
@@ -181,9 +201,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                           animationDelay: `${index * 0.1}s`,
                         }}
                       >
-                        <div className="event-icon">
-                          {getEventIcon(event.type)}
-                        </div>
+                        <div className="event-icon">{getEventIcon(event)}</div>
                         <div className="event-details">
                           <h5 className="event-title">{event.title}</h5>
                           {event.time && (
@@ -224,7 +242,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                             }}
                           >
                             <div className="event-icon">
-                              {getEventIcon(event.type)}
+                              {getEventIcon(event)}
                             </div>
                             <div className="event-details">
                               <h5 className="event-title">{event.title}</h5>

@@ -6,6 +6,7 @@ import type {
   EventType,
   FamilyMember,
 } from '../../../types/index';
+import { useAuth } from '../../../contexts/AuthContext';
 import ReminderSelector from './ReminderSelector';
 import RecipientSelector from '../../Notifications/RecipientSelector';
 import RecurrenceSelector from './RecurrenceSelector';
@@ -65,8 +66,9 @@ const EventForm: React.FC<EventFormProps> = ({
         time: event.time || '',
         endTime: event.endTime || '',
         type: event.type,
-        familyMemberId: event.familyMemberId || '',
+        familyMemberId: defaultMemberId || '', // Nastavíme v useEffect
         color: event.color || '#667eea',
+        icon: event.icon || '',
         reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
         isMultiDay: !!event.endDate,
@@ -87,6 +89,7 @@ const EventForm: React.FC<EventFormProps> = ({
       type: 'personal' as EventType,
       familyMemberId: defaultMemberId || '',
       color: '#667eea',
+      icon: '',
       reminders: [],
       isAllDay: false,
       isMultiDay: false,
@@ -95,6 +98,19 @@ const EventForm: React.FC<EventFormProps> = ({
       recurring: null,
     };
   });
+
+  const { currentUser } = useAuth();
+
+  // Automatický default: přihlášený uživatel nebo "Rodina"
+  useEffect(() => {
+    if (!event && !defaultMemberId && currentUser) {
+      const myMember = familyMembers.find((m) => m.authUid === currentUser.uid);
+      setFormData((prev) => ({
+        ...prev,
+        familyMemberId: myMember?.id || 'all',
+      }));
+    }
+  }, [event, defaultMemberId, currentUser, familyMembers]);
 
   useEffect(() => {
     if (event) {
@@ -107,6 +123,7 @@ const EventForm: React.FC<EventFormProps> = ({
         type: event.type,
         familyMemberId: event.familyMemberId || '',
         color: event.color || '#667eea',
+        icon: event.icon || '',
         reminders: event.reminders || [],
         isAllDay: event.isAllDay || false,
         isMultiDay: !!event.endDate,
@@ -155,35 +172,41 @@ const EventForm: React.FC<EventFormProps> = ({
       eventData.reminderRecipients = formData.reminderRecipients;
     }
 
-// ✅ Přidej recurring pattern - vyčisti undefined hodnoty
-if (formData.recurring) {
-  const cleanRecurring: any = {
-    frequency: formData.recurring.frequency,
-    interval: formData.recurring.interval,
-    endType: formData.recurring.endType,
-  };
-  
-  // Přidej pouze definované hodnoty
-  if (formData.recurring.daysOfWeek && formData.recurring.daysOfWeek.length > 0) {
-    cleanRecurring.daysOfWeek = formData.recurring.daysOfWeek;
-  }
-  if (formData.recurring.dayOfMonth !== undefined) {
-    cleanRecurring.dayOfMonth = formData.recurring.dayOfMonth;
-  }
-  if (formData.recurring.endDate) {
-    cleanRecurring.endDate = formData.recurring.endDate;
-  }
-  if (formData.recurring.endCount) {
-    cleanRecurring.endCount = formData.recurring.endCount;
-  }
-  if (formData.recurring.exceptions && formData.recurring.exceptions.length > 0) {
-    cleanRecurring.exceptions = formData.recurring.exceptions;
-  }
-  
-  eventData.recurring = cleanRecurring;
-} else {
-  eventData.recurring = null;
-}
+    // ✅ Přidej recurring pattern - vyčisti undefined hodnoty
+    if (formData.recurring) {
+      const cleanRecurring: any = {
+        frequency: formData.recurring.frequency,
+        interval: formData.recurring.interval,
+        endType: formData.recurring.endType,
+      };
+
+      // Přidej pouze definované hodnoty
+      if (
+        formData.recurring.daysOfWeek &&
+        formData.recurring.daysOfWeek.length > 0
+      ) {
+        cleanRecurring.daysOfWeek = formData.recurring.daysOfWeek;
+      }
+      if (formData.recurring.dayOfMonth !== undefined) {
+        cleanRecurring.dayOfMonth = formData.recurring.dayOfMonth;
+      }
+      if (formData.recurring.endDate) {
+        cleanRecurring.endDate = formData.recurring.endDate;
+      }
+      if (formData.recurring.endCount) {
+        cleanRecurring.endCount = formData.recurring.endCount;
+      }
+      if (
+        formData.recurring.exceptions &&
+        formData.recurring.exceptions.length > 0
+      ) {
+        cleanRecurring.exceptions = formData.recurring.exceptions;
+      }
+
+      eventData.recurring = cleanRecurring;
+    } else {
+      eventData.recurring = null;
+    }
 
     onSave(eventData);
   };
@@ -214,44 +237,58 @@ if (formData.recurring) {
   };
 
   // Kontrola, zda opakování nepřekračuje limity
-const hasRecurrenceError = (): boolean => {
-  if (!formData.recurring) return false;
+  const hasRecurrenceError = (): boolean => {
+    if (!formData.recurring) return false;
 
-  const limits: Record<string, number> = {
-    daily: 365,
-    weekly: 104,
-    biweekly: 52,
-    monthly: 48,
-    yearly: 4,
-    custom: 104,
-  };
+    const limits: Record<string, number> = {
+      daily: 365,
+      weekly: 104,
+      biweekly: 52,
+      monthly: 48,
+      yearly: 4,
+      custom: 104,
+    };
 
-  const limit = limits[formData.recurring.frequency] || 100;
+    const limit = limits[formData.recurring.frequency] || 100;
 
-  if (formData.recurring.endType === 'count' && formData.recurring.endCount) {
-    return formData.recurring.endCount > limit;
-  }
-
-  if (formData.recurring.endType === 'date' && formData.recurring.endDate) {
-    const start = formData.date;
-    const end = new Date(formData.recurring.endDate);
-    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-    let estimated = 0;
-    switch (formData.recurring.frequency) {
-      case 'daily': estimated = diffDays; break;
-      case 'weekly': estimated = Math.ceil(diffDays / 7); break;
-      case 'biweekly': estimated = Math.ceil(diffDays / 14); break;
-      case 'monthly': estimated = Math.ceil(diffDays / 30); break;
-      case 'yearly': estimated = Math.ceil(diffDays / 365); break;
-      case 'custom': estimated = Math.ceil(diffDays / 7); break;
+    if (formData.recurring.endType === 'count' && formData.recurring.endCount) {
+      return formData.recurring.endCount > limit;
     }
 
-    return estimated > limit;
-  }
+    if (formData.recurring.endType === 'date' && formData.recurring.endDate) {
+      const start = formData.date;
+      const end = new Date(formData.recurring.endDate);
+      const diffDays = Math.ceil(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-  return false;
-};
+      let estimated = 0;
+      switch (formData.recurring.frequency) {
+        case 'daily':
+          estimated = diffDays;
+          break;
+        case 'weekly':
+          estimated = Math.ceil(diffDays / 7);
+          break;
+        case 'biweekly':
+          estimated = Math.ceil(diffDays / 14);
+          break;
+        case 'monthly':
+          estimated = Math.ceil(diffDays / 30);
+          break;
+        case 'yearly':
+          estimated = Math.ceil(diffDays / 365);
+          break;
+        case 'custom':
+          estimated = Math.ceil(diffDays / 7);
+          break;
+      }
+
+      return estimated > limit;
+    }
+
+    return false;
+  };
 
   const eventTypes = [
     { value: 'personal', label: 'Osobní', icon: '👤' },
@@ -262,24 +299,51 @@ const hasRecurrenceError = (): boolean => {
   ];
 
   const colorOptions = [
-    '#667eea',
-    '#764ba2',
-    '#ff6b6b',
-    '#4ecdc4',
-    '#45b7d1',
-    '#96ceb4',
-    '#feca57',
-    '#ff9ff3',
-    '#54a0ff',
-    '#5f27cd',
-    '#00d2d3',
-    '#ff9f43',
-    '#8395a7',
-    '#10ac84',
-    '#ee5a24',
-    '#0abde3',
+    '#667eea', // fialová
+    '#ff6b6b', // červená
+    '#4ecdc4', // tyrkysová
+    '#feca57', // žlutá
+    '#54a0ff', // modrá
+    '#10ac84', // zelená
   ];
- 
+
+  // Emoji ikony pro události
+  const iconOptions = [
+    // Běžné
+    { emoji: '📅', label: 'Kalendář' },
+    { emoji: '📌', label: 'Připnuté' },
+    { emoji: '⭐', label: 'Důležité' },
+    { emoji: '❗', label: 'Urgentní' },
+    { emoji: '✅', label: 'Úkol' },
+    // Rodina
+    { emoji: '👶', label: 'Dítě' },
+    { emoji: '🎒', label: 'Škola' },
+    { emoji: '🚗', label: 'Cesta' },
+    { emoji: '🎂', label: 'Narozeniny' },
+    { emoji: '👨‍👩‍👧', label: 'Rodina' },
+    // Koníčky/Sport
+    { emoji: '⚽', label: 'Fotbal' },
+    { emoji: '🎨', label: 'Kreslení' },
+    { emoji: '🎸', label: 'Hudba' },
+    { emoji: '🎮', label: 'Hry' },
+    { emoji: '📚', label: 'Čtení' },
+    { emoji: '🤸', label: 'Parkour' },
+    // Cestování
+    { emoji: '✈️', label: 'Letadlo' },
+    { emoji: '🏖️', label: 'Pláž' },
+    { emoji: '⛷️', label: 'Lyže' },
+    { emoji: '🏕️', label: 'Kemp' },
+    // Svátky
+    { emoji: '🎄', label: 'Vánoce' },
+    { emoji: '🎃', label: 'Halloween' },
+    { emoji: '🐣', label: 'Velikonoce' },
+    { emoji: '🎁', label: 'Dárek' },
+    // Práce/Zdraví
+    { emoji: '💼', label: 'Práce' },
+    { emoji: '💊', label: 'Léky' },
+    { emoji: '🦷', label: 'Zubař' },
+    { emoji: '🏥', label: 'Doktor' },
+  ];
 
   return (
     <div
@@ -448,6 +512,27 @@ const hasRecurrenceError = (): boolean => {
             </div>
           )}
 
+          {/* Pro koho (přiřazení člena rodiny) */}
+          {familyMembers.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Pro koho je událost?:</label>
+              <select
+                className="form-select"
+                value={formData.familyMemberId || 'all'}
+                onChange={(e) =>
+                  handleInputChange('familyMemberId', e.target.value)
+                }
+              >
+                <option value="all">👨‍👩‍👧‍👦 Celá rodina</option>
+                {familyMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.icon || '👤'} {member.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Typ události */}
           <div className="form-group">
             <label className="form-label">Typ události</label>
@@ -508,6 +593,41 @@ const hasRecurrenceError = (): boolean => {
             </div>
           </div>
 
+          {/* Ikona */}
+          <div className="form-group">
+            <label className="form-label">Ikona (volitelné)</label>
+            <div className="icon-picker">
+              {/* Tlačítko pro zrušení ikony */}
+              <button
+                type="button"
+                className={`icon-option ${
+                  formData.icon === '' ? 'selected' : ''
+                }`}
+                onClick={() => handleInputChange('icon', '')}
+                title="Bez ikony"
+                style={{
+                  fontSize: '14px',
+                  color: '#999',
+                }}
+              >
+                ✕
+              </button>
+              {iconOptions.map((item) => (
+                <button
+                  key={item.emoji}
+                  type="button"
+                  className={`icon-option ${
+                    formData.icon === item.emoji ? 'selected' : ''
+                  }`}
+                  onClick={() => handleInputChange('icon', item.emoji)}
+                  title={item.label}
+                >
+                  {item.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Připomínky */}
           <ReminderSelector
             reminders={formData.reminders}
@@ -531,8 +651,8 @@ const hasRecurrenceError = (): boolean => {
             <button type="button" className="btn btn-outline" onClick={onClose}>
               Zrušit
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary"
               disabled={hasRecurrenceError()}
             >

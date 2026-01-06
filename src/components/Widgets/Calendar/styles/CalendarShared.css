@@ -1,8 +1,8 @@
 /* === CalendarShared.css === */
 /* Sdílené styly pro všechny kalendářní komponenty */
 
-/* === Import Google Fonts === */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap');
+/* === Google Fonts === */
+/* Font Caveat se načítá v index.html pro lepší výkon (eliminace render-blocking) */
 
 /* === CSS Variables === */
 :root {
@@ -222,6 +222,43 @@
 .color-option.selected {
   border-color: var(--calendar-text);
   box-shadow: 0 0 0 2px white, 0 0 0 4px var(--calendar-text);
+}
+
+/* Icon Picker */
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.icon-option {
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.icon-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
 }
 
 .family-member-selector {

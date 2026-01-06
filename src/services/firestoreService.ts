@@ -7,7 +7,7 @@ import {
   deleteDoc,
   arrayUnion,
   arrayRemove,
-  deleteField, 
+  deleteField,
   collection,
   addDoc,
   query,
@@ -33,6 +33,8 @@ import type {
   HeaderSlotConfig,
   ShoppingItem,
   ShoppingList,
+  DishwasherState,
+  DishwasherHistoryItem,
 } from '../types/index';
 
 class FirestoreService {
@@ -117,7 +119,7 @@ class FirestoreService {
    * @param newRoomId ID nové místnosti (nebo ""/null pro odebrání)
    * @param oldRoomId ID staré místnosti (pokud bylo někde přiřazeno)
    */
-   async assignDeviceToRoom(
+  async assignDeviceToRoom(
     deviceId: string,
     newRoomId: string | null | undefined,
     oldRoomId: string | null | undefined
@@ -132,9 +134,9 @@ class FirestoreService {
         batch.update(deviceRef, { roomId: newRoomId, lastUpdated: Date.now() });
       } else {
         // Odebíráme z místnosti (nastavujeme "nezařazeno")
-        batch.update(deviceRef, { 
+        batch.update(deviceRef, {
           roomId: deleteField(), // Smaže pole 'roomId' z dokumentu
-          lastUpdated: Date.now() 
+          lastUpdated: Date.now(),
         });
       }
 
@@ -143,7 +145,7 @@ class FirestoreService {
         const oldRoomRef = doc(db, 'rooms', oldRoomId);
         batch.update(oldRoomRef, {
           devices: arrayRemove(deviceId), // Atomicky odebere ID z pole
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         });
       }
 
@@ -152,15 +154,16 @@ class FirestoreService {
         const newRoomRef = doc(db, 'rooms', newRoomId);
         batch.update(newRoomRef, {
           devices: arrayUnion(deviceId), // Atomicky přidá ID do pole
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         });
       }
 
       // Krok 4: Spusť všechny operace najednou
       await batch.commit();
-      
-      console.log(`✅ Atomicky přesunuto zařízení ${deviceId} (Odebráno z: ${oldRoomId}, Přidáno do: ${newRoomId})`);
 
+      console.log(
+        `✅ Atomicky přesunuto zařízení ${deviceId} (Odebráno z: ${oldRoomId}, Přidáno do: ${newRoomId})`
+      );
     } catch (error) {
       console.error('❌ Chyba při atomickém přiřazení zařízení:', error);
       throw new Error('Nepodařilo se přiřadit zařízení');
@@ -299,70 +302,68 @@ class FirestoreService {
 
   // ==================== FLOORS (PŮDORYSY) ====================
 
-/**
- * Získá layout půdorysu (pozice místností)
- */
-async getFloorLayout(floorId: string): Promise<any | null> {
-  try {
-    const docRef = doc(db, 'floors', floorId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data();
+  /**
+   * Získá layout půdorysu (pozice místností)
+   */
+  async getFloorLayout(floorId: string): Promise<any | null> {
+    try {
+      const docRef = doc(db, 'floors', floorId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting floor layout:', error);
+      throw new Error('Nepodařilo se načíst půdorys');
     }
-    return null;
-  } catch (error) {
-    console.error('Error getting floor layout:', error);
-    throw new Error('Nepodařilo se načíst půdorys');
   }
-}
 
-/**
- * Uloží layout půdorysu (pozice místností)
- */
-async saveFloorLayout(floorId: string, rooms: any[]): Promise<void> {
-  try {
-    const docRef = doc(db, 'floors', floorId);
-    await setDoc(
-      docRef,
-      {
-        rooms: rooms,
-        updatedAt: Date.now(),
-      },
-      { merge: true }
-    );
-    console.log(`✅ Floor layout "${floorId}" uložen`);
-  } catch (error) {
-    console.error('Error saving floor layout:', error);
-    throw new Error('Nepodařilo se uložit půdorys');
-  }
-}
-
-
-
-/**
- * Subscribe k real-time změnám layoutu
- */
-subscribeToFloorLayout(
-  floorId: string,
-  callback: (rooms: any[]) => void
-): Unsubscribe {
-  const docRef = doc(db, 'floors', floorId);
-  return onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      callback(data.rooms || []);
-    } else {
-      callback([]);
+  /**
+   * Uloží layout půdorysu (pozice místností)
+   */
+  async saveFloorLayout(floorId: string, rooms: any[]): Promise<void> {
+    try {
+      const docRef = doc(db, 'floors', floorId);
+      await setDoc(
+        docRef,
+        {
+          rooms: rooms,
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
+      console.log(`✅ Floor layout "${floorId}" uložen`);
+    } catch (error) {
+      console.error('Error saving floor layout:', error);
+      throw new Error('Nepodařilo se uložit půdorys');
     }
-  });
-}
+  }
+
+  /**
+   * Subscribe k real-time změnám layoutu
+   */
+  subscribeToFloorLayout(
+    floorId: string,
+    callback: (rooms: any[]) => void
+  ): Unsubscribe {
+    const docRef = doc(db, 'floors', floorId);
+    return onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        callback(data.rooms || []);
+      } else {
+        callback([]);
+      }
+    });
+  }
 
   // ==================== DEVICES ====================
 
   /**
    * 🗂️ Vytvoří novou dávku (batch) pro hromadné zápisy
    */
-   getWriteBatch() {
+  getWriteBatch() {
     return writeBatch(db);
   }
 
@@ -409,7 +410,7 @@ subscribeToFloorLayout(
       // ✅ NOVÉ: Nejprve načti existující zařízení pro zachování uživatelských nastavení
       const q = query(devicesRef, where('userId', '==', uid));
       const existingDevicesSnapshot = await getDocs(q);
-      
+
       // Vytvoř mapu existujících zařízení pro rychlý přístup
       const existingDevicesMap = new Map<string, any>();
       existingDevicesSnapshot.forEach((docSnap) => {
@@ -422,18 +423,20 @@ subscribeToFloorLayout(
       devices.forEach((device) => {
         const docRef = doc(devicesRef, device.id);
         const existingData = existingDevicesMap.get(device.id);
-        
+
         // ✅ Zachovej uživatelská nastavení z existujícího dokumentu
-        const preservedSettings = existingData ? {
-          gridLayout: existingData.gridLayout,
-          cardSettings: existingData.cardSettings,
-          customName: existingData.customName,
-          customIcon: existingData.customIcon,
-          customColor: existingData.customColor,
-          notes: existingData.notes,
-          roomId: existingData.roomId,
-          position: existingData.position,
-        } : {};
+        const preservedSettings = existingData
+          ? {
+              gridLayout: existingData.gridLayout,
+              cardSettings: existingData.cardSettings,
+              customName: existingData.customName,
+              customIcon: existingData.customIcon,
+              customColor: existingData.customColor,
+              notes: existingData.notes,
+              roomId: existingData.roomId,
+              position: existingData.position,
+            }
+          : {};
 
         // Odstraň undefined hodnoty z preservedSettings
         const cleanPreservedSettings = Object.fromEntries(
@@ -446,7 +449,7 @@ subscribeToFloorLayout(
           userId: uid,
           lastUpdated: Date.now(),
         });
-        
+
         processedIds.add(device.id);
       });
 
@@ -458,7 +461,9 @@ subscribeToFloorLayout(
       });
 
       await batch.commit();
-      console.log(`✅ Uloženo ${devices.length} zařízení (s preserved settings)`);
+      console.log(
+        `✅ Uloženo ${devices.length} zařízení (s preserved settings)`
+      );
     } catch (error) {
       console.error('Error saving user devices:', error);
       throw new Error('Nepodařilo se uložit zařízení');
@@ -525,7 +530,7 @@ subscribeToFloorLayout(
    * @param dataToUpdate Objekt s cestou k aktualizaci,
    * např: { 'cardSettings.gridLayout': {x: 1, y: 2, w: 1, h: 1} }
    */
-   updateDevicePartial(
+  updateDevicePartial(
     batch: any, // Firebase WriteBatch
     _userId: string, // Přijímáme, ale nepoužíváme v cestě
     deviceId: string,
@@ -533,13 +538,13 @@ subscribeToFloorLayout(
   ) {
     // Tvoje kolekce je 'devices', nikoliv vnořená pod uživatelem
     const deviceDocRef = doc(db, 'devices', deviceId);
-    
+
     // Přidáme i 'lastUpdated' pro konzistenci
     const updatesWithTimestamp = {
       ...dataToUpdate,
       lastUpdated: Date.now(),
     };
-    
+
     batch.update(deviceDocRef, updatesWithTimestamp);
   }
 
@@ -954,15 +959,15 @@ subscribeToFloorLayout(
   /**
    * Získá nákupní seznam (sdílený pro celou rodinu)
    */
-   async getShoppingList(): Promise<ShoppingList | null> {
+  async getShoppingList(): Promise<ShoppingList | null> {
     try {
       const docRef = doc(db, 'allFamily', 'shoppingList');
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as ShoppingList;
       }
-      
+
       // Vytvoř prázdný seznam, pokud neexistuje
       const emptyList: Omit<ShoppingList, 'id'> = {
         items: [],
@@ -977,10 +982,12 @@ subscribeToFloorLayout(
     }
   }
 
- /**
+  /**
    * Přidá položku do nákupního seznamu
    */
-  async addShoppingItem(item: Omit<ShoppingItem, 'id' | 'addedAt' | 'completed'>): Promise<void> {
+  async addShoppingItem(
+    item: Omit<ShoppingItem, 'id' | 'addedAt' | 'completed'>
+  ): Promise<void> {
     try {
       const docRef = doc(db, 'allFamily', 'shoppingList');
       const newItem: ShoppingItem = {
@@ -989,10 +996,10 @@ subscribeToFloorLayout(
         addedAt: Date.now(),
         completed: false,
       };
-      
+
       // Nejprve zkontroluj, jestli dokument existuje
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         // Dokument existuje - přidej položku
         await updateDoc(docRef, {
@@ -1007,36 +1014,39 @@ subscribeToFloorLayout(
           updatedAt: Date.now(),
         });
       }
-      
+
       console.log('✅ Položka přidána do nákupního seznamu');
     } catch (error) {
       console.error('❌ Chyba při přidávání položky:', error);
       throw new Error('Nepodařilo se přidat položku');
     }
   }
-  
+
   /**
    * Aktualizuje položku v nákupním seznamu (např. completed)
    */
-  async updateShoppingItem(itemId: string, updates: Partial<ShoppingItem>): Promise<void> {
+  async updateShoppingItem(
+    itemId: string,
+    updates: Partial<ShoppingItem>
+  ): Promise<void> {
     try {
       const docRef = doc(db, 'allFamily', 'shoppingList');
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) {
         throw new Error('Nákupní seznam neexistuje');
       }
-      
+
       const data = docSnap.data() as ShoppingList;
       const updatedItems = data.items.map((item) =>
         item.id === itemId ? { ...item, ...updates } : item
       );
-      
+
       await updateDoc(docRef, {
         items: updatedItems,
         updatedAt: Date.now(),
       });
-      
+
       console.log('✅ Položka aktualizována');
     } catch (error) {
       console.error('❌ Chyba při aktualizaci položky:', error);
@@ -1051,19 +1061,19 @@ subscribeToFloorLayout(
     try {
       const docRef = doc(db, 'allFamily', 'shoppingList');
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) {
         throw new Error('Nákupní seznam neexistuje');
       }
-      
+
       const data = docSnap.data() as ShoppingList;
       const filteredItems = data.items.filter((item) => item.id !== itemId);
-      
+
       await updateDoc(docRef, {
         items: filteredItems,
         updatedAt: Date.now(),
       });
-      
+
       console.log('✅ Položka smazána');
     } catch (error) {
       console.error('❌ Chyba při mazání položky:', error);
@@ -1078,17 +1088,17 @@ subscribeToFloorLayout(
     try {
       const docRef = doc(db, 'allFamily', 'shoppingList');
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) return;
-      
+
       const data = docSnap.data() as ShoppingList;
       const activeItems = data.items.filter((item) => !item.completed);
-      
+
       await updateDoc(docRef, {
         items: activeItems,
         updatedAt: Date.now(),
       });
-      
+
       console.log('✅ Dokončené položky smazány');
     } catch (error) {
       console.error('❌ Chyba při mazání dokončených položek:', error);
@@ -1099,9 +1109,11 @@ subscribeToFloorLayout(
   /**
    * Real-time poslouchání změn v nákupním seznamu
    */
-  subscribeToShoppingList(callback: (list: ShoppingList | null) => void): Unsubscribe {
+  subscribeToShoppingList(
+    callback: (list: ShoppingList | null) => void
+  ): Unsubscribe {
     const docRef = doc(db, 'allFamily', 'shoppingList');
-    
+
     return onSnapshot(
       docRef,
       (docSnap) => {
@@ -1117,8 +1129,172 @@ subscribeToFloorLayout(
       }
     );
   }
+
+  // ==================== DISHWASHER ====================
+
+  /**
+   * Získá stav myčky (sdílený pro celou rodinu)
+   */
+  async getDishwasherState(): Promise<DishwasherState | null> {
+    try {
+      const docRef = doc(db, 'allFamily', 'dishwasher');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Kontrola, jestli má nové schéma
+        if (data.nextPersonId) {
+          return { id: docSnap.id, ...data } as DishwasherState;
+        }
+        // Starý dokument - přepíšeme ho
+        console.log('🍽️ Starý dokument, přepisuji na nové schéma...');
+      }
+
+      // Vytvoř výchozí stav - začíná Jareček
+      const initialState: Omit<DishwasherState, 'id'> = {
+        nextPersonId: 'jarecek',
+        nextPersonName: 'Jareček',
+        nextPersonEmoji: '👦',
+        lastCompletedBy: '',
+        lastCompletedByName: '',
+        lastCompletedByEmoji: '',
+        lastCompletedAt: null,
+        history: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await setDoc(docRef, initialState);
+      return { id: 'dishwasher', ...initialState };
+    } catch (error) {
+      console.error('❌ Chyba při načítání stavu myčky:', error);
+      throw new Error('Nepodařilo se načíst stav myčky');
+    }
+  }
+
+  /**
+   * Potvrdí, že aktuální osoba umyla nádobí a přepne na dalšího
+   */
+  async completeDishwasherDuty(): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'dishwasher');
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error('Dokument myčky neexistuje');
+      }
+
+      const currentData = docSnap.data() as DishwasherState;
+
+      // Nový záznam do historie
+      const historyItem: DishwasherHistoryItem = {
+        id: `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        personId: currentData.nextPersonId,
+        personName: currentData.nextPersonName,
+        personEmoji: currentData.nextPersonEmoji,
+        completedAt: Date.now(),
+      };
+
+      // Přepni na dalšího člověka
+      const nextPerson =
+        currentData.nextPersonId === 'jarecek'
+          ? { id: 'johanka', name: 'Johanka nádobí!', emoji: '👧' }
+          : { id: 'jarecek', name: 'Jareček nádobí!', emoji: '👦' };
+
+      // Přidej nový záznam na začátek a omez na max 10 položek
+      const updatedHistory = [
+        historyItem,
+        ...(currentData.history || []),
+      ].slice(0, 10);
+
+      await updateDoc(docRef, {
+        nextPersonId: nextPerson.id,
+        nextPersonName: nextPerson.name,
+        nextPersonEmoji: nextPerson.emoji,
+        lastCompletedBy: currentData.nextPersonId,
+        lastCompletedByName: currentData.nextPersonName,
+        lastCompletedByEmoji: currentData.nextPersonEmoji,
+        lastCompletedAt: Date.now(),
+        history: updatedHistory,
+        updatedAt: Date.now(),
+      });
+
+      console.log(
+        `✅ ${currentData.nextPersonName} umyl/a nádobí, další je ${nextPerson.name}`
+      );
+    } catch (error) {
+      console.error('❌ Chyba při potvrzení mytí:', error);
+      throw new Error('Nepodařilo se potvrdit mytí nádobí');
+    }
+  }
+
+  /**
+   * Vrátí poslední změnu (UNDO - pro rychlé překliknutí)
+   */
+  async undoDishwasherDuty(): Promise<void> {
+    try {
+      const docRef = doc(db, 'allFamily', 'dishwasher');
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error('Dokument myčky neexistuje');
+      }
+
+      const currentData = docSnap.data() as DishwasherState;
+
+      // Odeber poslední záznam z historie
+      const lastRecord = currentData.history[0];
+      if (!lastRecord) {
+        console.log('⚠️ Žádná historie k vrácení');
+        return;
+      }
+
+      const updatedHistory = currentData.history.slice(1);
+      const previousRecord = updatedHistory[0];
+
+      await updateDoc(docRef, {
+        // Vrať zpět toho, kdo byl předtím na řadě
+        nextPersonId: lastRecord.personId,
+        nextPersonName: lastRecord.personName,
+        nextPersonEmoji: lastRecord.personEmoji,
+        // Aktualizuj "poslední dokončený"
+        lastCompletedBy: previousRecord?.personId || '',
+        lastCompletedByName: previousRecord?.personName || '',
+        lastCompletedByEmoji: previousRecord?.personEmoji || '',
+        lastCompletedAt: previousRecord?.completedAt || null,
+        history: updatedHistory,
+        updatedAt: Date.now(),
+      });
+
+      console.log(`✅ Undo: ${lastRecord.personName} je znovu na řadě`);
+    } catch (error) {
+      console.error('❌ Chyba při undo:', error);
+      throw new Error('Nepodařilo se vrátit změnu');
+    }
+  }
+
+  /**
+   * Real-time poslouchání změn stavu myčky
+   */
+  subscribeToDishwasher(
+    callback: (state: DishwasherState | null) => void
+  ): Unsubscribe {
+    const docRef = doc(db, 'allFamily', 'dishwasher');
+
+    return onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          callback({ id: docSnap.id, ...docSnap.data() } as DishwasherState);
+        } else {
+          callback(null);
+        }
+      },
+      (error) => {
+        console.error('❌ Chyba při poslechu stavu myčky:', error);
+        callback(null);
+      }
+    );
+  }
 }
-
-
 
 export const firestoreService = new FirestoreService();

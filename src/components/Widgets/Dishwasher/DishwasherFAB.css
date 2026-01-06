@@ -1,0 +1,225 @@
+/* src/components/Widgets/Dishwasher/DishwasherFAB.css */
+
+.dishwasher-fab-container {
+  position: fixed;
+  top: 16px;
+  right: 80px;
+  z-index: 1000;
+}
+
+/* FAB tlačítko - zobrazuje kdo je na řadě */
+.dishwasher-fab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 64px;
+  padding: 6px 12px;
+  border-radius: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9));
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dishwasher-fab:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dishwasher-fab:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.dishwasher-fab.updating {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.dishwasher-fab.loading {
+  background: rgba(150, 150, 150, 0.5);
+}
+
+.fab-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.fab-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: white;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Undo hint */
+.dishwasher-undo-hint {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: rgba(76, 175, 80, 0.95);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  animation: hint-appear 0.3s ease;
+}
+
+@keyframes hint-appear {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Popup */
+.dishwasher-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  width: 260px;
+  background: rgba(30, 30, 50, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: popup-appear 0.2s ease;
+}
+
+@keyframes popup-appear {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  color: #fff;
+}
+
+.popup-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.popup-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Aktuální osoba */
+.popup-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.1));
+  margin: 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(99, 102, 241, 0.5);
+}
+
+.current-emoji {
+  font-size: 2.5rem;
+}
+
+.current-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.current-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.current-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.popup-last {
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0 16px 12px;
+}
+
+/* Historie */
+.popup-history {
+  padding: 0 12px 12px;
+}
+
+.history-title {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.history-name {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.history-time {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+}
+
+.popup-hint {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .dishwasher-fab-container {
+    top: 12px;
+    right: 70px;
+  }
+
+  .dishwasher-fab {
+    min-width: 56px;
+    height: 56px;
+  }
+
+  .fab-emoji {
+    font-size: 1.4rem;
+  }
+
+  .fab-name {
+    font-size: 0.6rem;
+  }
+}

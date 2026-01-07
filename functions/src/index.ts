@@ -280,7 +280,11 @@ export const onNewCalendarEvent = functions
           notification: {
             title,
             body,
-            icon: '/icon-192x192.png',
+          },
+          webpush: {
+            notification: {
+              icon: '/icon-192x192.png',
+            },
           },
           data: {
             type: 'new_calendar_event',
@@ -290,26 +294,25 @@ export const onNewCalendarEvent = functions
           token,
         }));
 
-try {
-  const response = await admin.messaging().sendEach(messages);
-  console.log(`✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`);
-  sentCount += response.successCount;
-  
-  // Loguj jednotlivé chyby
-  if (response.failureCount > 0) {
-    response.responses.forEach((resp, idx) => {
-      if (!resp.success) {
-        console.error(`❌ Token ${idx} pro ${member.name} selhal:`, resp.error?.message);
-      }
-    });
-  }
-} catch (error) {
-  console.error(`❌ Chyba push pro ${member.name}:`, error);
-}
+        try {
+          const response = await admin.messaging().sendEach(messages);
+          console.log(`✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`);
+          sentCount += response.successCount;
+          
+          // Loguj jednotlivé chyby
+          if (response.failureCount > 0) {
+            response.responses.forEach((resp: any, idx: number) => {
+              if (!resp.success) {
+                console.error(`❌ Token ${idx} pro ${member.name} selhal:`, resp.error?.message);
+              }
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Chyba push pro ${member.name}:`, error);
+        }
       }
 
       console.log(`✅ Celkem odesláno: ${sentCount} notifikací`);
       return null;
     }
   );
-

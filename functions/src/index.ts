@@ -290,18 +290,26 @@ export const onNewCalendarEvent = functions
           token,
         }));
 
-        try {
-          const response = await admin.messaging().sendEach(messages);
-          console.log(
-            `✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`
-          );
-          sentCount += response.successCount;
-        } catch (error) {
-          console.error(`❌ Chyba push pro ${member.name}:`, error);
-        }
+try {
+  const response = await admin.messaging().sendEach(messages);
+  console.log(`✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`);
+  sentCount += response.successCount;
+  
+  // Loguj jednotlivé chyby
+  if (response.failureCount > 0) {
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        console.error(`❌ Token ${idx} pro ${member.name} selhal:`, resp.error?.message);
+      }
+    });
+  }
+} catch (error) {
+  console.error(`❌ Chyba push pro ${member.name}:`, error);
+}
       }
 
       console.log(`✅ Celkem odesláno: ${sentCount} notifikací`);
       return null;
     }
   );
+

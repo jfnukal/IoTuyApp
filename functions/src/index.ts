@@ -197,3 +197,111 @@ export const checkReminders = functions
       return null;
     }
   });
+
+// ==================== TRIGGER: NOVÁ UDÁLOST ====================
+
+export const onNewCalendarEvent = functions
+  .region('europe-west1')
+  .firestore.document('calendarEvents/{eventId}')
+  .onCreate(
+    async (
+      snapshot: functions.firestore.QueryDocumentSnapshot,
+      context: functions.EventContext
+    ) => {
+      console.log('📅 Nová událost vytvořena:', context.params.eventId);
+
+      const event = snapshot.data();
+      if (!event) {
+        console.log('⚠️ Prázdná data události');
+        return null;
+      }
+
+      // Přeskoč osobní události
+      if (event.type === 'personal') {
+        console.log('⏭️ Osobní událost - přeskakuji notifikace');
+        return null;
+      }
+
+      const db = admin.firestore();
+      const authorId = event.createdBy;
+
+      // Získej jméno autora
+      let authorName = 'Někdo';
+      if (authorId) {
+        const membersSnapshot = await db
+          .collection('familyMembers')
+          .where('authUid', '==', authorId)
+          .limit(1)
+          .get();
+
+        if (!membersSnapshot.empty) {
+          authorName = membersSnapshot.docs[0].data().name || 'Někdo';
+        }
+      }
+
+      // Získej všechny členy rodiny
+      const allMembersSnapshot = await db.collection('familyMembers').get();
+
+      let sentCount = 0;
+
+      for (const memberDoc of allMembersSnapshot.docs) {
+        const member = memberDoc.data();
+        const memberAuthUid = member.authUid;
+
+        // Přeskoč autora - ten notifikaci nedostane
+        if (memberAuthUid === authorId) {
+          console.log(`⏭️ Přeskakuji autora: ${member.name}`);
+          continue;
+        }
+
+        // Získej FCM tokeny pro tohoto člena
+        if (!memberAuthUid) {
+          console.log(`⚠️ Člen ${member.name} nemá authUid`);
+          continue;
+        }
+
+        const userSettingsDoc = await db
+          .collection('userSettings')
+          .doc(memberAuthUid)
+          .get();
+
+        const tokens = userSettingsDoc.data()?.fcmTokens || [];
+
+        if (tokens.length === 0) {
+          console.log(`⚠️ Člen ${member.name} nemá FCM tokeny`);
+          continue;
+        }
+
+        // Sestav notifikaci
+        const title = '📅 Nová událost';
+        const body = `${event.title} - přidal/a ${authorName}`;
+
+        const messages = tokens.map((token: string) => ({
+          notification: {
+            title,
+            body,
+            icon: '/icon-192x192.png',
+          },
+          data: {
+            type: 'new_calendar_event',
+            eventId: context.params.eventId,
+            timestamp: Date.now().toString(),
+          },
+          token,
+        }));
+
+        try {
+          const response = await admin.messaging().sendEach(messages);
+          console.log(
+            `✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`
+          );
+          sentCount += response.successCount;
+        } catch (error) {
+          console.error(`❌ Chyba push pro ${member.name}:`, error);
+        }
+      }
+
+      console.log(`✅ Celkem odesláno: ${sentCount} notifikací`);
+      return null;
+    }
+  );

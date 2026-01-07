@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense, memo } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useCalendar } from '../Calendar/CalendarProvider';
 import { useWidgetSettings } from '../../../hooks/useWidgetSettings';
 
@@ -21,6 +22,8 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
   compact = false,
 }) => {
   const { getEventsByDate, formatDate, isToday } = useCalendar();
+  const { currentUser } = useAuth();
+  const [newEventsPopupOpen, setNewEventsPopupOpen] = useState(false);
   const { settings } = useWidgetSettings();
 
   // Načíst ze settings, nebo použít props, nebo fallback hodnoty
@@ -32,18 +35,29 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
   const [upcomingEvents, setUpcomingEvents] = useState<
     Array<CalendarEventData & { displayDate: Date }>
   >([]);
+  const [eventToEdit, setEventToEdit] = useState<CalendarEventData | null>(
+    null
+  );
+  const [previewEvent, setPreviewEvent] = useState<CalendarEventData | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+
+  // 🆕 Filtruj nové události (< 24h, ne autor, ne personal)
+  const newEvents = upcomingEvents.filter((event) => {
+    const now = Date.now();
+    const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+    const isRecent = event.createdAt > twentyFourHoursAgo;
+    const isNotAuthor = true; // TODO: vrátit na event.createdBy !== currentUser?.uid
+    const isNotPersonal = event.type !== 'personal';
+    return isRecent && isNotAuthor && isNotPersonal;
+  });
 
   useEffect(() => {
     const loadEvents = () => {
       const today = new Date();
       const events: Array<CalendarEventData & { displayDate: Date }> = [];
-
-      console.log('📊 UpcomingEventsWidget - DEBUG:');
-      console.log('  - Dnes:', today.toLocaleDateString('cs'));
-      console.log('  - Hledám dní dopředu:', effectiveDaysAhead);
-      console.log('  - Max událostí:', effectiveMaxEvents);
 
       // Načti dnešní události (filtruj typ "personal")
       const todayEvents = getEventsByDate(today);
@@ -85,6 +99,40 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 
     loadEvents();
   }, [getEventsByDate, effectiveDaysAhead, effectiveMaxEvents]);
+
+  // Helper funkce pro získání jmen
+  const getAuthorName = (authUid: string | undefined): string => {
+    if (!authUid) return 'Neznámý';
+    const author = familyMembers.find((m) => m.authUid === authUid);
+    return author?.name || 'Neznámý';
+  };
+
+  const getMemberName = (memberId: string | undefined): string => {
+    if (!memberId) return 'Nepřiřazeno';
+    if (memberId === 'all') return 'Celá rodina';
+    const member = familyMembers.find((m) => m.id === memberId);
+    return member?.name || 'Nepřiřazeno';
+  };
+
+  const getRecurringText = (event: CalendarEventData): string | null => {
+    if (!event.recurring) return null;
+    switch (event.recurring.frequency) {
+      case 'daily':
+        return 'Opakuje se denně';
+      case 'weekly':
+        return 'Opakuje se týdně';
+      case 'biweekly':
+        return 'Opakuje se každé 2 týdny';
+      case 'monthly':
+        return 'Opakuje se měsíčně';
+      case 'yearly':
+        return 'Opakuje se ročně';
+      case 'custom':
+        return 'Vlastní opakování';
+      default:
+        return null;
+    }
+  };
 
   // Ikony podle typu události - s podporou vlastní ikony
   const getEventIcon = (event: CalendarEventData) => {
@@ -146,6 +194,17 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
             <span className="event-count">
               {upcomingEvents.length} událostí
             </span>
+            {newEvents.length > 0 && (
+              <button
+                className="new-events-badge"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNewEventsPopupOpen(!newEventsPopupOpen);
+                }}
+              >
+                🆕 {newEvents.length} {newEvents.length === 1 ? 'nová' : 'nové'}
+              </button>
+            )}
             <button
               className="toggle-button"
               onClick={(e) => {
@@ -192,13 +251,16 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                       todayEvents.length === 1 ? 'single-event' : ''
                     }`}
                   >
-                    {todayEvents.slice(0, 6).map((event, index) => (
+                    {todayEvents.slice(0, 6).map((event) => (
                       <div
                         key={event.id}
                         className="event-card today-event"
                         style={{
                           background: getEventColor(event.type),
-                          animationDelay: `${index * 0.1}s`,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewEvent(event);
                         }}
                       >
                         <div className="event-icon">{getEventIcon(event)}</div>
@@ -208,7 +270,6 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                             <span className="event-time">⏰ {event.time}</span>
                           )}
                         </div>
-                        <div className="event-badge">Dnes!</div>
                       </div>
                     ))}
                   </div>
@@ -240,6 +301,10 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
                                 (todayEvents.length + index) * 0.1
                               }s`,
                             }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewEvent(event);
+                            }}
                           >
                             <div className="event-icon">
                               {getEventIcon(event)}
@@ -264,6 +329,161 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
             </>
           )}
         </div>
+
+        {/* 🆕 Popup s novými událostmi */}
+        {newEventsPopupOpen && newEvents.length > 0 && (
+          <div
+            className="new-events-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="new-events-popup-header">
+              <h4>🆕 Nové události</h4>
+              <button
+                className="popup-close-btn"
+                onClick={() => setNewEventsPopupOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="new-events-popup-list">
+              {newEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="new-event-item"
+                  onClick={() => {
+                    setNewEventsPopupOpen(false);
+                    setPreviewEvent(event);
+                  }}
+                >
+                  <span className="new-event-icon">{getEventIcon(event)}</span>
+                  <div className="new-event-details">
+                    <span className="new-event-title">{event.title}</span>
+                    <span className="new-event-date">
+                      {formatDate(event.displayDate, 'DD.MM')}{' '}
+                      {event.time && `v ${event.time}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 🔍 Náhled události */}
+        {previewEvent && (
+          <div
+            className="event-preview-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="event-preview-header">
+              <span className="preview-icon">{getEventIcon(previewEvent)}</span>
+              <h4 className="preview-title">{previewEvent.title}</h4>
+              <button
+                className="popup-close-btn"
+                onClick={() => setPreviewEvent(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="event-preview-content">
+              {/* Datum */}
+              <div className="preview-row">
+                <span className="preview-label">📅 Datum:</span>
+                <span className="preview-value">
+                  {formatDate(
+                    new Date(previewEvent.date + 'T00:00:00'),
+                    'DD.MM.YYYY'
+                  )}
+                </span>
+              </div>
+
+              {/* Vícedenní událost - zobrazit pouze pokud je validní a odlišné od startDate */}
+              {(() => {
+                if (!previewEvent.endDate) return null;
+                if (typeof previewEvent.endDate !== 'string') return null;
+                if (previewEvent.endDate === previewEvent.date) return null;
+
+                // Validace formátu YYYY-MM-DD
+                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!dateRegex.test(previewEvent.endDate)) return null;
+
+                // Zkusit vytvořit datum a ověřit, že je validní
+                const endDateObj = new Date(previewEvent.endDate + 'T00:00:00');
+                if (isNaN(endDateObj.getTime())) return null;
+
+                return (
+                  <div className="preview-row">
+                    <span className="preview-label">📆 Do:</span>
+                    <span className="preview-value">
+                      {formatDate(endDateObj, 'DD.MM.YYYY')}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Čas - pouze pokud existuje (není celodenní) */}
+              {previewEvent.time && (
+                <div className="preview-row">
+                  <span className="preview-label">⏰ Čas:</span>
+                  <span className="preview-value">
+                    {previewEvent.time}
+                    {previewEvent.endTime && ` – ${previewEvent.endTime}`}
+                  </span>
+                </div>
+              )}
+
+              {/* Pro koho */}
+              <div className="preview-row">
+                <span className="preview-label">👤 Pro:</span>
+                <span className="preview-value">
+                  {getMemberName(previewEvent.familyMemberId)}
+                </span>
+              </div>
+
+              {/* Vytvořil */}
+              <div className="preview-row">
+                <span className="preview-label">✍️ Vytvořil:</span>
+                <span className="preview-value">
+                  {getAuthorName(previewEvent.createdBy)}
+                </span>
+              </div>
+
+              {/* Opakování */}
+              {getRecurringText(previewEvent) && (
+                <div className="preview-row">
+                  <span className="preview-label">🔄 Opakování:</span>
+                  <span className="preview-value">
+                    {getRecurringText(previewEvent)}
+                  </span>
+                </div>
+              )}
+
+              {/* Popis */}
+              {previewEvent.description && (
+                <div className="preview-row preview-description">
+                  <span className="preview-label">📝 Poznámka:</span>
+                  <span className="preview-value">
+                    {previewEvent.description}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="event-preview-actions">
+              <button
+                className="preview-edit-btn"
+                onClick={() => {
+                  setPreviewEvent(null);
+                  setEventToEdit(previewEvent);
+                  setIsModalOpen(true);
+                }}
+              >
+                ✏️ Upravit
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Click Hint */}
         <div className="click-hint-events">
@@ -297,8 +517,12 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
         >
           <CalendarModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEventToEdit(null);
+            }}
             familyMembers={familyMembers}
+            initialEventToEdit={eventToEdit}
           />
         </Suspense>
       )}

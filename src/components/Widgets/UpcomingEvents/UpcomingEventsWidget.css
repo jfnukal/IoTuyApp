@@ -150,7 +150,7 @@
   margin-bottom: 0;
 }
 
-/* Compact mode - menší event cards */
+/* Compact mode - menÅ¡Ã­ event cards */
 .compact-mode .event-card {
   padding: 10px;
   gap: 10px;
@@ -291,9 +291,9 @@
   font-weight: 800;
   text-transform: uppercase;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  /* 🆕 Animace POUZE po načtení - ne při prvním renderingu */
+  /* ðŸ†• Animace POUZE po naÄtenÃ­ - ne pÅ™i prvnÃ­m renderingu */
   animation: pulse 2s infinite;
-  animation-delay: 2s; /* Počká až se stránka ustálí */
+  animation-delay: 2s; /* PoÄkÃ¡ aÅ¾ se strÃ¡nka ustÃ¡lÃ­ */
   will-change: transform; /* Optimalizace pro animaci */
 }
 
@@ -365,10 +365,10 @@
   }
 }
 
-/* --- STYLY PRO OVLÁDACÍ PRVKY WIDGETU --- */
+/* --- STYLY PRO OVLÃDACÃ PRVKY WIDGETU --- */
 
 .widget-header {
-  /* Ujistíme se, že header používá flexbox pro správné zarovnání */
+  /* UjistÃ­me se, Å¾e header pouÅ¾Ã­vÃ¡ flexbox pro sprÃ¡vnÃ© zarovnÃ¡nÃ­ */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -377,7 +377,7 @@
 .widget-controls {
   display: flex;
   align-items: center;
-  gap: 12px; /* Mezera mezi počtem a tlačítkem */
+  gap: 12px; /* Mezera mezi poÄtem a tlaÄÃ­tkem */
 }
 
 .toggle-button {
@@ -412,15 +412,15 @@
   transform: rotate(180deg);
 }
 
-/* --- Skrytí tlačítka na desktopu --- */
-/* Tento kód se aktivuje pouze pro obrazovky širší než 768px */
+/* --- SkrytÃ­ tlaÄÃ­tka na desktopu --- */
+/* Tento kÃ³d se aktivuje pouze pro obrazovky Å¡irÅ¡Ã­ neÅ¾ 768px */
 @media (min-width: 768px) {
   .toggle-button {
     display: none;
   }
 }
 
-/* === GRID PRO DNEŠNÍ UDÁLOSTI === */
+/* === GRID PRO DNEÅ NÃ UDÃLOSTI === */
 .today-events-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 sloupce */
@@ -429,14 +429,14 @@
 }
 
 .today-events-grid.single-event {
-  grid-template-columns: 1fr; /* Jen 1 sloupec pro jednu událost */
+  grid-template-columns: 1fr; /* Jen 1 sloupec pro jednu udÃ¡lost */
 }
 
 .today-events-grid .event-card {
-  margin: 0; /* Zrušíme původní marginy */
+  margin: 0; /* ZruÅ¡Ã­me pÅ¯vodnÃ­ marginy */
 }
 
-/* Responsive - na mobilech zpět na 1 sloupec */
+/* Responsive - na mobilech zpÄ›t na 1 sloupec */
 @media (max-width: 768px) {
   .today-events-grid {
     grid-template-columns: 1fr;
@@ -445,11 +445,364 @@
 
 /* ==================== CLS PREVENCE PRO HEADER SLOT ==================== */
 .upcoming-widget-header .upcoming-events-widget {
-  min-height: 350px; /* Rezervuje místo v header slotu - DESKTOP */
+  min-height: 350px; /* Rezervuje mÃ­sto v header slotu - DESKTOP */
 }
 
 @media (max-width: 768px) {
   .upcoming-widget-header .upcoming-events-widget {
-    min-height: 200px; /* Menší výška na mobilu */
+    min-height: 200px; /* MenÅ¡Ã­ vÃ½Å¡ka na mobilu */
+  }
+}
+
+/* ==================== EVENT PREVIEW POPUP ==================== */
+
+.event-preview-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+  min-width: 320px;
+  max-width: 400px;
+  overflow: hidden;
+  z-index: 150;
+  animation: previewSlideIn 0.3s ease;
+}
+
+@keyframes previewSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Header */
+.event-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.preview-icon {
+  font-size: 2rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.event-preview-header .popup-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.event-preview-header .popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Content */
+.event-preview-content {
+  padding: 20px;
+}
+
+.preview-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+}
+
+.preview-label {
+  font-size: 0.9rem;
+  color: #666;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.preview-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  word-break: break-word;
+}
+
+.preview-description {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-description .preview-value {
+  font-weight: 400;
+  color: #555;
+  line-height: 1.5;
+  background: #f8f9fa;
+  padding: 10px 12px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+/* Actions */
+.event-preview-actions {
+  padding: 16px 20px;
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.preview-edit-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .event-preview-popup {
+    min-width: auto;
+    max-width: none;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: translate(0, -50%);
+  }
+  
+  @keyframes previewSlideIn {
+    from {
+      opacity: 0;
+      transform: translate(0, -50%) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translate(0, -50%) scale(1);
+    }
+  }
+  
+  .preview-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .preview-label {
+    min-width: auto;
+  }
+}
+
+/* ==================== NEW EVENTS BADGE & POPUP ==================== */
+
+/* Badge tlačítko */
+.new-events-badge {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  animation: badgePulse 2s infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.new-events-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(238, 90, 36, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(238, 90, 36, 0);
+  }
+}
+
+/* Popup container */
+.new-events-popup {
+  position: absolute;
+  top: 70px;
+  right: 15px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  min-width: 280px;
+  max-width: 350px;
+  max-height: 400px;
+  overflow: hidden;
+  z-index: 100;
+  animation: popupSlideIn 0.3s ease;
+}
+
+@keyframes popupSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Popup header */
+.new-events-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+}
+
+.new-events-popup-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.popup-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Popup list */
+.new-events-popup-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* Jednotlivé položky */
+.new-event-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+/* 
+.new-event-item:last-child {
+  border-bottom: none;
+} */
+
+.new-event-item:hover {
+  background: #3993cf;
+  border-radius: 10px;
+}
+
+.new-event-icon {
+  font-size: 1.5rem;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.new-event-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.new-event-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.new-event-date {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Scrollbar pro popup */
+.new-events-popup-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.new-events-popup-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.new-events-popup-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .new-events-popup {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .new-events-badge {
+    padding: 5px 10px;
+    font-size: 0.8rem;
   }
 }

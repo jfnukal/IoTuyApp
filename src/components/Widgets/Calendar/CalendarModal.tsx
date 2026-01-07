@@ -16,12 +16,14 @@ interface CalendarModalProps {
   isOpen: boolean;
   onClose: () => void;
   familyMembers?: FamilyMember[];
+  initialEventToEdit?: CalendarEventData | null;  // 🆕 Pro přímé otevření editace
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({
   isOpen,
   onClose,
   familyMembers = [],
+  initialEventToEdit = null,
 }) => {
   const { events, addEvent, updateEvent, deleteEvent } = useCalendar();
   const isMobile = useIsMobile(768);
@@ -44,6 +46,16 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     isOpen: false,
     event: null,
   });
+
+  // 🆕 Automaticky otevři editaci, pokud je předána událost
+useEffect(() => {
+  if (isOpen && initialEventToEdit) {
+    setSelectedEvent(initialEventToEdit);
+    setSelectedDate(new Date(initialEventToEdit.date));
+    setDefaultMemberId(initialEventToEdit.familyMemberId);
+    setIsFormOpen(true);
+  }
+}, [isOpen, initialEventToEdit]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

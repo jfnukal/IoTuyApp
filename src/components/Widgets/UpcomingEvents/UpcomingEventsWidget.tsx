@@ -49,7 +49,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
     const now = Date.now();
     const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
     const isRecent = event.createdAt > twentyFourHoursAgo;
-    const isNotAuthor = event.createdBy !== currentUser?.uid;
+    const isNotAuthor = event.createdBy !== currentUser?.uid; // TODO: vrátit na event.createdBy !== currentUser?.uid // testy: const isNotAuthor = true; // ostre: const isNotAuthor = event.createdBy !== currentUser?.uid;
     const isNotPersonal = event.type !== 'personal';
     return isRecent && isNotAuthor && isNotPersonal;
   });
@@ -371,118 +371,129 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 
         {/* 🔍 Náhled události */}
         {previewEvent && (
-          <div
-            className="event-preview-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="event-preview-header">
-              <span className="preview-icon">{getEventIcon(previewEvent)}</span>
-              <h4 className="preview-title">{previewEvent.title}</h4>
-              <button
-                className="popup-close-btn"
-                onClick={() => setPreviewEvent(null)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="event-preview-content">
-              {/* Datum */}
-              <div className="preview-row">
-                <span className="preview-label">📅 Datum:</span>
-                <span className="preview-value">
-                  {formatDate(
-                    new Date(previewEvent.date + 'T00:00:00'),
-                    'DD.MM.YYYY'
-                  )}
+          <>
+            <div
+              className="event-preview-overlay"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewEvent(null);
+              }}
+            />
+            <div
+              className="event-preview-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="event-preview-header">
+                <span className="preview-icon">
+                  {getEventIcon(previewEvent)}
                 </span>
+                <h4 className="preview-title">{previewEvent.title}</h4>
+                <button
+                  className="popup-close-btn"
+                  onClick={() => setPreviewEvent(null)}
+                >
+                  ✕
+                </button>
               </div>
 
-              {/* Vícedenní událost - zobrazit pouze pokud je validní a odlišné od startDate */}
-              {(() => {
-                if (!previewEvent.endDate) return null;
-                if (typeof previewEvent.endDate !== 'string') return null;
-                if (previewEvent.endDate === previewEvent.date) return null;
+              <div className="event-preview-content">
+                {/* Datum */}
+                <div className="preview-row">
+                  <span className="preview-label">📅 Datum:</span>
+                  <span className="preview-value">
+                    {formatDate(
+                      new Date(previewEvent.date + 'T00:00:00'),
+                      'DD.MM.YYYY'
+                    )}
+                  </span>
+                </div>
 
-                // Validace formátu YYYY-MM-DD
-                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                if (!dateRegex.test(previewEvent.endDate)) return null;
+                {/* Vícedenní událost */}
+                {(() => {
+                  if (!previewEvent.endDate) return null;
+                  if (typeof previewEvent.endDate !== 'string') return null;
+                  if (previewEvent.endDate === previewEvent.date) return null;
 
-                // Zkusit vytvořit datum a ověřit, že je validní
-                const endDateObj = new Date(previewEvent.endDate + 'T00:00:00');
-                if (isNaN(endDateObj.getTime())) return null;
+                  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                  if (!dateRegex.test(previewEvent.endDate)) return null;
 
-                return (
+                  const endDateObj = new Date(
+                    previewEvent.endDate + 'T00:00:00'
+                  );
+                  if (isNaN(endDateObj.getTime())) return null;
+
+                  return (
+                    <div className="preview-row">
+                      <span className="preview-label">📆 Do:</span>
+                      <span className="preview-value">
+                        {formatDate(endDateObj, 'DD.MM.YYYY')}
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Čas */}
+                {previewEvent.time && (
                   <div className="preview-row">
-                    <span className="preview-label">📆 Do:</span>
+                    <span className="preview-label">⏰ Čas:</span>
                     <span className="preview-value">
-                      {formatDate(endDateObj, 'DD.MM.YYYY')}
+                      {previewEvent.time}
+                      {previewEvent.endTime && ` – ${previewEvent.endTime}`}
                     </span>
                   </div>
-                );
-              })()}
+                )}
 
-              {/* Čas - pouze pokud existuje (není celodenní) */}
-              {previewEvent.time && (
+                {/* Pro koho */}
                 <div className="preview-row">
-                  <span className="preview-label">⏰ Čas:</span>
+                  <span className="preview-label">👤 Pro:</span>
                   <span className="preview-value">
-                    {previewEvent.time}
-                    {previewEvent.endTime && ` – ${previewEvent.endTime}`}
+                    {getMemberName(previewEvent.familyMemberId)}
                   </span>
                 </div>
-              )}
 
-              {/* Pro koho */}
-              <div className="preview-row">
-                <span className="preview-label">👤 Pro:</span>
-                <span className="preview-value">
-                  {getMemberName(previewEvent.familyMemberId)}
-                </span>
+                {/* Vytvořil */}
+                <div className="preview-row">
+                  <span className="preview-label">✍️ Vytvořil:</span>
+                  <span className="preview-value">
+                    {getAuthorName(previewEvent.createdBy)}
+                  </span>
+                </div>
+
+                {/* Opakování */}
+                {getRecurringText(previewEvent) && (
+                  <div className="preview-row">
+                    <span className="preview-label">🔄 Opakování:</span>
+                    <span className="preview-value">
+                      {getRecurringText(previewEvent)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Popis */}
+                {previewEvent.description && (
+                  <div className="preview-row preview-description">
+                    <span className="preview-label">📝 Poznámka:</span>
+                    <span className="preview-value">
+                      {previewEvent.description}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Vytvořil */}
-              <div className="preview-row">
-                <span className="preview-label">✍️ Vytvořil:</span>
-                <span className="preview-value">
-                  {getAuthorName(previewEvent.createdBy)}
-                </span>
+              <div className="event-preview-actions">
+                <button
+                  className="preview-edit-btn"
+                  onClick={() => {
+                    setPreviewEvent(null);
+                    setEventToEdit(previewEvent);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  ✏️ Upravit
+                </button>
               </div>
-
-              {/* Opakování */}
-              {getRecurringText(previewEvent) && (
-                <div className="preview-row">
-                  <span className="preview-label">🔄 Opakování:</span>
-                  <span className="preview-value">
-                    {getRecurringText(previewEvent)}
-                  </span>
-                </div>
-              )}
-
-              {/* Popis */}
-              {previewEvent.description && (
-                <div className="preview-row preview-description">
-                  <span className="preview-label">📝 Poznámka:</span>
-                  <span className="preview-value">
-                    {previewEvent.description}
-                  </span>
-                </div>
-              )}
             </div>
-
-            <div className="event-preview-actions">
-              <button
-                className="preview-edit-btn"
-                onClick={() => {
-                  setPreviewEvent(null);
-                  setEventToEdit(previewEvent);
-                  setIsModalOpen(true);
-                }}
-              >
-                ✏️ Upravit
-              </button>
-            </div>
-          </div>
+          </>
         )}
 
         {/* Click Hint */}
@@ -533,4 +544,3 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 // 🚀 React.memo - widget se překreslí POUZE když se změní props (daysAhead, maxEvents, familyMembers, compact)
 // UpcomingEventsWidget má hodně animací a karet, takže optimalizace zrychlí celý dashboard
 export default memo(UpcomingEventsWidget);
-

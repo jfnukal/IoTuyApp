@@ -808,3 +808,18 @@
     font-size: 0.8rem;
   }
 }
+
+/* Overlay za popup */
+.event-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 140;
+}
+
+.event-preview-popup {
+  z-index: 150;
+}

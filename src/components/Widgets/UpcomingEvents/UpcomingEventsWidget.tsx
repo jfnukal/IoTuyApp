@@ -49,7 +49,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
     const now = Date.now();
     const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
     const isRecent = event.createdAt > twentyFourHoursAgo;
-    const isNotAuthor = true; // TODO: vrátit na event.createdBy !== currentUser?.uid
+    const isNotAuthor = event.createdBy !== currentUser?.uid;
     const isNotPersonal = event.type !== 'personal';
     return isRecent && isNotAuthor && isNotPersonal;
   });
@@ -533,3 +533,4 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 // 🚀 React.memo - widget se překreslí POUZE když se změní props (daysAhead, maxEvents, familyMembers, compact)
 // UpcomingEventsWidget má hodně animací a karet, takže optimalizace zrychlí celý dashboard
 export default memo(UpcomingEventsWidget);
+

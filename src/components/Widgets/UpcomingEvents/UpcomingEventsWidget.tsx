@@ -1,3 +1,5 @@
+//scr/components/Widgets/UpcomingEvents/UpcomingEventsWidget.tsx
+
 import React, { useState, useEffect, lazy, Suspense, memo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCalendar } from '../Calendar/CalendarProvider';
@@ -183,10 +185,10 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
 
   return (
     <>
-      <div
-        className="upcoming-events-widget"
-        onClick={() => setIsModalOpen(true)}
-      >
+<div
+  className={`upcoming-events-widget ${previewEvent ? 'preview-open' : ''}`}
+  onClick={() => setIsModalOpen(true)}
+>
         {/* Header */}
         <div className="widget-header">
           <h3 className="widget-title">🗓️ Co nás čeká?</h3>
@@ -369,8 +371,14 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
           </div>
         )}
 
-        {/* 🔍 Náhled události */}
-        {previewEvent && (
+        {/* Click Hint */}
+        <div className="click-hint-events">
+          <span>👆 Klikni pro celý kalendář</span>
+        </div>
+      </div>
+
+           {/* 🔍 Náhled události */}
+           {previewEvent && (
           <>
             <div
               className="event-preview-overlay"
@@ -494,13 +502,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
               </div>
             </div>
           </>
-        )}
-
-        {/* Click Hint */}
-        <div className="click-hint-events">
-          <span>👆 Klikni pro celý kalendář</span>
-        </div>
-      </div>
+           )}
 
       {/* Modal s kalendářem */}
       {isModalOpen && (

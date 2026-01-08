@@ -3,6 +3,9 @@
 /* ==================== MAIN LAYOUT ==================== */
 .dashboard-layout {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw; /* Pojistka proti přetečení */
+  overflow-x: hidden; /* Skryje vše, co by chtělo vyčuhovat doprava */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-attachment: fixed;
   position: relative;
@@ -285,6 +288,10 @@
 }
 
 @media (max-width: 768px) {
+  /* Oprava problikávání pozadí na mobilu */
+  .dashboard-layout {
+    background-attachment: scroll !important;
+  }
   .dashboard-main-title {
     font-size: 1.8rem;
   }

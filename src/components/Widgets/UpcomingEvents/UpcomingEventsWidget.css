@@ -83,7 +83,8 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -110,7 +111,8 @@
 }
 
 @keyframes rotate {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
   }
   25% {
@@ -222,7 +224,11 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 70%
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -298,7 +304,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -329,6 +336,20 @@
 
 .upcoming-events-widget:hover {
   transform: scale(1.02);
+}
+
+.upcoming-events-widget.preview-open,
+.upcoming-events-widget.preview-open:hover {
+  transform: none;
+}
+
+/* Deaktivuj hover efekt když je otevřený náhled */
+.upcoming-events-widget:has(.event-preview-overlay) {
+  transform: none !important;
+}
+
+.upcoming-events-widget:has(.event-preview-overlay):hover {
+  transform: none !important;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -433,7 +454,7 @@
 }
 
 .today-events-grid .event-card {
-  margin: 0; 
+  margin: 0;
 }
 
 /* Responsive - na mobilech zpÄ›t na 1 sloupec */
@@ -457,15 +478,15 @@
 /* ==================== EVENT PREVIEW POPUP ==================== */
 
 .event-preview-popup {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: white;
   border-radius: 20px;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
-  min-width: 320px;
-  max-width: 400px;
+  width: 360px;
+  max-width: calc(100vw - 40px);
   overflow: hidden;
   z-index: 150;
   animation: previewSlideIn 0.3s ease;
@@ -474,11 +495,11 @@
 @keyframes previewSlideIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translate(-50%, -50%);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -598,37 +619,79 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-
-
 /* Responsive */
 @media (max-width: 768px) {
   .event-preview-popup {
-    min-width: auto;
-    max-width: none;
-    left: 10px;
-    right: 10px;
+    left: 20px;
+    right: 20px;
     width: auto;
+    max-width: 340px;
+    margin: 0 auto;
     transform: translate(0, -50%);
   }
-  
+
   @keyframes previewSlideIn {
     from {
       opacity: 0;
-      transform: translate(0, -50%) scale(0.9);
+      transform: translate(0, -50%);
     }
     to {
       opacity: 1;
-      transform: translate(0, -50%) scale(1);
+      transform: translate(0, -50%);
     }
   }
-  
-  .preview-row {
-    flex-direction: column;
-    gap: 4px;
+
+  /* Menší header na mobilu */
+  .event-preview-header {
+    padding: 12px 16px;
+    gap: 10px;
   }
-  
+
+  .preview-icon {
+    font-size: 1.5rem;
+    padding: 6px;
+  }
+
+  .preview-title {
+    font-size: 1rem;
+  }
+
+  .event-preview-header .popup-close-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Řádky - label a hodnota vedle sebe, zarovnané vlevo */
+  .preview-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
   .preview-label {
-    min-width: auto;
+    min-width: 85px;
+    font-size: 0.85rem;
+  }
+
+  .preview-value {
+    font-size: 0.9rem;
+    text-align: left;
+  }
+
+  .event-preview-content {
+    padding: 16px;
+  }
+
+  .event-preview-actions {
+    padding: 12px 16px;
+  }
+
+  .preview-edit-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
   }
 }
 
@@ -655,7 +718,8 @@
 }
 
 @keyframes badgePulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(238, 90, 36, 0.5);
   }
   50% {
@@ -802,7 +866,7 @@
     min-width: auto;
     max-width: none;
   }
-  
+
   .new-events-badge {
     padding: 5px 10px;
     font-size: 0.8rem;
@@ -834,4 +898,3 @@
   background: rgba(0, 0, 0, 0.5);
   z-index: 140;
 }
-

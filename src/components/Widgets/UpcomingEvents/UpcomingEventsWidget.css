@@ -412,7 +412,7 @@
   transform: rotate(180deg);
 }
 
-/* --- SkrytÃ­ tlaÄÃ­tka na desktopu --- */
+/* --- SkrytÃ­ tlačítka na desktopu --- */
 /* Tento kÃ³d se aktivuje pouze pro obrazovky Å¡irÅ¡Ã­ neÅ¾ 768px */
 @media (min-width: 768px) {
   .toggle-button {
@@ -433,7 +433,7 @@
 }
 
 .today-events-grid .event-card {
-  margin: 0; /* ZruÅ¡Ã­me pÅ¯vodnÃ­ marginy */
+  margin: 0; 
 }
 
 /* Responsive - na mobilech zpÄ›t na 1 sloupec */
@@ -450,7 +450,7 @@
 
 @media (max-width: 768px) {
   .upcoming-widget-header .upcoming-events-widget {
-    min-height: 200px; /* MenÅ¡Ã­ vÃ½Å¡ka na mobilu */
+    min-height: 200px; /* Menší výškana mobilu */
   }
 }
 
@@ -823,3 +823,15 @@
 .event-preview-popup {
   z-index: 150;
 }
+
+/* Overlay za popup */
+.event-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 140;
+}
+

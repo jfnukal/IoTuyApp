@@ -203,16 +203,6 @@
   padding: 2rem;
 }
 
-.floorplan-loading .loading-spinner {
-  font-size: 3rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 .floorplan-error .error-icon {
   font-size: 3rem;
 }

@@ -258,4 +258,4 @@ const getDisplayName = (): string | null => {
   );
 };
 
-export default SmartLightCard;
+export default React.memo(SmartLightCard);

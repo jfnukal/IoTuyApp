@@ -1,6 +1,6 @@
 // src/tuya/hooks/useFloors.ts
 import { useState, useEffect, useCallback } from 'react';
-import { firestoreService } from '../../services/firestoreService';
+import { roomService } from '../../services/roomService';
 
 export const useFloors = (floorId: string) => {
   const [rooms, setRooms] = useState<any[]>([]);
@@ -11,7 +11,7 @@ export const useFloors = (floorId: string) => {
   useEffect(() => {
     console.log(`🏠 Floors: Připojuji k layoutu "${floorId}"...`);
     
-    const unsubscribe = firestoreService.subscribeToFloorLayout(
+    const unsubscribe = roomService.subscribeToFloorLayout(
       floorId,
       (roomsFromDB) => {
         console.log(`✅ Floors: Načteno ${roomsFromDB.length} místností`);
@@ -34,7 +34,7 @@ export const useFloors = (floorId: string) => {
       try {
         setError(null);
         console.log(`💾 Ukládám layout "${floorId}"...`);
-        await firestoreService.saveFloorLayout(floorId, updatedRooms);
+        await roomService.saveFloorLayout(floorId, updatedRooms);
         console.log('✅ Layout uložen!');
       } catch (err: any) {
         console.error('❌ Chyba při ukládání layoutu:', err);

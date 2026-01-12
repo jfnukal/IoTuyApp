@@ -318,4 +318,4 @@ const PTZCameraCard: React.FC<
   );
 };
 
-export default PTZCameraCard;
+export default React.memo(PTZCameraCard);

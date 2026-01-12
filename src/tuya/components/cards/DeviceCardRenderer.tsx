@@ -78,4 +78,4 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
   }
 };
 
-export default DeviceCardRenderer;
+export default React.memo(DeviceCardRenderer);

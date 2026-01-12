@@ -182,4 +182,4 @@ const MultiSwitchCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> 
   );
 };
 
-export default MultiSwitchCard;
+export default React.memo(MultiSwitchCard);

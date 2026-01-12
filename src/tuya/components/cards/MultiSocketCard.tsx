@@ -267,4 +267,4 @@ const getDisplayName = (): string | null => {
   );
 };
 
-export default MultiSocketCard;
+export default React.memo(MultiSocketCard);

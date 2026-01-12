@@ -352,4 +352,4 @@ const getDisplayName = (): string | null => {
   );
 };
 
-export default HeatingCard;
+export default React.memo(HeatingCard);

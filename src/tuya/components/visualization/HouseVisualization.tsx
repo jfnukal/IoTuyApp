@@ -7,7 +7,6 @@ import type { Room } from '../../../types/index';
 import './HouseVisualization.css';
 
 const HouseVisualization: React.FC = () => {
- // console.log('🏠 HouseVisualization component rendering...');
 
   const {
     house,
@@ -65,12 +64,10 @@ const HouseVisualization: React.FC = () => {
   const currentFloor = floors.find((f) => f.id === selectedFloorId);
 
   const handleRoomClick = (room: Room) => {
-    console.log('🚪 Vybrána místnost:', room.name);
     setSelectedRoom(room);
   };
 
   const handleDeviceClick = (deviceId: string) => {
-    console.log('📱 Kliknuto na zařízení:', deviceId);
   };
 
   console.log('🎨 Rendering state:', {
@@ -83,7 +80,6 @@ const HouseVisualization: React.FC = () => {
   });
 
   if (houseLoading) {
-    console.log('⏳ Zobrazuji loading state');
     return (
       <div className="house-visualization loading">
         <div className="loading-state">
@@ -111,7 +107,6 @@ const HouseVisualization: React.FC = () => {
   }
 
   if (!house) {
-    console.log('🏠 Nemám dům, zobrazuji empty state');
     return (
       <div className="house-visualization empty">
         <div className="empty-state">

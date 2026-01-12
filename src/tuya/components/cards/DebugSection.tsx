@@ -158,4 +158,4 @@ const DebugSection: React.FC<DebugSectionProps> = ({ device, isVisible }) => {
   );
 };
 
-export default DebugSection;
+export default React.memo(DebugSection);

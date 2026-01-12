@@ -1,5 +1,5 @@
 // src/services/tuyaService.ts
-import { firestoreService } from '../../services/firestoreService';
+import { deviceService } from '../../services/deviceService';
 import type { TuyaDevice } from '../../types';
 
 class TuyaService {
@@ -114,13 +114,116 @@ class TuyaService {
       }));
 
       // Ulož do Firestore
-      await firestoreService.saveUserDevices(userId, devicesWithUserId);
+      await deviceService.saveUserDevices(userId, devicesWithUserId);
 
       console.log('✅ Synchronizace dokončena');
       return devicesWithUserId;
     } catch (error) {
       console.error('❌ Chyba při synchronizaci:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 🆕 Získá status pro více zařízení najednou (batch)
+   * Používá se pro auto-sync podle kategorií
+   */
+   async getDevicesStatus(deviceIds: string[]): Promise<Map<string, any[]>> {
+    try {
+      if (deviceIds.length === 0) {
+        return new Map();
+      }
+
+      console.log(`📡 Batch status request for ${deviceIds.length} devices...`);
+
+      const response = await fetch(`${this.baseUrl}/get-devices-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deviceIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Nepodařilo se získat status zařízení');
+      }
+
+      // Převeď výsledky na Map pro snadný přístup
+      const statusMap = new Map<string, any[]>();
+      data.results.forEach((result: any) => {
+        if (result.success && result.status) {
+          statusMap.set(result.deviceId, result.status);
+        }
+      });
+
+      console.log(`✅ Batch status: ${statusMap.size}/${deviceIds.length} úspěšných`);
+      return statusMap;
+
+    } catch (error) {
+      console.error('❌ Chyba při batch status:', error);
+      return new Map();
+    }
+  }
+
+  /**
+   * 🆕 Synchronizuje status zařízení podle kategorie a aktualizuje Firestore
+   */
+   async syncDevicesByCategory(
+    devices: Array<{ id: string; category: string; online: boolean }>,
+    categories: string[],
+    syncOnlyOnline: boolean = true
+  ): Promise<number> {
+    try {
+      // Filtruj zařízení podle kategorií
+      let devicesToSync = devices.filter(d => categories.includes(d.category));
+      
+      // Filtruj pouze online pokud je nastaveno
+      if (syncOnlyOnline) {
+        devicesToSync = devicesToSync.filter(d => d.online);
+      }
+
+      if (devicesToSync.length === 0) {
+        console.log(`⏭️ Žádná zařízení k synchronizaci pro kategorie: ${categories.join(', ')}`);
+        return 0;
+      }
+
+      const deviceIds = devicesToSync.map(d => d.id);
+      console.log(`🔄 Synchronizuji ${deviceIds.length} zařízení (kategorie: ${categories.join(', ')})`);
+
+      // Získej statusy z Tuya API
+      const statusMap = await this.getDevicesStatus(deviceIds);
+
+      if (statusMap.size === 0) {
+        console.log('⚠️ Nepodařilo se získat žádné statusy');
+        return 0;
+      }
+
+      // Aktualizuj Firestore pro každé zařízení
+      const updatePromises: Promise<void>[] = [];
+      
+      statusMap.forEach((status, deviceId) => {
+        updatePromises.push(
+          deviceService.updateDevice(deviceId, {
+            status,
+            lastUpdated: Date.now(),
+          })
+        );
+      });
+
+      await Promise.all(updatePromises);
+      
+      console.log(`✅ Synchronizováno ${statusMap.size} zařízení`);
+      return statusMap.size;
+
+    } catch (error) {
+      console.error('❌ Chyba při synchronizaci kategorií:', error);
+      return 0;
     }
   }
 

@@ -68,13 +68,11 @@ const RoomManager: React.FC = () => {
     return (
       <div className="room-manager loading">
         <div className="loading-state">
-          <div className="spinner">🔄</div>
           <p>Načítám místnosti...</p>
         </div>
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="room-manager error">

@@ -137,4 +137,4 @@ return (
   );
 };
 
-export default TempSensorCard;
+export default React.memo(TempSensorCard);

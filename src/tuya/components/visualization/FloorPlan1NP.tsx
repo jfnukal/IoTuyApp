@@ -192,10 +192,10 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="floor-plan-1np loading">
-        <div className="loading-spinner">🔄</div>
-        <p>Načítám půdorys...</p>
-      </div>
+<div className="floor-plan-1np loading">
+  <div className="spinner-mini"></div>
+  <p>Načítám půdorys...</p>
+</div>
     );
   }
 

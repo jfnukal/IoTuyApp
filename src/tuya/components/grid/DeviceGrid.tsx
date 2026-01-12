@@ -6,7 +6,7 @@ import debounce from 'lodash/debounce';
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 import { useAuth } from '../../../contexts/AuthContext';
-import { firestoreService } from '../../../services/firestoreService';
+import { deviceService } from '../../../services/deviceService';
 import type { TuyaDevice } from '../../../types';
 import DeviceCardRenderer from '../cards/DeviceCardRenderer';
 
@@ -87,11 +87,11 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
     debounce((newLayout: Layout[]) => {
       if (!currentUser || devices.length === 0) return;
 
-      const batch = firestoreService.getWriteBatch();
+      const batch = deviceService.getWriteBatch();
       newLayout.forEach((item) => {
         const deviceId = item.i;
         const newGridSettings = { x: item.x, y: item.y, w: item.w, h: item.h };
-        firestoreService.updateDevicePartial(
+        deviceService.updateDevicePartial(
           batch,
           currentUser!.uid,
           deviceId,

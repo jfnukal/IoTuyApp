@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTuya } from '../../hooks/useTuya';
 import { useHouse } from '../../hooks/useHouse';
-import { firestoreService } from '../../../services/firestoreService';
+import { deviceService } from '../../../services/deviceService';
 import FloorPlan1NP from './FloorPlan1NP';
 import DeviceMiniatures from './DeviceMiniatures';
 import DeviceDetailModal from '../modals/DeviceDetailModal';
@@ -38,7 +38,7 @@ const FloorPlanPage: React.FC = () => {
   // Handler pro drop zařízení na půdorys
   const handleDeviceDrop = async (deviceId: string, x: number, y: number) => {
     try {
-      await firestoreService.updateDevicePosition(deviceId, { x, y });
+      await deviceService.updateDevicePosition(deviceId, { x, y });
     } catch (error) {
       console.error('❌ Chyba při ukládání pozice:', error);
     }
@@ -55,11 +55,11 @@ const FloorPlanPage: React.FC = () => {
   if (devicesLoading || houseLoading) {
     return (
       <div className="floorplan-page">
-        <div className="floorplan-loading">
-          <div className="loading-spinner">🔄</div>
-          <p>Načítám data...</p>
-        </div>
+      <div className="floorplan-loading">
+        <div className="spinner-global"></div>
+        <p>Načítám data...</p>
       </div>
+    </div>
     );
   }
 

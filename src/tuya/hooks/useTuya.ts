@@ -1,8 +1,9 @@
-// src/hooks/useTuya.ts
-import { useState, useEffect, useCallback } from 'react';
+// src/tuya/hooks/useTuya.ts
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { firestoreService } from '../../services/firestoreService';
+import { deviceService } from '../../services/deviceService';
 import { tuyaService } from '../services/tuyaService';
+import { settingsService, type TuyaSyncSettings } from '../../services/settingsService';
 import type { TuyaDevice } from '../../types';
 
 export const useTuya = () => {
@@ -11,6 +12,13 @@ export const useTuya = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 🆕 Refs pro intervaly (aby se daly čistit)
+  const criticalIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const standardIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const passiveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const discoveryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const syncSettingsRef = useRef<TuyaSyncSettings | null>(null);
 
   // 📡 Real-time subscribe k Firestore
   useEffect(() => {
@@ -27,10 +35,9 @@ export const useTuya = () => {
         setIsLoading(true);
         setError(null);
 
-        unsubscribe = await firestoreService.subscribeToUserDevices(
+        unsubscribe = await deviceService.subscribeToUserDevices(
           currentUser.uid,
           (devicesFromDB) => {
-            console.log(`✅ Tuya: Načteno ${devicesFromDB.length} zařízení z DB`);
             setDevices(devicesFromDB);
             setIsLoading(false);
           }
@@ -51,8 +58,144 @@ export const useTuya = () => {
     };
   }, [currentUser]);
 
+  // 🆕 Auto-sync logika
+  useEffect(() => {
+    if (!currentUser || devices.length === 0) {
+      return;
+    }
+
+    const setupAutoSync = async () => {
+      try {
+        const settings = await settingsService.loadSettings();
+        const tuyaSync = settings.systemSettings.tuyaSync;
+        syncSettingsRef.current = tuyaSync;
+
+        // Vyčisti předchozí intervaly
+        clearAllIntervals();
+
+        if (!tuyaSync?.enabled) {
+          console.log('⏸️ Tuya auto-sync je vypnutý');
+          return;
+        }
+
+        // Pomocná funkce pro výpočet intervalu (s nočním režimem)
+        const getInterval = (baseMinutes: number): number => {
+          if (tuyaSync.nightModeEnabled) {
+            const hour = new Date().getHours();
+            const isNight = tuyaSync.nightModeStart > tuyaSync.nightModeEnd
+              ? (hour >= tuyaSync.nightModeStart || hour < tuyaSync.nightModeEnd)
+              : (hour >= tuyaSync.nightModeStart && hour < tuyaSync.nightModeEnd);
+            
+            if (isNight) {
+              return baseMinutes * 2 * 60 * 1000;
+            }
+          }
+          return baseMinutes * 60 * 1000;
+        };
+
+        // Připrav data pro sync
+        const devicesForSync = devices.map(d => ({
+          id: d.id,
+          category: d.category,
+          online: d.online,
+        }));
+
+        // Pasivní kategorie = vše co není critical ani standard
+        const passiveCategories = [...new Set(devices.map(d => d.category))]
+          .filter(cat => 
+            !tuyaSync.criticalCategories.includes(cat) && 
+            !tuyaSync.standardCategories.includes(cat)
+          );
+
+        // 🔴 Critical interval
+        if (tuyaSync.criticalCategories.length > 0) {
+          const criticalMs = getInterval(tuyaSync.intervals.critical);
+          
+          criticalIntervalRef.current = setInterval(async () => {
+            await tuyaService.syncDevicesByCategory(
+              devicesForSync,
+              tuyaSync.criticalCategories,
+              tuyaSync.syncOnlyOnline
+            );
+          }, criticalMs);
+        }
+
+        // 🟡 Standard interval
+        if (tuyaSync.standardCategories.length > 0) {
+          const standardMs = getInterval(tuyaSync.intervals.standard);
+          
+          standardIntervalRef.current = setInterval(async () => {
+            await tuyaService.syncDevicesByCategory(
+              devicesForSync,
+              tuyaSync.standardCategories,
+              tuyaSync.syncOnlyOnline
+            );
+          }, standardMs);
+        }
+
+        // 🟢 Passive interval
+        if (passiveCategories.length > 0) {
+          const passiveMs = getInterval(tuyaSync.intervals.passive);
+          
+          passiveIntervalRef.current = setInterval(async () => {
+            await tuyaService.syncDevicesByCategory(
+              devicesForSync,
+              passiveCategories,
+              tuyaSync.syncOnlyOnline
+            );
+          }, passiveMs);
+        }
+
+        // 🔍 Discovery interval (plná synchronizace - hledání nových zařízení)
+        if (tuyaSync.intervals.discovery && tuyaSync.intervals.discovery > 0) {
+          const discoveryMs = tuyaSync.intervals.discovery * 60 * 1000;
+          
+          discoveryIntervalRef.current = setInterval(async () => {
+            try {
+              await tuyaService.syncToFirestore(currentUser.uid);
+            } catch (err) {
+              console.error('❌ Discovery sync selhal:', err);
+            }
+          }, discoveryMs);
+        }
+
+      } catch (err) {
+        console.error('❌ Chyba při nastavení auto-sync:', err);
+      }
+    };
+
+    // Spusť setup po krátkém zpoždění (aby se načetly devices)
+    const timeoutId = setTimeout(setupAutoSync, 2000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearAllIntervals();
+    };
+  }, [currentUser, devices.length]); // Spustí se znovu když se změní počet zařízení
+
+  // 🧹 Pomocná funkce pro vyčištění intervalů
+  const clearAllIntervals = () => {
+    if (criticalIntervalRef.current) {
+      clearInterval(criticalIntervalRef.current);
+      criticalIntervalRef.current = null;
+    }
+    if (standardIntervalRef.current) {
+      clearInterval(standardIntervalRef.current);
+      standardIntervalRef.current = null;
+    }
+    if (passiveIntervalRef.current) {
+      clearInterval(passiveIntervalRef.current);
+      passiveIntervalRef.current = null;
+    }
+    if (discoveryIntervalRef.current) {
+      clearInterval(discoveryIntervalRef.current);
+      discoveryIntervalRef.current = null;
+    }
+  };
+
   /**
-   * 🔄 Synchronizace: Tuya Cloud → Firestore → UI
+   * 🔄 Plná synchronizace: Tuya Cloud → Firestore → UI
+   * (Discovery nových zařízení)
    */
   const syncDevices = useCallback(async () => {
     if (!currentUser) {
@@ -65,7 +208,7 @@ export const useTuya = () => {
 
       await tuyaService.syncToFirestore(currentUser.uid);
 
-      console.log('✅ Tuya: Synchronizace dokončena');
+      console.log('✅ Tuya: Plná synchronizace dokončena');
     } catch (err: any) {
       console.error('❌ Tuya: Chyba při synchronizaci:', err);
       setError(err.message || 'Nepodařilo se synchronizovat zařízení');
@@ -75,13 +218,16 @@ export const useTuya = () => {
     }
   }, [currentUser]);
 
+  /**
+   * 🎮 Ovládání zařízení
+   */
   const controlDevice = useCallback(
     async (deviceId: string, commands: { code: string; value: any }[]) => {
       try {
         setError(null);
         await tuyaService.controlDevice(deviceId, commands);
         
-        // ✅ NOVÉ: Optimistická aktualizace - aktualizuj status v Firestore okamžitě
+        // ✅ Optimistická aktualizace - aktualizuj status v Firestore okamžitě
         const device = devices.find(d => d.id === deviceId);
         if (device) {
           const updatedStatus = [...(device.status || [])];
@@ -89,16 +235,13 @@ export const useTuya = () => {
           commands.forEach(cmd => {
             const statusIndex = updatedStatus.findIndex(s => s.code === cmd.code);
             if (statusIndex !== -1) {
-              // Aktualizuj existující status
               updatedStatus[statusIndex] = { ...updatedStatus[statusIndex], value: cmd.value };
             } else {
-              // Přidej nový status
               updatedStatus.push({ code: cmd.code, value: cmd.value });
             }
           });
           
-          // Aktualizuj Firestore - real-time listener to zachytí a UI se aktualizuje
-          await firestoreService.updateDevice(deviceId, { status: updatedStatus });
+          await deviceService.updateDevice(deviceId, { status: updatedStatus });
         }
       } catch (err: any) {
         console.error('❌ Tuya: Chyba při ovládání:', err);
@@ -106,11 +249,11 @@ export const useTuya = () => {
         throw err;
       }
     },
-    [devices]  // ✅ DŮLEŽITÉ: přidej devices do dependencies
+    [devices]
   );
 
   /**
-   * 💡 Zapnout zařízení
+   * ⚡ Zapnout zařízení
    */
   const turnOn = useCallback(
     async (deviceId: string) => {
@@ -120,7 +263,7 @@ export const useTuya = () => {
   );
 
   /**
-   * 🌑 Vypnout zařízení
+   * ⚡ Vypnout zařízení
    */
   const turnOff = useCallback(
     async (deviceId: string) => {
@@ -130,7 +273,7 @@ export const useTuya = () => {
   );
 
   /**
-   * 🔄 Přepnout stav (toggle)
+   * 🔀 Přepnout stav (toggle)
    */
   const toggleDevice = useCallback(
     async (deviceId: string) => {
@@ -139,7 +282,6 @@ export const useTuya = () => {
         throw new Error('Zařízení nenalezeno');
       }
 
-      // Najdi switch_1 status
       const switchStatus = device.status?.find((s) => s.code === 'switch_1');
       const currentState = switchStatus?.value === true;
 
@@ -175,6 +317,30 @@ export const useTuya = () => {
     return devices.filter((d) => d.online);
   }, [devices]);
 
+  /**
+   * 🆕 Manuální sync konkrétní kategorie
+   */
+  const syncCategory = useCallback(
+    async (categories: string[]) => {
+      if (!currentUser || devices.length === 0) return 0;
+
+      const devicesForSync = devices.map(d => ({
+        id: d.id,
+        category: d.category,
+        online: d.online,
+      }));
+
+      const syncOnlyOnline = syncSettingsRef.current?.syncOnlyOnline ?? true;
+
+      return tuyaService.syncDevicesByCategory(
+        devicesForSync,
+        categories,
+        syncOnlyOnline
+      );
+    },
+    [currentUser, devices]
+  );
+
   return {
     // Data
     devices,
@@ -195,5 +361,6 @@ export const useTuya = () => {
     toggleDevice,
     getDevice,
     getDevicesByCategory,
+    syncCategory, // 🆕
   };
 };

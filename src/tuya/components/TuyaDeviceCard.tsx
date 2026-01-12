@@ -197,4 +197,4 @@ const TuyaDeviceCard: React.FC<TuyaDeviceCardProps> = ({
   );
 };
 
-export default TuyaDeviceCard;
+export default React.memo(TuyaDeviceCard);

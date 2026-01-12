@@ -1,7 +1,7 @@
 // src/tuya/hooks/useRooms.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { firestoreService } from '../../services/firestoreService';
+import { roomService } from '../../services/roomService';
 import type { Room } from '../../types';
 
 export const useRooms = () => {
@@ -26,7 +26,7 @@ export const useRooms = () => {
         setIsLoading(true);
         setError(null);
 
-        unsubscribe = await firestoreService.subscribeToUserRooms(
+        unsubscribe = await roomService.subscribeToUserRooms(
           currentUser.uid,
           (roomsFromDB) => {
             setRooms(roomsFromDB);
@@ -62,7 +62,7 @@ export const useRooms = () => {
       try {
         setError(null);
         // console.log('🏠 Vytvářím místnost:', roomData.name);
-        const roomId = await firestoreService.createRoom(
+        const roomId = await roomService.createRoom(
           currentUser.uid,
           roomData
         );
@@ -85,7 +85,7 @@ export const useRooms = () => {
       try {
         setError(null);
         // console.log('🏠 Aktualizuji místnost:', roomId);
-        await firestoreService.updateRoom(roomId, updates);
+        await roomService.updateRoom(roomId, updates);
         // console.log('✅ Místnost aktualizována');
       } catch (err: any) {
         console.error('❌ Chyba při aktualizaci místnosti:', err);
@@ -103,7 +103,7 @@ export const useRooms = () => {
     try {
       setError(null);
       // console.log('🏠 Mažu místnost:', roomId);
-      await firestoreService.deleteRoom(roomId);
+      await roomService.deleteRoom(roomId);
       // console.log('✅ Místnost smazána');
     } catch (err: any) {
       console.error('❌ Chyba při mazání místnosti:', err);
@@ -128,7 +128,7 @@ export const useRooms = () => {
         setError(null);
 
         // Zavoláme naši novou atomickou funkci
-        await firestoreService.assignDeviceToRoom(
+        await roomService.assignDeviceToRoom(
           deviceId,
           newRoomId,
           oldRoomId

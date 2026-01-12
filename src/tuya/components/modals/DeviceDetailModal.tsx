@@ -9,7 +9,7 @@ import {
   getCardIcon,
   getDeviceCardType,
 } from '../../utils/deviceHelpers';
-import { firestoreService } from '../../../services/firestoreService';
+import { deviceService } from '../../../services/deviceService';
 import './DeviceDetailModal.css';
 import DebugSection from '../cards/DebugSection';
 
@@ -120,7 +120,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     setError(null);
 
     try {
-      await firestoreService.updateDevice(device.id, {
+      await deviceService.updateDevice(device.id, {
         customIcon: customIcon || undefined,
         cardSettings: {
           ...device.cardSettings,
@@ -167,7 +167,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     if (!window.confirm('Odebrat zařízení z půdorysu?')) return;
     setIsSaving(true);
     try {
-      await firestoreService.updateDevicePosition(device.id, null as any);
+      await deviceService.updateDevicePosition(device.id, null as any);
       onClose();
     } catch (err) {
       setError('Nepodařilo se odebrat z půdorysu.');

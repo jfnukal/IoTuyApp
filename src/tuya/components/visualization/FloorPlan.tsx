@@ -60,10 +60,10 @@ const FloorPlan: React.FC<FloorPlanProps> = ({
 
   if (isLoading) {
     return (
-      <div className="floor-plan loading">
-        <div className="loading-spinner">🔄</div>
-        <p>Načítám patro...</p>
-      </div>
+<div className="floor-plan loading">
+  <div className="spinner-mini"></div>
+  <p>Načítám patro...</p>
+</div>
     );
   }
 

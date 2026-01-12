@@ -1,13 +1,11 @@
 // src/tuya/components/TuyaDeviceList.tsx
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTuya } from '../hooks/useTuya';
 import './TuyaDeviceList.css';
 import { DeviceGrid } from './grid/DeviceGrid';
 import DeviceDetailModal from './modals/DeviceDetailModal';
-import type { TuyaDevice } from '../../types'; 
+import type { TuyaDevice } from '../../types';
 
-type FilterType = 'all' | 'online' | 'offline';
 type CategoryFilter =
   | 'all'
   | 'switch'
@@ -19,28 +17,32 @@ type CategoryFilter =
   | 'garden'
   | 'other';
 
-const TuyaDeviceList: React.FC = () => {
-  const navigate = useNavigate();
-  const {
-    devices,
-    onlineCount,
-    deviceCount,
-    isLoading,
-    isSyncing,
-    error,
-    syncDevices,
-    toggleDevice,
-    controlDevice,
-  } = useTuya();
+  interface TuyaDeviceListProps {
+    searchQuery?: string;
+    filter?: 'all' | 'online' | 'offline';
+    categoryFilter?: CategoryFilter; // Teď používáme ten definovaný typ výše
+    showDebugInfo?: boolean;
+    isLayoutEditMode?: boolean;
+  }
 
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showOffline, setShowOffline] = useState(false);
-
-  // Stav pro "Režim úprav"
-  const [isLayoutEditMode, setIsLayoutEditMode] = useState(false);
+  const TuyaDeviceList: React.FC<TuyaDeviceListProps> = ({
+    searchQuery = '',
+    filter = 'all',
+    categoryFilter = 'all', // Teď je to v props, nikoli v useState
+    showDebugInfo = false,
+    isLayoutEditMode = false,
+  }) => {
+    const {
+      devices,
+      deviceCount,
+      isLoading,
+      error,
+      syncDevices,
+      toggleDevice,
+      controlDevice,
+    } = useTuya();
+  
+    // Zde už nesmí být: const [categoryFilter] = useState...
   // Stav pro sledování, které zařízení jsme otevřeli (celý OBJEKT, ne jen ID)
   const [selectedDevice, setSelectedDevice] = useState<TuyaDevice | null>(null);
 
@@ -55,9 +57,7 @@ const TuyaDeviceList: React.FC = () => {
   // Filtrování zařízení
   const filteredDevices = useMemo(() => {
     let result = [...devices];
-    if (!showOffline) {
-      result = result.filter((d) => d.online);
-    }
+
     if (filter === 'online') {
       result = result.filter((d) => d.online);
     } else if (filter === 'offline') {
@@ -76,16 +76,10 @@ const TuyaDeviceList: React.FC = () => {
       );
     }
     return result;
-  }, [devices, filter, categoryFilter, searchQuery, showOffline]);
+  }, [devices, filter, categoryFilter, searchQuery]);
 
   // Počet zařízení podle kategorií
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    devices.forEach((device) => {
-      counts[device.category] = (counts[device.category] || 0) + 1;
-    });
-    return counts;
-  }, [devices]);
+
 
   const handleSync = async () => {
     try {
@@ -99,7 +93,7 @@ const TuyaDeviceList: React.FC = () => {
     return (
       <div className="tuya-device-list">
         <div className="loading-state">
-          <div className="loading-spinner-large">🔄</div>
+          <div className="spinner-global"></div>
           <p>Načítám Tuya zařízení...</p>
         </div>
       </div>
@@ -114,7 +108,7 @@ const TuyaDeviceList: React.FC = () => {
           <h3>Chyba při načítání zařízení</h3>
           <p>{error}</p>
           <button className="retry-button" onClick={handleSync}>
-            🔄 Zkusit znovu
+            Zkusit znovu
           </button>
         </div>
       </div>
@@ -124,163 +118,9 @@ const TuyaDeviceList: React.FC = () => {
   return (
     // Použijeme Fragment (<>), abychom mohli vrátit seznam I modal
     <>
-      <div className="tuya-device-list">
-        {/* Header */}
-        <div className="tuya-list-header">
-          <div className="header-info">
-            <h2 className="list-title">🔌 Tuya Zařízení</h2>
-            <div className="device-counts">
-              <span className="count-badge total">
-                Celkem: <strong>{deviceCount}</strong>
-              </span>
-              <span className="count-badge online">
-                Online: <strong>{onlineCount}</strong>
-              </span>
-              <span className="count-badge offline">
-                Offline: <strong>{deviceCount - onlineCount}</strong>
-              </span>
-            </div>
-          </div>
+        <div className="tuya-device-list">
 
-          <button
-            className="sync-button"
-            onClick={handleSync}
-            disabled={isSyncing}
-            title="Synchronizovat ze serveru"
-          >
-            <span className={`sync-icon ${isSyncing ? 'spinning' : ''}`}>🔄</span>
-            <span>{isSyncing ? 'Synchronizuji...' : 'Synchronizovat'}</span>
-          </button>
-          <label
-            className="show-offline-toggle"
-            title="Zobrazit i offline zařízení"
-          >
-            <input
-              type="checkbox"
-              checked={showOffline}
-              onChange={(e) => setShowOffline(e.target.checked)}
-            />
-            <span>Zobrazit offline ({deviceCount - onlineCount})</span>
-          </label>
-
-          <label className="show-debug-toggle" title="Zobrazit debug informace">
-            <input
-              type="checkbox"
-              checked={showDebugInfo}
-              onChange={(e) => setShowDebugInfo(e.target.checked)}
-            />
-            <span>🔍 Debug režim</span>
-          </label>
-
-          <button
-            className={`filter-button ${isLayoutEditMode ? 'active' : ''}`}
-            onClick={() => setIsLayoutEditMode((prev) => !prev)}
-            title="Přepnout režim úprav rozložení"
-          >
-            {isLayoutEditMode ? '✅ Uložit rozložení' : '✏️ Upravit rozložení'}
-          </button>
-          {/* 🔽 DOČASNÉ TESTOVACÍ TLAČÍTKO 🔽 */}
-          <button
-            className="filter-button"
-            onClick={() => navigate('/floorplan')}
-            title="Zobrazit 1.NP"
-            style={{ backgroundColor: '#dc3545' }} // Výrazná barva
-          >
-            🏠 Půdorys 1.NP
-          </button>
-          {/* 🔼 KONEC TESTOVACÍHO TLAČÍTKA 🔼 */}
-        </div>
-
-        {/* Filters */}
-        <div className="tuya-filters">
-           <div className="search-box">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Hledat zařízení..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            {searchQuery && (
-              <button
-                className="clear-search"
-                onClick={() => setSearchQuery('')}
-                title="Vymazat"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <div className="filter-group">
-            <button
-              className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              Vše ({deviceCount})
-            </button>
-            <button
-              className={`filter-button ${filter === 'online' ? 'active' : ''}`}
-              onClick={() => setFilter('online')}
-            >
-              🟢 Online ({onlineCount})
-            </button>
-            <button
-              className={`filter-button ${filter === 'offline' ? 'active' : ''}`}
-              onClick={() => setFilter('offline')}
-            >
-              ⚫ Offline ({deviceCount - onlineCount})
-            </button>
-          </div>
-          <div className="category-filter">
-            <select
-              value={categoryFilter}
-              onChange={(e) =>
-                setCategoryFilter(e.target.value as CategoryFilter)
-              }
-              className="category-select"
-            >
-              <option value="all">Všechny kategorie ({deviceCount})</option>
-              {categoryCounts.switch && (
-                <option value="switch">
-                  🔌 Spínače ({categoryCounts.switch})
-                </option>
-              )}
-              {categoryCounts.light && (
-                <option value="light">
-                  💡 Osvětlení ({categoryCounts.light})
-                </option>
-              )}
-              {categoryCounts.sensor && (
-                <option value="sensor">
-                  📡 Senzory ({categoryCounts.sensor})
-                </option>
-              )}
-              {categoryCounts.climate && (
-                <option value="climate">
-                  ❄️ Klimatizace ({categoryCounts.climate})
-                </option>
-              )}
-              {categoryCounts.security && (
-                <option value="security">
-                  🔒 Zabezpečení ({categoryCounts.security})
-                </option>
-              )}
-              {categoryCounts.cover && (
-                <option value="cover">🪟 Žaluzie ({categoryCounts.cover})</option>
-              )}
-              {categoryCounts.garden && (
-                <option value="garden">
-                  🌱 Zahrada ({categoryCounts.garden})
-                </option>
-              )}
-              {categoryCounts.other && (
-                <option value="other">⚙️ Ostatní ({categoryCounts.other})</option>
-              )}
-            </select>
-          </div>
-        </div>
-
+ 
         {/* Device Grid */}
         {filteredDevices.length === 0 ? (
           <div className="empty-state">
@@ -297,7 +137,7 @@ const TuyaDeviceList: React.FC = () => {
             </p>
             {devices.length === 0 && (
               <button className="sync-button-large" onClick={handleSync}>
-                🔄 Synchronizovat zařízení
+                Synchronizovat zařízení
               </button>
             )}
           </div>
@@ -307,15 +147,18 @@ const TuyaDeviceList: React.FC = () => {
               Zobrazeno {filteredDevices.length} z {deviceCount} zařízení
             </div>
             {/* Před DeviceGrid */}
-              {isLayoutEditMode && (
-                <div className="edit-mode-banner">
-                  <span className="edit-mode-icon">✏️</span>
-                  <div className="edit-mode-text">
-                    <strong>Režim úprav aktivní</strong>
-                    <p>Přetáhněte karty na požadované místo. Změny se ukládají automaticky.</p>
-                  </div>
+            {isLayoutEditMode && (
+              <div className="edit-mode-banner">
+                <span className="edit-mode-icon">✏️</span>
+                <div className="edit-mode-text">
+                  <strong>Režim úprav aktivní</strong>
+                  <p>
+                    Přetáhněte karty na požadované místo. Změny se ukládají
+                    automaticky.
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
             <div className="tuya-device-grid-container">
               <DeviceGrid
                 devices={filteredDevices}
@@ -339,6 +182,5 @@ const TuyaDeviceList: React.FC = () => {
     </>
   );
 };
-
 
 export default TuyaDeviceList;

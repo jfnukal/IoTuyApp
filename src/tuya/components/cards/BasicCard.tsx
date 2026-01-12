@@ -199,4 +199,4 @@ const getDisplayName = (): string | null => {
   );
 };
 
-export default BasicCard;
+export default React.memo(BasicCard);

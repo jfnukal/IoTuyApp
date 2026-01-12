@@ -112,7 +112,6 @@ async function sendPushNotification(
     }));
 
     const response = await admin.messaging().sendEach(messages);
-    console.log(`✅ Push odeslány: ${response.successCount}/${tokens.length}`);
 
     if (response.failureCount > 0) {
       console.warn(`⚠️ Selhalo: ${response.failureCount}`);
@@ -128,11 +127,8 @@ export const checkReminders = functions
   .pubsub.schedule('every 5 minutes')
   .timeZone('Europe/Prague')
   .onRun(async () => {
-    console.log('🔔 START');
-    console.log(
-      '🕐 Prague:',
-      new Date().toLocaleString('cs-CZ', { timeZone: 'Europe/Prague' })
-    );
+
+         new Date().toLocaleString('cs-CZ', { timeZone: 'Europe/Prague' });
 
     const now = Date.now();
     const db = admin.firestore();
@@ -142,8 +138,6 @@ export const checkReminders = functions
         .collection('calendarEvents')
         .where('reminders', '!=', null)
         .get();
-
-      console.log(`📋 Události: ${eventsSnapshot.size}`);
 
       let sent = 0;
 
@@ -165,7 +159,6 @@ export const checkReminders = functions
           const timeWindow = 5 * 60 * 1000;
 
           if (now >= reminderTime && now < reminderTime + timeWindow) {
-            console.log(`🎯 TRIGGER: ${event.title}`);
 
             const title = `Připomínka: ${event.title}`;
             const body = event.time
@@ -212,13 +205,11 @@ export const onNewCalendarEvent = functions
 
       const event = snapshot.data();
       if (!event) {
-        console.log('⚠️ Prázdná data události');
         return null;
       }
 
       // Přeskoč osobní události
       if (event.type === 'personal') {
-        console.log('⏭️ Osobní událost - přeskakuji notifikace');
         return null;
       }
 
@@ -256,7 +247,6 @@ export const onNewCalendarEvent = functions
 
         // Získej FCM tokeny pro tohoto člena
         if (!memberAuthUid) {
-          console.log(`⚠️ Člen ${member.name} nemá authUid`);
           continue;
         }
 
@@ -296,7 +286,6 @@ export const onNewCalendarEvent = functions
 
         try {
           const response = await admin.messaging().sendEach(messages);
-          console.log(`✅ Push pro ${member.name}: ${response.successCount}/${tokens.length}`);
           sentCount += response.successCount;
           
           // Loguj jednotlivé chyby
@@ -312,7 +301,6 @@ export const onNewCalendarEvent = functions
         }
       }
 
-      console.log(`✅ Celkem odesláno: ${sentCount} notifikací`);
       return null;
     }
   );

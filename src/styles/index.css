@@ -33,41 +33,11 @@
 /* ==================== CUSTOM PROPERTIES OVERRIDE ==================== */
 /* Místo pro override CSS variables pro různé konfigurace */
 
-/* Development mode - červené bordery pro debugging */
-.debug-mode * {
-  outline: 1px solid rgba(255, 0, 0, 0.2);
-}
-
-.debug-mode .device-card {
-  outline: 2px solid rgba(0, 255, 0, 0.5);
-}
-
-.debug-mode .room-selector {
-  outline: 2px solid rgba(0, 0, 255, 0.5);
-}
-
-/* ==================== FUTURE FEATURES PREPARATION ==================== */
-/* Placeholder pro budoucí funkce - zatím prázdné */
-
-/* Drag & Drop enhanced styles */
-.drag-enhanced {
-  /* Bude rozšířeno při implementaci drag & drop */
-}
-
-/* 2D Room View styles */
-.room-2d-enhanced {
-  /* Bude rozšířeno při implementaci 2D view */
-}
 
 /* 3D Room View styles */
 .room-3d-enhanced {
   /* Bude rozšířeno při implementaci 3D view */
   perspective: var(--room-3d-perspective);
-}
-
-/* Advanced animations pro budoucí použití */
-.enhanced-animations {
-  /* Pokročilé animace pro premium UX */
 }
 
 /* Mobile-specific enhancements */

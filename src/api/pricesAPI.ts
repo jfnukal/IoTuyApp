@@ -61,7 +61,7 @@ const loadDeals = async (): Promise<PriceDeal[]> => {
     })) as PriceDeal[];
     
     cacheTimestamp = now;
-    console.log(`[PricesAPI] Načteno ${cachedDeals.length} deals z Firebase`);
+    // console.log(`[PricesAPI] Načteno ${cachedDeals.length} deals z Firebase`);
     
     return cachedDeals;
   } catch (error) {
@@ -195,7 +195,7 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
       
       if (expandedSearch !== productName.toLowerCase()) {
         searchTerms.push(expandedSearch);
-        console.log(`[PricesAPI] Rozšířeno hledání: "${productName}" → "${expandedSearch}"`);
+        // console.log(`[PricesAPI] Rozšířeno hledání: "${productName}" → "${expandedSearch}"`);
       }
     }
     
@@ -218,7 +218,7 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
         
         // Debug: log prvních 5 shod
         if (matches.length <= 5) {
-          console.log(`[PricesAPI] Match: "${deal.productName}" (score: ${bestScore}, keywords: ${deal.keywords?.join(', ')})`);
+          // console.log(`[PricesAPI] Match: "${deal.productName}" (score: ${bestScore}, keywords: ${deal.keywords?.join(', ')})`);
         }
       }
     }

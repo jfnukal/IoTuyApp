@@ -11,18 +11,31 @@ import { AppRoutes } from './routes';
 
 // 🆕 Komponenta pro načítání (Spinner)
 // Zobrazí se okamžitě, když uživatel klikne na stránku, která se teprve stahuje
+// Opravený PageLoader v App.tsx
 const PageLoader = () => (
   <div 
     className="flex items-center justify-center w-full" 
     style={{ 
       minHeight: '100vh',
-      height: '100vh',  /* Fixní výška pro prevenci CLS */
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      height: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',          /* Jistota pro centrování */
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
     }}
   >
     <div className="text-center">
-      <div className="spinner" style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔄</div>
-      <p style={{ color: 'rgba(255,255,255,0.9)' }}>Načítám aplikaci...</p>
+      {/* CSS Spinner bez emoji */}
+      <div className="spinner-global"></div>
+      <p style={{ 
+        color: 'rgba(255,255,255,0.9)', 
+        marginTop: '20px', 
+        fontSize: '1.2rem',
+        fontFamily: 'sans-serif' 
+      }}>
+        Načítám aplikaci...
+      </p>
     </div>
   </div>
 );

@@ -1,6 +1,9 @@
+//src/hooks/useFirestore.ts
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestoreService } from '../services/firestoreService';
+import { deviceService } from '../services/deviceService';
 import type {
   TuyaDevice,
   UserSettings,
@@ -43,7 +46,7 @@ export const useFirestore = () => {
         setUserSettings(settings);
 
         // Subscribe to devices (Tuya)
-        devicesUnsubscribe = await firestoreService.subscribeToUserDevices(
+        devicesUnsubscribe = await deviceService.subscribeToUserDevices(
           currentUser.uid,
           setDevices
         );
@@ -97,7 +100,7 @@ export const useFirestore = () => {
     if (!currentUser) throw new Error('Not authenticated');
 
     try {
-      await firestoreService.saveUserDevices(currentUser.uid, newDevices);
+      await deviceService.saveUserDevices(currentUser.uid, newDevices);
     } catch (err: any) {
       setError(err.message);
       throw err;

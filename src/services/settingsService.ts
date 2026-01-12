@@ -50,6 +50,24 @@ export interface APIStatus {
   errorMessage?: string;
 }
 
+// 🆕 TUYA Auto-sync nastavení
+export interface TuyaSyncSettings {
+  enabled: boolean;                    // Povolit auto-sync
+  intervals: {
+    critical: number;                  // Teploměry, topení (minuty)
+    standard: number;                  // Světla, zásuvky (minuty)
+    passive: number;                   // Kamery, dveřní senzory (minuty)
+    discovery: number;                 // 🆕 Hledání nových zařízení (minuty)
+  };
+  criticalCategories: string[];        // Kategorie s častou synchronizací
+  standardCategories: string[];        // Kategorie se standardní synchronizací
+  // Zbytek kategorií = passive (nejméně časté)
+  syncOnlyOnline: boolean;             // Synchronizovat pouze online zařízení
+  nightModeEnabled: boolean;           // Méně časté sync v noci
+  nightModeStart: number;              // Začátek nočního režimu (hodina 0-23)
+  nightModeEnd: number;                // Konec nočního režimu (hodina 0-23)
+}
+
 export interface FCMStats {
   totalSent: number;
   monthSent: number;
@@ -69,7 +87,9 @@ export interface AppSettings {
   systemSettings: {
     apiCheckIntervalMinutes: number;
     autoCheckEnabled: boolean;
-    fcmEnabled: boolean; // 🆕 Zapnout/vypnout Firebase notifikace
+    fcmEnabled: boolean;
+    // 🆕 TUYA Auto-sync
+    tuyaSync: TuyaSyncSettings;
   };
 }
 
@@ -127,9 +147,25 @@ const DEFAULT_SETTINGS: AppSettings = {
     firebase: { name: 'Firebase', status: 'unknown', lastCheck: 0 },
   },
   systemSettings: {
-    apiCheckIntervalMinutes: 30, // Default 30 minut
-    autoCheckEnabled: false, // Defaultně vypnuto
-    fcmEnabled: true, // 🆕 Defaultně zapnuto
+    apiCheckIntervalMinutes: 30,
+    autoCheckEnabled: false,
+    fcmEnabled: true,
+    // 🆕 TUYA Auto-sync
+    tuyaSync: {
+      enabled: false,                          // Defaultně vypnuto
+      intervals: {
+        critical: 5,                           // Teploměry každých 5 minut
+        standard: 15,                          // Světla každých 15 minut
+        passive: 60,                           // Kamery každou hodinu
+        discovery: 10080,                      // 🆕 Discovery 1x týdně (7 * 24 * 60)
+      },
+      criticalCategories: ['wsdcg', 'wk', 'pir'],      // Teploměry, topení, PIR
+      standardCategories: ['dj', 'kg', 'cz', 'pc'],    // Světla, vypínače, zásuvky
+      syncOnlyOnline: true,                    // Šetří API volání
+      nightModeEnabled: false,
+      nightModeStart: 23,                      // 23:00
+      nightModeEnd: 6,                         // 06:00
+    },
   },
 };
 

@@ -137,7 +137,6 @@ class ConfigService {
   clearCache(): void {
     this.config = null;
     this.loadPromise = null;
-    console.log('🔄 Config cache vymazána');
   }
 
   /**

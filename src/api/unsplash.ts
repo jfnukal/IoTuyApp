@@ -33,11 +33,11 @@ async function getUnsplashClient() {
 export const fetchImageForQuery = async (
   query: string
 ): Promise<string | null> => {
-  // 🆕 CACHE - klíč podle dotazu
+  // CACHE - klíč podle dotazu
   const cacheKey = `unsplash_${query.replace(/\s+/g, '_')}`;
   const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hodin v ms
 
-  // 🆕 Zkusit načíst z cache
+  // Zkusit načíst z cache
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -53,7 +53,7 @@ export const fetchImageForQuery = async (
     // Cache error - pokračujeme bez cache
   }
 
-  // 🔄 Načíst z API (původní kód)
+  // Načíst z API (původní kód)
   try {
     const unsplash = await getUnsplashClient();
 

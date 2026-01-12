@@ -25,9 +25,7 @@
 
 /* ==================== FLEX UTILITIES ==================== */
 
-.d-flex { display: flex; }
 .d-inline-flex { display: inline-flex; }
-.d-grid { display: grid; }
 .d-block { display: block; }
 .d-inline-block { display: inline-block; }
 .d-none { display: none; }
@@ -192,7 +190,6 @@
 /* ==================== SPACING UTILITIES ==================== */
 
 .m-0 { margin: 0; }
-.m-1 { margin: var(--spacing-1); }
 .m-2 { margin: var(--spacing-2); }
 .m-3 { margin: var(--spacing-3); }
 .m-4 { margin: var(--spacing-4); }
@@ -232,7 +229,6 @@
 .mb-8 { margin-bottom: var(--spacing-8); }
 
 .p-0 { padding: 0; }
-.p-1 { padding: var(--spacing-1); }
 .p-2 { padding: var(--spacing-2); }
 .p-3 { padding: var(--spacing-3); }
 .p-4 { padding: var(--spacing-4); }
@@ -441,4 +437,10 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+}
+
+/* ==================== SCROLL CONTAINER FIX ==================== */
+.app-layout {
+  height: 100%;
+  overflow: hidden;
 }

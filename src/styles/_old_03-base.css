@@ -1,5 +1,10 @@
 /* ==================== SMOOTH THEME TRANSITIONS ==================== */
 
+* {
+  transition: background-color var(--transition-normal), 
+              color var(--transition-normal), 
+              border-color var(--transition-normal);
+}
 
 *:focus,
 *:hover,
@@ -9,20 +14,8 @@
 
 /* ==================== BASE STYLES ==================== */
 
-/* ZDEN JSEM DELAL ZMENU DLE GEMINI!!! Oprava výpočtu šířky - zabrání bílému pruhu na straně 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-  margin: 0;
-  padding: 0;
+html {
+  font-size: 16px;
   height: 100%;
 }
 
@@ -33,17 +26,17 @@ body {
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
   background: none;
-  height: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
 }
 
 #root {
-  height: 100%;
-}
-
-/* #root {
   min-height: 100vh;
   width: 100%;
-} */
+}
 
 /* ==================== TYPOGRAPHY ==================== */
 
@@ -246,6 +239,37 @@ tr:hover {
 .bg-success { background-color: var(--color-success); }
 .bg-warning { background-color: var(--color-warning); }
 .bg-danger { background-color: var(--color-danger); }
+
+/* ==================== ACCESSIBILITY ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-background: #1a1a1a;
+    --color-card-background: #2d2d2d;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #b3b3b3;
+    --color-text-muted: #888888;
+  }
+} */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary: #0000ff;
+    --color-success: #008000;
+    --color-danger: #ff0000;
+    --color-warning: #ff8000;
+  }
+}
 
 /* ==================== PRINT STYLES ==================== */
 

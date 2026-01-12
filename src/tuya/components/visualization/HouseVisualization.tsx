@@ -67,7 +67,7 @@ const HouseVisualization: React.FC = () => {
     setSelectedRoom(room);
   };
 
-  const handleDeviceClick = (deviceId: string) => {
+  const handleDeviceClick = (_deviceId: string) => {
   };
 
   console.log('🎨 Rendering state:', {

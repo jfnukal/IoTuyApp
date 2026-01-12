@@ -943,24 +943,6 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-.search-spinner {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.2rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: translateY(-50%) rotate(0deg);
-  }
-  to {
-    transform: translateY(-50%) rotate(360deg);
-  }
-}
-
 .search-results {
   position: absolute;
   top: 105%;

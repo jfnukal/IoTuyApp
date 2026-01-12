@@ -2,10 +2,11 @@
 
 /* ==================== MAIN LAYOUT ==================== */
 .dashboard-layout {
-  min-height: 100vh;
+  height: 100%;
   width: 100%;
-  max-width: 100vw; /* Pojistka proti přetečení */
-  overflow-x: hidden; /* Skryje vše, co by chtělo vyčuhovat doprava */
+  max-width: 100vw;
+  overflow-x: hidden;
+  overflow-y: auto;  /* Jediný scrollbar */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-attachment: fixed;
   position: relative;
@@ -292,6 +293,7 @@
   .dashboard-layout {
     background-attachment: scroll !important;
   }
+
   .dashboard-main-title {
     font-size: 1.8rem;
   }
@@ -855,4 +857,41 @@
   .fab-menu-icon {
     font-size: 1.2rem;
   }
+}
+
+/* Univerzální malé kolečko pro všechny widgety */
+.spinner-mini {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+/* Pojistka pro animaci (pokud ji nemáš v 03-base.css) */
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
 }

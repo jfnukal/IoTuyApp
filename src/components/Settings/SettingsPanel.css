@@ -213,3 +213,88 @@
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.8);
 }
+
+/* ==================== TUYA SYNC SETTINGS ==================== */
+
+/* Noční režim - časy vedle sebe */
+.night-mode-times {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.night-mode-times > div {
+  flex: 1;
+}
+
+/* Legenda kategorií */
+.category-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.legend-group {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.legend-group h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.legend-item.critical {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.legend-item.standard {
+  background: rgba(255, 193, 7, 0.15);
+  color: #b38600;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.legend-item.passive {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* Responsive pro noční režim */
+@media (max-width: 480px) {
+  .night-mode-times {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .legend-items {
+    flex-direction: column;
+  }
+
+  .legend-item {
+    width: 100%;
+    justify-content: center;
+  }
+}

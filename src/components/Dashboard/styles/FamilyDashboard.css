@@ -342,18 +342,28 @@
   padding: 60px 20px;
   color: rgba(255, 255, 255, 0.8);
 }
-
+/* OPRAVENÝ SPINNER - už to není emoji, ale čisté CSS kolečko */
 .loading-settings .spinner {
-  font-size: 3rem;
-  animation: spin 1s linear infinite;
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.1); /* Světlý neaktivní kruh */
+  border-top: 5px solid #ffffff; /* Bílá část, která se točí */
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite;
+  margin-bottom: 20px;
 }
 
 .loading-settings p {
-  margin-top: 20px;
+  margin: 0;
   font-size: 1.1rem;
+  font-weight: 500;
+  /* Zajištění, že se text nebude točit */
+  transform: none !important; 
+  animation: none !important;
 }
 
-@keyframes spin {
+/* Vlastní animace pro spinner, aby se nepletla s jinými */
+@keyframes spinner-rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }

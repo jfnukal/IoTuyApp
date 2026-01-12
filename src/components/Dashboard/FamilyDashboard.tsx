@@ -31,18 +31,18 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
   const { settings, isLoading } = useWidgetSettings();
   const { currentUser } = useAuth();
 
-  // Pokud se ještě načítá nastavení, zobraz loader
-  if (isLoading) {
-    return (
-      <div className="family-dashboard">
-        <div className="loading-settings">
-          <div className="spinner">🔄</div>
-          <p>Načítám nastavení...</p>
-        </div>
+// Pokud se ještě načítá nastavení, zobraz loader
+if (isLoading) {
+  return (
+    <div className="family-dashboard">
+      <div className="loading-settings">
+        {/* Tento div je teď prázdný, CSS z něj udělá kolečko */}
+        <div className="spinner"></div>
+        <p>Načítám nastavení...</p>
       </div>
-    );
-  }
-
+    </div>
+  );
+}
   return (
     <div className="family-dashboard">
       <div className="widgets-grid">
@@ -106,13 +106,15 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         )}
 
         {/* Placeholder pro budoucí widgety */}
-        <div className="widget-container add-widget-container">
+        
+        
+        {/* <div className="widget-container add-widget-container">
           <div className="add-widget-placeholder">
             <div className="add-widget-icon">➕</div>
             <div className="add-widget-text">Přidat widget</div>
             <p className="add-widget-hint">Brzy dostupné...</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Info panel když je vybrán člen rodiny */}

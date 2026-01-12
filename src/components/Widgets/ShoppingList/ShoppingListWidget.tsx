@@ -73,7 +73,7 @@ const ShoppingListWidget: React.FC = () => {
     return (
       <div className="shopping-widget loading">
         <div className="loading-content">
-          <span className="loading-spinner">🔄</span>
+          <div className="spinner-mini"></div>
           <p>Načítám seznam...</p>
         </div>
       </div>

@@ -79,6 +79,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <span className="mode-label">Technický</span>
               </button>
             </div>
+            
 
             {/* Tlačítko pro notifikace */}
             <button

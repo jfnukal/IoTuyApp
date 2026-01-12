@@ -15,21 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 180px; /* 🆕 Stejná výška jako normální stav */
-}
-
-.loading-spinner {
-  font-size: 1.5rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  min-height: 180px; 
 }
 
 /* Header */
@@ -320,6 +306,8 @@
 }
 
 .shopping-widget.loading {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -999,4 +987,22 @@
     width: 40px !important;
     height: 40px;
   }
+}
+
+/* Univerzální styl pro to jedno správné kolečko */
+.spinner-mini {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.2) !important;
+  border-top: 3px solid #ffffff !important;
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite !important;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+/* Pokud by animace spinner-rotate nebyla v base.css, dej ji sem */
+@keyframes spinner-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

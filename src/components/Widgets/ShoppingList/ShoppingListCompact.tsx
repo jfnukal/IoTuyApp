@@ -47,13 +47,14 @@ const ShoppingListCompact: React.FC<ShoppingListCompactProps> = ({
     deleteItem(itemId);
   };
 
-  if (loading) {
-    return (
-      <div className="shopping-compact loading">
-        <span className="loading-spinner">🔄</span>
-      </div>
-    );
-  }
+// PRO KOMPAKTNÍ VERZI
+if (loading) {
+  return (
+    <div className="shopping-compact loading">
+ 
+    </div>
+  );
+}
 
   return (
     <div className="shopping-compact">

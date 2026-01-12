@@ -203,9 +203,20 @@ const WeatherModal: React.FC<WeatherModalProps> = ({ isOpen, onClose }) => {
                 disabled={isLoading}
                 title="Obnovit počasí"
               >
-                <span className={`refresh-icon ${isLoading ? 'spinning' : ''}`}>
-                  🔄
-                </span>
+                {/* Pokud se načítá, ukážeme stabilní spinner, jinak statické emoji */}
+                {isLoading ? (
+                  <div
+                    className="spinner-mini"
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderWidth: '2px',
+                      margin: '0 auto',
+                    }}
+                  ></div>
+                ) : (
+                  <span className="refresh-icon">🔄</span>
+                )}
               </button>
 
               <div className="view-switcher">
@@ -303,7 +314,18 @@ const WeatherModal: React.FC<WeatherModalProps> = ({ isOpen, onClose }) => {
                   className="city-search-input"
                   style={{ width: '160px', fontSize: '0.85rem' }}
                 />
-                {isSearching && <div className="search-spinner">⟲</div>}
+                {isSearching && (
+                  <div className="search-spinner">
+                    <div
+                      className="spinner-mini"
+                      style={{
+                        width: '14px',
+                        height: '14px',
+                        borderWidth: '2px',
+                      }}
+                    ></div>
+                  </div>
+                )}
                 {searchResults.length > 0 && (
                   <div className="search-results">
                     {searchResults.map((result, index) => (

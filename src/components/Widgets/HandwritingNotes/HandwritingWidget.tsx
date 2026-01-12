@@ -118,15 +118,15 @@ const HandwritingWidget: React.FC<HandwritingWidgetProps> = ({
         </ModalPortal>
       )}
 
-      {/* Loading overlay taky přes Portal, aby byl nahoře */}
-      {isProcessing && (
-        <ModalPortal>
-          <div className="processing-content">
-            <div className="spinner">🔄</div>
-            <p>Rozpoznávám text...</p>
-          </div>
-        </ModalPortal>
-      )}
+{/* Loading overlay přes Portal se stabilním kolečkem */}
+{isProcessing && (
+  <ModalPortal>
+    <div className="processing-content">
+      <div className="spinner-mini"></div>
+      <p>Rozpoznávám text...</p>
+    </div>
+  </ModalPortal>
+)}
 
       <div className="notes-list">
         {/* ... (Zbytek renderování seznamu poznámek zůstává stejný) ... */}

@@ -311,10 +311,6 @@
   transition: transform 0.6s ease;
 }
 
-.mobile-refresh-icon.spinning {
-  animation: spin 1s linear infinite;
-}
-
 .mobile-last-updated {
   font-size: 0.8rem;
   opacity: 0.7;

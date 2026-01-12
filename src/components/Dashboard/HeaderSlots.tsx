@@ -102,19 +102,12 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
         return null;
     }
   };
-
+// Pokud se hlavička ještě načítá, nevracej nic (null)
   if (loading) {
-    return (
-      <div className="header-slots loading">
-        <div className="loading-spinner">⏳ Načítání hlavičky...</div>
-      </div>
-    );
+    return null; 
   }
 
-  // 🆕 TOTO JE OPRAVENÁ VERZE FUNKCE
   const renderScheduleModal = () => {
-    // NENÍ potřeba 'modal-root', použijeme 'document.body'
-    // Tím se opraví chyba "bez reakce"
 
     return createPortal(
       <div

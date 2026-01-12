@@ -481,7 +481,7 @@ const EventForm: React.FC<EventFormProps> = ({
             </label>
           </div>
 
-          {/* 🔄 Opakování */}
+          {/* Opakování */}
           <RecurrenceSelector
             value={formData.recurring}
             onChange={(pattern) => handleInputChange('recurring', pattern)}

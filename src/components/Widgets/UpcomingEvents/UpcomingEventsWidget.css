@@ -360,8 +360,30 @@
     padding: 15px;
   }
 
+  /* 🆕 Header na mobilu - dvouřádkový layout */
+  .upcoming-events-widget .widget-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
   .upcoming-events-widget .widget-title {
     font-size: 1.3rem;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  /* 🆕 Controls na vlastním řádku na mobilu */
+  .upcoming-events-widget .widget-controls {
+    width: 100%;
+    justify-content: space-between;
+    order: 3;
+  }
+
+  /* 🆕 Badge vždy viditelný */
+  .upcoming-events-widget .new-events-badge {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
   }
 
   .event-card {
@@ -387,6 +409,7 @@
     font-size: 1.5rem;
   }
 }
+
 
 /* --- STYLY PRO OVLÃDACÃ PRVKY WIDGETU --- */
 

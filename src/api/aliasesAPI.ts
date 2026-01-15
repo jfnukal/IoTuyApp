@@ -40,7 +40,7 @@ export const loadAliases = async (): Promise<ProductAlias[]> => {
     })) as ProductAlias[];
 
     cacheTimestamp = now;
-    console.log(`[AliasesAPI] Načteno ${cachedAliases.length} aliasů`);
+    // console.log(`[AliasesAPI] Načteno ${cachedAliases.length} aliasů`);
 
     return cachedAliases;
   } catch (error) {
@@ -115,36 +115,42 @@ export const clearAliasCache = (): void => {
   cacheTimestamp = 0;
 };
 
-
 // Smaže všechny aliasy pro daný hledaný výraz
-export const deleteAliasBySearch = async (searchTerm: string): Promise<number> => {
+export const deleteAliasBySearch = async (
+  searchTerm: string
+): Promise<number> => {
   const aliases = await loadAliases();
   const normalized = searchTerm.toLowerCase().trim();
   const words = normalized.split(/\s+/);
-  
+
   let deletedCount = 0;
-  
+
   for (const word of words) {
     // Najdeme všechny aliasy kde alias = word
-    const matches = aliases.filter(a => a.alias === word);
-    
+    const matches = aliases.filter((a) => a.alias === word);
+
     for (const match of matches) {
       try {
         const docRef = doc(db, 'productAliases', match.id);
         await deleteDoc(docRef);
         deletedCount++;
-        console.log(`[AliasesAPI] Smazán alias: ${match.alias} → ${match.canonical}`);
+        console.log(
+          `[AliasesAPI] Smazán alias: ${match.alias} → ${match.canonical}`
+        );
       } catch (error) {
-        console.error(`[AliasesAPI] Chyba při mazání aliasu ${match.id}:`, error);
+        console.error(
+          `[AliasesAPI] Chyba při mazání aliasu ${match.id}:`,
+          error
+        );
       }
     }
   }
-  
+
   // Invalidujeme cache
   if (deletedCount > 0) {
     cachedAliases = null;
     cacheTimestamp = 0;
   }
-  
+
   return deletedCount;
 };

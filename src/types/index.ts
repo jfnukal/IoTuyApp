@@ -36,24 +36,24 @@ export interface TuyaDevice {
   notes?: string;
 
   // 🎨 NASTAVENÍ KARTY (jak se má zobrazovat)
-cardSettings?: {
-    size?: 'small' | 'medium' | 'large';      // Výška: small=150px, medium=300px, large=450px
-    layout?: 'compact' | 'default';           // Layout typ
-    hiddenControls?: string[];                 // Skryté ovládací prvky (např. ['switch_3'])
-    showInDetail?: string[];                   // Co zobrazit pouze v detailu
+  cardSettings?: {
+    size?: 'small' | 'medium' | 'large'; // Výška: small=150px, medium=300px, large=450px
+    layout?: 'compact' | 'default'; // Layout typ
+    hiddenControls?: string[]; // Skryté ovládací prvky (např. ['switch_3'])
+    showInDetail?: string[]; // Co zobrazit pouze v detailu
     gridPosition?: { row: number; col: number }; // Pozice v gridu (pro budoucí D&D)
-    showName?: boolean;                       // Zobrazovat název zařízení
-    showCustomName?: boolean;                 // Zobrazovat vlastní název
-    hidden?: boolean;                         // Skrýt kartu v gridu/listu
+    showName?: boolean; // Zobrazovat název zařízení
+    showCustomName?: boolean; // Zobrazovat vlastní název
+    hidden?: boolean; // Skrýt kartu v gridu/listu
   };
 
-    // Grid pozice (pro react-grid-layout)
-    gridLayout?: {
-      x: number;      // Pozice sloupec (0, 1, 2, ...)
-      y: number;      // Pozice řádek (0, 1, 2, ...)
-      w: number;      // Šířka (1 = 1 karta, 2 = 2 karty, ...)
-      h: number;      // Výška (1 = malá, 2 = velká)
-    };
+  // Grid pozice (pro react-grid-layout)
+  gridLayout?: {
+    x: number; // Pozice sloupec (0, 1, 2, ...)
+    y: number; // Pozice řádek (0, 1, 2, ...)
+    w: number; // Šířka (1 = 1 karta, 2 = 2 karty, ...)
+    h: number; // Výška (1 = malá, 2 = velká)
+  };
 
   // 🏠 MÍSTNOST (kde zařízení patří)
   roomAssignment?: {
@@ -347,7 +347,7 @@ export interface CalendarEventData {
   familyMemberId?: string;
   reminderRecipients?: string[];
   color?: string;
-  icon?: string;  
+  icon?: string;
   reminders?: ReminderItem[];
   sentReminders?: string[];
   isAllDay?: boolean;
@@ -355,10 +355,10 @@ export interface CalendarEventData {
   recurring?: RecurringPattern; // Zachováno z tvé verze
   createdAt: number; // Potřebné pro DB
   updatedAt: number; // Potřebné pro DB
-    // Pro instance opakovaných událostí
-    isRecurringInstance?: boolean;
-    originalEventId?: string;
-    instanceIndex?: number;
+  // Pro instance opakovaných událostí
+  isRecurringInstance?: boolean;
+  originalEventId?: string;
+  instanceIndex?: number;
 }
 
 export type EventType =
@@ -393,23 +393,23 @@ export interface FileAttachment {
 
 // ==================== RECURRING EVENTS ====================
 
-export type RecurrenceFrequency = 
-  | 'daily'           // Každý den
-  | 'weekly'          // Každý týden
-  | 'biweekly'        // Každé 2 týdny
-  | 'monthly'         // Každý měsíc
-  | 'yearly'          // Každý rok
-  | 'custom';         // Vlastní (konkrétní dny v týdnu)
+export type RecurrenceFrequency =
+  | 'daily' // Každý den
+  | 'weekly' // Každý týden
+  | 'biweekly' // Každé 2 týdny
+  | 'monthly' // Každý měsíc
+  | 'yearly' // Každý rok
+  | 'custom'; // Vlastní (konkrétní dny v týdnu)
 
 export interface RecurringPattern {
   frequency: RecurrenceFrequency;
-  interval: number;                    // Každých X (dní/týdnů/měsíců)
-  daysOfWeek?: number[];               // Pro custom: 0=Ne, 1=Po, 2=Út... 6=So
-  dayOfMonth?: number;                 // Pro monthly: den v měsíci (1-31)
+  interval: number; // Každých X (dní/týdnů/měsíců)
+  daysOfWeek?: number[]; // Pro custom: 0=Ne, 1=Po, 2=Út... 6=So
+  dayOfMonth?: number; // Pro monthly: den v měsíci (1-31)
   endType: 'never' | 'date' | 'count'; // Kdy končí opakování
-  endDate?: string;                    // Koncové datum (YYYY-MM-DD)
-  endCount?: number;                   // Po X opakováních
-  exceptions?: string[];               // Data, kdy se událost NEKONÁ (YYYY-MM-DD)
+  endDate?: string; // Koncové datum (YYYY-MM-DD)
+  endCount?: number; // Po X opakováních
+  exceptions?: string[]; // Data, kdy se událost NEKONÁ (YYYY-MM-DD)
 }
 
 export interface Holiday {
@@ -526,7 +526,7 @@ export interface HeaderConfigDoc {
 /**
  * Props pro jednotlivé karty zařízení
  */
- export interface DeviceCardProps {
+export interface DeviceCardProps {
   device: TuyaDevice;
   onToggle: (deviceId: string) => Promise<void>;
   onControl?: (
@@ -550,12 +550,11 @@ export type DeviceCardType =
   | 'gateway'
   | 'valve'
   | 'soil_sensor'
-  | 'doorbell'  
+  | 'doorbell'
   | 'ptz_camera'
   | 'basic';
 
-
-  // Na konec souboru před export
+// Na konec souboru před export
 export interface DoorbellEvent {
   id: string;
   userId: string;
@@ -579,14 +578,14 @@ export interface DoorbellSnapshot {
 export interface ShoppingItem {
   id: string;
   text: string;
-  addedBy: string;           // ID člena rodiny (dad, mom, jarecek...)
-  addedByEmoji: string;      // 👨, 👩, 👦...
-  addedByName: string;       // Táta, Máma, Jareček...
-  addedAt: number;           // timestamp
+  addedBy: string; // ID člena rodiny (dad, mom, jarecek...)
+  addedByEmoji: string; // 👨, 👩, 👦...
+  addedByName: string; // Táta, Máma, Jareček...
+  addedAt: number; // timestamp
   completed: boolean;
   completedBy?: string | null;
   completedByName?: string | null;
-  completedAt?: number | null; 
+  completedAt?: number | null;
 }
 
 export interface ShoppingList {
@@ -607,10 +606,10 @@ export interface DishwasherPerson {
 
 export interface DishwasherHistoryItem {
   id: string;
-  personId: string;               // ID člena, který myl (jarecek/johanka)
-  personName: string;             // Jméno (Jareček, Johanka)
-  personEmoji: string;            // Emoji (👦, 👧)
-  completedAt: number;            // Kdy to udělal
+  personId: string; // ID člena, který myl (jarecek/johanka)
+  personName: string; // Jméno (Jareček, Johanka)
+  personEmoji: string; // Emoji (👦, 👧)
+  completedAt: number; // Kdy to udělal
 }
 
 export interface DishwasherState {

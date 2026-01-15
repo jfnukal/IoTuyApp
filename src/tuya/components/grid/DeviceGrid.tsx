@@ -50,7 +50,7 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
 
   const generateInitialLayout = (): Layout[] => {
     return devices.map((device, index) => {
-      // ✅ Pokud má uložený layout, použij ho
+      // ✅ Pokud má uložený layout, použij ho (už přemigrovaný)
       if (device.gridLayout) {
         return {
           i: device.id,
@@ -58,26 +58,39 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
           y: device.gridLayout.y,
           w: device.gridLayout.w,
           h: device.gridLayout.h,
+          minW: 2,  // Minimální šířka (2 * ~8% = 16% obrazovky)
+          minH: 2,  // Minimální výška (2 * 50px = 100px)
         };
       }
-
-      // ⚙️ Jinak použij výchozí hodnoty podle kategorie
-      let defaultW = 1;
-      let defaultH = 1;
-      if (device.category === 'wk') defaultH = 2; // heating
-      if (device.category === 'wkcz') defaultH = 2; // bojler
-      if (device.category === 'dj') defaultH = 2; // light
-      if (device.category === 'kg') defaultH = 2; // multi_switch
-      if (device.category === 'cz') defaultH = 2; // socket
-      if (device.category === 'pc') defaultH = 2; // socket
-      if (device.category === 'wsdcg') defaultH = 2; // temp sensor
-
+  
+      // ⚙️ Výchozí hodnoty pro NOVÝ grid (cols=12, rowHeight=50)
+      // Šířka: 3 = 25% obrazovky (3/12)
+      // Výška: 6 = 300px (6 * 50px)
+      let defaultW = 3;
+      let defaultH = 4; // 200px - základní
+  
+      // Větší karty podle kategorie
+      if (device.category === 'wk') defaultH = 6;   // heating - 300px
+      if (device.category === 'wkcz') defaultH = 6; // bojler - 300px
+      if (device.category === 'dj') defaultH = 5;   // light - 250px
+      if (device.category === 'kg') defaultH = 5;   // multi_switch - 250px
+      if (device.category === 'cz') defaultH = 5;   // socket - 250px
+      if (device.category === 'pc') defaultH = 5;   // socket - 250px
+      if (device.category === 'wsdcg') defaultH = 4; // temp sensor - 200px
+  
+      // Pozice: 4 karty na řádek (každá w=3, celkem 12)
+      const cardsPerRow = 4;
+      const col = index % cardsPerRow;
+      const row = Math.floor(index / cardsPerRow);
+  
       return {
         i: device.id,
-        x: index % 4,
-        y: Math.floor(index / 4),
+        x: col * 3,           // 0, 3, 6, 9
+        y: row * defaultH,    // Výška závisí na předchozích kartách
         w: defaultW,
         h: defaultH,
+        minW: 2,
+        minH: 2,
       };
     });
   };
@@ -121,12 +134,12 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
   }, [devices.length, isInitialized]);
 
   return (
-    <ResponsiveGridLayout
-      className="layout"
-      layouts={layouts}
-      breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-      cols={{ lg: 4, md: 3, sm: 2, xs: 1, xxs: 1 }}
-      rowHeight={150}
+<ResponsiveGridLayout
+  className="layout"
+  layouts={layouts}
+  breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+  cols={{ lg: 12, md: 9, sm: 6, xs: 3, xxs: 3 }}
+  rowHeight={50}
       onLayoutChange={(_currentLayout, allLayouts) => {
         if (allLayouts.lg) {
           handleLayoutSave(allLayouts.lg);

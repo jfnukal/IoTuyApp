@@ -82,3 +82,12 @@
 .grid-item-clickable:hover {
   transform: translateY(-4px);
 }
+
+/* Minimální rozměry pro jemnější grid */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+  overflow: hidden;
+  min-width: 80px;   /* ~2 buňky */
+  min-height: 100px; /* 2 * 50px */
+}

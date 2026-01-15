@@ -14,6 +14,7 @@
   'wfcon': 'gateway',     // Zigbee Gateway
   'sfkzq': 'valve',       // Ventil zavlažování
   'zwjcy': 'soil_sensor', // Půdní senzor
+  'pc': 'multi_socket',   // 🆕 PC zásuvka (stejný typ jako cz)
  // 'sp': 'doorbell',       // Video zvonek 🔔 // 'sp': rozlišuje se v getDeviceCardType() podle product_id  
 };
 

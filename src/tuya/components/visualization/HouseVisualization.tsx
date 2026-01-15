@@ -68,6 +68,7 @@ const HouseVisualization: React.FC = () => {
   };
 
   const handleDeviceClick = (_deviceId: string) => {
+    // TODO: Implementovat detail zařízení po kliknutí
   };
 
   console.log('🎨 Rendering state:', {

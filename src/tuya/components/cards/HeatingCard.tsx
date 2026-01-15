@@ -52,16 +52,20 @@ const HeatingCard: React.FC<DeviceCardProps & { isDebugVisible?: boolean }> = ({
 
     setIsAdjusting(true);
     try {
-      // Pošli teplotu A změň režim na manual
-      await onControl(device.id, [
+      // Připrav příkazy - vždy nastavit teplotu
+      const commands: { code: string; value: any }[] = [
         { code: 'temp_set', value: Math.round(localTempSet * 10) },
-        { code: 'mode', value: 'manual' },
-      ]);
-      console.log(
-        '🌡️ Teplota nastavena na',
-        localTempSet,
-        '+ režim změněn na manual'
-      );
+      ];
+      
+      // Změň režim na manual JEN pokud byl v "auto" (Program)
+      if (mode === 'auto') {
+        commands.push({ code: 'mode', value: 'manual' });
+        console.log('🌡️ Teplota nastavena na', localTempSet, '+ režim změněn z auto na manual');
+      } else {
+        console.log('🌡️ Teplota nastavena na', localTempSet, '(režim zůstává:', mode, ')');
+      }
+      
+      await onControl(device.id, commands);
     } catch (error) {
       console.error('Chyba při nastavení teploty:', error);
     } finally {

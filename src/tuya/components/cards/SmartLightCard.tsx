@@ -127,7 +127,7 @@ const getDisplayName = (): string | null => {
               <h3 className="device-name">{getDisplayName()}</h3>
             )}
             <div className="device-subtitle">
-              <span className="device-category">Teplotní senzor</span>
+            <span className="device-category">Smart Light</span>
               {room && (
                 <>
                   <span className="subtitle-separator">•</span>

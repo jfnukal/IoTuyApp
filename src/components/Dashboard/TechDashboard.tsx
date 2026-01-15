@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { TuyaDeviceList, HouseVisualization, RoomManager } from '../../tuya';
 import { useTuya } from '../../tuya/hooks/useTuya';
 import { useNavigate } from 'react-router-dom';
+import { migrateGridLayouts } from '../../utils/migrateGridLayout';
 import './styles/TechDashboard.css';
 
 type ViewType = 'list' | 'visualization' | 'rooms';
@@ -15,11 +16,41 @@ const TechDashboard: React.FC = () => {
 
   // Stavy
   const [view, setView] = useState<ViewType>('list');
-  const [searchInput, setSearchInput] = useState('');  // Okamžitá hodnota inputu
-  const [searchQuery, setSearchQuery] = useState('');  // Debounced hodnota pro filtrování
+  const [searchInput, setSearchInput] = useState(''); // Okamžitá hodnota inputu
+  const [searchQuery, setSearchQuery] = useState(''); // Debounced hodnota pro filtrování
   const [filter, setFilter] = useState<FilterType>('online');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const [isLayoutEditMode, setIsLayoutEditMode] = useState(false);
+
+  // Stav pro migraci (přidej k ostatním useState)
+  const [isMigrating, setIsMigrating] = useState(false);
+
+  // Funkce pro migraci
+  const handleMigration = async () => {
+    if (
+      !window.confirm(
+        'Opravdu spustit migraci gridLayout? Toto změní pozice všech karet.'
+      )
+    ) {
+      return;
+    }
+    setIsMigrating(true);
+    try {
+      const result = await migrateGridLayouts();
+      if (result.success) {
+        alert(
+          `✅ Migrace dokončena! Migrováno: ${result.migratedCount} zařízení. Obnov stránku.`
+        );
+        window.location.reload();
+      } else {
+        alert(`❌ Chyba migrace: ${result.errors.join(', ')}`);
+      }
+    } catch (error) {
+      alert(`❌ Chyba: ${error}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   // Debounce vyhledávání - počká 300ms po posledním znaku
   useEffect(() => {
@@ -43,7 +74,7 @@ const TechDashboard: React.FC = () => {
         {/* Horní řádek: Logo + Statistiky + Akce */}
         <div className="header-top-row">
           {/* Logo a návrat */}
-          <button 
+          <button
             className="tech-logo-btn"
             onClick={() => navigate('/?mode=family')}
             title="Zpět na rodinný dashboard"
@@ -55,23 +86,27 @@ const TechDashboard: React.FC = () => {
 
           {/* Statistiky zařízení */}
           <div className="device-stats">
-            <div 
+            <div
               className={`stat-card ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
               <span className="stat-number">{deviceCount}</span>
               <span className="stat-label">Celkem</span>
             </div>
-            <div 
-              className={`stat-card online ${filter === 'online' ? 'active' : ''}`}
+            <div
+              className={`stat-card online ${
+                filter === 'online' ? 'active' : ''
+              }`}
               onClick={() => setFilter('online')}
             >
               <span className="stat-indicator"></span>
               <span className="stat-number">{onlineCount}</span>
               <span className="stat-label">Online</span>
             </div>
-            <div 
-              className={`stat-card offline ${filter === 'offline' ? 'active' : ''}`}
+            <div
+              className={`stat-card offline ${
+                filter === 'offline' ? 'active' : ''
+              }`}
               onClick={() => setFilter('offline')}
             >
               <span className="stat-indicator"></span>
@@ -90,7 +125,9 @@ const TechDashboard: React.FC = () => {
               <span className="qa-icon">🐛</span>
             </button>
             <button
-              className={`quick-action-btn ${isLayoutEditMode ? 'active edit-mode' : ''}`}
+              className={`quick-action-btn ${
+                isLayoutEditMode ? 'active edit-mode' : ''
+              }`}
               onClick={() => setIsLayoutEditMode(!isLayoutEditMode)}
               title="Upravit rozložení"
             >
@@ -104,7 +141,9 @@ const TechDashboard: React.FC = () => {
               <span className="qa-icon">🏠</span>
             </button>
             <button
-              className={`quick-action-btn sync-action ${isSyncing ? 'syncing' : ''}`}
+              className={`quick-action-btn sync-action ${
+                isSyncing ? 'syncing' : ''
+              }`}
               onClick={syncDevices}
               disabled={isSyncing}
               title="Synchronizovat zařízení"
@@ -113,6 +152,19 @@ const TechDashboard: React.FC = () => {
                 <div className="spinner-mini"></div>
               ) : (
                 <span className="qa-icon">🔄</span>
+              )}
+            </button>
+            <button
+              className={`quick-action-btn ${isMigrating ? 'syncing' : ''}`}
+              onClick={handleMigration}
+              disabled={isMigrating}
+              title="Migrovat grid layout (jednorázově)"
+              style={{ background: '#f59e0b' }}
+            >
+              {isMigrating ? (
+                <div className="spinner-mini"></div>
+              ) : (
+                <span className="qa-icon">📐</span>
               )}
             </button>
           </div>
@@ -131,7 +183,7 @@ const TechDashboard: React.FC = () => {
               className="search-input-new"
             />
             {searchInput && (
-              <button 
+              <button
                 className="search-clear"
                 onClick={() => {
                   setSearchInput('');

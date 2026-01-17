@@ -120,16 +120,23 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     setError(null);
 
     try {
-      await deviceService.updateDevice(device.id, {
-        customIcon: customIcon || undefined,
+      // 🆕 Sestavíme objekt jen se změněnými hodnotami
+      const updates: Partial<TuyaDevice> = {
         cardSettings: {
           ...device.cardSettings,
           showName,
           showCustomName,
           hidden: hiddenCard,
         },
-      });
+      };
 
+      if (customIcon !== device.customIcon) {
+        updates.customIcon = customIcon;
+      }
+
+      await deviceService.updateDevice(device.id, updates);
+
+      // Změna místnosti
       if (device.roomId !== selectedRoomId) {
         await assignDeviceToRoom(
           device.id,
@@ -225,69 +232,69 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
         <div className="device-modal-body">
           {error && <div className="error-message">{error}</div>}
 
-  {/* ===== TAB: INFO ===== */}
-{activeTab === 'info' && (
-  <div className="tab-content tab-info">
-    {/* Embedded karta s ovládáním */}
-    <div className="embedded-device-card">
-      <DeviceCardRenderer
-        device={device}
-        onToggle={async () => {}}
-        onControl={controlDevice}
-        isDebugVisible={false}
-      />
-    </div>
+          {/* ===== TAB: INFO ===== */}
+          {activeTab === 'info' && (
+            <div className="tab-content tab-info">
+              {/* Embedded karta s ovládáním */}
+              <div className="embedded-device-card">
+                <DeviceCardRenderer
+                  device={device}
+                  onToggle={async () => {}}
+                  onControl={controlDevice}
+                  isDebugVisible={false}
+                />
+              </div>
 
-    {/* Všechny statusy */}
-    {device.status && device.status.length > 0 && (
-      <div className="status-section">
-        <h3>Stav zařízení</h3>
-        <div className="status-list">
-          {device.status.map((s) => (
-            <div key={s.code} className="status-item">
-              <span className="status-code">{s.code}</span>
-              <span className="status-value">
-                {typeof s.value === 'boolean'
-                  ? s.value
-                    ? '✅ Ano'
-                    : '❌ Ne'
-                  : String(s.value)}
-              </span>
+              {/* Všechny statusy */}
+              {device.status && device.status.length > 0 && (
+                <div className="status-section">
+                  <h3>Stav zařízení</h3>
+                  <div className="status-list">
+                    {device.status.map((s) => (
+                      <div key={s.code} className="status-item">
+                        <span className="status-code">{s.code}</span>
+                        <span className="status-value">
+                          {typeof s.value === 'boolean'
+                            ? s.value
+                              ? '✅ Ano'
+                              : '❌ Ne'
+                            : String(s.value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Základní info */}
+              <div className="info-section">
+                <h3>Základní informace</h3>
+                <div className="info-grid">
+                  <div className="info-row">
+                    <span className="info-label">Kategorie:</span>
+                    <span className="info-value">
+                      {getCategoryLabel(device.category)}
+                    </span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Místnost:</span>
+                    <span className="info-value">
+                      {rooms.find((r) => r.id === device.roomId)?.name ||
+                        'Nepřiřazeno'}
+                    </span>
+                  </div>
+                  {device.position && (
+                    <div className="info-row">
+                      <span className="info-label">Pozice:</span>
+                      <span className="info-value">
+                        X: {device.position.x}, Y: {device.position.y}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Základní info */}
-    <div className="info-section">
-      <h3>Základní informace</h3>
-      <div className="info-grid">
-        <div className="info-row">
-          <span className="info-label">Kategorie:</span>
-          <span className="info-value">
-            {getCategoryLabel(device.category)}
-          </span>
-        </div>
-        <div className="info-row">
-          <span className="info-label">Místnost:</span>
-          <span className="info-value">
-            {rooms.find((r) => r.id === device.roomId)?.name ||
-              'Nepřiřazeno'}
-          </span>
-        </div>
-        {device.position && (
-          <div className="info-row">
-            <span className="info-label">Pozice:</span>
-            <span className="info-value">
-              X: {device.position.x}, Y: {device.position.y}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+          )}
 
           {/* ===== TAB: NASTAVENÍ ===== */}
           {activeTab === 'settings' && (

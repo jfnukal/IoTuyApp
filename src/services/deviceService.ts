@@ -128,24 +128,29 @@ class DeviceService {
     }
   }
 
-async updateDevice(
-  deviceId: string,
-  updates: Partial<TuyaDevice>
-): Promise<void> {
-  try {
-    const deviceRef = doc(db, 'devices', deviceId);
-    
-    // 🆕 Odfiltruj undefined hodnoty - Firestore je nepodporuje
-    const cleanedUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
-    );
-    
-    await updateDoc(deviceRef, { ...cleanedUpdates, lastUpdated: Date.now() });
-  } catch (error) {
-    console.error('Error updating device:', error);
-    throw new Error('Nepodařilo se aktualizovat zařízení');
+  async updateDevice(
+    deviceId: string,
+    updates: Partial<TuyaDevice>
+  ): Promise<void> {
+    try {
+      const deviceRef = doc(db, 'devices', deviceId);
+      
+      // 🆕 Odfiltruj undefined hodnoty - Firestore je nepodporuje
+      const cleanedUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== undefined)
+      );
+      
+      if (Object.keys(cleanedUpdates).length === 0) {
+        console.warn('⚠️ updateDevice: Žádná data k uložení');
+        return;
+      }
+      
+      await updateDoc(deviceRef, { ...cleanedUpdates, lastUpdated: Date.now() });
+    } catch (error) {
+      console.error('Error updating device:', error);
+      throw new Error('Nepodařilo se aktualizovat zařízení');
+    }
   }
-}
 
   async updateDevicePosition(
     deviceId: string,
@@ -280,6 +285,5 @@ async updateDevice(
     ];
   }
 }
-
 
 export const deviceService = new DeviceService();

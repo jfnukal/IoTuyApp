@@ -54,29 +54,34 @@ type CategoryFilter =
     }
   };
 
-  // Filtrování zařízení
-  const filteredDevices = useMemo(() => {
-    let result = [...devices];
+// Filtrování zařízení
+const filteredDevices = useMemo(() => {
+  let result = [...devices];
 
-    if (filter === 'online') {
-      result = result.filter((d) => d.online);
-    } else if (filter === 'offline') {
-      result = result.filter((d) => !d.online);
-    }
-    if (categoryFilter !== 'all') {
-      result = result.filter((d) => d.category === categoryFilter);
-    }
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (d) =>
-          d.name.toLowerCase().includes(query) ||
-          d.customName?.toLowerCase().includes(query) ||
-          d.category.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [devices, filter, categoryFilter, searchQuery]);
+  // 🆕 Skryté karty nezobrazovat (pokud není edit mode)
+  if (!isLayoutEditMode) {
+    result = result.filter((d) => !d.cardSettings?.hidden);
+  }
+
+  if (filter === 'online') {
+    result = result.filter((d) => d.online);
+  } else if (filter === 'offline') {
+    result = result.filter((d) => !d.online);
+  }
+  if (categoryFilter !== 'all') {
+    result = result.filter((d) => d.category === categoryFilter);
+  }
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase();
+    result = result.filter(
+      (d) =>
+        d.name.toLowerCase().includes(query) ||
+        d.customName?.toLowerCase().includes(query) ||
+        d.category.toLowerCase().includes(query)
+    );
+  }
+  return result;
+}, [devices, filter, categoryFilter, searchQuery, isLayoutEditMode]);
 
   // Počet zařízení podle kategorií
 

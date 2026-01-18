@@ -23,9 +23,9 @@ import { fetchImageForQuery } from '../../../api/unsplash';
 import { monthThemes } from './data/monthThemes';
 import { useAuth } from '../../../contexts/AuthContext';
 import { firestoreService } from '../../../services/firestoreService';
-import { 
+import {
   getEventsForDate as getRecurringEventsForDate,
-  clearRecurrenceCache 
+  clearRecurrenceCache,
 } from '../../../utils/recurrenceUtils';
 
 interface CalendarContextType {
@@ -56,7 +56,6 @@ interface CalendarContextType {
   isToday: (date: Date) => boolean;
   isSameDay: (date1: Date | string, date2: Date) => boolean;
   formatDate: (date: Date, format?: string) => string;
-  // NOVÉ FUNKCE PRO PRÁCI S JMENINAMI
   isNamedayMarked: (date: Date) => boolean;
   markNameday: (date: Date, marked: boolean) => Promise<void>;
 }
@@ -75,12 +74,12 @@ export const useCalendar = () => {
 
 interface CalendarProviderProps {
   children: ReactNode;
-  events?: CalendarEventData[]; // Nový prop pro events z useFirestore
+  events?: CalendarEventData[];
 }
 
-const CalendarProvider: React.FC<CalendarProviderProps> = ({ 
+const CalendarProvider: React.FC<CalendarProviderProps> = ({
   children,
-  events: externalEvents = []
+  events: externalEvents = [],
 }) => {
   const { currentUser } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -101,14 +100,13 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     familyView: true,
   });
 
-  // NOVÝ STAV PRO OZNAČENÉ JMENINY
   const [markedNamedays, setMarkedNamedays] = useState<Set<string>>(new Set());
 
   const calendarDataCache = useRef<
     Map<number, { holidays: Holiday[]; namedays: Nameday[] }>
   >(new Map());
 
-  // Načtení svátků a jmenin (zůstává stejné)
+  // Načtení dat (svátky, jmeniny)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -134,7 +132,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     loadData();
   }, [currentDate.getFullYear()]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!currentUser) {
       setMarkedNamedays(new Set());
       return;
@@ -153,14 +151,10 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
   useEffect(() => {
     const loadHeaderImage = async () => {
       const month = currentDate.getMonth();
-
-      // Zkontroluj cache
       if (imageCache.current.has(month)) {
         setHeaderImage(imageCache.current.get(month)!);
-        return; // ← OKAMŽITĚ hotovo!
+        return;
       }
-
-      // Pokud není v cache, stáhni a ulož
       const currentTheme = monthThemes[month];
       const query = `${currentTheme.name} ${currentTheme.month}`;
       const imageUrl = await fetchImageForQuery(query);
@@ -170,55 +164,56 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     loadHeaderImage();
   }, [currentDate.getMonth()]);
 
-  // --- CRUD OPERACE PRO UDÁLOSTI ---
+  // --- CRUD ---
   const addEvent = useCallback(
     async (
-      eventData: Omit <
+      eventData: Omit<
         CalendarEventData,
         'id' | 'userId' | 'createdAt' | 'updatedAt'
       >
     ) => {
-    if (!currentUser) return;
-    try {
-      await firestoreService.addEvent(currentUser.uid, eventData);
-      clearRecurrenceCache(); // ← PŘIDEJ
-    } catch (error) {
-      console.error('Error adding event:', error);
-    }
-  },
-  [currentUser]
-);
+      if (!currentUser) return;
+      try {
+        await firestoreService.addEvent(currentUser.uid, eventData);
+        clearRecurrenceCache();
+      } catch (error) {
+        console.error('Error adding event:', error);
+      }
+    },
+    [currentUser]
+  );
 
-const updateEvent = useCallback(
-  async (id: string, updates: Partial<CalendarEventData>) => {
-    if (!currentUser) return;
-    try {
-      await firestoreService.updateEvent(id, updates);
-      clearRecurrenceCache(); // ← PŘIDEJ
-    } catch (error) {
-      console.error('Error updating event:', error);
-    }
-  },
-  [currentUser]
-);
+  const updateEvent = useCallback(
+    async (id: string, updates: Partial<CalendarEventData>) => {
+      if (!currentUser) return;
+      try {
+        await firestoreService.updateEvent(id, updates);
+        clearRecurrenceCache();
+      } catch (error) {
+        console.error('Error updating event:', error);
+      }
+    },
+    [currentUser]
+  );
 
-const deleteEvent = useCallback(
-  async (id: string) => {
-    if (!currentUser) return;
-    try {
-      await firestoreService.deleteEvent(id);
-      clearRecurrenceCache(); // ← PŘIDEJ
-    } catch (error) {
-      console.error('Error deleting event:', error);
-    }
-  },
-  [currentUser]
-);
+  const deleteEvent = useCallback(
+    async (id: string) => {
+      if (!currentUser) return;
+      try {
+        await firestoreService.deleteEvent(id);
+        clearRecurrenceCache();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    },
+    [currentUser]
+  );
 
-  // --- NOVÉ FUNKCE PRO JMENINY ---
+  // --- HELPERS (Memoized) ---
+
   const isNamedayMarked = useCallback(
     (date: Date): boolean => {
-      const key = date.toISOString().split('T')[0]; // Klíč ve formátu YYYY-MM-DD
+      const key = date.toISOString().split('T')[0];
       return markedNamedays.has(key);
     },
     [markedNamedays]
@@ -234,8 +229,7 @@ const deleteEvent = useCallback(
       } else {
         newMarkedDays.delete(key);
       }
-      setMarkedNamedays(newMarkedDays); // Okamžitá aktualizace UI pro plynulost
-      // Uložení do Firebase na pozadí
+      setMarkedNamedays(newMarkedDays);
       await firestoreService.saveNamedayPreferences(currentUser.uid, {
         markedDates: Array.from(newMarkedDays),
       });
@@ -243,7 +237,6 @@ const deleteEvent = useCallback(
     [currentUser, markedNamedays]
   );
 
-  // --- POMOCNÉ FUNKCE (zůstávají stejné) ---
   const isSameDay = useCallback((date1: Date | string, date2: Date) => {
     const d1 = new Date(date1);
     return (
@@ -260,7 +253,6 @@ const deleteEvent = useCallback(
     [events]
   );
 
-  // Funkce pro získání pouze narozeninových událostí
   const getBirthdayEventsByDate = useCallback(
     (date: Date) => {
       return events.filter(
@@ -284,20 +276,26 @@ const deleteEvent = useCallback(
     [namedays, isSameDay]
   );
 
-  const updateSettings = (updates: Partial<CalendarSettings>) => {
+  const updateSettings = useCallback((updates: Partial<CalendarSettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const getCurrentMonthTheme = () => {
+  // OPTIMALIZACE: Memoizace těchto funkcí, aby se nevytvářely při každém renderu
+  const getCurrentMonthTheme = useCallback(() => {
     const month = currentDate.getMonth();
     return monthThemes[month] || monthThemes[0];
-  };
+  }, [currentDate]);
 
-  const isToday = (date: Date) => {
-    return isSameDay(date, new Date());
-  };
+  const isToday = useCallback((date: Date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }, []);
 
-  const formatDate = (date: Date, format = 'DD.MM.YYYY') => {
+  const formatDate = useCallback((date: Date, format = 'DD.MM.YYYY') => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -317,8 +315,9 @@ const deleteEvent = useCallback(
       default:
         return date.toLocaleDateString('cs-CZ');
     }
-  };
+  }, []);
 
+  // Context value s důkladnou memoizací
   const value = useMemo<CalendarContextType>(
     () => ({
       currentDate,
@@ -361,6 +360,8 @@ const deleteEvent = useCallback(
       getNamedayByDate,
       headerImage,
       settings,
+      updateSettings, // Přidáno
+      getCurrentMonthTheme, // Přidáno
       isToday,
       isSameDay,
       formatDate,

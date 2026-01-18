@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useCalendar } from './CalendarProvider';
 import type { CalendarEventData, FamilyMember } from '../../../types/index';
-import RecurringEditDialog from './RecurringEditDialog';
-import type { RecurringEditAction } from './RecurringEditDialog';
+import RecurringEditDialog, { type RecurringEditAction } from './RecurringEditDialog';
 import EventForm from './EventForm';
 import './styles/CalendarMobile.css';
 
@@ -16,7 +15,6 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({
   onClose,
 }) => {
   const {
-    events,
     currentDate,
     setCurrentDate,
     getEventsByDate,
@@ -27,14 +25,19 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({
     updateEvent,
     deleteEvent,
     getCurrentMonthTheme,
+    isToday,
   } = useCalendar();
 
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  // State
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(
-    null
-  );
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [formDate, setFormDate] = useState<Date>(new Date());
+  
+  // Ref pro scrollování
+  const dayRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  // Dialog pro mazání
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     event: CalendarEventData | null;
@@ -44,155 +47,55 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({
   });
 
   const theme = getCurrentMonthTheme();
-  const today = new Date();
 
-  // Získej dny měsíce
-  const getDaysInMonth = () => {
+  // Automatický scroll na dnešek (pouze při změně měsíce)
+  useEffect(() => {
+    setTimeout(() => {
+      const todayKey = new Date().toDateString();
+      const element = dayRefs.current.get(todayKey);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
+  }, [currentDate.getMonth(), currentDate.getFullYear()]);
+
+  // --- OPTIMALIZACE: Výpočet dnů jen při změně data ---
+  const days = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Pondělí = 0
-
-    const days: (Date | null)[] = [];
-
-    // Prázdná místa na začátku
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysArr: Date[] = [];
+    for (let i = 1; i <= daysInMonth; i++) {
+      daysArr.push(new Date(year, month, i));
     }
+    return daysArr;
+  }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
-    // Dny měsíce
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
+  // --- HANDLERS ---
+  const handleJumpToDate = (date: Date) => {
+    if (date.getMonth() !== currentDate.getMonth()) {
+      setCurrentDate(date);
     }
-
-    return days;
+    setIsDatePickerOpen(false);
+    setTimeout(() => {
+      const key = date.toDateString();
+      const element = dayRefs.current.get(key);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
-  const days = getDaysInMonth();
-
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-  };
-
-  const handleAddEvent = () => {
+  const handleAddEvent = (date: Date) => {
     setSelectedEvent(null);
+    setFormDate(date);
     setIsFormOpen(true);
   };
 
   const handleEditEvent = (event: CalendarEventData) => {
     setSelectedEvent(event);
-    setSelectedDate(new Date(event.date));
+    setFormDate(new Date(event.date));
     setIsFormOpen(true);
-  };
-
-  const handleSaveEvent = (eventData: Partial<CalendarEventData>) => {
-    if (selectedEvent) {
-      // Část pro úpravu události zůstává stejná
-      updateEvent(selectedEvent.id, eventData);
-    } else {
-      // Část pro vytvoření nové události je teď čistší
-      const finalDate = eventData.date
-        ? new Date(eventData.date).toISOString().split('T')[0]
-        : (selectedDate || new Date()).toISOString().split('T')[0];
-
-      const newEventPayload = {
-        title: 'Nová událost',
-        type: 'personal' as const,
-        ...eventData, // Nejprve vložíme data z formuláře
-        date: finalDate, // A pak přepíšeme datum za správně naformátované
-      };
-
-      addEvent(newEventPayload);
-    }
-    setIsFormOpen(false);
-  };
-
-  // Pomocná funkce pro formátování data
-  const formatDateKey = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  // Rozhodne, zda ukázat dialog nebo smazat rovnou
-  const handleDeleteEvent = (event: CalendarEventData) => {
-    if (event.isRecurringInstance || (event.recurring && event.recurring.frequency)) {
-      // Opakovaná událost - ukázat dialog
-      setDeleteDialog({
-        isOpen: true,
-        event: event,
-      });
-    } else {
-      // Běžná událost - smazat rovnou
-      if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
-        deleteEvent(event.id);
-        setIsFormOpen(false);
-      }
-    }
-  };
-
-  // Zpracování výběru z dialogu
-  const handleDeleteDialogSelect = async (action: RecurringEditAction) => {
-    const { event } = deleteDialog;
-
-    if (action === 'cancel' || !event) {
-      setDeleteDialog({ isOpen: false, event: null });
-      return;
-    }
-
-    const originalEventId = event.originalEventId || event.id;
-
-    switch (action) {
-      case 'this':
-        // Přidej toto datum do výjimek
-        const originalEvent = await getOriginalEvent(originalEventId);
-        if (originalEvent && originalEvent.recurring) {
-          const currentExceptions = originalEvent.recurring.exceptions || [];
-          await updateEvent(originalEventId, {
-            recurring: {
-              ...originalEvent.recurring,
-              exceptions: [...currentExceptions, event.date],
-            },
-          });
-        }
-        break;
-
-      case 'future':
-        // Ukonči opakování den PŘED tímto datem
-        const origEvent = await getOriginalEvent(originalEventId);
-        if (origEvent && origEvent.recurring) {
-          const dayBefore = new Date(event.date + 'T00:00:00');
-          dayBefore.setDate(dayBefore.getDate() - 1);
-          const endDateStr = formatDateKey(dayBefore);
-
-          await updateEvent(originalEventId, {
-            recurring: {
-              ...origEvent.recurring,
-              endType: 'date',
-              endDate: endDateStr,
-            },
-          });
-        }
-        break;
-
-      case 'all':
-        // Smaž celou sérii
-        if (window.confirm(`Opravdu smazat VŠECHNY výskyty této události?`)) {
-          deleteEvent(originalEventId);
-        }
-        break;
-    }
-
-    setDeleteDialog({ isOpen: false, event: null });
-    setIsFormOpen(false);
-  };
-
-  // Pomocná funkce pro získání původní události
-  const getOriginalEvent = (eventId: string): CalendarEventData | null => {
-    return events.find(e => e.id === eventId) || null;
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -201,157 +104,190 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({
     setCurrentDate(newDate);
   };
 
-  const isToday = (date: Date) => {
+  const handleSaveEvent = (eventData: Partial<CalendarEventData>) => {
+    if (selectedEvent) {
+      updateEvent(selectedEvent.id, eventData);
+    } else {
+      const finalDate = eventData.date
+        ? new Date(eventData.date).toISOString().split('T')[0]
+        : formDate.toISOString().split('T')[0];
+
+      const newEventPayload = {
+        title: 'Nová událost',
+        type: 'personal' as const,
+        ...eventData,
+        date: finalDate,
+      };
+      addEvent(newEventPayload);
+    }
+    setIsFormOpen(false);
+  };
+
+  const handleDeleteEvent = (event: CalendarEventData) => {
+    if (event.isRecurringInstance || (event.recurring && event.recurring.frequency)) {
+      setDeleteDialog({ isOpen: true, event: event });
+    } else {
+      if (window.confirm(`Opravdu smazat "${event.title}"?`)) {
+        deleteEvent(event.id);
+        setIsFormOpen(false);
+      }
+    }
+  };
+
+  const handleDeleteDialogSelect = async (action: RecurringEditAction) => {
+     const { event } = deleteDialog;
+     if (action === 'cancel' || !event) {
+       setDeleteDialog({ isOpen: false, event: null });
+       return;
+     }
+     const originalEventId = event.originalEventId || event.id;
+     if(action === 'all') deleteEvent(originalEventId);
+     setDeleteDialog({ isOpen: false, event: null });
+     setIsFormOpen(false);
+  };
+
+  // --- RENDERERS ---
+  const renderDatePicker = () => {
+    if (!isDatePickerOpen) return null;
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const startingDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; 
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    
+    const gridDays = [];
+    for (let i = 0; i < startingDayOfWeek; i++) gridDays.push(null);
+    for (let i = 1; i <= daysInMonth; i++) gridDays.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+
     return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
+      <div className="mobile-date-picker-overlay" onClick={() => setIsDatePickerOpen(false)}>
+        <div className="mobile-date-picker" onClick={e => e.stopPropagation()}>
+          <div className="picker-header">
+            <button onClick={() => navigateMonth('prev')}>◀</button>
+            <span>{formatDate(currentDate, 'MONTH')} {currentDate.getFullYear()}</span>
+            <button onClick={() => navigateMonth('next')}>▶</button>
+          </div>
+          <div className="picker-grid">
+            {['Po','Út','St','Čt','Pá','So','Ne'].map(d => <div key={d} className="picker-weekday">{d}</div>)}
+            {gridDays.map((date, idx) => {
+              if (!date) return <div key={`empty-${idx}`} />;
+              const hasEvents = getEventsByDate(date).length > 0;
+              const isTodayDate = isToday(date);
+              return (
+                <div 
+                  key={date.toISOString()} 
+                  className={`picker-day ${isTodayDate ? 'today' : ''} ${hasEvents ? 'has-events' : ''}`}
+                  onClick={() => handleJumpToDate(date)}
+                >
+                  {date.getDate()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     );
   };
 
-  const selectedDateEvents = selectedDate ? getEventsByDate(selectedDate) : [];
-  const selectedHoliday = selectedDate ? getHolidayByDate(selectedDate) : null;
-  const selectedNameday = selectedDate ? getNamedayByDate(selectedDate) : null;
-
   return (
-    <div className="calendar-mobile">
-      {/* Header */}
-      <div
-        className="calendar-mobile-header"
-        style={{ background: theme.backgroundImage }}
-      >
-        <div className="mobile-header-controls">
-          <button
-            className="mobile-nav-btn"
-            onClick={() => navigateMonth('prev')}
-          >
-            ◀
-          </button>
-          <h2 className="mobile-month-title" style={{ color: theme.textColor }}>
+    <div className="calendar-mobile-container">
+      {/* HEADER */}
+      <div className="mobile-header" style={{ background: theme.backgroundImage }}>
+        <div className="mobile-header-content">
+          <h2 className="mobile-title" style={{ color: theme.textColor }}>
             {formatDate(currentDate, 'MONTH')} {currentDate.getFullYear()}
           </h2>
-          <button
-            className="mobile-nav-btn"
-            onClick={() => navigateMonth('next')}
-          >
-            ▶
-          </button>
-          <button
-            className="mobile-close-btn"
-            onClick={onClose || (() => window.history.back())}
-            aria-label="Zavřít kalendář"
-          >
-            ✕
-          </button>
+          <div className="mobile-actions">
+            <button 
+              className="action-btn"
+              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+            >
+              📅
+            </button>
+            <button 
+              className="action-btn close-btn" 
+              onClick={onClose}
+            >
+              ✕
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Kalendářní mřížka */}
-      <div className="calendar-mobile-grid">
-        <div className="mobile-weekdays">
-          {['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map((day) => (
-            <div key={day} className="mobile-weekday">
-              {day}
-            </div>
-          ))}
-        </div>
-        <div className="mobile-days">
-          {days.map((date, index) => {
-            if (!date) {
-              return (
-                <div key={`empty-${index}`} className="mobile-day empty" />
-              );
-            }
+      {renderDatePicker()}
+
+      {/* SCROLLABLE CONTENT */}
+      <div className="mobile-scroll-area">
+        <div className="mobile-agenda-list">
+          {days.map((date) => {
             const dayEvents = getEventsByDate(date);
-            const hasEvents = dayEvents.length > 0;
             const holiday = getHolidayByDate(date);
-            const isSelected =
-              selectedDate &&
-              date.getDate() === selectedDate.getDate() &&
-              date.getMonth() === selectedDate.getMonth();
+            const nameday = getNamedayByDate(date);
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            const isTodayDay = isToday(date);
+            
+            const birthdays = familyMembers.filter(m => 
+              m.birthday && 
+              new Date(m.birthday).getDate() === date.getDate() && 
+              new Date(m.birthday).getMonth() === date.getMonth()
+            );
+
             return (
-              <div
-                key={date.toISOString()}
-                className={`mobile-day ${isToday(date) ? 'today' : ''} ${
-                  isSelected ? 'selected' : ''
-                } ${holiday ? 'holiday' : ''} ${hasEvents ? 'has-events' : ''}`}
-                onClick={() => handleDateClick(date)}
+              <div 
+                key={date.toISOString()} 
+                className={`agenda-card ${isTodayDay ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
+                ref={(el) => { if (el) dayRefs.current.set(date.toDateString(), el); }}
               >
-                <span className="mobile-day-number">{date.getDate()}</span>
-                {hasEvents && <div className="mobile-event-dot" />}
+                {/* Hlavička karty */}
+                <div className="agenda-card-header">
+                  <div className="date-badge">
+                    <span className="day-name">{formatDate(date, 'WEEKDAY').substring(0, 2)}</span>
+                    <span className="day-num">{date.getDate()}</span>
+                  </div>
+                  
+                  <div className="day-info">
+                    {holiday && <span className="tag holiday">{holiday.name}</span>}
+                    {nameday && <span className="tag nameday">Svátek: {nameday.names[0]}</span>}
+                    {birthdays.map(m => (
+                      <span key={m.id} className="tag birthday">🎂 {m.name}</span>
+                    ))}
+                  </div>
+
+                  <button className="add-btn" onClick={() => handleAddEvent(date)}>
+                    +
+                  </button>
+                </div>
+
+                {/* Seznam událostí */}
+                <div className="agenda-events">
+                  {dayEvents.length > 0 ? (
+                    dayEvents.map((event: CalendarEventData) => {
+                      const member = familyMembers.find(m => m.id === event.familyMemberId);
+                      return (
+                        <div 
+                          key={event.id} 
+                          className="agenda-event"
+                          style={{ borderLeftColor: member?.color || event.color || '#ccc' }}
+                          onClick={() => handleEditEvent(event)}
+                        >
+                          <div className="event-time">
+                            {event.isAllDay ? 'Celý den' : event.time}
+                          </div>
+                          <div className="event-content">
+                            <div className="event-title">{event.title}</div>
+                            {member && <div className="event-member" style={{ color: member.color }}>{member.name}</div>}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="no-events-spacer" />
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Detail vybraného dne */}
-      {selectedDate && (
-        <div className="mobile-day-detail">
-          <div className="mobile-detail-header">
-            <h3>{formatDate(selectedDate, 'FULL')}</h3>
-            <button className="mobile-add-btn" onClick={handleAddEvent}>
-              + Přidat
-            </button>
-          </div>
-          {selectedHoliday && (
-            <div className="mobile-special-event holiday">
-              🎉 {selectedHoliday.name}
-            </div>
-          )}
-          {selectedNameday && (
-            <div className="mobile-special-event nameday">
-              🎂 Svátek: {selectedNameday.names.join(', ')}
-            </div>
-          )}
-          {/* ✅ PŘIDÁNO: Narozeniny */}
-          {selectedDate &&
-            (() => {
-              const birthdaysToday = familyMembers.filter(
-                (member) =>
-                  member.birthday &&
-                  new Date(member.birthday).getDate() ===
-                    selectedDate.getDate() &&
-                  new Date(member.birthday).getMonth() ===
-                    selectedDate.getMonth()
-              );
-              return birthdaysToday.map((member) => (
-                <div key={member.id} className="mobile-special-event birthday">
-                  🎈 Narozeniny: {member.name}
-                </div>
-              ));
-            })()}
-          <div className="mobile-events-list">
-            {selectedDateEvents.length > 0 ? (
-              selectedDateEvents.map((event) => {
-                const member = familyMembers.find(
-                  (m) => m.id === event.familyMemberId
-                );
-                return (
-                  <div
-                    key={event.id}
-                    className="mobile-event-item"
-                    style={{ borderLeftColor: member?.color || event.color }}
-                    onClick={() => handleEditEvent(event)}
-                  >
-                    {event.time && (
-                      <span className="mobile-event-time">{event.time}</span>
-                    )}
-                    <span className="mobile-event-title">{event.title}</span>
-                    {member && (
-                      <span className="mobile-event-member">{member.name}</span>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <p className="mobile-no-events">Žádné události</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Dialog pro mazání opakovaných událostí */}
       <RecurringEditDialog
         isOpen={deleteDialog.isOpen}
         mode="delete"
@@ -360,11 +296,10 @@ const CalendarMobile: React.FC<CalendarMobileProps> = ({
         onSelect={handleDeleteDialogSelect}
       />
 
-      {/* Formulář */}
       {isFormOpen && (
         <EventForm
           event={selectedEvent}
-          date={selectedDate}
+          date={formDate}
           familyMembers={familyMembers}
           onSave={handleSaveEvent}
           onDelete={selectedEvent ? () => handleDeleteEvent(selectedEvent) : undefined}

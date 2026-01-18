@@ -1,275 +1,276 @@
-/* Mobile Calendar Styles */
-.calendar-mobile {
-  width: 100%;
-  height: 100vh;
+/* src/components/Widgets/Calendar/styles/CalendarMobile.css */
+
+/* Hlavní kontejner - musí vyplnit rodiče (modal) */
+.calendar-mobile-container {
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
-  overflow: hidden;
+  height: 100%; /* Důležité: ne 100vh, ale 100% rodiče! */
+  background-color: #f0f2f5;
+  color: #333; /* Globální reset barvy textu */
+  overflow: hidden; /* Zabrání scrollování celého kontejneru */
 }
 
-.calendar-mobile-header {
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-header-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.mobile-nav-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.mobile-nav-btn:active {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.mobile-month-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-  flex: 1;
-  text-align: center;
-}
-
-/* Calendar Grid */
-.calendar-mobile-grid {
-  background: white;
-  padding: 0.5rem;
-}
-
-.mobile-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 0.5rem;
-}
-
-.mobile-weekday {
-  text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #666;
-  padding: 0.5rem 0;
-}
-
-.mobile-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.mobile-day {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  position: relative;
-}
-
-.mobile-day.empty {
-  cursor: default;
-}
-
-.mobile-day-number {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #333;
-}
-
-.mobile-day.today {
-  background: #667eea;
-}
-
-.mobile-day.today .mobile-day-number {
-  color: white;
-  font-weight: 700;
-}
-
-.mobile-day.selected {
-  background: #e3e8ff;
-  box-shadow: 0 0 0 2px #667eea;
-}
-
-.mobile-day.holiday .mobile-day-number {
-  color: #ff6b6b;
-  font-weight: 600;
-}
-
-/* Zvýraznění dnů s událostmi */
-.mobile-day.has-events {
-  background: rgba(102, 126, 234, 0.1);
-  font-weight: 600;
-}
-
-.mobile-day.has-events:not(.today):not(.selected) {
-  border: 2px solid rgba(102, 126, 234, 0.3);
-}
-
-.mobile-event-dot {
-  width: 4px;
-  height: 4px;
-  background: #667eea;
-  border-radius: 50%;
-  position: absolute;
-  bottom: 4px;
-}
-
-.mobile-day.today .mobile-event-dot {
-  background: white;
-}
-
-/* Day Detail */
-.mobile-day-detail {
-  flex: 1;
-  overflow-y: auto;
-  background: white;
-  margin-top: 0.5rem;
-  padding: 1rem;
-  border-radius: 16px 16px 0 0;
-}
-
-.mobile-detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.mobile-detail-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.mobile-add-btn {
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.mobile-special-event {
-  padding: 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.mobile-special-event.holiday {
-  background: #fff5f5;
-  color: #ff6b6b;
-}
-
-.mobile-special-event.nameday {
-  background: #f0f9ff;
-  color: #3b82f6;
-}
-
-.mobile-special-event.birthday {
-  background: #fef3c7;
-  color: #f59e0b;
-  font-weight: 600;
-}
-
-.mobile-events-list {
-  margin-top: 1rem;
-}
-
-.mobile-event-item {
-  background: white;
-  border-left: 4px solid #667eea;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.mobile-event-item:active {
-  transform: scale(0.98);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-event-time {
-  display: block;
-  font-size: 0.75rem;
-  color: #666;
-  margin-bottom: 0.25rem;
-}
-
-.mobile-event-title {
-  display: block;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.25rem;
-}
-
-.mobile-event-member {
-  display: block;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.mobile-no-events {
-  text-align: center;
-  color: #999;
-  padding: 2rem 0;
-  font-size: 0.9rem;
-}
-
-/* Tlačítko zavření */
-.mobile-close-btn {
-  position: absolute;
-  top: 0rem;
-  right: 0rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: none;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 300;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
+/* === HEADER === */
+.mobile-header {
+  flex-shrink: 0; /* Hlavička se nesmí zmenšovat */
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   z-index: 10;
+  color: white;
+}
+
+.mobile-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.mobile-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  cursor: pointer;
+}
+
+.close-btn {
+  background: rgba(0,0,0,0.2);
+  border-radius: 50%;
+  font-size: 1rem;
+}
+
+/* === SCROLLABLE AREA === */
+.mobile-scroll-area {
+  flex: 1; /* Zabere veškeré zbývající místo */
+  overflow-y: auto; /* Povolí scrollování jen v této oblasti */
+  -webkit-overflow-scrolling: touch; /* Plynulé scrollování na iOS */
+  padding: 10px;
+}
+
+.mobile-agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 40px; /* Místo dole pro pohodlné scrollování */
+}
+
+/* === KARTA DNE === */
+.agenda-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
+  color: #333; /* Jistota barvy */
+}
+
+.agenda-card.today {
+  border: 2px solid #667eea;
+}
+
+.agenda-card.weekend {
+  background: #fafafa;
+}
+
+.agenda-card-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  gap: 12px;
+}
+
+.date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  background: #f0f2f5;
+  border-radius: 8px;
+  color: #555;
+}
+
+.agenda-card.today .date-badge {
+  background: #667eea;
+  color: white;
+}
+
+.day-name {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.day-num {
+  font-size: 1.2rem;
+  font-weight: 700;
   line-height: 1;
 }
 
-.mobile-close-btn:active {
-  background: rgba(0, 0, 0, 0.5);
+.day-info {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-/* Header musí být relative pro positioning */
-.calendar-mobile-header {
-  position: relative;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* Štítky */
+.tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.tag.holiday { background: #ffebeb; color: #d63031; }
+.tag.nameday { background: #e3f2fd; color: #0984e3; }
+.tag.birthday { background: #fff3cd; color: #856404; font-weight: bold; }
+
+.add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f0f2f5;
+  color: #667eea;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding-bottom: 4px; /* Optické zarovnání pluska */
+}
+
+/* === SEZNAM UDÁLOSTÍ === */
+.agenda-events {
+  padding: 5px 0;
+}
+
+.agenda-event {
+  display: flex;
+  padding: 12px;
+  border-left: 4px solid #ccc;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.agenda-event:active {
+  background: #f9f9f9;
+}
+
+.event-time {
+  width: 60px;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.event-content {
+  flex: 1;
+}
+
+.event-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.event-member {
+  font-size: 0.8rem;
+}
+
+.no-events-spacer {
+  height: 5px;
+}
+
+/* === DATE PICKER === */
+.mobile-date-picker-overlay {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 20;
+  backdrop-filter: blur(2px);
+}
+
+.mobile-date-picker {
+  background: white;
+  padding: 15px;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: bold;
+}
+
+.picker-header button {
+  background: #f0f2f5;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #333;
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.picker-weekday {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.picker-day {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.picker-day.today {
+  background: #667eea;
+  color: white;
+}
+
+.picker-day.has-events:not(.today) {
+  background: #eef2ff;
+  color: #667eea;
+  font-weight: bold;
 }

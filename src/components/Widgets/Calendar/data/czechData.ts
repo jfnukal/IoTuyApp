@@ -1,5 +1,8 @@
 // src/components/Widgets/Calendar/data/czechData.ts
 import type { Holiday, Nameday } from '../../../../types/index';
+import { getNameDay } from 'namedays-cs';
+import { getPublicHoliday, isPublicHoliday } from 'holidays-cs';
+import { DateTime } from 'luxon';
 
 interface YearlyData {
   holidays: Holiday[];
@@ -7,60 +10,58 @@ interface YearlyData {
 }
 
 /**
- * Načte svátky a jmeniny pro celý zadaný rok pomocí jednoho API volání.
- * @param year - Rok, pro který se mají data načíst.
+ * Generuje svátky a jmeniny pro celý rok z OFFLINE dat.
+ * Používá balíčky namedays-cs a holidays-cs - žádné API volání.
+ * 
+ * @param year - Rok, pro který se mají data vygenerovat.
  * @returns Objekt obsahující pole svátků a pole jmenin.
  */
 export const fetchCalendarDataForYear = async (
   year: number
 ): Promise<YearlyData> => {
-  // Zjistíme, jestli je rok přestupný, abychom načetli správný počet dní
+  const holidays: Holiday[] = [];
+  const namedays: Nameday[] = [];
+
+  // Zjistíme, jestli je rok přestupný
   const isLeap = new Date(year, 1, 29).getMonth() === 1;
   const daysInYear = isLeap ? 366 : 365;
 
-  const url = `https://svatkyapi.cz/api/day/${year}-01-01/interval/${daysInYear}`;
+  // Projdeme všechny dny v roce
+  for (let dayOfYear = 0; dayOfYear < daysInYear; dayOfYear++) {
+    const jsDate = new Date(year, 0, 1 + dayOfYear);
+    const luxonDate = DateTime.fromJSDate(jsDate);
+    
+    // Formát pro ID: YYYY-MM-DD
+    const dateStr = `${year}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
 
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`API svatkyapi.cz vrátilo chybu: ${response.status}`);
-    }
-    const data: any[] = await response.json();
-
-    const holidays: Holiday[] = [];
-    const namedays: Nameday[] = [];
-
-    // Projdeme data pro každý den v roce
-    data.forEach((day) => {
-      const currentDate = new Date(day.date);
-
-      // Pokud je den svátek, přidáme ho do pole svátků
-      if (day.isHoliday && day.holidayName) {
+    // === STÁTNÍ SVÁTKY (holidays-cs) ===
+    if (isPublicHoliday(luxonDate)) {
+      const holidayName = getPublicHoliday(luxonDate);
+      if (holidayName) {
         holidays.push({
-          id: `holiday-${day.date}`,
-          name: day.holidayName,
-          date: currentDate,
+          id: `holiday-${dateStr}`,
+          name: holidayName,
+          date: jsDate,
           type: 'national',
           isPublic: true,
         });
       }
+    }
 
-      // Pro každý den přidáme jmeniny do pole jmenin
-      if (day.name) {
-        const names = day.name.split(/, | a /);
-        namedays.push({
-          id: `nameday-${day.date}`,
-          name: day.name,
-          date: currentDate,
-          names: names,
-        });
-      }
-    });
-
-    return { holidays, namedays };
-  } catch (error) {
-    console.error('Nepodařilo se načíst data z svatkyapi.cz:', error);
-    // V případě chyby vrátíme prázdné objekty
-    return { holidays: [], namedays: [] };
+    // === JMENINY (namedays-cs) ===
+    const names = getNameDay(jsDate); // Vrací pole: ['Adam', 'Eva'] nebo []
+    
+    if (names && names.length > 0) {
+      namedays.push({
+        id: `nameday-${dateStr}`,
+        name: names.join(', '), // "Adam, Eva"
+        date: jsDate,
+        names: names, // ['Adam', 'Eva']
+      });
+    }
   }
+
+  console.log(`✅ Načteno offline: ${holidays.length} svátků, ${namedays.length} jmenin pro rok ${year}`);
+  
+  return { holidays, namedays };
 };

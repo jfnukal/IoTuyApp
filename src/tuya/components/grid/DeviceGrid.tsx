@@ -51,13 +51,14 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
   const generateInitialLayout = (): Layout[] => {
     return devices.map((device, index) => {
       // ✅ Pokud má uložený layout, použij ho (už přemigrovaný)
-      if (device.gridLayout) {
+      const savedLayout = (device as any).gridLayout || device.gridLayouts?.all;
+      if (savedLayout) {
         return {
           i: device.id,
-          x: device.gridLayout.x,
-          y: device.gridLayout.y,
-          w: device.gridLayout.w,
-          h: device.gridLayout.h,
+          x: savedLayout.x,
+          y: savedLayout.y,
+          w: savedLayout.w,
+          h: savedLayout.h,
           minW: 2,  // Minimální šířka (2 * ~8% = 16% obrazovky)
           minH: 2,  // Minimální výška (2 * 50px = 100px)
         };
@@ -176,3 +177,4 @@ export const DeviceGrid: React.FC<DeviceGridProps> = ({
     </ResponsiveGridLayout>
   );
 };
+

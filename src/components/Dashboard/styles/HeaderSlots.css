@@ -2,10 +2,10 @@
 
 .header-slots {
   display: grid;
-  grid-template-columns: 380px 1fr 420px;
+  grid-template-columns: 350px 1fr 425px;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 8px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 10px;
@@ -195,4 +195,5 @@
 .header-left-stack > .shopping-compact {
   flex-shrink: 0;
 }
+
 

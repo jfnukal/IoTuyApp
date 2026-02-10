@@ -13,6 +13,9 @@ export interface AppConfig {
     strava_username: string;
     strava_password: string;
     strava_canteen: string;
+    gemini: string;
+    openai: string;
+    elevenlabs: string;
   };
   features: {
     useMockData: boolean;
@@ -84,6 +87,9 @@ class ConfigService {
           strava_username: apiKeysData.strava_username || '',
           strava_password: apiKeysData.strava_password || '',
           strava_canteen: apiKeysData.strava_canteen || '',
+          gemini: apiKeysData.gemini || '',
+          openai: apiKeysData.openai || '',
+          elevenlabs: apiKeysData.elevenlabs || '',
         },
         features: {
           useMockData: featuresData.useMockData ?? false,

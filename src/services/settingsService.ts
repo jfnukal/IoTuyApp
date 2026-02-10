@@ -154,10 +154,10 @@ const DEFAULT_SETTINGS: AppSettings = {
     tuyaSync: {
       enabled: false,                          // Defaultně vypnuto
       intervals: {
-        critical: 5,                           // Teploměry každých 5 minut
-        standard: 15,                          // Světla každých 15 minut
-        passive: 60,                           // Kamery každou hodinu
-        discovery: 10080,                      // 🆕 Discovery 1x týdně (7 * 24 * 60)
+        critical: 15,                          // 🔧 Teploměry každých 15 minut (bylo 5)
+        standard: 30,                          // 🔧 Světla každých 30 minut (bylo 15)
+        passive: 120,                          // 🔧 Kamery každé 2 hodiny (bylo 60)
+        discovery: 10080,                      // Discovery 1x týdně - OK
       },
       criticalCategories: ['wsdcg', 'wk', 'pir'],      // Teploměry, topení, PIR
       standardCategories: ['dj', 'kg', 'cz', 'pc'],    // Světla, vypínače, zásuvky

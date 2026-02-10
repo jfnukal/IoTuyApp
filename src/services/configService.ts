@@ -10,6 +10,9 @@ export interface AppConfig {
     bakalari_password: string;
     bakalari_server: string;
     google_vision: string;
+    strava_username: string;
+    strava_password: string;
+    strava_canteen: string;
   };
   features: {
     useMockData: boolean;
@@ -78,6 +81,9 @@ class ConfigService {
           bakalari_password: apiKeysData.bakalari_password || '',
           bakalari_server: apiKeysData.bakalari_server || '',
           google_vision: apiKeysData.google_vision || '',
+          strava_username: apiKeysData.strava_username || '',
+          strava_password: apiKeysData.strava_password || '',
+          strava_canteen: apiKeysData.strava_canteen || '',
         },
         features: {
           useMockData: featuresData.useMockData ?? false,

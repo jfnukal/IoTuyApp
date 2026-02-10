@@ -8,32 +8,36 @@ import CalendarProvider from './components/Widgets/Calendar/CalendarProvider';
 import { NotificationProvider } from './components/Notifications/NotificationProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppRoutes } from './routes';
+import { AiWidget } from './AI/components/AiWidget';
+import { RoomsProvider } from './contexts/RoomsContext';
 
 // 🆕 Komponenta pro načítání (Spinner)
 // Zobrazí se okamžitě, když uživatel klikne na stránku, která se teprve stahuje
 // Opravený PageLoader v App.tsx
 const PageLoader = () => (
-  <div 
-    className="flex items-center justify-center w-full" 
-    style={{ 
+  <div
+    className="flex items-center justify-center w-full"
+    style={{
       minHeight: '100vh',
       height: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',          /* Jistota pro centrování */
+      display: 'flex' /* Jistota pro centrování */,
       flexDirection: 'column',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
     }}
   >
     <div className="text-center">
       {/* CSS Spinner bez emoji */}
       <div className="spinner-global"></div>
-      <p style={{ 
-        color: 'rgba(255,255,255,0.9)', 
-        marginTop: '20px', 
-        fontSize: '1.2rem',
-        fontFamily: 'sans-serif' 
-      }}>
+      <p
+        style={{
+          color: 'rgba(255,255,255,0.9)',
+          marginTop: '20px',
+          fontSize: '1.2rem',
+          fontFamily: 'sans-serif',
+        }}
+      >
         Načítám aplikaci...
       </p>
     </div>
@@ -68,7 +72,9 @@ function App() {
   useEffect(() => {
     const initRemoteConfig = async () => {
       try {
-        const { remoteConfigService } = await import('./services/remoteConfigService.ts');
+        const { remoteConfigService } = await import(
+          './services/remoteConfigService.ts'
+        );
         await remoteConfigService.initialize();
       } catch (error) {
         console.error('❌ Chyba při inicializaci Remote Config:', error);
@@ -92,9 +98,11 @@ function App() {
     const runDailyCleanup = async () => {
       try {
         // Dynamický import pro úsporu výkonu při startu
-        const { familyMessagingService } = await import('./services/familyMessagingService');
+        const { familyMessagingService } = await import(
+          './services/familyMessagingService'
+        );
         const { settingsService } = await import('./services/settingsService');
-        
+
         const settings = await settingsService.loadSettings();
         const daysToKeep = settings.widgets.messageHistory.deleteAfterDays;
 
@@ -118,14 +126,18 @@ function App() {
 
     const loadFamilyMember = async () => {
       // Fallback ID (volitelně odstranit, pokud není potřeba)
-      // setFamilyMemberId('dad'); 
+      // setFamilyMemberId('dad');
 
       try {
-        const member = await firestoreService.getFamilyMemberByAuthUid(currentUser.uid);
+        const member = await firestoreService.getFamilyMemberByAuthUid(
+          currentUser.uid
+        );
         if (member) {
           setFamilyMemberId(member.id);
         } else {
-          console.warn(`⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`);
+          console.warn(
+            `⚠️ Nepodařilo se najít family member pro UID ${currentUser.uid}`
+          );
         }
       } catch (error) {
         console.error('❌ Chyba při načítání family member:', error);
@@ -169,7 +181,9 @@ function App() {
             <div className="error-pulse"></div>
           </div>
           <h2 className="error-title">Něco se pokazilo</h2>
-          <p className="error-description">Nepodařilo se načíst data: {firebaseError}</p>
+          <p className="error-description">
+            Nepodařilo se načíst data: {firebaseError}
+          </p>
           <div className="error-actions">
             <button
               onClick={() => window.location.reload()}
@@ -185,21 +199,24 @@ function App() {
   }
 
   return (
-    <CalendarProvider events={calendarEvents}>
-      <NotificationProvider
-        authUid={currentUser?.uid || null}
-        familyMemberId={familyMemberId || null}
-      >
-        <div className="app-layout">
-          {/* 🚀 ZDE JE TA ZMĚNA: Suspense obaluje AppRoutes */}
-          <Suspense fallback={<PageLoader />}>
-            <AppRoutes familyMemberId={familyMemberId} />
-          </Suspense>
+    <RoomsProvider>
+      <CalendarProvider events={calendarEvents}>
+        <NotificationProvider
+          authUid={currentUser?.uid || null}
+          familyMemberId={familyMemberId || null}
+        >
+          {/* AI Widget bude plavat nad vším */}
+          <AiWidget />
+          <div className="app-layout">
+            <Suspense fallback={<PageLoader />}>
+              <AppRoutes familyMemberId={familyMemberId} />
+            </Suspense>
 
-          <div id="modal-root"></div>
-        </div>
-      </NotificationProvider>
-    </CalendarProvider>
+            <div id="modal-root"></div>
+          </div>
+        </NotificationProvider>
+      </CalendarProvider>
+    </RoomsProvider>
   );
 }
 

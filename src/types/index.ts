@@ -45,14 +45,20 @@ export interface TuyaDevice {
     showName?: boolean; // Zobrazovat název zařízení
     showCustomName?: boolean; // Zobrazovat vlastní název
     hidden?: boolean; // Skrýt kartu v gridu/listu
+    // 🌡️ Pool Sensor - názvy kanálů
+    channelNames?: {
+      in?: string;   // Základna
+      ch1?: string;  // Kanál 1
+      ch2?: string;  // Kanál 2
+      ch3?: string;  // Bazén
+    };
   };
 
   // Grid pozice (pro react-grid-layout)
-  gridLayout?: {
-    x: number; // Pozice sloupec (0, 1, 2, ...)
-    y: number; // Pozice řádek (0, 1, 2, ...)
-    w: number; // Šířka (1 = 1 karta, 2 = 2 karty, ...)
-    h: number; // Výška (1 = malá, 2 = velká)
+  gridLayouts?: {
+    all?: { x: number; y: number; w: number; h: number };
+    online?: { x: number; y: number; w: number; h: number };
+    offline?: { x: number; y: number; w: number; h: number };
   };
 
   // 🏠 MÍSTNOST (kde zařízení patří)

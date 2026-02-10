@@ -2,11 +2,19 @@
 import { toolsDefinition } from '../tools';
 import { addItems, getList, clearList } from './shoppingService';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+import { configService } from '../../services/configService';
 
-if (!API_KEY) {
-  console.error("CHYBA: Chybí VITE_GEMINI_API_KEY v .env souboru!");
-}
+let API_KEY: string | null = null;
+
+const getApiKey = async (): Promise<string> => {
+  if (!API_KEY) {
+    API_KEY = await configService.getApiKey('gemini');
+    if (!API_KEY) {
+      console.error("CHYBA: Chybí Gemini API klíč ve Firestore (appConfig/apiKeys/gemini)!");
+    }
+  }
+  return API_KEY || '';
+};
 
 // Sloučený prompt: Tvoje pravidla pro hlas + Instrukce pro nákupy
 const SYSTEM_PROMPT = `
@@ -115,7 +123,7 @@ async function callGeminiApi(history: any[], tools?: any[]) {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${await getApiKey()}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

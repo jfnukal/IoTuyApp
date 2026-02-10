@@ -1,24 +1,34 @@
-// ID hlasu (Tohle je 'Mimi' - dětský hlas, často zní fajn, nebo zkus najít jiné ID v jejich knihovně)
-// Můžeš zkusit i defaultní '21m00Tcm4TlvDq8ikWAM' (Rachel), ale musíš nastavit model na multilingual.
-// const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // ženský hlas
-
-
 // src/AI/services/textToSpeech.ts
+import { configService } from '../../services/configService';
 
-// Potřebuješ oba klíče
-const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY; // Necháme ho tam
+let ELEVENLABS_API_KEY: string | null = null;
+let OPENAI_API_KEY: string | null = null;
+
+const getElevenLabsKey = async (): Promise<string> => {
+  if (!ELEVENLABS_API_KEY) {
+    ELEVENLABS_API_KEY = await configService.getApiKey('elevenlabs');
+  }
+  return ELEVENLABS_API_KEY || '';
+};
+
+const getOpenAIKey = async (): Promise<string> => {
+  if (!OPENAI_API_KEY) {
+    OPENAI_API_KEY = await configService.getApiKey('openai');
+  }
+  return OPENAI_API_KEY || '';
+};
 
 const ELEVENLABS_VOICE_ID = '7FpO7yFcBAfqM6vZJCg7'; 
 
 // Funkce pro volání OpenAI (vytáhneme ji ven, ať ji můžeme zavolat z catch bloku)
 const playOpenAIBackup = async (text: string): Promise<void> => {
-    if (!OPENAI_API_KEY) throw new Error("No OpenAI Key");
+    const openaiKey = await getOpenAIKey();
+    if (!openaiKey) throw new Error("No OpenAI Key");
     
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${openaiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -37,11 +47,12 @@ const playOpenAIBackup = async (text: string): Promise<void> => {
 
 export const playHumanVoice = async (text: string): Promise<void> => {
   // 1. POKUS: ELEVENLABS
-  if (ELEVENLABS_API_KEY) {
+  const elevenKey = await getElevenLabsKey();
+  if (elevenKey) {
       try {
         const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
           method: 'POST',
-          headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+          headers: { 'xi-api-key': elevenKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text,
             model_id: "eleven_multilingual_v2",
@@ -57,14 +68,13 @@ export const playHumanVoice = async (text: string): Promise<void> => {
 
       } catch (err) {
         console.warn("ElevenLabs selhal, přepínám na OpenAI zálohu...", err);
-        // Tady to nespadne, ale pokračuje to dál k OpenAI
       }
   }
 
   // 2. POKUS: OPENAI (Záloha za 5 USD)
   try {
       await playOpenAIBackup(text);
-      return; // Úspěch, končíme
+      return;
   } catch (err) {
       console.warn("OpenAI taky selhalo, jdu na robota.", err);
   }

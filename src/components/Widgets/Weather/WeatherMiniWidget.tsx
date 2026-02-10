@@ -3,12 +3,49 @@ import React, { useState, useEffect, lazy, Suspense, memo } from 'react';
 import { useWeather } from './hooks/useWeather';
 import { WeatherUtils } from './utils/weatherUtils';
 import { fetchImageForQuery } from '../../../api/unsplash';
+import { useTuya } from '../../../tuya/hooks/useTuya';
+import { getTemperature, getHumidity } from '../../../tuya/utils/deviceHelpers';
 import './WeatherMiniWidget.css';
 
 // 🚀 Lazy loading pro modály - načtou se až když uživatel otevře detail počasí
 const WeatherModal = lazy(() => import('./WeatherModal'));
 const WeatherModalMobile = lazy(() => import('./WeatherModalMobile'));
 import { createPortal } from 'react-dom';
+
+// Překlad anglických názvů počasí do češtiny
+const WEATHER_CZ: Record<string, string> = {
+  'Clear': 'Jasno',
+  'Sunny': 'Slunečno',
+  'Partly cloudy': 'Polojasno',
+  'Partly Cloudy': 'Polojasno',
+  'Cloudy': 'Oblačno',
+  'Overcast': 'Zataženo',
+  'Mist': 'Mlha',
+  'Fog': 'Mlha',
+  'Freezing fog': 'Mrznoucí mlha',
+  'Light rain': 'Slabý déšť',
+  'Rain': 'Déšť',
+  'Heavy rain': 'Silný déšť',
+  'Light snow': 'Slabý sníh',
+  'Snow': 'Sníh',
+  'Heavy snow': 'Silný sníh',
+  'Sleet': 'Plískanice',
+  'Thunderstorm': 'Bouřka',
+  'Drizzle': 'Mrholení',
+  'Light drizzle': 'Slabé mrholení',
+  'Patchy rain possible': 'Možný déšť',
+  'Patchy snow possible': 'Možný sníh',
+  'Blowing snow': 'Vánice',
+  'Blizzard': 'Blizard',
+  'Ice pellets': 'Kroupy',
+  'Freezing rain': 'Mrznoucí déšť',
+  'Moderate rain': 'Mírný déšť',
+  'Moderate snow': 'Mírný sníh',
+};
+
+const translateCondition = (condition: string): string => {
+  return WEATHER_CZ[condition] || condition;
+};
 
 interface WeatherMiniWidgetProps {
   className?: string;
@@ -18,6 +55,9 @@ interface WeatherMiniWidgetProps {
   compactMode?: boolean;
 }
 
+// ID venkovního Tuya teploměru
+const OUTDOOR_TEMP_SENSOR_ID = 'bfb0ff3b441b1fc2ecv8au';
+
 const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   className = '',
   onExpand,
@@ -25,6 +65,15 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   headerMode = false,
   compactMode = false,
 }) => {
+  // Tuya hook pro reálnou venkovní teplotu
+  const { devices } = useTuya();
+  
+  // Najdi venkovní teploměr
+  const outdoorSensor = devices.find(d => d.id === OUTDOOR_TEMP_SENSOR_ID);
+  const realTemperature = outdoorSensor ? getTemperature(outdoorSensor.status) : undefined;
+  const realHumidity = outdoorSensor ? getHumidity(outdoorSensor.status) : undefined;
+  const sensorOnline = outdoorSensor?.online ?? false;
+
   const {
     isLoading,
     error,
@@ -385,18 +434,20 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
           </div>
         </div>
 
-        {/* Current Weather */}
-        <div className="current-weather-section">
-          <div className="current-temp-container">
-            <span className="current-temp">
+        {/* Current Weather - Dual Temperature Layout */}
+        <div className="current-weather-section dual-temp-layout">
+          {/* LEVÁ STRANA - Předpověď (menší) */}
+          <div className="forecast-temp-container">
+            <span className="forecast-label">Předpověď</span>
+            <span className="forecast-temp">
               {WeatherUtils.formatTemperature(
                 primaryWeather.current.temperature,
                 settings.temperatureUnit
               )}
             </span>
-            <div className="current-details">
-              <span className="condition-text">
-                {primaryWeather.current.condition}
+            <div className="forecast-details">
+            <span className="condition-text">
+                {translateCondition(primaryWeather.current.condition)}
               </span>
               <span className="feels-like">
                 Pocitově{' '}
@@ -408,6 +459,7 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
             </div>
           </div>
 
+          {/* IKONA UPROSTŘED */}
           <div className="weather-icon-container">
             <img
               src={primaryWeather.current.iconUrl}
@@ -417,6 +469,26 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
               height={80}
               loading="eager"
             />
+          </div>
+
+          {/* PRAVÁ STRANA - Reálná teplota z Tuya (větší) */}
+          <div className="real-temp-container">
+            <span className="real-label">
+              🌡️ Reálná {!sensorOnline && <span className="offline-badge">offline</span>}
+            </span>
+            {realTemperature !== undefined ? (
+              <>
+                <span className="real-temp">{realTemperature.toFixed(1)}°C</span>
+                {realHumidity !== undefined && (
+                  <div className="real-humidity">
+                    <span className="humidity-icon">💧</span>
+                    <span className="humidity-value">{realHumidity}%</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <span className="real-temp no-data">--°C</span>
+            )}
           </div>
         </div>
 

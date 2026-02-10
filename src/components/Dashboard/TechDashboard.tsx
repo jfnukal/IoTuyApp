@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { TuyaDeviceList, HouseVisualization, RoomManager } from '../../tuya';
 import { useTuya } from '../../tuya/hooks/useTuya';
 import { useNavigate } from 'react-router-dom';
-import { migrateGridLayouts } from '../../utils/migrateGridLayout';
 import './styles/TechDashboard.css';
 
 type ViewType = 'list' | 'visualization' | 'rooms';
@@ -20,37 +19,6 @@ const TechDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(''); // Debounced hodnota pro filtrování
   const [filter, setFilter] = useState<FilterType>('online');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
-  const [isLayoutEditMode, setIsLayoutEditMode] = useState(false);
-
-  // Stav pro migraci (přidej k ostatním useState)
-  const [isMigrating, setIsMigrating] = useState(false);
-
-  // Funkce pro migraci
-  const handleMigration = async () => {
-    if (
-      !window.confirm(
-        'Opravdu spustit migraci gridLayout? Toto změní pozice všech karet.'
-      )
-    ) {
-      return;
-    }
-    setIsMigrating(true);
-    try {
-      const result = await migrateGridLayouts();
-      if (result.success) {
-        alert(
-          `✅ Migrace dokončena! Migrováno: ${result.migratedCount} zařízení. Obnov stránku.`
-        );
-        window.location.reload();
-      } else {
-        alert(`❌ Chyba migrace: ${result.errors.join(', ')}`);
-      }
-    } catch (error) {
-      alert(`❌ Chyba: ${error}`);
-    } finally {
-      setIsMigrating(false);
-    }
-  };
 
   // Debounce vyhledávání - počká 300ms po posledním znaku
   useEffect(() => {
@@ -125,15 +93,6 @@ const TechDashboard: React.FC = () => {
               <span className="qa-icon">🐛</span>
             </button>
             <button
-              className={`quick-action-btn ${
-                isLayoutEditMode ? 'active edit-mode' : ''
-              }`}
-              onClick={() => setIsLayoutEditMode(!isLayoutEditMode)}
-              title="Upravit rozložení"
-            >
-              <span className="qa-icon">✏️</span>
-            </button>
-            <button
               className="quick-action-btn floor-action"
               onClick={() => navigate('/floorplan')}
               title="Půdorys 1.NP"
@@ -152,19 +111,6 @@ const TechDashboard: React.FC = () => {
                 <div className="spinner-mini"></div>
               ) : (
                 <span className="qa-icon">🔄</span>
-              )}
-            </button>
-            <button
-              className={`quick-action-btn ${isMigrating ? 'syncing' : ''}`}
-              onClick={handleMigration}
-              disabled={isMigrating}
-              title="Migrovat grid layout (jednorázově)"
-              style={{ background: '#f59e0b' }}
-            >
-              {isMigrating ? (
-                <div className="spinner-mini"></div>
-              ) : (
-                <span className="qa-icon">📐</span>
               )}
             </button>
           </div>
@@ -218,7 +164,6 @@ const TechDashboard: React.FC = () => {
             searchQuery={searchQuery}
             filter={filter}
             showDebugInfo={showDebugInfo}
-            isLayoutEditMode={isLayoutEditMode}
           />
         )}
 
@@ -234,52 +179,6 @@ const TechDashboard: React.FC = () => {
         )}
 
         {view === 'rooms' && <RoomManager />}
-      </div>
-
-      {/* ==================== WIDGETY ==================== */}
-      <div className="tech-widgets-grid secondary">
-        <div className="tech-widget cameras-widget">
-          <div className="tech-widget-header">
-            <div className="tech-widget-title">
-              <span className="tech-widget-icon">📹</span>
-              <span>Bezpečnostní kamery</span>
-            </div>
-            <span className="tech-widget-count">0</span>
-          </div>
-          <div className="tech-widget-content">
-            <p className="tech-placeholder-text">
-              Připojení ke kamerám bude dostupné brzy...
-            </p>
-          </div>
-        </div>
-
-        <div className="tech-widget energy-widget">
-          <div className="tech-widget-header">
-            <div className="tech-widget-title">
-              <span className="tech-widget-icon">⚡</span>
-              <span>Spotřeba energie</span>
-            </div>
-          </div>
-          <div className="tech-widget-content">
-            <p className="tech-placeholder-text">
-              Monitoring energie bude dostupný brzy...
-            </p>
-          </div>
-        </div>
-
-        <div className="tech-widget system-widget">
-          <div className="tech-widget-header">
-            <div className="tech-widget-title">
-              <span className="tech-widget-icon">🖥️</span>
-              <span>Systémový stav</span>
-            </div>
-          </div>
-          <div className="tech-widget-content">
-            <p className="tech-placeholder-text">
-              Systémové informace budou dostupné brzy...
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

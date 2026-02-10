@@ -6,7 +6,6 @@ import { useWidgetSettings } from '../../hooks/useWidgetSettings';
 import HeaderInfo from './HeaderInfo';
 import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
 import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
-import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
 import '../Widgets/SchoolSchedule/SchoolScheduleModal.css';
 import SchoolScheduleHeaderWidget from '../Widgets/SchoolSchedule/SchoolScheduleHeaderWidget';
 import type { FamilyMember, HeaderWidgetType } from '../../types';
@@ -23,7 +22,7 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
   const { headerConfig, loading } = useHeaderConfig();
   const { settings } = useWidgetSettings();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showShoppingModal, setShowShoppingModal] = useState(false); 
+  const [showShoppingModal, setShowShoppingModal] = useState(false);
 
   // Funkce pro vykreslení widgetu podle typu
   const renderWidget = (
@@ -102,13 +101,12 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
         return null;
     }
   };
-// Pokud se hlavička ještě načítá, nevracej nic (null)
+  // Pokud se hlavička ještě načítá, nevracej nic (null)
   if (loading) {
-    return null; 
+    return null;
   }
 
   const renderScheduleModal = () => {
-
     return createPortal(
       <div
         className="schedule-modal-overlay"
@@ -127,7 +125,7 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
           </button>
 
           {/* ZDE VOLÁME SKUTEČNÝ WIDGET */}
-          <SchoolScheduleWidget />
+          <SchoolScheduleHeaderWidget />
         </div>
       </div>,
       document.body // <-- ZMĚNA BYLA ZDE (z 'modalRoot' na 'document.body')
@@ -140,10 +138,10 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
       <div className="header-slot header-slot-left">
         <div className="header-left-stack">
           {renderWidget(headerConfig.left, 'left')}
-          
+
           {/* 🛒 Nákupní seznam - samostatný widget */}
           <ShoppingListProvider familyMembers={familyMembers}>
-          <ShoppingListCompact
+            <ShoppingListCompact
               maxItems={3}
               onOpenFull={() => setShowShoppingModal(true)}
             />

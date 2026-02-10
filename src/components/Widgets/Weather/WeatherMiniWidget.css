@@ -97,7 +97,6 @@
   }
 }
 
-
 /* ==================== CURRENT WEATHER SECTION ==================== */
 .current-weather-section {
   display: flex;
@@ -539,7 +538,6 @@
   .weather-mini-widget:hover {
     border-color: #ffff00;
   }
-
 }
 
 /* ==================== REDUCED MOTION ==================== */
@@ -780,9 +778,9 @@
 /* Aplikuje kompaktní mobilní vzhled, finálně zvětšený */
 
 .weather-mini-widget.force-compact-mode {
-  padding: 16px; /* (bylo 15px) */
-  min-height: 155px; /* (bylo 144px) */
-  border-radius: 16px;
+  padding: 10px 10px;
+  min-height: 100px;
+  border-radius: 14px;
 }
 
 /* Skryj zbytečné sekce */
@@ -796,57 +794,96 @@
 
 /* Header menší */
 .weather-mini-widget.force-compact-mode .weather-mini-header {
-  margin-bottom: 12px; /* (bylo 10px) */
+  margin-bottom: 3px;
 }
 .weather-mini-widget.force-compact-mode .widget-title {
-  font-size: 1.2rem; /* (bylo 1.1rem) */
+  display: none !important;
+}
+.weather-mini-widget.force-compact-mode .widget-title-section {
+  width: 100%;
+  align-items: center;
+  text-align: center;
 }
 .weather-mini-widget.force-compact-mode .location-name {
-  font-size: 1.0rem; /* (bylo 0.9rem) */
+  font-size: 1.55rem;
+  opacity: 1.85;
+  font-style: italic;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  margin-top: -10px;
+}
+.weather-mini-widget.force-compact-mode .location-name::before {
+  content: 'Aktuálně: ';
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
 }
 
 /* Current weather kompaktní */
 .weather-mini-widget.force-compact-mode .current-weather-section {
   margin-bottom: 0;
-  gap: 12px; /* (bylo 10px) */
+  gap: 12px; 
 }
 .weather-mini-widget.force-compact-mode .current-temp {
-  font-size: 2.6rem; /* (bylo 2.4rem) */
+  font-size: 2.6rem; 
 }
 .weather-mini-widget.force-compact-mode .current-details {
-  gap: 3px; /* (bylo 2px) */
+  gap: 3px; 
 }
 .weather-mini-widget.force-compact-mode .condition-text {
-  font-size: 1.1rem; /* (bylo 0.95rem) */
+  font-size: 1.1rem; 
 }
 .weather-mini-widget.force-compact-mode .feels-like {
-  font-size: 0.9rem; /* (bylo 0.85rem) */
+  font-size: 0.9rem; 
 }
 .weather-mini-widget.force-compact-mode .weather-icon {
-  width: 56px; /* (bylo 48px) */
-  height: 56px; /* (bylo 48px) */
+  width: 56px; 
+  height: 56px; 
 }
 
 /* Tlačítka menší */
-.weather-mini-widget.force-compact-mode .refresh-btn,
-.weather-mini-widget.force-compact-mode .close-widget-btn {
-  width: 34px; /* (bylo 32px) */
-  height: 34px; /* (bylo 32px) */
+.weather-mini-widget.force-compact-mode .widget-controls {
+  position: absolute;
+  bottom: 100px;
+  left: 5%;
+  transform: translateX(-50%);
+  z-index: 5;
 }
-.weather-mini-widget.force-compact-mode .mickey-ear {
-  width: 12px; 
-  height: 12px;
+.weather-mini-widget.force-compact-mode .refresh-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  border-top: 2px solid rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+  animation: spinner-rotate 3s linear infinite;
+  opacity: 1.5;
+  transition: opacity 0.2s ease;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+  overflow: hidden;
+}
+.weather-mini-widget.force-compact-mode .refresh-btn * {
+  display: none !important;
+}
+.weather-mini-widget.force-compact-mode .refresh-btn:hover {
+  opacity: 1;
+  border-top-color: white !important;
+  animation-duration: 0.8s;
 }
 
 /* ===== SKELETON LOADER ===== */
 .weather-mini-widget.weather-skeleton {
-  background: linear-gradient(135deg, #87CEEB, #B0C4DE);
-  min-height: 280px; /* Stejná výška jako normální widget - prevence CLS */
+  background: linear-gradient(135deg, #87ceeb, #b0c4de);
+  min-height: 280px; 
 }
 
 /* Skeleton v compact módu */
 .weather-mini-widget.weather-skeleton.force-compact-mode {
-  min-height: 155px; /* Stejná jako force-compact-mode */
+  min-height: 100px;
 }
 
 .weather-skeleton .skeleton-location {
@@ -898,10 +935,224 @@
 }
 
 @keyframes skeleton-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
     opacity: 0.8;
   }
+}
+
+/* ==================== DUAL TEMPERATURE LAYOUT ==================== */
+/* Zobrazení předpovědi (vlevo) a reálné teploty z Tuya (vpravo) */
+
+.current-weather-section.dual-temp-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* LEVÁ STRANA - Předpověď (menší) */
+.forecast-temp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.forecast-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.forecast-temp {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.forecast-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.forecast-details .condition-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.forecast-details .feels-like {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* PRAVÁ STRANA - Reálná teplota z Tuya (větší) */
+.real-temp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.real-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.real-label .offline-badge {
+  font-size: 0.6rem;
+  background: rgba(255, 100, 100, 0.8);
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-transform: lowercase;
+  font-weight: 500;
+}
+
+.real-temp {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+}
+
+.real-temp.no-data {
+  opacity: 0.5;
+  font-size: 2.5rem;
+}
+
+.real-humidity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+}
+
+.real-humidity .humidity-icon {
+  font-size: 0.9rem;
+}
+
+.real-humidity .humidity-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* IKONA UPROSTŘED - zmenšená */
+.dual-temp-layout .weather-icon-container {
+  flex: 0 0 auto;
+}
+
+.dual-temp-layout .weather-icon {
+  width: 60px;
+  height: 60px;
+}
+
+/* ==================== RESPONSIVE - DUAL TEMP ==================== */
+
+@media (max-width: 768px) {
+  .current-weather-section.dual-temp-layout {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .forecast-temp-container {
+    order: 1;
+    flex: 1 1 45%;
+  }
+
+  .real-temp-container {
+    order: 2;
+    flex: 1 1 45%;
+  }
+
+  .dual-temp-layout .weather-icon-container {
+    order: 3;
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .forecast-temp {
+    font-size: 1.6rem;
+  }
+
+  .real-temp {
+    font-size: 2.2rem;
+  }
+
+  .dual-temp-layout .weather-icon {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Force compact mode - dual temp */
+.weather-mini-widget.force-compact-mode .dual-temp-layout {
+  gap: 8px;
+}
+
+.weather-mini-widget.force-compact-mode .forecast-temp {
+  font-size: 1.4rem;
+}
+
+.weather-mini-widget.force-compact-mode .real-temp {
+  font-size: 2.2rem;
+}
+
+.weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon {
+  width: 58px;
+  height: 58px;
+}
+.weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon-container {
+  align-self: flex-end;
+  margin-bottom: -1px;
+}
+
+.weather-mini-widget.force-compact-mode .forecast-label,
+.weather-mini-widget.force-compact-mode .real-label {
+  font-size: 0.6rem;
+}
+
+.weather-mini-widget.force-compact-mode .condition-text {
+  font-size: 0.75rem !important;
+}
+
+.weather-mini-widget.force-compact-mode .feels-like {
+  font-size: 0.65rem !important;
+}
+
+.weather-mini-widget.force-compact-mode .real-humidity {
+  padding: 2px 6px;
+}
+
+.weather-mini-widget.force-compact-mode .real-humidity .humidity-icon {
+  font-size: 0.7rem;
+}
+
+.weather-mini-widget.force-compact-mode .real-humidity .humidity-value {
+  font-size: 0.7rem;
+}
+
+.weather-mini-widget.force-compact-mode .current-weather-section {
+  gap: 4px;
 }

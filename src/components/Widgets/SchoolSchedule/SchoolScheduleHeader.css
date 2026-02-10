@@ -1,268 +1,462 @@
 /* src/components/Widgets/SchoolSchedule/SchoolScheduleHeader.css */
 
-/* ========================================= */
-/* === KOMPAKTNÍ STYLY PRO HLAVIČKU ======== */
-/* ========================================= */
-
-.school-schedule-widget {
-  padding: 14px 10px;
-  /* height: 100%; */
-  height: 370px;
+/* ==================== WIDGET CONTAINER ==================== */
+.school-schedule-widget.compact {
+  padding: 3px;
+  height: fit-content;
+  max-height: 56%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-    135deg,
-    #76c760,
-    #53a040
-  ); /* Zelená podle obrázku */
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
+  background: linear-gradient(135deg, #2d5a27 0%, #4a8c3f 100%);
+  border-radius: 16px;
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  position: relative; /* Pro absolutní pozicování tlačítek */
-  perspective: 1200px; /* 3D prostor pro celý widget */
-  transform-style: preserve-3d;
+  font-family: var(--font-display, 'Nunito', sans-serif);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
 }
 
-/* ==================== HEADER (NOVÝ LAYOUT) ==================== */
-.schedule-header {
-  margin-bottom: 2px; /* ⬅️ POSUNUTÍ NAHORU (bylo 12px) */
-  display: flex;
-  justify-content: flex-start; /* ⬅️ POSUNUTÍ DOLEVA (bylo space-between) */
-  align-items: flex-start;
-  gap: 26px; /* ⬅️ Mezera mezi "Školní rozvrh" a taby */
+/* ==================== HEADER - KOMPAKTNÍ ==================== */
+.schedule-header-compact {
+  margin-bottom: 2px;
 }
-.schedule-title {
+
+.schedule-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  opacity: 0.9;
-  /* 🆕 Odebrán margin-bottom, aby se taby přilepily k titulku */
-  padding-top: 4px; /* Lehké srovnání s taby */
+  gap: 3px;
+  margin-bottom: 0px;
 }
 
 .schedule-icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
-/* ==================== KIDS TABS (VERTIKÁLNÍ) ==================== */
-.schedule-kids-tabs-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-  min-height: 60px; /* 🆕 CLS prevence - prostor pro 2 taby */
-}
-
-.kid-tab {
-  padding: 5px 12px; /* Menší padding */
-  background: rgba(0, 0, 0, 0.15);
-  border: none;
-  border-radius: 9px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.8rem; /* Menší písmo */
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 80px; /* Minimální šířka */
-  text-align: center;
-}
-
-.kid-tab:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.kid-tab.active {
-  background: white;
-  color: #53a040;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  font-weight: 700;
-}
-
-/* ==================== SKRYTÁ NAVIGACE DNŮ ==================== */
-.schedule-days-nav {
-  display: none; /* Klíčová změna: Skryjeme výběr dnů */
-}
-
-/* ==================== CONTENT ==================== */
-.schedule-content {
-  flex: 1;
-  overflow-y: auto; 
-  padding-right: 5px;
-  perspective: 1500px; /* Větší perspektiva pro lepší 3D efekt */
-  animation: pageFlip 1.6s cubic-bezier(0.23, 1, 0.32, 1); /* Pomalejší, plynulejší */
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity; /* Optimalizace pro plynulejší animaci */
-}
-
-/* Scrollbar styling */
-.schedule-content::-webkit-scrollbar {
-  width: 4px;
-}
-.schedule-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-}
-.schedule-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
-.schedule-day-title {
+.schedule-title-text {
   font-size: 0.95rem;
   font-weight: 700;
-  margin: 0 0 8px 0;
-  text-align: center;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  flex: 1;
 }
 
-.schedule-day-title,
-.lessons-list,
-.schedule-error {
-  /* Aplikujeme novou, JEDNODUŠŠÍ animaci */
-  animation: slideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-}
-
-/* ==================== LESSONS LIST (KOMPAKTNÍ) ==================== */
-.lessons-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* Menší mezery */
-}
-
-.lesson-item {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 6px 10px; /* Menší padding */
-  border-radius: 8px;
-  border-left: 2px solid rgba(255, 255, 255, 0.5);
+.schedule-refresh-btn-mini {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px; /* Menší mezera */
-  animation: none; /* Vypneme animace */
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
-.lesson-item:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: none; /* Vypneme posun */
+.schedule-refresh-btn-mini:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
 }
 
-.lesson-time {
+/* ==================== DAYS TABS - MENŠÍ ==================== */
+.schedule-days-tabs {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.day-tab {
+  flex: 1;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.day-tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.day-tab.active {
+  background: white;
+  color: #2d5a27;
   font-weight: 700;
-  font-size: 0.9rem; /* Menší písmo */
-  min-width: 40px;
+}
+
+/* ==================== DAY LABEL - MENŠÍ ==================== */
+.schedule-day-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 2px 0;
   opacity: 0.9;
 }
 
-.lesson-details {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* ==================== TABLE WRAPPER ==================== */
+.schedule-table-wrapper {
   flex: 1;
-  /* Umožní zalamování, kdyby byl název dlouhý */
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: transparent !important;
 }
 
-.lesson-emoji {
-  font-size: 0.9rem; /* Menší emoji */
+.schedule-table-wrapper::-webkit-scrollbar {
+  height: 0px;
 }
 
-.lesson-subject {
+.schedule-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+/* ==================== TABLE - PRŮHLEDNÉ POZADÍ ==================== */
+.schedule-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: separate;
+  border-spacing: 3px;
+  background: transparent !important;
+}
+
+.schedule-table thead,
+.schedule-table tbody,
+.schedule-table tr {
+  background: transparent !important;
+}
+
+.schedule-table th,
+.schedule-table td {
+  padding: 1px 3px;
+  text-align: center;
+  vertical-align: middle;
+  background: transparent;
+}
+
+/* Header row - časy */
+.schedule-table thead th {
+  font-size: 0.6rem;
   font-weight: 600;
-  font-size: 1.0rem; /* Menší písmo */
+  color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Zkrátí dlouhé názvy "..." */
+  background: transparent !important;
 }
 
-/* ==================== STAVY & TLAČÍTKA ==================== */
-.schedule-loading,
-.schedule-error {
+.col-kid {
+  width: 44px;
+  min-width: 44px;
+}
+
+.col-time {
+  min-width: 38px;
+}
+
+/* ==================== KID CELLS ==================== */
+.cell-kid {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px;
+  padding: 4px 3px !important;
+  position: relative;
+}
+
+.cell-kid.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cell-kid.clickable:hover {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.cell-kid.clickable:hover::after {
+  content: '✏️';
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.45rem;
+}
+
+.kid-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  flex: 1;
+  gap: 0;
+}
+
+.kid-icon {
   font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.8;
-  text-align: center;
-  padding: 10px;
-  min-height: 300px; /* 🆕 CLS prevence - stejná výška jako obsah */
+  line-height: 1;
 }
 
-.schedule-error p {
-  margin: 0 0 10px 0;
-}
-
-.setup-button {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #2c5f2d;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.85rem;
+.kid-name {
+  font-size: 0.55rem;
   font-weight: 700;
+  letter-spacing: 0.3px;
+  color: white;
 }
 
-/* Tlačítka pro Refresh (Johanka) a Edit (Jareček) */
-.schedule-refresh-btn,
-.edit-schedule-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 1rem;
+/* ==================== LUNCH ICON - KLIKATELNÝ ==================== */
+.lunch-icon {
+  display: inline-block;
+  font-size: 0.65rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 180, 50, 0.5);
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-top: 1px;
+  border: 1px solid rgba(255, 180, 50, 0.7);
+}
+
+.lunch-icon.has-snack {
+  background: rgba(120, 220, 80, 0.6);
+  border: 1px solid rgba(120, 220, 80, 0.8);
+  animation: snack-pulse 2s ease-in-out infinite;
+}
+
+@keyframes snack-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.lunch-icon:hover {
+  transform: scale(1.2);
+  background: rgba(255, 180, 50, 0.8);
+}
+
+.lunch-icon.has-snack:hover {
+  background: rgba(120, 220, 80, 0.9);
+}
+
+.lunch-icon:active {
+  transform: scale(0.95);
+}
+
+/* ==================== LESSON CELLS ==================== */
+.cell-lesson {
+  border-radius: 6px;
+  min-width: 36px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cell-lesson.has-lesson:hover {
+  transform: scale(1.08);
+  z-index: 10;
+}
+
+.cell-lesson.empty {
+  cursor: default;
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.lesson-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 2px 1px;
+}
+
+.lesson-emoji {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.lesson-abbrev {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.empty-cell {
+  font-size: 0.6rem;
+  opacity: 0.35;
+  color: white;
+}
+
+/* ==================== ROW COLORS ==================== */
+.row-jarecek .cell-lesson.has-lesson {
+  background: rgba(100, 150, 255, 0.5) !important;
+  border: 1px solid rgba(100, 150, 255, 0.6);
+}
+
+.row-johanka .cell-lesson.has-lesson {
+  background: rgba(255, 140, 170, 0.5) !important;
+  border: 1px solid rgba(255, 140, 170, 0.6);
+}
+
+.row-jarecek .cell-lesson.has-lesson:hover {
+  background: rgba(100, 150, 255, 0.7) !important;
+  box-shadow: 0 2px 8px rgba(100, 150, 255, 0.5);
+}
+
+.row-johanka .cell-lesson.has-lesson:hover {
+  background: rgba(255, 140, 170, 0.7) !important;
+  box-shadow: 0 2px 8px rgba(255, 140, 170, 0.5);
+}
+
+/* ==================== TOOLTIP ==================== */
+.lesson-tooltip {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 7px;
+  border-radius: 5px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.lesson-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* ==================== LUNCH POPUP ==================== */
+.lunch-detail-popup {
+  position: absolute;
+  bottom: calc(50% + 8px);
+  left: 0;
+  z-index: 1000;
+}
+
+.lunch-detail-content {
+  background: #fffbeb;
+  color: #333;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  min-width: 180px;
+  max-width: 260px;
+  text-align: left;
+  font-size: 0.8rem;
+  border: 2px solid #f59e0b;
+}
+
+.lunch-detail-content strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #d97706;
+  font-size: 0.85rem;
+}
+
+.lunch-detail-content p {
+  margin: 0;
+  line-height: 1.4;
+  color: #555;
+}
+
+.meal-snack-highlight {
+  background: rgba(120, 220, 80, 0.15);
+  border-left: 3px solid #4ade80;
+  padding: 6px 8px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 6px;
+}
+
+.meal-snack-highlight strong {
+  color: #16a34a;
+}
+
+.meal-snack-highlight p {
+  color: #333;
+  font-weight: 600;
+}
+
+.meal-lunch-info {
+  padding: 4px 0 0 0;
+  opacity: 0.85;
+}
+
+.meal-lunch-info strong {
+  font-size: 0.75rem;
+}
+
+.meal-lunch-info p {
+  font-size: 0.75rem;
+}
+
+.lunch-close-btn {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.6;
+  color: #333;
+}
+
+.lunch-close-btn:hover {
+  opacity: 1;
+}
+
+/* ==================== LOADING ==================== */
+.schedule-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 10;
-  padding: 0;
-}
-.schedule-refresh-btn:hover,
-.edit-schedule-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.1);
+  height: 100%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
-  
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 480px) {
+  .school-schedule-widget.compact {
+    padding: 6px;
+  }
 
-/* 3D FLIP ANIMACE - REALISTICKÉ OTÁČENÍ LISTU ZPRAVA */
-@keyframes pageFlip {
-  0% {
-    opacity: 0;
-    transform: rotateY(180deg) scale(0.85);
-    transform-origin: right center; /* Otáčení zprava */
-    filter: brightness(0.4) drop-shadow(-8px 0 12px rgba(0, 0, 0, 0.5));
+  .schedule-title-text {
+    font-size: 0.85rem;
   }
-  25% {
-    opacity: 0.6;
-    filter: brightness(0.6) drop-shadow(-6px 0 10px rgba(0, 0, 0, 0.4));
+
+  .day-tab {
+    padding: 2px 3px;
+    font-size: 0.65rem;
   }
-  50% {
-    opacity: 0.8;
-    filter: brightness(0.8) drop-shadow(-4px 0 8px rgba(0, 0, 0, 0.3));
+
+  .schedule-day-label {
+    font-size: 0.7rem;
   }
-  75% {
-    opacity: 0.95;
-    filter: brightness(0.95) drop-shadow(-2px 0 4px rgba(0, 0, 0, 0.15));
+
+  .col-time {
+    min-width: 34px;
   }
-  100% {
-    opacity: 1;
-    transform: rotateY(0deg) scale(1);
-    transform-origin: right center;
-    filter: brightness(1) drop-shadow(0 0 0 transparent);
+
+  .lesson-emoji {
+    font-size: 0.75rem;
+  }
+
+  .lesson-abbrev {
+    font-size: 0.5rem;
+  }
+
+  .kid-icon {
+    font-size: 0.8rem;
+  }
+
+  .kid-name {
+    font-size: 0.5rem;
   }
 }

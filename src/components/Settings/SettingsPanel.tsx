@@ -21,21 +21,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   settings,
   onSettingsChange,
 }) => {
-  const updateWidgetSetting = (
-    widget: keyof AppSettings['widgets'],
-    key: string,
-    value: any
-  ) => {
-    const newSettings = { ...settings };
-
-    // Pokud widget objekt neexistuje, vytvoř ho
-    if (!newSettings.widgets[widget]) {
-      newSettings.widgets[widget] = {} as any;
-    }
-
-    (newSettings.widgets[widget] as any)[key] = value;
-    onSettingsChange(newSettings);
-  };
 
   const renderDashboard = () => {
     const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -287,3 +272,4 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 };
 
 export default SettingsPanel;
+

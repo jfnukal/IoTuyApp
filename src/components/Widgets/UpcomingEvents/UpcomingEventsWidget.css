@@ -156,8 +156,8 @@
 
 /* Compact mode - menší­ event cards */
 .compact-mode .event-card {
-  padding: 10px;
-  gap: 10px;
+  padding: 12px;
+  gap: 8px;
 }
 
 .compact-mode .event-icon {
@@ -176,7 +176,7 @@
 
 .compact-mode .event-time {
   font-size: 0.75rem;
-  padding: 2px 6px;
+  padding: 2px 4px;
 }
 
 /* Responsive pro compact mode */

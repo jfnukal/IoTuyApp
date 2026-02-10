@@ -3,9 +3,9 @@
 .header-slots {
   display: grid;
   grid-template-columns: 380px 1fr 420px;
-  gap: 15px;
+  gap: 10px;
   width: 100%;
-  padding: 15px 20px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 10px;
@@ -130,8 +130,8 @@
 @media (max-width: 1024px) {
   .header-slots {
     grid-template-columns: 1fr;
-    gap: 15px;
-    padding: 15px;
+    gap: 10px;
+    padding: 8px;
   }
 
   .header-slot {
@@ -195,3 +195,4 @@
 .header-left-stack > .shopping-compact {
   flex-shrink: 0;
 }
+

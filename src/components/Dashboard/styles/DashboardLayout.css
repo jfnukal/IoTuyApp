@@ -30,6 +30,13 @@
   z-index: 10;
 }
 
+@media (min-width: 769px) and (max-width: 1100px) {
+  .dashboard-layout-header {
+    padding: 10px 6px;
+    margin-bottom: 10px;
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -276,7 +283,14 @@
   margin: 0 auto;
   padding: 0 20px 40px 20px;
   animation: fadeIn 0.5s ease;
-  min-height: 600px; /* 🆕 Prevence CLS - rezervuje místo pro widgety */
+  min-height: 600px;
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  .dashboard-content {
+    padding: 0 6px 20px 6px;
+    max-width: 100%;
+  }
 }
 
 @keyframes fadeIn {
@@ -410,6 +424,13 @@
   margin: 0 auto;
 }
 
+@media (min-width: 769px) and (max-width: 1100px) {
+  .header-content {
+    max-width: 100%;
+    gap: 10px;
+  }
+}
+
 /* ==================== RODINNÉ IKONY ==================== */
 
 /* Info box skrytý na desktopu */
@@ -418,6 +439,15 @@
 }
 
 /* ==================== TABLET/MOBIL ==================== */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .header-slots {
+    grid-template-columns: 280px 1fr 380px;
+    gap: 6px;
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+}
+
 @media (max-width: 1024px) {
   .header-content {
     flex-direction: column;

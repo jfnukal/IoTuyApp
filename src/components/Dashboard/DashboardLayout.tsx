@@ -3,7 +3,6 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useFirestore } from '../../hooks/useFirestore';
 import FamilyDashboard from './FamilyDashboard';
 import HeaderSlots from './HeaderSlots';
-import DishwasherWidget from '../Widgets/Dishwasher/DishwasherFAB';
 import './styles/DashboardLayout.css';
 const TechDashboard = lazy(() => import('./TechDashboard'));
 const SendMessagePanel = lazy(() =>
@@ -242,3 +241,4 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 };
 
 export default DashboardLayout;
+

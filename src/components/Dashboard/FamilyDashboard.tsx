@@ -31,18 +31,18 @@ const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
   const { settings, isLoading } = useWidgetSettings();
   const { currentUser } = useAuth();
 
-// Pokud se ještě načítá nastavení, zobraz loader
-if (isLoading) {
-  return (
-    <div className="family-dashboard">
-      <div className="loading-settings">
-        {/* Tento div je teď prázdný, CSS z něj udělá kolečko */}
-        <div className="spinner"></div>
-        <p>Načítám nastavení...</p>
+  // Pokud se ještě načítá nastavení, zobraz loader
+  if (isLoading) {
+    return (
+      <div className="family-dashboard">
+        <div className="loading-settings">
+          {/* Tento div je teď prázdný, CSS z něj udělá kolečko */}
+          <div className="spinner"></div>
+          <p>Načítám nastavení...</p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
   return (
     <div className="family-dashboard">
       <div className="widgets-grid">
@@ -87,7 +87,7 @@ if (isLoading) {
         {settings?.widgets.stickyNotes.enabled && (
           <div className="widget-container shopping-list-container">
             <ShoppingListProvider familyMembers={familyMembers}>
-            <ShoppingListWidget />
+              <ShoppingListWidget />
             </ShoppingListProvider>
           </div>
         )}
@@ -106,8 +106,7 @@ if (isLoading) {
         )}
 
         {/* Placeholder pro budoucí widgety */}
-        
-        
+
         {/* <div className="widget-container add-widget-container">
           <div className="add-widget-placeholder">
             <div className="add-widget-icon">➕</div>

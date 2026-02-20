@@ -3,7 +3,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useFirestore } from '../../hooks/useFirestore';
 import FamilyDashboard from './FamilyDashboard';
 import HeaderSlots from './HeaderSlots';
-import DishwasherFAB from '../Widgets/Dishwasher/DishwasherFAB';
+import DishwasherWidget from '../Widgets/Dishwasher/DishwasherFAB';
 import './styles/DashboardLayout.css';
 const TechDashboard = lazy(() => import('./TechDashboard'));
 const SendMessagePanel = lazy(() =>
@@ -200,10 +200,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         )}
       </button>
 
-      {/* 🍽️ FAB - Myčka nádobí */}
-      <DishwasherFAB />
-
-      {/* Obsah podle režimu */}
+     {/* Obsah podle režimu */}
       <div className="dashboard-content">
         {mode === 'family' ? (
           <FamilyDashboard

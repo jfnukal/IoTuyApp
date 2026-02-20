@@ -8,6 +8,7 @@ import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
 import UpcomingEventsWidget from '../Widgets/UpcomingEvents/UpcomingEventsWidget';
 import '../Widgets/SchoolSchedule/SchoolScheduleModal.css';
 import SchoolScheduleHeaderWidget from '../Widgets/SchoolSchedule/SchoolScheduleHeaderWidget';
+import DishwasherWidget from '../Widgets/Dishwasher/DishwasherFAB';
 import type { FamilyMember, HeaderWidgetType } from '../../types';
 import './styles/HeaderSlots.css';
 import { ShoppingListProvider } from '../../contexts/ShoppingListContext';
@@ -31,7 +32,7 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
   ) => {
     // Speciální případ: pravý slot má 2 widgety nad sebou
     // ...
-    if (position === 'right' && window.innerWidth > 768) {
+    if (position === 'right') {
       const showWeather = settings?.widgets?.weather?.enabled ?? true;
       const showSchedule = settings?.widgets?.schoolSchedule?.enabled ?? true;
 
@@ -58,6 +59,11 @@ const HeaderSlots: React.FC<HeaderSlotsProps> = ({ familyMembers }) => {
               <SchoolScheduleHeaderWidget />
             </div>
           )}
+
+          {/* 🍽️ Myčka nádobí */}
+          <div className="header-widget-wrapper dishwasher-widget-header">
+            <DishwasherWidget />
+          </div>
         </div>
       );
     }

@@ -22,6 +22,9 @@
 /* ==================== HEADER ==================== */
 .dashboard-layout-header {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
   margin-bottom: 50px;
   padding: 10px 10px;
   text-align: center;
@@ -426,6 +429,14 @@
   justify-content: center;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .header-content {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 @media (min-width: 769px) and (max-width: 1100px) {
@@ -444,14 +455,12 @@
 }
 
 /* ==================== TABLET/MOBIL ==================== */
-@media (min-width: 769px) and (max-width: 1100px) {
+
+@media (max-width: 768px) {
   .header-slots {
-    grid-template-columns: 280px 1fr 380px;
-    gap: 6px;
-    padding: 6px;
-    margin-bottom: 6px;
-    flex: 1;
-    align-items: stretch;
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+    padding: 8px;
   }
 }
 

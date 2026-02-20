@@ -13,6 +13,13 @@
   overflow: hidden;
 }
 
+@media (max-width: 1024px) {
+  .upcoming-events-widget {
+    height: auto;
+    max-height: 500px;
+  }
+}
+
 /* ==================== HEADER ==================== */
 .upcoming-events-widget .widget-header {
   display: flex;
@@ -261,7 +268,7 @@
 }
 
 .event-title {
-  font-size: 1.0rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 0;
   color: white;
@@ -410,7 +417,6 @@
   }
 }
 
-
 /* --- STYLY PRO OVLÃDACÃ PRVKY WIDGETU --- */
 
 .widget-header {
@@ -496,7 +502,17 @@
 
 @media (max-width: 768px) {
   .upcoming-widget-header .upcoming-events-widget {
-    min-height: 200px; /* Menší výškana mobilu */
+    min-height: auto;
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .upcoming-events-widget {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 

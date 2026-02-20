@@ -3,8 +3,8 @@
 /* ==================== WIDGET CONTAINER ==================== */
 .school-schedule-widget.compact {
   padding: 3px;
-  height: fit-content;
-  max-height: 56%;
+  height: auto;
+  max-height: none;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #2d5a27 0%, #4a8c3f 100%);
@@ -332,10 +332,11 @@
 
 /* ==================== LUNCH POPUP ==================== */
 .lunch-detail-popup {
-  position: absolute;
-  bottom: calc(50% + 8px);
-  left: 0;
-  z-index: 1000;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
 }
 
 .lunch-detail-content {

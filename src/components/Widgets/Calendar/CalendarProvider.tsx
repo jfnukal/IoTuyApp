@@ -83,7 +83,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<CalendarView>('month');
+  const [currentView, setCurrentView] = useState<CalendarView>('week');
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [namedays, setNamedays] = useState<Nameday[]>([]);
   const events = externalEvents;
@@ -95,7 +95,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
     showWeekNumbers: false,
     showHolidays: true,
     showNamedays: true,
-    defaultView: 'month',
+    defaultView: 'week',
     reminderSettings: { email: true, push: true, defaultTime: '15min' },
     familyView: true,
   });
@@ -378,3 +378,4 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
 };
 
 export default CalendarProvider;
+

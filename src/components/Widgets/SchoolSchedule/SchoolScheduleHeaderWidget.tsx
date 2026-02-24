@@ -195,21 +195,13 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     }
   };
 
-  // Získání všech unikátních časů pro vybraný den
-  const getAllTimesForDay = (): string[] => {
-    const times = new Set<string>();
-    
-    const johankaDay = johankaSchedule[selectedDay];
-    const jarecekDay = jarecekSchedule[selectedDay];
-    
-    johankaDay?.lessons.forEach(l => times.add(l.begintime));
-    jarecekDay?.lessons.forEach(l => times.add(l.begintime));
-    
-    return Array.from(times).sort((a, b) => {
-      const timeA = parseInt(a.replace(':', ''), 10);
-      const timeB = parseInt(b.replace(':', ''), 10);
-      return timeA - timeB;
-    });
+  // Časy pouze pro jedno dítě
+  const getTimesForKid = (schedule: TimetableDay[]): string[] => {
+    const day = schedule[selectedDay];
+    if (!day) return [];
+    return day.lessons
+      .map(l => l.begintime)
+      .sort((a, b) => parseInt(a.replace(':', ''), 10) - parseInt(b.replace(':', ''), 10));
   };
 
   // Najít předmět pro daný čas
@@ -276,7 +268,8 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     );
   }
 
-  const allTimes = getAllTimesForDay();
+  const jarTimes = getTimesForKid(jarecekSchedule);
+  const johTimes = getTimesForKid(johankaSchedule);
   const johankaDay = johankaSchedule[selectedDay];
   const jarecekDay = jarecekSchedule[selectedDay];
 
@@ -317,17 +310,15 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
 
       {/* Horizontální tabulka */}
       <div className="schedule-table-wrapper">
-        <table className="schedule-table">
-          <thead>
-            <tr>
+      <table className="schedule-table">
+          <tbody>
+            {/* Řádek Jarečka — hlavička + data */}
+            <tr className="row-times">
               <th className="col-kid"></th>
-              {allTimes.map(time => (
+              {jarTimes.map(time => (
                 <th key={time} className="col-time">{time}</th>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {/* Řádek Jarečka */}
             <tr className="row-jarecek">
               <td 
                 className="cell-kid clickable"
@@ -337,7 +328,7 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
                 <span className="kid-icon">👦</span>
                 <span className="kid-name">JAR</span>
               </td>
-              {allTimes.map(time => {
+              {jarTimes.map(time => {
                 const lesson = getLessonAtTime(jarecekDay?.lessons, time);
                 const cellId = `jar-${time}`;
                 return (
@@ -365,6 +356,15 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
                   </td>
                 );
               })}
+            </tr>
+
+            {/* Oddělovací řádek + hlavička Johanky */}
+            <tr className="row-spacer"><td colSpan={johTimes.length + 1}></td></tr>
+            <tr className="row-times">
+              <th className="col-kid"></th>
+              {johTimes.map(time => (
+                <th key={time} className="col-time">{time}</th>
+              ))}
             </tr>
 
             {/* Řádek Johanky */}
@@ -414,7 +414,7 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
                   </div>
                 )}
               </td>
-              {allTimes.map(time => {
+              {johTimes.map(time => {
                 const lesson = getLessonAtTime(johankaDay?.lessons, time);
                 const cellId = `joh-${time}`;
                 return (

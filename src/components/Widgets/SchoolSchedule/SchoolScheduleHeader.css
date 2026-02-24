@@ -117,8 +117,7 @@
 
 /* ==================== TABLE - PRŮHLEDNÉ POZADÍ ==================== */
 .schedule-table {
-  width: 100%;
-  min-width: max-content;
+  width: max-content;
   border-collapse: separate;
   border-spacing: 3px;
   background: transparent !important;
@@ -153,7 +152,7 @@
 }
 
 .col-time {
-  min-width: 38px;
+  min-width: 59px;
 }
 
 /* ==================== KID CELLS ==================== */
@@ -220,8 +219,13 @@
 }
 
 @keyframes snack-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 .lunch-icon:hover {
@@ -240,7 +244,7 @@
 /* ==================== LESSON CELLS ==================== */
 .cell-lesson {
   border-radius: 6px;
-  min-width: 36px;
+  min-width: 50px;
   position: relative;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -265,12 +269,12 @@
 }
 
 .lesson-emoji {
-  font-size: 0.85rem;
+  font-size: 1.3rem;
   line-height: 1;
 }
 
 .lesson-abbrev {
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -333,8 +337,8 @@
 /* ==================== LUNCH POPUP ==================== */
 .lunch-detail-popup {
   position: fixed;
-  top: 50%;
-  left: 50%;
+  top: 45%;
+  left: 80%;
   transform: translate(-50%, -50%);
   z-index: 9999;
 }
@@ -460,4 +464,11 @@
   .kid-name {
     font-size: 0.5rem;
   }
+}
+
+.row-times th.col-time {
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 1px 3px;
 }

@@ -10,6 +10,9 @@ import Login from './components/Login';
 // Hlavní Dashboard
 const DashboardLayout = lazy(() => import('./components/Dashboard/DashboardLayout'));
 
+// Dashboard V2 — rodinný dashboard (nová route /v2)
+const DashboardV2 = lazy(() => import('./components/DashboardV2/DashboardV2'));
+
 // Nastavení
 const SettingsPage = lazy(() => import('./components/Settings/SettingsPage'));
 
@@ -67,6 +70,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
       <Route 
         path="/floorplan" 
         element={<FloorPlanPage />} 
+      />
+
+      {/* 🏠 Dashboard V2 — rodinný dashboard */}
+      <Route
+        path="/v2"
+        element={<DashboardV2 />}
       />
 
       {/* Fallback - přesměrování na home */}

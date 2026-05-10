@@ -4,7 +4,7 @@ import { useVoiceChain } from '../hooks/useVoiceChain';
 import './AiWidget.css';
 
 export const AiWidget: React.FC = () => {
-  const { state, transcript, response, startListening, cancel } = useVoiceChain();
+  const { state, transcript, response, errorMsg, startListening, cancel } = useVoiceChain();
 
   const handleClick = () => {
       if (state === 'idle') {
@@ -18,11 +18,12 @@ export const AiWidget: React.FC = () => {
     <div className={`ai-widget-container ${state}`}>
       
       {/* Bublina s textem */}
-      {(transcript || response) && state !== 'idle' && (
+      {(transcript || response || errorMsg) && (
         <div className="ai-chat-bubble">
           {state === 'listening' && <div className="hint">Poslouchám...</div>}
           {transcript && state !== 'listening' && <div className="user-msg">"{transcript}"</div>}
           {response && <div className="ai-msg">{response}</div>}
+          {errorMsg && <div className="ai-error">{errorMsg}</div>}
         </div>
       )}
 

@@ -1,0 +1,150 @@
+/* RecipeMiniWidget.css */
+.recipe-mini {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: background 0.2s;
+}
+
+.recipe-mini:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Hlavička */
+.recipe-mini__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recipe-mini__icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.recipe-mini__title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe-mini__actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.recipe-mini__btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.recipe-mini__btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Ingredience */
+.recipe-mini__ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recipe-mini__ingredient {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.recipe-mini__ing-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe-mini__ing-amount {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.55);
+  margin-left: 6px;
+  font-size: 0.75rem;
+}
+
+.recipe-mini__more {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
+}
+
+/* Meta */
+.recipe-mini__meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: auto;
+}
+
+.recipe-mini__hint {
+  margin-left: auto;
+}
+
+/* Empty state */
+.recipe-mini--empty {
+  cursor: default;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.recipe-mini__empty-icon {
+  font-size: 2rem;
+}
+
+.recipe-mini__empty-text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.recipe-mini__add-btn {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.recipe-mini__add-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

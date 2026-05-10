@@ -1,0 +1,283 @@
+/* src/components/DashboardV2/DashboardV2.css */
+
+/* ==================== WRAPPER ==================== */
+.v2-layout {
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== PRVNÍ OBRAZOVKA — flat CSS Grid ==================== */
+/*
+  10 řádků × 3 sloupce, vše přesně v 100dvh.
+  Chceš přeskupit widget? Změň jen grid-row / grid-column v sekci GRID POZICE níže.
+  Chceš jinou výšku slotu? Uprav grid-row rozsah (každý řádek = 10 % výšky).
+*/
+.v2-screen {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: repeat(20, 1fr);
+  gap: 6px;
+  padding: 6px;
+  height: 100dvh;
+  box-sizing: border-box;
+}
+
+/* ==================== GRID POZICE — upravuj tady ==================== */
+
+/* Výchozí hodnoty — přepisuje je GridConfigPanel přes CSS proměnné */
+:root {
+  --grid-greeting-col:   1; --grid-greeting-start:   1; --grid-greeting-end:   7;
+  --grid-shopping-col:   1; --grid-shopping-start:   7; --grid-shopping-end:  15;
+  --grid-recipes-col:    1; --grid-recipes-start:   15; --grid-recipes-end:   21;
+  --grid-calendar-col:   2; --grid-calendar-start:   1; --grid-calendar-end:  21;
+  --grid-weather-col:    3; --grid-weather-start:    1; --grid-weather-end:    6;
+  --grid-schedule-col:   3; --grid-schedule-start:   6; --grid-schedule-end:  13;
+  --grid-dishwasher-col: 3; --grid-dishwasher-start:13; --grid-dishwasher-end:19;
+  --grid-controls-col:   3; --grid-controls-start:  19; --grid-controls-end:  21;
+}
+
+.v2-slot--greeting   { grid-column: var(--grid-greeting-col);   grid-row: var(--grid-greeting-start)   / var(--grid-greeting-end);   }
+.v2-slot--shopping   { grid-column: var(--grid-shopping-col);   grid-row: var(--grid-shopping-start)   / var(--grid-shopping-end);   }
+.v2-slot--recipes    { grid-column: var(--grid-recipes-col);    grid-row: var(--grid-recipes-start)    / var(--grid-recipes-end);    }
+.v2-slot--calendar   { grid-column: var(--grid-calendar-col);   grid-row: var(--grid-calendar-start)   / var(--grid-calendar-end);   }
+.v2-slot--weather    { grid-column: var(--grid-weather-col);    grid-row: var(--grid-weather-start)    / var(--grid-weather-end);    }
+.v2-slot--schedule   { grid-column: var(--grid-schedule-col);   grid-row: var(--grid-schedule-start)   / var(--grid-schedule-end);   }
+.v2-slot--dishwasher { grid-column: var(--grid-dishwasher-col); grid-row: var(--grid-dishwasher-start) / var(--grid-dishwasher-end); }
+.v2-slot--controls   { grid-column: var(--grid-controls-col);   grid-row: var(--grid-controls-start)   / var(--grid-controls-end);   }
+
+/* ==================== SLOT — GLASSMORPHISM KARTA ==================== */
+.v2-slot {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  min-width: 0;
+  min-height: 0; /* kritické — zabrání přetečení grid buněk */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.2s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.v2-slot:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Sloty s reálným obsahem — zarovnání na začátek, bez paddingu */
+.v2-slot--greeting,
+.v2-slot--shopping,
+.v2-slot--recipes,
+.v2-slot--schedule,
+.v2-slot--dishwasher,
+.v2-slot--calendar,
+.v2-slot--weather {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+/* Placeholder label */
+.v2-slot__label {
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ==================== WIDGET OVERRIDES — vnitřní odsazení 10px ==================== */
+.v2-slot--shopping .shopping-compact,
+.v2-slot--weather .weather-mini-widget,
+.v2-slot--dishwasher .dishwasher-widget,
+.v2-slot--calendar .upcoming-events-widget {
+  padding: 10px !important;
+}
+
+/* ==================== CALENDAR ==================== */
+.v2-slot--calendar .upcoming-events-widget {
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  box-sizing: border-box;
+  margin: 0 !important;
+  overflow-y: auto;
+}
+
+/* ==================== SHOPPING ==================== */
+.v2-slot--shopping .shopping-compact {
+  width: 100%;
+  height: auto;
+  box-sizing: border-box;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 !important;
+}
+
+.v2-slot--shopping .shopping-more {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.v2-slot--shopping .shopping-more:hover { opacity: 1; }
+
+.v2-slot--shopping .shopping-compact-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.v2-slot--shopping .shopping-compact-footer:hover { opacity: 1; }
+
+/* ==================== SCHEDULE ==================== */
+.v2-slot--schedule {
+  padding: 0 !important;
+}
+
+.v2-slot--schedule .school-schedule-widget {
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  box-sizing: border-box;
+  box-shadow: none;
+}
+
+/* ==================== DISHWASHER ==================== */
+.v2-slot--dishwasher .dishwasher-widget {
+  margin: 0 !important;
+  width: 100%;
+  min-height: 0;
+  border-radius: 7px;
+}
+
+/* ==================== WEATHER ==================== */
+.v2-slot--weather .weather-mini-widget {
+  width: 100%;
+  min-height: 0;
+  border-radius: 7px;
+}
+
+.v2-slot--weather .forecast-comparison,
+.v2-slot--weather .playful-comment,
+.v2-slot--weather .quick-stats,
+.v2-slot--weather .last-updated,
+.v2-slot--weather .click-hint {
+  display: none !important;
+}
+
+.v2-slot--weather .real-temp   { font-size: 2.2rem; }
+.v2-slot--weather .forecast-temp { font-size: 1.6rem; }
+
+/* ==================== SEKUNDÁRNÍ SEKCE (scroll) ==================== */
+.v2-secondary {
+  padding: 6px;
+  padding-top: 0;
+}
+
+.v2-secondary-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 6px;
+  align-items: start;
+}
+
+.v2-slot--sticky,
+.v2-slot--full-schedule,
+.v2-slot--bus {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  min-height: 300px;
+}
+
+.v2-slot--sticky .sticky-notes-widget,
+.v2-slot--full-schedule .school-schedule-widget,
+.v2-slot--bus .bus-schedule-widget {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 7px;
+  box-shadow: none;
+  margin: 0 !important;
+}
+
+/* ==================== TABLET (≤ 1100px) ==================== */
+@media (max-width: 1100px) {
+  .v2-screen {
+    grid-template-columns: 1fr 1.6fr 1fr;
+  }
+
+  .v2-secondary-grid {
+    grid-template-columns: 1fr 1.6fr 1fr;
+  }
+}
+
+/* ==================== MOBIL (≤ 768px) ==================== */
+@media (max-width: 768px) {
+  .v2-layout {
+    background-attachment: scroll;
+  }
+
+  /* Na mobilu: jeden sloupec, sloty se řadí pod sebe s auto výškou */
+  .v2-screen {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    height: auto;
+  }
+
+  .v2-slot--greeting,
+  .v2-slot--shopping,
+  .v2-slot--recipes,
+  .v2-slot--weather,
+  .v2-slot--schedule,
+  .v2-slot--dishwasher {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 120px;
+  }
+
+  .v2-slot--calendar {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 320px;
+  }
+
+  .v2-secondary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .v2-slot--sticky,
+  .v2-slot--full-schedule,
+  .v2-slot--bus {
+    min-height: 200px;
+  }
+
+  .v2-slot {
+    font-size: 1rem;
+    border-radius: 6px;
+  }
+}
+
+/* ==================== MALÝ MOBIL (≤ 480px) ==================== */
+@media (max-width: 480px) {
+  .v2-screen,
+  .v2-secondary-grid {
+    gap: 4px;
+    padding: 4px;
+  }
+}

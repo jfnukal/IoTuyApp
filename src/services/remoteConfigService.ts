@@ -34,32 +34,14 @@ class RemoteConfigService {
    * Inicializuje Remote Config a načte hodnoty ze serveru
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      console.log('🔧 Remote Config již byl inicializován');
-      return;
-    }
+    if (this.isInitialized) return;
 
     try {
-      console.log('🔄 Načítám konfiguraci z Firebase Remote Config...');
-
-      // Načtení a aktivace konfigurace
-      const activated = await fetchAndActivate(this.remoteConfig);
-
-      if (activated) {
-        console.log('✅ Remote Config byl úspěšně aktivován');
-      } else {
-        console.log('ℹ️ Používám cache Remote Config');
-      }
-
+      await fetchAndActivate(this.remoteConfig);
       this.isInitialized = true;
-
-      // Přednahrát všechny hodnoty do cache
       this.preloadCache();
     } catch (error) {
-      console.error('❌ Chyba při načítání Remote Config:', error);
-      console.warn('⚠️ Používám výchozí hodnoty (fallback)');
-
-      // I při chybě označíme jako inicializovaný, aby aplikace fungovala
+      console.error('[RemoteConfig] Chyba načítání:', error);
       this.isInitialized = true;
     }
   }
@@ -81,12 +63,10 @@ class RemoteConfigService {
       try {
         const value = getValue(this.remoteConfig, key);
         this.configCache.set(key, value.asString());
-      } catch (error) {
-        console.warn(`⚠️ Nepodařilo se načíst klíč: ${key}`);
+      } catch {
+        // klíč přeskočen
       }
     });
-
-    console.log(`✅ Načteno ${this.configCache.size} parametrů do cache`);
   }
 
   /**
@@ -94,7 +74,6 @@ class RemoteConfigService {
    */
   getString(key: string): string {
     if (!this.isInitialized) {
-      console.warn('⚠️ Remote Config ještě není inicializován');
       return '';
     }
 
@@ -113,7 +92,7 @@ class RemoteConfigService {
 
       return stringValue;
     } catch (error) {
-      console.error(`❌ Chyba při získávání klíče "${key}":`, error);
+      console.error(`[RemoteConfig] klíč "${key}":`, error);
       return '';
     }
   }
@@ -131,7 +110,7 @@ class RemoteConfigService {
       const value = getValue(this.remoteConfig, key);
       return value.asNumber();
     } catch (error) {
-      console.error(`❌ Chyba při získávání čísla "${key}":`, error);
+      console.error(`[RemoteConfig] číslo "${key}":`, error);
       return 0;
     }
   }
@@ -149,7 +128,7 @@ class RemoteConfigService {
       const value = getValue(this.remoteConfig, key);
       return value.asBoolean();
     } catch (error) {
-      console.error(`❌ Chyba při získávání boolean "${key}":`, error);
+      console.error(`[RemoteConfig] boolean "${key}":`, error);
       return false;
     }
   }
@@ -167,7 +146,7 @@ class RemoteConfigService {
     try {
       return JSON.parse(stringValue) as T;
     } catch (error) {
-      console.error(`❌ Chyba při parsování JSON z klíče "${key}":`, error);
+      console.error(`[RemoteConfig] JSON "${key}":`, error);
       return null;
     }
   }

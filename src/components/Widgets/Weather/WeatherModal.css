@@ -204,7 +204,7 @@
 /* ==================== MODAL CONTENT ==================== */
 .weather-modal-content {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: 15px;
   display: flex;
   flex-direction: column;

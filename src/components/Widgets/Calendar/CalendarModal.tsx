@@ -25,7 +25,11 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
   familyMembers = [],
   initialEventToEdit = null,
 }) => {
-  const { events, addEvent, updateEvent, deleteEvent } = useCalendar();
+  const { events, addEvent, updateEvent, deleteEvent, setCurrentView } = useCalendar();
+
+  useEffect(() => {
+    if (isOpen) setCurrentView('week');
+  }, [isOpen, setCurrentView]);
   const isMobile = useIsMobile(768);
   const isTabletDevice = isTablet();
 

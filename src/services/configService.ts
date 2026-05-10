@@ -59,7 +59,6 @@ class ConfigService {
    */
   private async _fetchConfig(): Promise<AppConfig> {
     try {
-      console.log('🔑 Načítám API klíče z Firebase...');
 
       // Načteme oba dokumenty paralelně
       const [apiKeysDoc, featuresDoc] = await Promise.all([
@@ -98,17 +97,9 @@ class ConfigService {
         environment: apiKeysData.environment || 'development',
       };
 
-      console.log('✅ Konfigurace načtena:', {
-        environment: config.environment,
-        hasWeatherKey: !!config.apiKeys.weather,
-        hasUnsplashKey: !!config.apiKeys.unsplash,
-        hasBakalariCreds: !!config.apiKeys.bakalari_username,
-        useMockData: config.features.useMockData,
-      });
-
       return config;
     } catch (error) {
-      console.error('❌ Chyba při načítání konfigurace:', error);
+      console.error('[Config] Chyba načítání:', error);
       throw error;
     }
   }
@@ -121,7 +112,7 @@ class ConfigService {
     const key = config.apiKeys[keyName];
 
     if (!key) {
-      console.warn(`⚠️ API klíč "${keyName}" není nastaven!`);
+      console.warn(`[Config] Klíč "${keyName}" není nastaven`);
     }
 
     return key;

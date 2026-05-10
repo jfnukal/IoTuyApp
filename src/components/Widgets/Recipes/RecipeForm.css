@@ -1,0 +1,268 @@
+/* RecipeForm.css */
+.rform-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.rform-dialog {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  animation: rform-in 0.2s ease;
+}
+
+@keyframes rform-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0e8d8;
+}
+
+.rform-title {
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  color: #3d2008;
+  margin: 0;
+}
+
+.rform-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #888;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.rform-close:hover { background: #f5f0e8; }
+
+.rform-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rform-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rform-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7a5530;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rform-input {
+  padding: 8px 12px;
+  border: 1px solid #e0ceb0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #3d2008;
+  background: #fdfaf4;
+  transition: border-color 0.15s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rform-input:focus {
+  border-color: #c8813a;
+  background: #fff;
+}
+
+.rform-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.rform-row {
+  display: grid;
+  gap: 12px;
+}
+
+.rform-row--2col { grid-template-columns: 2fr 1fr; }
+.rform-row--3col { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Měsíce */
+.rform-months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rform-month {
+  padding: 5px 10px;
+  border: 1px solid #e0ceb0;
+  border-radius: 20px;
+  background: #fdfaf4;
+  color: #7a5530;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rform-month:hover { background: #f5ead0; }
+.rform-month.active {
+  background: linear-gradient(135deg, #c8813a, #a0601a);
+  border-color: #a0601a;
+  color: white;
+}
+
+/* Ingredience */
+.rform-ing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rform-ing-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.rform-ing-amount,
+.rform-ing-unit {
+  min-width: 0;
+}
+
+/* Kroky */
+.rform-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rform-step-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.rform-step-num {
+  padding-top: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #c8813a;
+  white-space: nowrap;
+}
+
+.rform-step-input {
+  min-height: 50px;
+}
+
+.rform-add-btn {
+  align-self: flex-start;
+  background: rgba(160, 100, 40, 0.08);
+  border: 1px dashed rgba(160, 100, 40, 0.4);
+  color: #7a4820;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+
+.rform-add-btn:hover { background: rgba(160, 100, 40, 0.15); }
+
+.rform-remove-btn {
+  background: none;
+  border: none;
+  color: #c87060;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+  align-self: center;
+}
+
+.rform-remove-btn:hover { background: rgba(200, 80, 60, 0.1); }
+
+.rform-error {
+  color: #c82020;
+  font-size: 0.85rem;
+  background: rgba(200, 30, 30, 0.06);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 30, 30, 0.2);
+}
+
+/* Patička */
+.rform-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0e8d8;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rform-btn {
+  padding: 9px 22px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.rform-btn--cancel {
+  background: #f5f0e8;
+  color: #7a5530;
+  border: 1px solid #e0ceb0;
+}
+
+.rform-btn--cancel:hover { background: #ede5d0; }
+
+.rform-btn--save {
+  background: linear-gradient(135deg, #c8813a, #a0601a);
+  color: white;
+  box-shadow: 0 2px 8px rgba(160, 80, 20, 0.3);
+}
+
+.rform-btn--save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d8914a, #b0702a);
+  transform: translateY(-1px);
+}
+
+.rform-btn--save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Scrollbar */
+.rform-body::-webkit-scrollbar { width: 6px; }
+.rform-body::-webkit-scrollbar-track { background: #f5f0e8; border-radius: 3px; }
+.rform-body::-webkit-scrollbar-thumb { background: #e0ceb0; border-radius: 3px; }

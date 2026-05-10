@@ -951,7 +951,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
 /* LEVÁ STRANA - Předpověď (menší) */
@@ -1056,9 +1056,11 @@
   font-weight: 600;
 }
 
-/* IKONA UPROSTŘED - zmenšená */
+/* IKONA UPROSTŘED - zmenšená, posunuta výš */
 .dual-temp-layout .weather-icon-container {
   flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 .dual-temp-layout .weather-icon {

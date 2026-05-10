@@ -644,4 +644,45 @@ export const DISHWASHER_PEOPLE: DishwasherPerson[] = [
 // TODO: Dishwasher Widget - přidat možnost konfigurace:
 // - Kolik položek historie uchovávat (aktuálně max 10)
 // - Nebo alternativně: kolik dnů zpětně uchovávat historii
+
+// ==================== KUCHAŘKA ====================
+
+export type RecipeCategory =
+  | 'polévka'
+  | 'hlavní jídlo'
+  | 'dezert'
+  | 'pečení'
+  | 'salát'
+  | 'příloha'
+  | 'nápoj'
+  | 'ostatní';
+
+export interface RecipeIngredient {
+  name: string;
+  amount: string;   // "200", "1/2", "podle chuti"
+  unit: string;     // "g", "ml", "ks", "lžíce", ""
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  category: RecipeCategory;
+  // Měsíce kdy se zobrazuje (1–12). Prázdné pole = celý rok.
+  seasonMonths: number[];
+  ingredients: RecipeIngredient[];
+  steps: string[];
+  prepTime?: number;        // minuty
+  cookTime?: number;        // minuty
+  servings?: number;
+  youtubeLinks?: string[];  // max 2
+  originalPhotoUrl?: string; // foto skenovaného originálu
+  imageUrl?: string;         // fotka hotového jídla
+  tags: string[];
+  addedBy: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type RecipeFormData = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
 // - Nastavení přidat do SettingsPanel nebo přímo do widgetu

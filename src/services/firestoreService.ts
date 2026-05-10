@@ -29,6 +29,8 @@ import type {
   ShoppingList,
   DishwasherState,
   DishwasherHistoryItem,
+  Recipe,
+  RecipeFormData,
 } from '../types/index';
 
 class FirestoreService {
@@ -772,6 +774,44 @@ class FirestoreService {
         callback(null);
       }
     );
+  }
+
+  // ==================== KUCHAŘKA (RECEPTY) ====================
+
+  subscribeToRecipes(callback: (recipes: Recipe[]) => void): Unsubscribe {
+    const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snap) => {
+      const recipes = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Recipe));
+      callback(recipes);
+    }, (error) => {
+      console.error('❌ Chyba při poslechu receptů:', error);
+      callback([]);
+    });
+  }
+
+  async getRecipes(): Promise<Recipe[]> {
+    const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Recipe));
+  }
+
+  async addRecipe(data: RecipeFormData): Promise<string> {
+    const now = Date.now();
+    const docRef = await addDoc(collection(db, 'recipes'), {
+      ...data,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return docRef.id;
+  }
+
+  async updateRecipe(id: string, data: Partial<RecipeFormData>): Promise<void> {
+    const docRef = doc(db, 'recipes', id);
+    await updateDoc(docRef, { ...data, updatedAt: Date.now() });
+  }
+
+  async deleteRecipe(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'recipes', id));
   }
 }
 

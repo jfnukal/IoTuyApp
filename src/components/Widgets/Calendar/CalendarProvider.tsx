@@ -172,12 +172,16 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({
         'id' | 'userId' | 'createdAt' | 'updatedAt'
       >
     ) => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.error('[CalendarProvider] addEvent: currentUser je null — uživatel není přihlášen?');
+        return;
+      }
       try {
         await firestoreService.addEvent(currentUser.uid, eventData);
         clearRecurrenceCache();
       } catch (error) {
-        console.error('Error adding event:', error);
+        console.error('[CalendarProvider] addEvent Firestore chyba:', error);
+        throw error; // propaguj chybu zpět do calendarService
       }
     },
     [currentUser]

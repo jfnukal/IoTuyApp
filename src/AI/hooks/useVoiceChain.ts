@@ -1,75 +1,92 @@
 // src/AI/hooks/useVoiceChain.ts
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { sendToGemini } from '../services/geminiApi';
-import { playHumanVoice } from '../services/textToSpeech'; // <--- Import nové služby
+import { playGeminiVoice } from '../services/geminiTts';
 
 export type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking';
+
+const RECOGNITION_ERRORS: Record<string, string> = {
+  'not-allowed':            'Mikrofon není povolen — povol přístup v prohlížeči',
+  'no-speech':              'Nic jsem neslyšel, zkus to znovu',
+  'audio-capture':          'Mikrofon nenalezen nebo je obsazený',
+  'network':                'Chyba služby rozpoznávání řeči — zkus to znovu',
+  'aborted':                'Poslouchání zrušeno',
+  'service-not-allowed':    'Služba rozpoznávání řeči není povolena',
+  'language-not-supported': 'Čeština není podporována v tomto prohlížeči',
+};
 
 export const useVoiceChain = () => {
   const [state, setState] = useState<VoiceState>('idle');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const recognitionRef = useRef<any>(null);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
+      recognitionRef.current?.abort();
     };
   }, []);
 
-// --- 1. Syntéza řeči (NOVÁ - Human Voice) ---
-const speak = useCallback(async (text: string) => {
-  setState('speaking');
-  
-  // Zavoláme OpenAI a počkáme, dokud audio nedohraje
-  await playHumanVoice(text);
-  
-  // Teprve až audio skončí, přepneme stav zpět na 'idle' (koule přestane svítit)
-  setState('idle'); 
-}, []);
+  const speak = useCallback(async (text: string) => {
+    setState('speaking');
+    await playGeminiVoice(text);
+    setState('idle');
+  }, []);
 
-  // --- 2. Zpracování s Gemini ---
   const processText = useCallback(async (text: string) => {
     setState('processing');
+    setErrorMsg('');
     const aiReply = await sendToGemini(text);
     setResponse(aiReply);
-    
-    // Tady musíme počkat na vygenerování zvuku, než to pustíme
-    speak(aiReply);
+    await speak(aiReply);
   }, [speak]);
 
-  // ... (ZBYTEK FUNKCE startListening ZŮSTÁVÁ STEJNÝ) ...
-  
-  // Kopíruj zbytek souboru useVoiceChain z minula...
   const startListening = useCallback(() => {
-    if (!('webkitSpeechRecognition' in window)) {
-       // ... atd
-       return;
-    }
-    // ... atd (zkopíruj starý kód startListening)
-    
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognition.lang = 'cs-CZ';
-    // ...
-    
-    recognition.onstart = () => setState('listening');
-    recognition.onresult = (event: any) => {
-        const text = event.results[0][0].transcript;
-        setTranscript(text);
-        processText(text);
-    };
-    recognition.start();
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
+    if (!SpeechRecognition) {
+      setErrorMsg('Rozpoznávání řeči není podporováno v tomto prohlížeči (zkus Chrome)');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'cs-CZ';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setState('listening');
+      setTranscript('');
+      setResponse('');
+      setErrorMsg('');
+    };
+
+    recognition.onerror = (e: any) => {
+      const msg = RECOGNITION_ERRORS[e.error] ?? `Chyba rozpoznávání: ${e.error}`;
+      console.warn(`[VoiceChain] ${e.error} — ${msg}`);
+      setErrorMsg(msg);
+      setState('idle');
+    };
+
+    recognition.onresult = (event: any) => {
+      const text = event.results[0][0].transcript;
+      setTranscript(text);
+      processText(text);
+    };
+
+    recognition.start();
   }, [processText]);
 
-  return {
-    state,
-    transcript,
-    response,
-    startListening,
-    cancel: () => {
-        window.speechSynthesis.cancel();
-        setState('idle');
-    }
-  };
+  const cancel = useCallback(() => {
+    window.speechSynthesis.cancel();
+    recognitionRef.current?.abort();
+    setState('idle');
+    setErrorMsg('');
+  }, []);
+
+  return { state, transcript, response, errorMsg, startListening, cancel };
 };

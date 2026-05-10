@@ -9,6 +9,8 @@ import { NotificationProvider } from './components/Notifications/NotificationPro
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppRoutes } from './routes';
 import { AiWidget } from './AI/components/AiWidget';
+import { CalendarBridge } from './AI/components/CalendarBridge';
+import { DishwasherBridge } from './AI/components/DishwasherBridge';
 import { RoomsProvider } from './contexts/RoomsContext';
 
 // 🆕 Komponenta pro načítání (Spinner)
@@ -205,7 +207,11 @@ function App() {
           authUid={currentUser?.uid || null}
           familyMemberId={familyMemberId || null}
         >
-          {/* AI Widget bude plavat nad vším */}
+          {/* CalendarBridge — propojuje CalendarProvider s Gemini */}
+          <CalendarBridge />
+          {/* DishwasherBridge — propojuje Firestore myčku s Gemini */}
+          <DishwasherBridge />
+          {/* AI Widget — plovoucí orb */}
           <AiWidget />
           <div className="app-layout">
             <Suspense fallback={<PageLoader />}>

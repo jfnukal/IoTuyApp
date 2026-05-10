@@ -8,6 +8,7 @@ import {
   getUpcomingBirthdays,
 } from './calendarService';
 import { getDishwasherStatus, markDishwasherDone } from './dishwasherService';
+import { getRecipeList, searchRecipes, getRecipeDetail } from './recipeService';
 import { configService } from '../../services/configService';
 
 let API_KEY: string | null = null;
@@ -73,6 +74,14 @@ async function executeFunction(name: string, args: Record<string, any>): Promise
       return getDishwasherStatus();
     case 'markDishwasherDone':
       return await markDishwasherDone();
+
+    // --- Kuchařka / Recepty ---
+    case 'getRecipeList':
+      return getRecipeList();
+    case 'searchRecipes':
+      return searchRecipes(args.query ?? '');
+    case 'getRecipeDetail':
+      return getRecipeDetail(args.name ?? '');
 
     default:
       return `Funkci "${name}" neumím vykonat.`;

@@ -11,6 +11,7 @@ import { AppRoutes } from './routes';
 import { AiWidget } from './AI/components/AiWidget';
 import { CalendarBridge } from './AI/components/CalendarBridge';
 import { DishwasherBridge } from './AI/components/DishwasherBridge';
+import { RecipeBridge } from './AI/components/RecipeBridge';
 import { RoomsProvider } from './contexts/RoomsContext';
 
 // 🆕 Komponenta pro načítání (Spinner)
@@ -211,6 +212,8 @@ function App() {
           <CalendarBridge />
           {/* DishwasherBridge — propojuje Firestore myčku s Gemini */}
           <DishwasherBridge />
+          {/* RecipeBridge — propojuje Firestore kuchařku s Gemini */}
+          <RecipeBridge />
           {/* AI Widget — plovoucí orb */}
           <AiWidget />
           <div className="app-layout">

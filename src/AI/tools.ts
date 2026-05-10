@@ -126,6 +126,44 @@ export const toolsDefinition = [
         parameters: { type: 'OBJECT', properties: {} },
       },
 
+      // ==================== KUCHAŘKA / RECEPTY ====================
+      {
+        name: 'getRecipeList',
+        description:
+          'Vrátí seznam receptů v kuchařce. Použij pro dotazy jako "co máme v kuchařce", "jaké recepty máme", "co můžeme uvařit".',
+        parameters: { type: 'OBJECT', properties: {} },
+      },
+      {
+        name: 'searchRecipes',
+        description:
+          'Hledá recept podle názvu nebo ingredience. Použij pro dotazy jako "máme recept na svíčkovou", "co uvaříme z kuřete", "najdi recept s těstovinami".',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            query: {
+              type: 'STRING',
+              description: 'Hledaný výraz — název jídla nebo ingredience (např. "kuře", "svíčková", "těstoviny")',
+            },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'getRecipeDetail',
+        description:
+          'Vrátí detail receptu včetně ingrediencí a doby přípravy. Použij když uživatel chce vědět co přesně je v receptu nebo jak ho připravit.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            name: {
+              type: 'STRING',
+              description: 'Název receptu (nebo jeho část), jehož detail chceme zobrazit.',
+            },
+          },
+          required: ['name'],
+        },
+      },
+
     ],
   },
 ];

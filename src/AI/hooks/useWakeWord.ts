@@ -17,17 +17,22 @@ import { playGeminiVoice } from '../services/geminiTts';
 
 export type WakeState = 'off' | 'dormant' | 'listening' | 'processing' | 'speaking';
 
-// Wake slova — co Gemini probudí (case-insensitive, substring match)
-const WAKE_WORDS = [
-  'gemini',   // anglická výslovnost
-  'džemíni',  // foneticky česky
-  'džemini',
-  'jemini',   // další varianta přepisu
-  'gimini',
+// Wake FRÁZE — vyžadujeme celou frázi, ne jen jedno slovo (méně falešných triggerů)
+// Primární: "hej gemini" a varianty. Fallback: samotné "gemini" s vyšší jistotou.
+const WAKE_PHRASES = [
+  'hej gemini', 'hey gemini',
+  'hej džemíni', 'hey džemíni',
+  'hej džemini', 'hey džemini',
+  'hej jemini',
 ];
+const WAKE_FALLBACK = ['gemini', 'džemíni', 'džemini', 'jemini', 'gimini'];
+
+// Minimální confidence pro fallback (samotné "gemini")
+const FALLBACK_MIN_CONFIDENCE = 0.75;
 
 // Po kolika ms ticha se Chrome ukončí continuous recognition → auto-restart
-const RESTART_DELAY_MS = 300;
+// Delší delay = méně pipů při restartech
+const RESTART_DELAY_MS = 800;
 
 const RECOGNITION_ERRORS: Record<string, string> = {
   'not-allowed':            'Mikrofon není povolen — povol přístup v prohlížeči',
@@ -64,7 +69,7 @@ export const useWakeWord = () => {
     recognitionRef.current = r;
     r.lang = 'cs-CZ';
     r.continuous = true;
-    r.interimResults = true;
+    r.interimResults = false; // jen finální výsledky — méně false triggerů, méně CPU
     r.maxAlternatives = 1;
     awakeRef.current = false;
 
@@ -76,15 +81,22 @@ export const useWakeWord = () => {
 
     r.onresult = (event: any) => {
       const last = event.results[event.results.length - 1];
+      if (!last.isFinal) return; // jen finální výsledky
+
       const text = last[0].transcript.toLowerCase().trim();
+      const confidence: number = last[0].confidence ?? 1;
 
       if (!awakeRef.current) {
-        // Debug — co Chrome přepsal (odstraň až bude wake word spolehlivý)
-        if (last.isFinal) console.log('[WakeWord] slyším:', JSON.stringify(text));
+        // Debug log — sleduj co tablet přepíše
+        console.log('[WakeWord] slyším:', JSON.stringify(text), 'confidence:', confidence.toFixed(2));
 
-        // Hledáme wake word
-        const woken = WAKE_WORDS.some(w => text.includes(w));
-        if (!woken) return;
+        // Hledáme wake FRÁZI (celá fráze = méně false pozitiv)
+        const phraseMatch = WAKE_PHRASES.some(w => text.includes(w));
+        // Fallback: samotné "gemini" jen s vysokou jistotou
+        const fallbackMatch = confidence >= FALLBACK_MIN_CONFIDENCE &&
+          WAKE_FALLBACK.some(w => text === w || text.startsWith(w + ' '));
+
+        if (!phraseMatch && !fallbackMatch) return;
 
         awakeRef.current = true;
         setState('listening');
@@ -92,21 +104,20 @@ export const useWakeWord = () => {
         setResponse('');
         setErrorMsg('');
 
-        // Zkus vytáhnout příkaz ze stejné promluvy (po wake wordu)
-        if (last.isFinal) {
-          let cmd = text;
-          for (const w of WAKE_WORDS) {
-            const idx = cmd.indexOf(w);
-            if (idx !== -1) cmd = cmd.slice(idx + w.length).trim();
-          }
-          if (cmd.length > 2) {
-            // Příkaz je ve stejné promluvě — zpracuj
-            handleCommand(cmd);
-          }
-          // jinak čekáme na další výsledek (viz níže)
+        // Příkaz ve stejné promluvě — po wake frází
+        const allPhrases = [...WAKE_PHRASES, ...WAKE_FALLBACK];
+        let cmd = text;
+        for (const w of allPhrases) {
+          const idx = cmd.indexOf(w);
+          if (idx !== -1) { cmd = cmd.slice(idx + w.length).trim(); break; }
         }
-      } else if (last.isFinal && !processingRef.current) {
-        // Jsme probuzení, toto je příkaz
+        if (cmd.length > 3) {
+          handleCommand(cmd);
+        }
+        // jinak čekáme na samostatný příkaz (viz else větev níže)
+
+      } else if (!processingRef.current) {
+        // Jsme probuzení — toto je příkaz
         const cmd = last[0].transcript.trim();
         if (cmd.length > 1) handleCommand(cmd);
       }

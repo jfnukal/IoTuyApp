@@ -56,9 +56,10 @@
   transform-origin: bottom center;
 }
 
-.hint { color: #f87171; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; }
+.hint     { color: #f87171; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; }
 .user-msg { color: #94a3b8; font-style: italic; margin-bottom: 8px; font-size: 0.95rem; }
-.ai-msg { font-weight: 500; font-size: 1.1rem; color: #f1f5f9; line-height: 1.6; }
+.ai-msg   { font-weight: 500; font-size: 1.1rem; color: #f1f5f9; line-height: 1.6; }
+.ai-error { color: #fca5a5; font-size: 0.9rem; }
 
 
 /* --- ORB (Živá 3D sféra) --- */
@@ -150,4 +151,73 @@
 @keyframes pop-up-bubble {
   from { opacity: 0; transform: translateY(40px) scale(0.8); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ==================== DORMANT stav ==================== */
+
+/* Orb v dormant módu — velmi jemná, skoro neviditelná */
+.ai-widget-container.dormant .ai-orb {
+  color: rgba(139, 92, 246, 0.25);
+  transform: scale(0.75);
+  box-shadow:
+    inset 0 0 25px rgba(0,0,0,0.6),
+    0 0 8px rgba(139, 92, 246, 0.2),
+    0 0 20px rgba(139, 92, 246, 0.1);
+  animation: dormant-breathe 3s ease-in-out infinite alternate;
+}
+
+@keyframes dormant-breathe {
+  from { opacity: 0.5; transform: scale(0.73); }
+  to   { opacity: 0.85; transform: scale(0.77); }
+}
+
+/* Malý popisek "Řekni Gemini…" */
+.ai-dormant-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  user-select: none;
+  margin-bottom: -18px; /* přiblíží k orbu */
+}
+
+/* ==================== ALWAYS-ON toggle tlačítko ==================== */
+
+.ai-always-on-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  margin-top: -16px; /* přiblíží pod orb */
+  opacity: 0.6;
+}
+
+.ai-always-on-btn:hover {
+  opacity: 1;
+  background: rgba(139, 92, 246, 0.35);
+  border-color: rgba(139, 92, 246, 0.6);
+  transform: scale(1.1);
+}
+
+.ai-always-on-btn.active {
+  background: rgba(139, 92, 246, 0.5);
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+  opacity: 1;
+  animation: mic-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes mic-pulse {
+  from { box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
+  to   { box-shadow: 0 0 18px rgba(139, 92, 246, 0.7); }
 }

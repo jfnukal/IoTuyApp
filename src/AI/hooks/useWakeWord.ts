@@ -262,5 +262,11 @@ export const useWakeWord = () => {
     };
   }, []);
 
-  return { state, alwaysOn, transcript, response, errorMsg, toggleAlwaysOn, startListening, cancel };
+  const clearConversation = useCallback(() => {
+    setTranscript('');
+    setResponse('');
+    setErrorMsg('');
+  }, []);
+
+  return { state, alwaysOn, transcript, response, errorMsg, toggleAlwaysOn, startListening, cancel, clearConversation };
 };

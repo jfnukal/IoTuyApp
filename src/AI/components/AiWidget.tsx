@@ -1,7 +1,9 @@
 // src/AI/components/AiWidget.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useWakeWord } from '../hooks/useWakeWord';
 import './AiWidget.css';
+
+const DISMISS_DELAY_MS = 6000; // bublina zmizí 6s po konci odpovědi
 
 export const AiWidget: React.FC = () => {
   const {
@@ -13,7 +15,15 @@ export const AiWidget: React.FC = () => {
     toggleAlwaysOn,
     startListening,
     cancel,
+    clearConversation,
   } = useWakeWord();
+
+  // Auto-dismiss bubliny po návratu do klidového stavu
+  useEffect(() => {
+    if (state !== 'dormant' && state !== 'off') return;
+    const t = setTimeout(clearConversation, DISMISS_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [state, clearConversation]);
 
   const handleOrbClick = () => {
     if (state === 'processing' || state === 'speaking') {

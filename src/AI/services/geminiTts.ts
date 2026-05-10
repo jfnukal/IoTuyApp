@@ -67,6 +67,7 @@ export const playGeminiVoice = async (text: string): Promise<void> => {
             const wav = pcm16ToWav(audioPart.data);
             const url = URL.createObjectURL(wav);
             const audio = new Audio(url);
+            audio.playbackRate = 1.3; // Aoede mluví přirozeně rychleji
             return new Promise((resolve) => {
               audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
               audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
@@ -93,7 +94,7 @@ function browserTts(text: string): Promise<void> {
     u.lang = 'cs-CZ';
     const czVoice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('cs')) ?? null;
     if (czVoice) u.voice = czVoice;
-    u.rate = 0.95;
+    u.rate = 1.2;
     u.onend = () => resolve();
     u.onerror = () => resolve();
     window.speechSynthesis.speak(u);

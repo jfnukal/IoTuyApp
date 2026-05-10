@@ -53,8 +53,13 @@ const DashboardV2: React.FC = () => {
       </div>
 
       {/* Swipe hint — jemný indikátor navigace */}
-      <div className="v2-swipe-hint v2-swipe-hint--bottom">
+      {/* Desktop/tablet: swipe nahoru + doleva */}
+      <div className="v2-swipe-hint v2-swipe-hint--bottom v2-swipe-hint--desktop">
         přejeď nahoru pro zařízení · doleva pro widgety
+      </div>
+      {/* Mobil: jen doleva (vertikální swipe zakázán kvůli scrollu) */}
+      <div className="v2-swipe-hint v2-swipe-hint--bottom v2-swipe-hint--mobile">
+        přejeď doleva pro další widgety
       </div>
 
       <GridConfigPanel />

@@ -17,8 +17,8 @@ const SettingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Pouze "dad" má přístup
-  const isDad = currentUser?.email === 'jarek.fuki@gmail.com'; // TODO: Změň na skutečný email
+  // Stránka je přístupná všem přihlášeným uživatelům (ochrana je na úrovni Firebase Auth)
+  const isDad = !!currentUser;
 
   useEffect(() => {
     loadSettings();

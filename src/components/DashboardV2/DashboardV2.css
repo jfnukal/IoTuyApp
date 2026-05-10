@@ -39,6 +39,15 @@
   --grid-schedule-col:   3; --grid-schedule-start:   6; --grid-schedule-end:  13;
   --grid-dishwasher-col: 3; --grid-dishwasher-start:13; --grid-dishwasher-end:19;
   --grid-controls-col:   3; --grid-controls-start:  19; --grid-controls-end:  21;
+
+  /* Výchozí pořadí widgetů na mobilu — přepisuje mobileOrderConfig.ts */
+  --mo-greeting:   1;
+  --mo-calendar:   2;
+  --mo-shopping:   3;
+  --mo-weather:    4;
+  --mo-schedule:   5;
+  --mo-dishwasher: 6;
+  --mo-recipes:    7;
 }
 
 .v2-slot--greeting   { grid-column: var(--grid-greeting-col);   grid-row: var(--grid-greeting-start)   / var(--grid-greeting-end);   }
@@ -222,7 +231,16 @@
 .v2-page {
   width: 100%;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow: hidden; /* zabrání přetečení při slide animacích */
+}
+
+/* Na mobilu musí stránka scrollovat — overflow: hidden to blokuje.
+   Vertikální animace tam nepoužíváme, takže overflow-y: auto je bezpečné. */
+@media (max-width: 768px) {
+  .v2-page {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 /* Slide animace dle směru příchodu */
@@ -376,14 +394,14 @@
     min-height: 320px;
   }
 
-  /* Pořadí widgetů na mobilu (CSS grid order property) */
-  .v2-slot--greeting   { order: 1; }
-  .v2-slot--calendar   { order: 2; }
-  .v2-slot--shopping   { order: 3; }
-  .v2-slot--weather    { order: 4; }
-  .v2-slot--schedule   { order: 5; }
-  .v2-slot--dishwasher { order: 6; }
-  .v2-slot--recipes    { order: 7; }
+  /* Pořadí widgetů na mobilu — řízeno CSS proměnnými z mobileOrderConfig.ts */
+  .v2-slot--greeting   { order: var(--mo-greeting);   }
+  .v2-slot--calendar   { order: var(--mo-calendar);   }
+  .v2-slot--shopping   { order: var(--mo-shopping);   }
+  .v2-slot--weather    { order: var(--mo-weather);    }
+  .v2-slot--schedule   { order: var(--mo-schedule);   }
+  .v2-slot--dishwasher { order: var(--mo-dishwasher); }
+  .v2-slot--recipes    { order: var(--mo-recipes);    }
 
   /* Skryj prázdný placeholder */
   .v2-slot--controls {

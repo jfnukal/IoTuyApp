@@ -197,6 +197,79 @@
   margin-left: auto;
 }
 
+/* ==================== MOBILE ORDER PANEL ==================== */
+
+.gcp-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  margin: 14px 0 8px;
+}
+
+.gcp-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  margin: 14px 0;
+}
+
+/* Drag-and-drop seznam widgetů */
+.mop {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  user-select: none;
+}
+
+.mop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.mop-item--dragging {
+  opacity: 0.4;
+  background: rgba(255,255,255,0.04);
+}
+
+.mop-handle {
+  font-size: 1.1rem;
+  opacity: 0.5;
+  cursor: grab;
+  touch-action: none;   /* zabrání scrollu stránky při tahu */
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.mop-handle:active {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.mop-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+/* Indikátor místa vložení */
+.mop-dropline {
+  height: 2px;
+  background: rgba(255, 200, 80, 0.9);
+  border-radius: 2px;
+  margin: 0 4px;
+  box-shadow: 0 0 6px rgba(255, 200, 80, 0.6);
+}
+
+/* ==================== MINIATURNÍ VIZUALIZAČNÍ PRUH ==================== */
+
 /* Miniaturní vizualizační pruh */
 .gcp-bar {
   position: absolute;

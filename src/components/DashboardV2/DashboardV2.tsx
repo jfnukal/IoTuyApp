@@ -21,34 +21,34 @@ const DashboardV2: React.FC = () => {
       <div className="v2-screen">
 
         {/* LEVÝ SLOUPEC — col 1 */}
-        <div className="v2-slot v2-slot--greeting">
+        <div id="widget-greeting" className="v2-slot v2-slot--greeting">
           <GreetingWidget />
         </div>
-        <div className="v2-slot v2-slot--shopping">
+        <div id="widget-shopping" className="v2-slot v2-slot--shopping">
           <ShoppingWidget />
         </div>
-        <div className="v2-slot v2-slot--recipes">
+        <div id="widget-recipes" className="v2-slot v2-slot--recipes">
           <RecipeMiniWidget />
         </div>
 
         {/* STŘED — col 2, celá výška */}
-        <div className="v2-slot v2-slot--calendar">
+        <div id="widget-calendar" className="v2-slot v2-slot--calendar">
           <CalendarV2 />
         </div>
 
         {/* PRAVÝ SLOUPEC — col 3 */}
-        <div className="v2-slot v2-slot--weather">
+        <div id="widget-weather" className="v2-slot v2-slot--weather">
           <WeatherMiniWidget />
         </div>
-        <div className="v2-slot v2-slot--schedule">
+        <div id="widget-schedule" className="v2-slot v2-slot--schedule">
           <SchoolScheduleHeaderWidget />
         </div>
-        <div className="v2-slot v2-slot--dishwasher">
+        <div id="widget-dishwasher" className="v2-slot v2-slot--dishwasher">
           <DishwasherWidget />
         </div>
 
         {/* Placeholder pro budoucí ovládací prvky */}
-        <div className="v2-slot v2-slot--controls" />
+        <div id="widget-controls" className="v2-slot v2-slot--controls" />
 
       </div>
 

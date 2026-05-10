@@ -7,14 +7,20 @@ import {
   loadGridConfig, saveGridConfig, applyGridConfig, DEFAULT_GRID,
   type SlotKey, type SlotConfig,
 } from './gridConfig';
+import {
+  loadMobileOrder, type MobileWidgetKey,
+} from './mobileOrderConfig';
+import { MobileOrderPanel } from './MobileOrderPanel';
 import './GridConfigPanel.css';
 
 const ROWS = 20;
 const COLS: Record<number, string> = { 1: 'Levý', 2: 'Střed', 3: 'Pravý' };
 
 const GridConfigPanel: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  const [cfg, setCfg] = useState(() => loadGridConfig());
+  const [open, setOpen]           = useState(false);
+  const [cfg, setCfg]             = useState(() => loadGridConfig());
+  const [mobileOrder, setMobileOrder] = useState<MobileWidgetKey[]>(() => loadMobileOrder());
+
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { requestPermission, unreadCount } = useNotificationContext();
@@ -51,14 +57,53 @@ const GridConfigPanel: React.FC = () => {
 
   return (
     <>
-      <button className="gcp-fab" onClick={() => setOpen(o => !o)} title="Grid editor">
+      <button className="gcp-fab" onClick={() => setOpen(o => !o)} title="Nastavení">
         {open ? '✕' : '⚙️'}
       </button>
 
       {open && (
         <div className="gcp-panel">
+
+          {/* ── 1. NAVIGACE & AKCE (nahoře) ───────────────────── */}
           <div className="gcp-header">
-            <span>Grid editor <small>(20 řádků)</small></span>
+            <span>Nastavení</span>
+          </div>
+
+          <div className="gcp-actions">
+            <button className="gcp-action-btn" onClick={() => { navigate('/devices'); setOpen(false); }}>
+              <span>📱</span> Zařízení
+            </button>
+            <button className="gcp-action-btn" onClick={() => { navigate('/more'); setOpen(false); }}>
+              <span>🗂️</span> Widgety
+            </button>
+            <button className="gcp-action-btn" onClick={() => navigate('/v1')}>
+              <span>🏠</span> Starý dashboard
+            </button>
+            <button className="gcp-action-btn" onClick={() => navigate('/settings')}>
+              <span>🛠️</span> Nastavení
+            </button>
+            <button className="gcp-action-btn" onClick={requestPermission}>
+              <span>🔔</span> Notifikace {unreadCount > 0 && <span className="gcp-badge">{unreadCount}</span>}
+            </button>
+            <button className="gcp-action-btn gcp-action-btn--logout" onClick={logout}>
+              <span>🚪</span> Odhlásit
+            </button>
+          </div>
+
+          <hr className="gcp-divider" />
+
+          {/* ── 2. POŘADÍ WIDGETŮ NA MOBILU ──────────────────── */}
+          <div className="gcp-section-title">Pořadí widgetů na mobilu</div>
+          <MobileOrderPanel
+            order={mobileOrder}
+            onChange={setMobileOrder}
+          />
+
+          <hr className="gcp-divider" />
+
+          {/* ── 3. GRID EDITOR (desktop / tablet layout) ─────── */}
+          <div className="gcp-header">
+            <span>Grid editor <small>(pro desktop / tablet)</small></span>
             <button className="gcp-reset" onClick={reset}>↺ Reset</button>
           </div>
 
@@ -91,27 +136,6 @@ const GridConfigPanel: React.FC = () => {
             ))}
           </div>
 
-          {/* ---- Navigace & Akce ---- */}
-          <div className="gcp-actions">
-            <button className="gcp-action-btn" onClick={() => { navigate('/devices'); setOpen(false); }}>
-              <span>📱</span> Zařízení (Tuya)
-            </button>
-            <button className="gcp-action-btn" onClick={() => { navigate('/more'); setOpen(false); }}>
-              <span>🗂️</span> Další widgety
-            </button>
-            <button className="gcp-action-btn" onClick={() => navigate('/v1')}>
-              <span>🏠</span> Starý dashboard
-            </button>
-            <button className="gcp-action-btn" onClick={() => navigate('/settings')}>
-              <span>🛠️</span> Nastavení
-            </button>
-            <button className="gcp-action-btn" onClick={requestPermission}>
-              <span>🔔</span> Notifikace {unreadCount > 0 && <span className="gcp-badge">{unreadCount}</span>}
-            </button>
-            <button className="gcp-action-btn gcp-action-btn--logout" onClick={logout}>
-              <span>🚪</span> Odhlásit
-            </button>
-          </div>
         </div>
       )}
     </>

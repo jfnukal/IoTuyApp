@@ -376,6 +376,15 @@
     min-height: 320px;
   }
 
+  /* Pořadí widgetů na mobilu (CSS grid order property) */
+  .v2-slot--greeting   { order: 1; }
+  .v2-slot--calendar   { order: 2; }
+  .v2-slot--shopping   { order: 3; }
+  .v2-slot--weather    { order: 4; }
+  .v2-slot--schedule   { order: 5; }
+  .v2-slot--dishwasher { order: 6; }
+  .v2-slot--recipes    { order: 7; }
+
   /* Skryj prázdný placeholder */
   .v2-slot--controls {
     display: none;

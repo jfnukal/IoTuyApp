@@ -18,7 +18,13 @@ import { playGeminiVoice } from '../services/geminiTts';
 export type WakeState = 'off' | 'dormant' | 'listening' | 'processing' | 'speaking';
 
 // Wake slova — co Gemini probudí (case-insensitive, substring match)
-const WAKE_WORDS = ['gemini', 'džemíni', 'džemini'];
+const WAKE_WORDS = [
+  'gemini',   // anglická výslovnost
+  'džemíni',  // foneticky česky
+  'džemini',
+  'jemini',   // další varianta přepisu
+  'gimini',
+];
 
 // Po kolika ms ticha se Chrome ukončí continuous recognition → auto-restart
 const RESTART_DELAY_MS = 300;
@@ -73,6 +79,9 @@ export const useWakeWord = () => {
       const text = last[0].transcript.toLowerCase().trim();
 
       if (!awakeRef.current) {
+        // Debug — co Chrome přepsal (odstraň až bude wake word spolehlivý)
+        if (last.isFinal) console.log('[WakeWord] slyším:', JSON.stringify(text));
+
         // Hledáme wake word
         const woken = WAKE_WORDS.some(w => text.includes(w));
         if (!woken) return;

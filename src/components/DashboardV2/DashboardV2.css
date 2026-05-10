@@ -234,12 +234,12 @@
   overflow: hidden; /* zabrání přetečení při slide animacích */
 }
 
-/* Na mobilu musí stránka scrollovat — overflow: hidden to blokuje.
-   Vertikální animace tam nepoužíváme, takže overflow-y: auto je bezpečné. */
+/* Na mobilu: obsah nesmí být oříznut — scrolluje okno (window), ne element.
+   overflow-y: visible = obsah přeteče do window scroll containeru. */
 @media (max-width: 768px) {
   .v2-page {
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: visible;
   }
 }
 

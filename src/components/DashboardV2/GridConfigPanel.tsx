@@ -1,5 +1,8 @@
 // src/components/DashboardV2/GridConfigPanel.tsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotificationContext } from '../Notifications/NotificationProvider';
 import {
   loadGridConfig, saveGridConfig, applyGridConfig, DEFAULT_GRID,
   type SlotKey, type SlotConfig,
@@ -12,6 +15,9 @@ const COLS: Record<number, string> = { 1: 'Levý', 2: 'Střed', 3: 'Pravý' };
 const GridConfigPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [cfg, setCfg] = useState(() => loadGridConfig());
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const { requestPermission, unreadCount } = useNotificationContext();
 
   useEffect(() => {
     applyGridConfig(cfg);
@@ -83,6 +89,22 @@ const GridConfigPanel: React.FC = () => {
                 ))}
               </div>
             ))}
+          </div>
+
+          {/* ---- Navigace & Akce ---- */}
+          <div className="gcp-actions">
+            <button className="gcp-action-btn" onClick={() => navigate('/')}>
+              <span>🏠</span> Starý dashboard
+            </button>
+            <button className="gcp-action-btn" onClick={() => navigate('/settings')}>
+              <span>🛠️</span> Nastavení
+            </button>
+            <button className="gcp-action-btn" onClick={requestPermission}>
+              <span>🔔</span> Notifikace {unreadCount > 0 && <span className="gcp-badge">{unreadCount}</span>}
+            </button>
+            <button className="gcp-action-btn gcp-action-btn--logout" onClick={logout}>
+              <span>🚪</span> Odhlásit
+            </button>
           </div>
         </div>
       )}

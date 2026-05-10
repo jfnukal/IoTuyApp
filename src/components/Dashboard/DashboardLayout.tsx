@@ -165,6 +165,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <button
             className="fab-menu-item"
             onClick={() => {
+              navigate('/v2');
+              setIsFabOpen(false);
+            }}
+            title="Nový dashboard"
+          >
+            <span className="fab-menu-icon">✨</span>
+            <span className="fab-menu-label">V2 dashboard</span>
+          </button>
+
+          <button
+            className="fab-menu-item"
+            onClick={() => {
               logout();
               setIsFabOpen(false);
             }}

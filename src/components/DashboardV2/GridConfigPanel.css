@@ -148,6 +148,55 @@
   font-size: 0.85rem;
 }
 
+/* Navigační tlačítka */
+.gcp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.gcp-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.gcp-action-btn:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+.gcp-action-btn--logout {
+  background: rgba(220, 60, 60, 0.25);
+  border-color: rgba(220, 60, 60, 0.4);
+}
+
+.gcp-action-btn--logout:hover {
+  background: rgba(220, 60, 60, 0.45);
+}
+
+.gcp-badge {
+  background: #e53e3e;
+  color: white;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
 /* Miniaturní vizualizační pruh */
 .gcp-bar {
   position: absolute;

@@ -331,15 +331,6 @@
   align-items: start;
 }
 
-/* Swipe hint varianty — desktop vs mobil */
-.v2-swipe-hint--mobile  { display: none; }
-.v2-swipe-hint--desktop { display: block; }
-
-@media (max-width: 768px) {
-  .v2-swipe-hint--mobile  { display: block; }
-  .v2-swipe-hint--desktop { display: none; }
-}
-
 /* ==================== TABLET (≤ 1100px) ==================== */
 @media (max-width: 1100px) {
   .v2-screen {
@@ -357,30 +348,38 @@
     background-attachment: scroll;
   }
 
-  /* Na mobilu: jeden sloupec, sloty se řadí pod sebe s auto výškou */
+  /* Jeden sloupec, výška podle obsahu, widgety se řadí pod sebe */
   .v2-screen {
+    display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: none;
     height: auto;
-  }
-
-  /* Přepnutí na flex-column umožní order reordering */
-  .v2-screen {
-    display: flex;
-    flex-direction: column;
     gap: 6px;
     padding: 6px;
   }
 
-  /* POŘADÍ WIDGETŮ na mobilu — nejdůležitější nahoře */
-  .v2-slot--calendar   { order: 1; min-height: 360px; }
-  .v2-slot--greeting   { order: 2; min-height: 70px;  }
-  .v2-slot--shopping   { order: 3; min-height: 160px; }
-  .v2-slot--weather    { order: 4; min-height: 90px;  }
-  .v2-slot--schedule   { order: 5; min-height: 120px; }
-  .v2-slot--dishwasher { order: 6; min-height: 80px;  }
-  .v2-slot--recipes    { order: 7; min-height: 80px;  }
-  .v2-slot--controls   { order: 8; display: none;     } /* skryj prázdný placeholder */
+  /* Všechny sloty: jeden sloupec, výška dle obsahu */
+  .v2-slot--greeting,
+  .v2-slot--shopping,
+  .v2-slot--recipes,
+  .v2-slot--weather,
+  .v2-slot--schedule,
+  .v2-slot--dishwasher {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 120px;
+  }
+
+  .v2-slot--calendar {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 320px;
+  }
+
+  /* Skryj prázdný placeholder */
+  .v2-slot--controls {
+    display: none;
+  }
 
   .v2-secondary-grid {
     grid-template-columns: 1fr;
@@ -395,15 +394,6 @@
   .v2-slot {
     font-size: 1rem;
     border-radius: 6px;
-    /* Na mobilu: flex-start vždy */
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 0;
-  }
-
-  /* Swipe hint — na mobilu jen doleva (vertikální navigace zakázána) */
-  .v2-swipe-hint--bottom {
-    display: none; /* nahrazeno hintem dole */
   }
 }
 

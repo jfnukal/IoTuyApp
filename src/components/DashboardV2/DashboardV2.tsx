@@ -1,4 +1,7 @@
 // src/components/DashboardV2/DashboardV2.tsx
+// Hlavní rodinná obrazovka — /v2 (index route uvnitř V2Shell)
+// Sekundární widgety (sticky, rozvrh, bus) jsou přesunuty do MorePage (/v2/more)
+
 import React from 'react';
 import GreetingWidget from './GreetingWidget';
 import WeatherMiniWidget from '../Widgets/Weather/WeatherMiniWidget';
@@ -8,25 +11,13 @@ import DishwasherWidget from '../Widgets/Dishwasher/DishwasherFAB';
 import CalendarV2 from './CalendarV2';
 import RecipeMiniWidget from '../Widgets/Recipes/RecipeMiniWidget';
 import GridConfigPanel from './GridConfigPanel';
-import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
-import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
-import BusScheduleWidget from '../Widgets/SchoolSchedule/BusScheduleWidget';
-import { applyGridConfig, loadGridConfig } from './gridConfig';
 import './DashboardV2.css';
-
-// Načti uložený grid config při startu
-applyGridConfig(loadGridConfig());
 
 const DashboardV2: React.FC = () => {
   return (
     <div className="v2-layout">
 
       {/* ==================== PRVNÍ OBRAZOVKA — flat CSS Grid (100dvh) ==================== */}
-      {/*
-        Grid: 3 sloupce × 10 řádků, vše v 100dvh.
-        Každý slot ví svůj grid-column + grid-row → žádné flex kolony.
-        Chceš přeskupit? Změň jen řádky v DashboardV2.css sekci GRID POZICE.
-      */}
       <div className="v2-screen">
 
         {/* LEVÝ SLOUPEC — col 1 */}
@@ -61,24 +52,10 @@ const DashboardV2: React.FC = () => {
 
       </div>
 
-      {/* ==================== SEKUNDÁRNÍ WIDGETY (scroll dolů) ==================== */}
-      <section className="v2-secondary">
-        <div className="v2-secondary-grid">
-
-          <div className="v2-slot v2-slot--sticky">
-            <StickyNotesWidget selectedMember={null} />
-          </div>
-
-          <div className="v2-slot v2-slot--full-schedule">
-            <SchoolScheduleWidget />
-          </div>
-
-          <div className="v2-slot v2-slot--bus">
-            <BusScheduleWidget />
-          </div>
-
-        </div>
-      </section>
+      {/* Swipe hint — jemný indikátor navigace */}
+      <div className="v2-swipe-hint v2-swipe-hint--bottom">
+        ↓ přejeď nahoru pro zařízení · doleva pro widgety
+      </div>
 
       <GridConfigPanel />
 

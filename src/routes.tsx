@@ -10,8 +10,11 @@ import Login from './components/Login';
 // Hlavní Dashboard
 const DashboardLayout = lazy(() => import('./components/Dashboard/DashboardLayout'));
 
-// Dashboard V2 — rodinný dashboard (nová route /v2)
+// Dashboard V2 — shell + podstránky
+const V2Shell     = lazy(() => import('./components/DashboardV2/V2Shell'));
 const DashboardV2 = lazy(() => import('./components/DashboardV2/DashboardV2'));
+const DevicesPage = lazy(() => import('./components/DashboardV2/DevicesPage'));
+const MorePage    = lazy(() => import('./components/DashboardV2/MorePage'));
 
 // Nastavení
 const SettingsPage = lazy(() => import('./components/Settings/SettingsPage'));
@@ -72,11 +75,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
         element={<FloorPlanPage />} 
       />
 
-      {/* 🏠 Dashboard V2 — rodinný dashboard */}
-      <Route
-        path="/v2"
-        element={<DashboardV2 />}
-      />
+      {/* 🏠 Dashboard V2 — nested routes se swipe navigací */}
+      <Route path="/v2" element={<V2Shell />}>
+        <Route index          element={<DashboardV2 />} />
+        <Route path="devices" element={<DevicesPage />} />
+        <Route path="more"    element={<MorePage />} />
+      </Route>
 
       {/* Fallback - přesměrování na home */}
       <Route path="*" element={<Navigate to="/" replace />} />

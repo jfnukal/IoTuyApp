@@ -93,7 +93,7 @@ const GridConfigPanel: React.FC = () => {
 
           {/* ---- Navigace & Akce ---- */}
           <div className="gcp-actions">
-            <button className="gcp-action-btn" onClick={() => navigate('/')}>
+            <button className="gcp-action-btn" onClick={() => navigate('/v1')}>
               <span>🏠</span> Starý dashboard
             </button>
             <button className="gcp-action-btn" onClick={() => navigate('/settings')}>

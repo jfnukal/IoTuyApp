@@ -54,7 +54,7 @@ const DashboardV2: React.FC = () => {
 
       {/* Swipe hint — jemný indikátor navigace */}
       <div className="v2-swipe-hint v2-swipe-hint--bottom">
-        ↓ přejeď nahoru pro zařízení · doleva pro widgety
+        přejeď nahoru pro zařízení · doleva pro widgety
       </div>
 
       <GridConfigPanel />

@@ -43,46 +43,38 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
   // takže se při přepínání automaticky zobrazí hlavní PageLoader.
   return (
     <Routes>
-      {/* 🏠 Hlavní Dashboard */}
+      {/* 🏠 Dashboard V2 — VÝCHOZÍ (/, /devices, /more) */}
+      <Route path="/" element={<V2Shell />}>
+        <Route index            element={<DashboardV2 />} />
+        <Route path="devices"   element={<DevicesPage />} />
+        <Route path="more"      element={<MorePage />} />
+      </Route>
+
+      {/* 🏠 Dashboard V1 — záloha na /v1 */}
       <Route
-        path="/"
+        path="/v1"
         element={
           <DashboardLayout
             familyMemberId={familyMemberId}
-            onNavigateToSettings={() => {
-              // Zde by mělo být volání navigace, pokud to Dashboard vyžaduje
-              console.log('Navigate to settings...');
-            }}
+            onNavigateToSettings={() => {}}
           />
         }
       />
 
       {/* ⚙️ Nastavení */}
-      <Route 
-        path="/settings" 
-        element={<SettingsPage />} 
-      />
+      <Route path="/settings"  element={<SettingsPage />} />
 
       {/* 📱 Tuya zařízení */}
-      <Route 
-        path="/tuya" 
-        element={<TuyaDeviceList />} 
-      />
+      <Route path="/tuya"      element={<TuyaDeviceList />} />
 
       {/* 🗺️ Půdorys */}
-      <Route 
-        path="/floorplan" 
-        element={<FloorPlanPage />} 
-      />
+      <Route path="/floorplan" element={<FloorPlanPage />} />
 
-      {/* 🏠 Dashboard V2 — nested routes se swipe navigací */}
-      <Route path="/v2" element={<V2Shell />}>
-        <Route index          element={<DashboardV2 />} />
-        <Route path="devices" element={<DevicesPage />} />
-        <Route path="more"    element={<MorePage />} />
-      </Route>
+      {/* Zpětná kompatibilita — /v2 přesměruje na / */}
+      <Route path="/v2"  element={<Navigate to="/"         replace />} />
+      <Route path="/v2/*" element={<Navigate to="/"        replace />} />
 
-      {/* Fallback - přesměrování na home */}
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

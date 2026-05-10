@@ -50,21 +50,21 @@ export function useV2Swipe() {
       // -------- VERTIKÁLNÍ gesto --------
       if (absDy > absDx * RATIO) {
         if (dy < 0) {
-          // SWIPE UP — jdi na /v2/devices
-          if (pathname === '/v2') {
+          // SWIPE UP — jdi na /devices
+          if (pathname === '/') {
             const atBottom =
               window.scrollY + window.innerHeight >= document.body.scrollHeight - 20;
             const edgeStart = start.y > window.innerHeight * 0.65;
             if (atBottom || edgeStart) {
               setNavDir('from-bottom');
-              navigate('/v2/devices');
+              navigate('/devices');
             }
           }
         } else {
-          // SWIPE DOWN — zpět na /v2
-          if (pathname === '/v2/devices' && start.scrollY < 30) {
+          // SWIPE DOWN — zpět na /
+          if (pathname === '/devices' && start.scrollY < 30) {
             setNavDir('from-top');
-            navigate('/v2');
+            navigate('/');
           }
         }
         return;
@@ -73,16 +73,16 @@ export function useV2Swipe() {
       // -------- HORIZONTÁLNÍ gesto --------
       if (absDx > absDy * RATIO) {
         if (dx < 0) {
-          // SWIPE LEFT — jdi na /v2/more
-          if (pathname === '/v2') {
+          // SWIPE LEFT — jdi na /more
+          if (pathname === '/') {
             setNavDir('from-right');
-            navigate('/v2/more');
+            navigate('/more');
           }
         } else {
-          // SWIPE RIGHT — zpět na /v2
-          if (pathname === '/v2/more') {
+          // SWIPE RIGHT — zpět na /
+          if (pathname === '/more') {
             setNavDir('from-left');
-            navigate('/v2');
+            navigate('/');
           }
         }
       }

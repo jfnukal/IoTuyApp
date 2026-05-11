@@ -8,10 +8,12 @@ import { useV2Swipe } from './useV2Swipe';
 import { getNavDir, clearNavDir } from './navDirection';
 import { applyGridConfig, loadGridConfig } from './gridConfig';
 import { applyMobileOrder, loadMobileOrder } from './mobileOrderConfig';
+import { applyColWidths, loadColWidths } from './colWidthConfig';
 
 // Načti konfigurace jednou při mountu shellu
 applyGridConfig(loadGridConfig());
 applyMobileOrder(loadMobileOrder());
+applyColWidths(loadColWidths());
 
 const V2Shell: React.FC = () => {
   useV2Swipe(); // aktivní na všech /v2/* stránkách

@@ -13,13 +13,13 @@
 
 /* ==================== PRVNÍ OBRAZOVKA — flat CSS Grid ==================== */
 /*
-  10 řádků × 3 sloupce, vše přesně v 100dvh.
-  Chceš přeskupit widget? Změň jen grid-row / grid-column v sekci GRID POZICE níže.
-  Chceš jinou výšku slotu? Uprav grid-row rozsah (každý řádek = 10 % výšky).
+  20 řádků × 20 sloupců, vše přesně v 100dvh.
+  Výška widgetu: row-start / row-end  → GridConfigPanel (ozubené kolečko)
+  Šířka widgetu: col-start / col-end  → ColWidthModal (tlačítko ↔)
 */
 .v2-screen {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: repeat(20, 1fr);
   grid-template-rows: repeat(20, 1fr);
   gap: 6px;
   padding: 6px;
@@ -29,16 +29,31 @@
 
 /* ==================== GRID POZICE — upravuj tady ==================== */
 
-/* Výchozí hodnoty — přepisuje je GridConfigPanel přes CSS proměnné */
+/* Výchozí hodnoty:
+   - řádky: přepisuje GridConfigPanel
+   - sloupce (col-start/col-end): přepisuje ColWidthModal
+   Výchozí rozvržení odpovídá původnímu 1fr:2fr:1fr
+   (levý=5, střed=10, pravý=5 sloupců z 20) */
 :root {
-  --grid-greeting-col:   1; --grid-greeting-start:   1; --grid-greeting-end:   7;
-  --grid-shopping-col:   1; --grid-shopping-start:   7; --grid-shopping-end:  15;
-  --grid-recipes-col:    1; --grid-recipes-start:   15; --grid-recipes-end:   21;
-  --grid-calendar-col:   2; --grid-calendar-start:   1; --grid-calendar-end:  21;
-  --grid-weather-col:    3; --grid-weather-start:    1; --grid-weather-end:    6;
-  --grid-schedule-col:   3; --grid-schedule-start:   6; --grid-schedule-end:  13;
-  --grid-dishwasher-col: 3; --grid-dishwasher-start:13; --grid-dishwasher-end:19;
-  --grid-controls-col:   3; --grid-controls-start:  19; --grid-controls-end:  21;
+  /* Řádky (beze změny) */
+  --grid-greeting-start:    1; --grid-greeting-end:   7;
+  --grid-shopping-start:    7; --grid-shopping-end:  15;
+  --grid-recipes-start:    15; --grid-recipes-end:   21;
+  --grid-calendar-start:    1; --grid-calendar-end:  21;
+  --grid-weather-start:     1; --grid-weather-end:    6;
+  --grid-schedule-start:    6; --grid-schedule-end:  13;
+  --grid-dishwasher-start: 13; --grid-dishwasher-end:19;
+  --grid-controls-start:   19; --grid-controls-end:  21;
+
+  /* Sloupce — col-start / col-end (z 20) */
+  --grid-greeting-col-start:    1; --grid-greeting-col-end:    6;
+  --grid-shopping-col-start:    1; --grid-shopping-col-end:    6;
+  --grid-recipes-col-start:     1; --grid-recipes-col-end:     6;
+  --grid-calendar-col-start:    6; --grid-calendar-col-end:   16;
+  --grid-weather-col-start:    16; --grid-weather-col-end:    21;
+  --grid-schedule-col-start:   16; --grid-schedule-col-end:   21;
+  --grid-dishwasher-col-start: 16; --grid-dishwasher-col-end: 21;
+  --grid-controls-col-start:   16; --grid-controls-col-end:   21;
 
   /* Výchozí pořadí widgetů na mobilu — přepisuje mobileOrderConfig.ts */
   --mo-greeting:   1;
@@ -50,14 +65,14 @@
   --mo-recipes:    7;
 }
 
-.v2-slot--greeting   { grid-column: var(--grid-greeting-col);   grid-row: var(--grid-greeting-start)   / var(--grid-greeting-end);   }
-.v2-slot--shopping   { grid-column: var(--grid-shopping-col);   grid-row: var(--grid-shopping-start)   / var(--grid-shopping-end);   }
-.v2-slot--recipes    { grid-column: var(--grid-recipes-col);    grid-row: var(--grid-recipes-start)    / var(--grid-recipes-end);    }
-.v2-slot--calendar   { grid-column: var(--grid-calendar-col);   grid-row: var(--grid-calendar-start)   / var(--grid-calendar-end);   }
-.v2-slot--weather    { grid-column: var(--grid-weather-col);    grid-row: var(--grid-weather-start)    / var(--grid-weather-end);    }
-.v2-slot--schedule   { grid-column: var(--grid-schedule-col);   grid-row: var(--grid-schedule-start)   / var(--grid-schedule-end);   }
-.v2-slot--dishwasher { grid-column: var(--grid-dishwasher-col); grid-row: var(--grid-dishwasher-start) / var(--grid-dishwasher-end); }
-.v2-slot--controls   { grid-column: var(--grid-controls-col);   grid-row: var(--grid-controls-start)   / var(--grid-controls-end);   }
+.v2-slot--greeting   { grid-column: var(--grid-greeting-col-start)   / var(--grid-greeting-col-end);   grid-row: var(--grid-greeting-start)   / var(--grid-greeting-end);   }
+.v2-slot--shopping   { grid-column: var(--grid-shopping-col-start)   / var(--grid-shopping-col-end);   grid-row: var(--grid-shopping-start)   / var(--grid-shopping-end);   }
+.v2-slot--recipes    { grid-column: var(--grid-recipes-col-start)    / var(--grid-recipes-col-end);    grid-row: var(--grid-recipes-start)    / var(--grid-recipes-end);    }
+.v2-slot--calendar   { grid-column: var(--grid-calendar-col-start)   / var(--grid-calendar-col-end);   grid-row: var(--grid-calendar-start)   / var(--grid-calendar-end);   }
+.v2-slot--weather    { grid-column: var(--grid-weather-col-start)    / var(--grid-weather-col-end);    grid-row: var(--grid-weather-start)    / var(--grid-weather-end);    }
+.v2-slot--schedule   { grid-column: var(--grid-schedule-col-start)   / var(--grid-schedule-col-end);   grid-row: var(--grid-schedule-start)   / var(--grid-schedule-end);   }
+.v2-slot--dishwasher { grid-column: var(--grid-dishwasher-col-start) / var(--grid-dishwasher-col-end); grid-row: var(--grid-dishwasher-start) / var(--grid-dishwasher-end); }
+.v2-slot--controls   { grid-column: var(--grid-controls-col-start)   / var(--grid-controls-col-end);   grid-row: var(--grid-controls-start)   / var(--grid-controls-end);   }
 
 /* ==================== SLOT — GLASSMORPHISM KARTA ==================== */
 .v2-slot {

@@ -11,14 +11,16 @@ import {
   loadMobileOrder, type MobileWidgetKey,
 } from './mobileOrderConfig';
 import { MobileOrderPanel } from './MobileOrderPanel';
+import ColWidthModal from './ColWidthModal';
 import './GridConfigPanel.css';
 
 const ROWS = 20;
 const COLS: Record<number, string> = { 1: 'Levý', 2: 'Střed', 3: 'Pravý' };
 
 const GridConfigPanel: React.FC = () => {
-  const [open, setOpen]           = useState(false);
-  const [cfg, setCfg]             = useState(() => loadGridConfig());
+  const [open, setOpen]               = useState(false);
+  const [showColModal, setShowColModal] = useState(false);
+  const [cfg, setCfg]                 = useState(() => loadGridConfig());
   const [mobileOrder, setMobileOrder] = useState<MobileWidgetKey[]>(() => loadMobileOrder());
 
   const navigate = useNavigate();
@@ -61,6 +63,8 @@ const GridConfigPanel: React.FC = () => {
         {open ? '✕' : '⚙️'}
       </button>
 
+      {showColModal && <ColWidthModal onClose={() => setShowColModal(false)} />}
+
       {open && (
         <div className="gcp-panel">
 
@@ -75,6 +79,9 @@ const GridConfigPanel: React.FC = () => {
             </button>
             <button className="gcp-action-btn" onClick={() => { navigate('/more'); setOpen(false); }}>
               <span>🗂️</span> Widgety
+            </button>
+            <button className="gcp-action-btn" onClick={() => { setShowColModal(true); setOpen(false); }}>
+              <span>↔</span> Šířky widgetů
             </button>
             <button className="gcp-action-btn" onClick={() => navigate('/v1')}>
               <span>🏠</span> Starý dashboard

@@ -40,7 +40,6 @@ export function saveGridConfig(cfg: Record<SlotKey, SlotConfig>): void {
 export function applyGridConfig(cfg: Record<SlotKey, SlotConfig>): void {
   const root = document.documentElement.style;
   for (const [key, slot] of Object.entries(cfg) as [SlotKey, SlotConfig][]) {
-    root.setProperty(`--grid-${key}-col`,   String(slot.col));
     root.setProperty(`--grid-${key}-start`, String(slot.rowStart));
     root.setProperty(`--grid-${key}-end`,   String(slot.rowEnd));
   }

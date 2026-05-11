@@ -1,5 +1,4 @@
 // src/AI/hooks/useWakeWord.ts
-// Rozšíření voice chain o "always-on" режим s wake word detekcí.
 //
 // Stavy:
 //   off       — always-on vypnutý, jen manuální spuštění
@@ -8,8 +7,11 @@
 //   processing — odesílá dotaz na Gemini
 //   speaking  — přehrává TTS odpověď
 //
-// Wake word: "gemini" (+ zkrácené varianty)
-// Po odpovědi se automaticky vrátí do dormant.
+// Android specifika:
+//   - continuous:true session se ukončuje po ~60s ticha → restart + systémový beep
+//   - interimResults:true udržuje session živou déle (interim traffic = "ne ticho")
+//   - cs-CZ nemusí být na tabletu nainstalovaná → fallback na en-US detekci "gemini"
+//   - confidence na Androidu bývá nízká (~0.4–0.6), proto snižujeme práh
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { sendToGemini } from '../services/geminiApi';
@@ -17,22 +19,26 @@ import { playGeminiVoice } from '../services/geminiTts';
 
 export type WakeState = 'off' | 'dormant' | 'listening' | 'processing' | 'speaking';
 
-// Wake FRÁZE — vyžadujeme celou frázi, ne jen jedno slovo (méně falešných triggerů)
-// Primární: "hej gemini" a varianty. Fallback: samotné "gemini" s vyšší jistotou.
+// Primární wake fráze (česky)
 const WAKE_PHRASES = [
   'hej gemini', 'hey gemini',
   'hej džemíni', 'hey džemíni',
   'hej džemini', 'hey džemini',
-  'hej jemini',
+  'hej jemini',  'hey jemini',
+  'ahoj gemini',
 ];
-const WAKE_FALLBACK = ['gemini', 'džemíni', 'džemini', 'jemini', 'gimini'];
 
-// Minimální confidence pro fallback (samotné "gemini")
-const FALLBACK_MIN_CONFIDENCE = 0.75;
+// Fallback: samotné "gemini" ve všech pravděpodobných přepisech
+const WAKE_FALLBACK = [
+  'gemini', 'džemíni', 'džemini', 'jemini', 'gimini',
+  'dżemini', 'gemíni', 'žemini',
+];
 
-// Po kolika ms ticha se Chrome ukončí continuous recognition → auto-restart
-// Delší delay = méně pipů při restartech
-const RESTART_DELAY_MS = 800;
+// Minimální confidence pro fallback — Android bývá nízký, snižujeme na 0.5
+const FALLBACK_MIN_CONFIDENCE = 0.5;
+
+// Prodloužený delay po restartu → méně beepů za minutu
+const RESTART_DELAY_MS = 1200;
 
 const RECOGNITION_ERRORS: Record<string, string> = {
   'not-allowed':            'Mikrofon není povolen — povol přístup v prohlížeči',
@@ -44,6 +50,32 @@ const RECOGNITION_ERRORS: Record<string, string> = {
 const getSpeechRecognition = () =>
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null;
 
+// Hledá wake word v textu — normalizace: diakritika, mezery
+const containsWakeWord = (text: string): boolean => {
+  const t = text.toLowerCase().trim();
+  if (WAKE_PHRASES.some(w => t.includes(w))) return true;
+  return false;
+};
+
+const containsFallback = (text: string, confidence: number): boolean => {
+  const t = text.toLowerCase().trim();
+  if (confidence < FALLBACK_MIN_CONFIDENCE) return false;
+  return WAKE_FALLBACK.some(w => t === w || t.startsWith(w + ' ') || t.endsWith(' ' + w));
+};
+
+// Odstraní wake word ze začátku textu → zbyde příkaz
+const stripWakeWord = (text: string): string => {
+  const t = text.toLowerCase().trim();
+  const allPhrases = [...WAKE_PHRASES, ...WAKE_FALLBACK];
+  for (const w of allPhrases) {
+    const idx = t.indexOf(w);
+    if (idx !== -1) {
+      return text.slice(idx + w.length).trim();
+    }
+  }
+  return text.trim();
+};
+
 export const useWakeWord = () => {
   const [state, setState]           = useState<WakeState>('off');
   const [alwaysOn, setAlwaysOn]     = useState(false);
@@ -52,9 +84,15 @@ export const useWakeWord = () => {
   const [errorMsg, setErrorMsg]     = useState('');
 
   const recognitionRef  = useRef<any>(null);
-  const enabledRef      = useRef(false);   // je always-on zapnutý?
-  const awakeRef        = useRef(false);   // prošli jsme wake wordem?
-  const processingRef   = useRef(false);   // zpracováváme příkaz?
+  const enabledRef      = useRef(false);
+  const awakeRef        = useRef(false);
+  const processingRef   = useRef(false);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleRestart = useCallback((delay = RESTART_DELAY_MS) => {
+    if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+    restartTimerRef.current = setTimeout(() => startDormant(), delay);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ───────── Spuštění dormant poslechu ─────────
   const startDormant = useCallback(() => {
@@ -63,14 +101,16 @@ export const useWakeWord = () => {
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) return;
 
-    recognitionRef.current?.abort();
+    // Zruš předchozí session
+    try { recognitionRef.current?.abort(); } catch (_) { /* ignore */ }
 
     const r = new SpeechRecognition();
     recognitionRef.current = r;
     r.lang = 'cs-CZ';
     r.continuous = true;
-    r.interimResults = false; // jen finální výsledky — méně false triggerů, méně CPU
-    r.maxAlternatives = 1;
+    // interimResults:true → browser průběžně posílá data → méně "ticha" → méně předčasných ukončení na Androidu
+    r.interimResults = true;
+    r.maxAlternatives = 3; // více alternativ = větší šance zachytit "gemini"
     awakeRef.current = false;
 
     r.onstart = () => {
@@ -80,67 +120,72 @@ export const useWakeWord = () => {
     };
 
     r.onresult = (event: any) => {
-      const last = event.results[event.results.length - 1];
-      if (!last.isFinal) return; // jen finální výsledky
+      // Zpracováváme jen finální výsledky pro wake word detekci
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (!result.isFinal) continue;
 
-      const text = last[0].transcript.toLowerCase().trim();
-      const confidence: number = last[0].confidence ?? 1;
+        // Vyzkoušej všechny alternativy
+        for (let alt = 0; alt < result.length; alt++) {
+          const text = result[alt].transcript.toLowerCase().trim();
+          const confidence: number = result[alt].confidence ?? 0.5;
 
-      if (!awakeRef.current) {
-        // Debug log — sleduj co tablet přepíše
-        console.log('[WakeWord] slyším:', JSON.stringify(text), 'confidence:', confidence.toFixed(2));
+          console.log('[WakeWord] slyším:', JSON.stringify(text), 'confidence:', confidence.toFixed(2), 'final:', result.isFinal);
 
-        // Hledáme wake FRÁZI (celá fráze = méně false pozitiv)
-        const phraseMatch = WAKE_PHRASES.some(w => text.includes(w));
-        // Fallback: samotné "gemini" jen s vysokou jistotou
-        const fallbackMatch = confidence >= FALLBACK_MIN_CONFIDENCE &&
-          WAKE_FALLBACK.some(w => text === w || text.startsWith(w + ' '));
+          if (!awakeRef.current) {
+            const phraseMatch  = containsWakeWord(text);
+            const fallbackMatch = containsFallback(text, confidence);
 
-        if (!phraseMatch && !fallbackMatch) return;
+            if (!phraseMatch && !fallbackMatch) continue;
 
-        awakeRef.current = true;
-        setState('listening');
-        setTranscript('');
-        setResponse('');
-        setErrorMsg('');
+            awakeRef.current = true;
+            setState('listening');
+            setTranscript('');
+            setResponse('');
+            setErrorMsg('');
 
-        // Příkaz ve stejné promluvě — po wake frází
-        const allPhrases = [...WAKE_PHRASES, ...WAKE_FALLBACK];
-        let cmd = text;
-        for (const w of allPhrases) {
-          const idx = cmd.indexOf(w);
-          if (idx !== -1) { cmd = cmd.slice(idx + w.length).trim(); break; }
+            // Příkaz ve stejné promluvě
+            const cmd = stripWakeWord(text);
+            if (cmd.length > 3) {
+              handleCommand(cmd);
+            }
+            break; // nepotřebujeme další alternativy
+
+          } else if (!processingRef.current) {
+            // Probuzeno — příkaz
+            const cmd = result[0].transcript.trim();
+            if (cmd.length > 1) handleCommand(cmd);
+            break;
+          }
         }
-        if (cmd.length > 3) {
-          handleCommand(cmd);
-        }
-        // jinak čekáme na samostatný příkaz (viz else větev níže)
-
-      } else if (!processingRef.current) {
-        // Jsme probuzení — toto je příkaz
-        const cmd = last[0].transcript.trim();
-        if (cmd.length > 1) handleCommand(cmd);
       }
     };
 
     r.onerror = (e: any) => {
+      console.log('[WakeWord] onerror:', e.error);
       if (e.error === 'no-speech' || e.error === 'aborted') {
-        // Normální — tiše restartuj
         if (enabledRef.current && !processingRef.current) {
-          setTimeout(startDormant, RESTART_DELAY_MS);
+          scheduleRestart();
+        }
+        return;
+      }
+      // network error — kratší retry protože může být jen přechodné
+      if (e.error === 'network') {
+        if (enabledRef.current && !processingRef.current) {
+          scheduleRestart(3000);
         }
         return;
       }
       console.warn('[WakeWord] recognition error:', e.error);
       const msg = RECOGNITION_ERRORS[e.error] ?? `Chyba rozpoznávání: ${e.error}`;
       setErrorMsg(msg);
-      if (enabledRef.current) setTimeout(startDormant, 2000);
+      if (enabledRef.current) scheduleRestart(2000);
     };
 
     r.onend = () => {
-      // Chrome ukončil continuous session → auto-restart
+      console.log('[WakeWord] onend, enabled:', enabledRef.current, 'processing:', processingRef.current);
       if (enabledRef.current && !processingRef.current) {
-        setTimeout(startDormant, RESTART_DELAY_MS);
+        scheduleRestart();
       }
     };
 
@@ -148,13 +193,14 @@ export const useWakeWord = () => {
       r.start();
     } catch (err) {
       console.warn('[WakeWord] start error:', err);
+      if (enabledRef.current) scheduleRestart(2000);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ───────── Zpracování příkazu ─────────
   const handleCommand = useCallback(async (text: string) => {
     processingRef.current = true;
-    recognitionRef.current?.stop();
+    try { recognitionRef.current?.stop(); } catch (_) { /* ignore */ }
 
     setTranscript(text);
     setState('processing');
@@ -173,7 +219,6 @@ export const useWakeWord = () => {
     processingRef.current = false;
 
     if (enabledRef.current) {
-      // Krátká pauza aby TTS doznila, pak zpět do dormant
       setTimeout(() => {
         setState('dormant');
         startDormant();
@@ -192,17 +237,15 @@ export const useWakeWord = () => {
     if (nowEnabled) {
       startDormant();
     } else {
-      recognitionRef.current?.abort();
+      if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+      try { recognitionRef.current?.abort(); } catch (_) { /* ignore */ }
       setState('off');
     }
   }, [startDormant]);
 
   // ───────── Manuální spuštění (klik na orb) ─────────
-  // Pokud jsme dormant → přeskočíme wake word
-  // Pokud jsme off → jednorázový poslech (klasický mód)
   const startListening = useCallback(() => {
     if (state === 'dormant') {
-      // Přeskočíme wake word, rovnou posloucháme příkaz
       awakeRef.current = true;
       setState('listening');
       return;
@@ -210,14 +253,13 @@ export const useWakeWord = () => {
 
     if (state !== 'off') return;
 
-    // Jednorázový mód bez always-on
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) {
       setErrorMsg('Rozpoznávání řeči není podporováno (zkus Chrome)');
       return;
     }
 
-    recognitionRef.current?.abort();
+    try { recognitionRef.current?.abort(); } catch (_) { /* ignore */ }
     const r = new SpeechRecognition();
     recognitionRef.current = r;
     r.lang = 'cs-CZ';
@@ -250,7 +292,8 @@ export const useWakeWord = () => {
   // ───────── Zrušení ─────────
   const cancel = useCallback(() => {
     window.speechSynthesis.cancel();
-    recognitionRef.current?.abort();
+    if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+    try { recognitionRef.current?.abort(); } catch (_) { /* ignore */ }
     processingRef.current = false;
     setErrorMsg('');
 
@@ -268,7 +311,8 @@ export const useWakeWord = () => {
   useEffect(() => {
     return () => {
       enabledRef.current = false;
-      recognitionRef.current?.abort();
+      if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+      try { recognitionRef.current?.abort(); } catch (_) { /* ignore */ }
       window.speechSynthesis.cancel();
     };
   }, []);

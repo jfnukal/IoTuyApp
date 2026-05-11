@@ -1,61 +1,21 @@
 // src/components/DashboardV2/GridConfigPanel.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../Notifications/NotificationProvider';
-import {
-  loadGridConfig, saveGridConfig, applyGridConfig, DEFAULT_GRID,
-  type SlotKey, type SlotConfig,
-} from './gridConfig';
-import {
-  loadMobileOrder, type MobileWidgetKey,
-} from './mobileOrderConfig';
+import { loadMobileOrder, type MobileWidgetKey } from './mobileOrderConfig';
 import { MobileOrderPanel } from './MobileOrderPanel';
 import ColWidthModal from './ColWidthModal';
 import './GridConfigPanel.css';
 
-const ROWS = 20;
-const COLS: Record<number, string> = { 1: 'Levý', 2: 'Střed', 3: 'Pravý' };
-
 const GridConfigPanel: React.FC = () => {
-  const [open, setOpen]               = useState(false);
-  const [showColModal, setShowColModal] = useState(false);
-  const [cfg, setCfg]                 = useState(() => loadGridConfig());
-  const [mobileOrder, setMobileOrder] = useState<MobileWidgetKey[]>(() => loadMobileOrder());
+  const [open, setOpen]                 = useState(false);
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [mobileOrder, setMobileOrder]   = useState<MobileWidgetKey[]>(() => loadMobileOrder());
 
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { requestPermission, unreadCount } = useNotificationContext();
-
-  useEffect(() => {
-    applyGridConfig(cfg);
-  }, [cfg]);
-
-  const update = (key: SlotKey, field: keyof SlotConfig, delta: number) => {
-    setCfg(prev => {
-      const slot = { ...prev[key] };
-      const val = (slot[field] as number) + delta;
-      if (val < 1 || val > ROWS + 1) return prev;
-      (slot[field] as number) = val;
-      const next = { ...prev, [key]: slot };
-      saveGridConfig(next);
-      return next;
-    });
-  };
-
-  const reset = () => {
-    const fresh = { ...DEFAULT_GRID };
-    setCfg(fresh);
-    saveGridConfig(fresh);
-  };
-
-  const slotsByCol: Record<number, [SlotKey, SlotConfig][]> = { 1: [], 2: [], 3: [] };
-  for (const [k, v] of Object.entries(cfg) as [SlotKey, SlotConfig][]) {
-    slotsByCol[v.col].push([k, v]);
-  }
-  for (const col of [1, 2, 3]) {
-    slotsByCol[col].sort((a, b) => a[1].rowStart - b[1].rowStart);
-  }
 
   return (
     <>
@@ -63,12 +23,12 @@ const GridConfigPanel: React.FC = () => {
         {open ? '✕' : '⚙️'}
       </button>
 
-      {showColModal && <ColWidthModal onClose={() => setShowColModal(false)} />}
+      {showSizeModal && <ColWidthModal onClose={() => setShowSizeModal(false)} />}
 
       {open && (
         <div className="gcp-panel">
 
-          {/* ── 1. NAVIGACE & AKCE (nahoře) ───────────────────── */}
+          {/* ── NAVIGACE & AKCE ── */}
           <div className="gcp-header">
             <span>Nastavení</span>
           </div>
@@ -80,8 +40,8 @@ const GridConfigPanel: React.FC = () => {
             <button className="gcp-action-btn" onClick={() => { navigate('/more'); setOpen(false); }}>
               <span>🗂️</span> Widgety
             </button>
-            <button className="gcp-action-btn" onClick={() => { setShowColModal(true); setOpen(false); }}>
-              <span>↔</span> Šířky widgetů
+            <button className="gcp-action-btn" onClick={() => { setShowSizeModal(true); setOpen(false); }}>
+              <span>⤢</span> Změna velikosti
             </button>
             <button className="gcp-action-btn" onClick={() => navigate('/v1')}>
               <span>🏠</span> Starý dashboard
@@ -99,49 +59,9 @@ const GridConfigPanel: React.FC = () => {
 
           <hr className="gcp-divider" />
 
-          {/* ── 2. POŘADÍ WIDGETŮ NA MOBILU ──────────────────── */}
+          {/* ── POŘADÍ WIDGETŮ NA MOBILU ── */}
           <div className="gcp-section-title">Pořadí widgetů na mobilu</div>
-          <MobileOrderPanel
-            order={mobileOrder}
-            onChange={setMobileOrder}
-          />
-
-          <hr className="gcp-divider" />
-
-          {/* ── 3. GRID EDITOR (desktop / tablet layout) ─────── */}
-          <div className="gcp-header">
-            <span>Grid editor <small>(pro desktop / tablet)</small></span>
-            <button className="gcp-reset" onClick={reset}>↺ Reset</button>
-          </div>
-
-          <div className="gcp-cols">
-            {[1, 2, 3].map(col => (
-              <div key={col} className="gcp-col">
-                <div className="gcp-col-label">{COLS[col]}</div>
-                {slotsByCol[col].map(([key, slot]) => (
-                  <div key={key} className="gcp-slot">
-                    <div className="gcp-slot-name">{slot.label}</div>
-                    <div className="gcp-slot-row">
-                      <span className="gcp-field-label">start</span>
-                      <button onClick={() => update(key, 'rowStart', -1)}>−</button>
-                      <span className="gcp-val">{slot.rowStart}</span>
-                      <button onClick={() => update(key, 'rowStart', +1)}>+</button>
-                    </div>
-                    <div className="gcp-slot-row">
-                      <span className="gcp-field-label">end</span>
-                      <button onClick={() => update(key, 'rowEnd', -1)}>−</button>
-                      <span className="gcp-val">{slot.rowEnd}</span>
-                      <button onClick={() => update(key, 'rowEnd', +1)}>+</button>
-                    </div>
-                    <div className="gcp-bar" style={{
-                      top:    `${((slot.rowStart - 1) / ROWS) * 100}%`,
-                      height: `${((slot.rowEnd - slot.rowStart) / ROWS) * 100}%`,
-                    }} />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+          <MobileOrderPanel order={mobileOrder} onChange={setMobileOrder} />
 
         </div>
       )}

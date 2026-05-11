@@ -1,20 +1,22 @@
 // src/components/DashboardV2/ColWidthModal.tsx
-// Vizuální editor šířek widgetů.
-// Zobrazuje proporcionální náhled dashboardu (20 sloupců × 20 řádků).
-// Kliknutím na widget ho vyberem a upravíme colStart / colEnd tlačítky.
+// Sjednocený editor velikosti widgetů — šířka (sloupce) i výška (řádky).
+// Grid: 31 sloupců × 21 řádků. Klikni na widget → uprav.
 
 import React, { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  TOTAL_COLS,
+  TOTAL_COLS, TOTAL_ROWS,
   DEFAULT_COL_WIDTHS,
   loadColWidths, saveColWidths, applyColWidths,
   type ColWidthConfig, type WidgetColBounds,
 } from './colWidthConfig';
-import { loadGridConfig, type SlotKey } from './gridConfig';
+import {
+  loadGridConfig, saveGridConfig, applyGridConfig, DEFAULT_GRID,
+  type SlotKey, type SlotConfig,
+} from './gridConfig';
 import './ColWidthModal.css';
 
-// ── Metadata widgetů ────────────────────────────────────────────
+// ── Metadata ────────────────────────────────────────────────────
 
 const WIDGET_LABELS: Record<SlotKey, string> = {
   greeting:   '🏠 Pozdrav',
@@ -43,161 +45,171 @@ const SLOT_KEYS: SlotKey[] = [
   'weather', 'schedule', 'dishwasher', 'controls',
 ];
 
-const TOTAL_ROWS = 20;
-
 // ── Komponenta ───────────────────────────────────────────────────
 
-interface Props {
-  onClose: () => void;
-}
+interface Props { onClose: () => void; }
 
 const ColWidthModal: React.FC<Props> = ({ onClose }) => {
-  const [cfg, setCfg] = useState<ColWidthConfig>(() => loadColWidths());
+  const [colCfg, setColCfg] = useState<ColWidthConfig>(() => loadColWidths());
+  const [rowCfg, setRowCfg] = useState<Record<SlotKey, SlotConfig>>(() => loadGridConfig());
   const [selected, setSelected] = useState<SlotKey | null>(null);
 
-  // Aktuální řádkový layout — jen pro vizualizaci
-  const rowCfg = loadGridConfig();
-
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
   const updateCol = useCallback((key: SlotKey, field: keyof WidgetColBounds, delta: number) => {
-    setCfg(prev => {
-      const cur = { ...prev[key] };
-      if (field === 'colStart') {
-        cur.colStart = clamp(cur.colStart + delta, 1, cur.colEnd - 1);
-      } else {
-        cur.colEnd = clamp(cur.colEnd + delta, cur.colStart + 1, TOTAL_COLS + 1);
-      }
-      return { ...prev, [key]: cur };
+    setColCfg(prev => {
+      const c = { ...prev[key] };
+      if (field === 'colStart') c.colStart = clamp(c.colStart + delta, 1, c.colEnd - 1);
+      else                      c.colEnd   = clamp(c.colEnd   + delta, c.colStart + 1, TOTAL_COLS + 1);
+      return { ...prev, [key]: c };
+    });
+  }, []);
+
+  const updateRow = useCallback((key: SlotKey, field: 'rowStart' | 'rowEnd', delta: number) => {
+    setRowCfg(prev => {
+      const r = { ...prev[key] };
+      if (field === 'rowStart') r.rowStart = clamp(r.rowStart + delta, 1, r.rowEnd - 1);
+      else                      r.rowEnd   = clamp(r.rowEnd   + delta, r.rowStart + 1, TOTAL_ROWS + 1);
+      return { ...prev, [key]: r };
     });
   }, []);
 
   const handleSave = () => {
-    saveColWidths(cfg);
-    applyColWidths(cfg);
+    saveColWidths(colCfg);  applyColWidths(colCfg);
+    saveGridConfig(rowCfg); applyGridConfig(rowCfg);
     onClose();
   };
 
   const handleReset = () => {
-    setCfg({ ...DEFAULT_COL_WIDTHS });
+    setColCfg({ ...DEFAULT_COL_WIDTHS });
+    setRowCfg({ ...DEFAULT_GRID });
   };
 
-  const sel = selected ? cfg[selected] : null;
-
-  const modalRoot = document.getElementById('modal-root') ?? document.body;
+  const selCol = selected ? colCfg[selected] : null;
+  const selRow = selected ? rowCfg[selected] : null;
 
   return createPortal(
     <div className="cwm-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="cwm-modal">
 
-        {/* ── Záhlaví ── */}
+        {/* Záhlaví */}
         <div className="cwm-header">
-          <span className="cwm-title">↔ Šířky widgetů</span>
+          <span className="cwm-title">⤢ Změna velikosti</span>
           <div className="cwm-header-actions">
             <button className="cwm-btn cwm-btn--reset" onClick={handleReset}>↺ Reset</button>
             <button className="cwm-btn cwm-btn--close" onClick={onClose}>✕</button>
           </div>
         </div>
 
-        <p className="cwm-hint">Klikni na widget v náhledu → uprav sloupce níže</p>
+        <p className="cwm-hint">Klikni na widget v náhledu → uprav šířku a výšku</p>
 
-        {/* ── Vizuální náhled ── */}
+        {/* Vizuální náhled */}
         <div className="cwm-preview-wrap">
-
-          {/* Čísla sloupců nahoře */}
+          {/* Čísla sloupců */}
           <div className="cwm-col-nums">
-            {[1, 5, 10, 15, 20].map(n => (
-              <div
-                key={n}
-                className="cwm-col-num"
-                style={{ left: `${((n - 1) / TOTAL_COLS) * 100}%` }}
-              >
+            {[1, 5, 10, 15, 20, 25, 31].map(n => (
+              <div key={n} className="cwm-col-num"
+                style={{ left: `${((n - 1) / TOTAL_COLS) * 100}%` }}>
                 {n}
               </div>
             ))}
           </div>
 
-          {/* Mřížka s widgety */}
+          {/* Mřížka */}
           <div className="cwm-grid">
-
-            {/* Vertikální vodítka sloupců */}
+            {/* Vodítka sloupců */}
             {Array.from({ length: TOTAL_COLS - 1 }, (_, i) => (
-              <div
-                key={i}
-                className="cwm-grid-line cwm-grid-line--v"
-                style={{ left: `${((i + 1) / TOTAL_COLS) * 100}%` }}
-              />
+              <div key={`v${i}`} className={`cwm-line cwm-line--v ${(i + 1) % 5 === 0 ? 'cwm-line--major' : ''}`}
+                style={{ left: `${((i + 1) / TOTAL_COLS) * 100}%` }} />
+            ))}
+            {/* Vodítka řádků */}
+            {Array.from({ length: TOTAL_ROWS - 1 }, (_, i) => (
+              <div key={`h${i}`} className={`cwm-line cwm-line--h ${(i + 1) % 5 === 0 ? 'cwm-line--major' : ''}`}
+                style={{ top: `${((i + 1) / TOTAL_ROWS) * 100}%` }} />
             ))}
 
             {/* Widgety */}
             {SLOT_KEYS.map(key => {
-              const col  = cfg[key];
-              const row  = rowCfg[key];
-              const isSelected = selected === key;
-
+              const col = colCfg[key];
+              const row = rowCfg[key];
+              const isSel = selected === key;
               return (
-                <div
-                  key={key}
-                  className={`cwm-widget${isSelected ? ' cwm-widget--selected' : ''}`}
+                <div key={key}
+                  className={`cwm-widget${isSel ? ' cwm-widget--sel' : ''}`}
                   style={{
-                    left:   `${((col.colStart - 1) / TOTAL_COLS) * 100}%`,
-                    width:  `${((col.colEnd - col.colStart) / TOTAL_COLS) * 100}%`,
-                    top:    `${((row.rowStart - 1) / TOTAL_ROWS) * 100}%`,
-                    height: `${((row.rowEnd - row.rowStart) / TOTAL_ROWS) * 100}%`,
-                    background: WIDGET_COLORS[key],
-                    borderColor: isSelected ? '#fff' : 'rgba(255,255,255,0.2)',
+                    left:        `${((col.colStart - 1) / TOTAL_COLS) * 100}%`,
+                    width:       `${((col.colEnd - col.colStart) / TOTAL_COLS) * 100}%`,
+                    top:         `${((row.rowStart - 1) / TOTAL_ROWS) * 100}%`,
+                    height:      `${((row.rowEnd - row.rowStart) / TOTAL_ROWS) * 100}%`,
+                    background:  WIDGET_COLORS[key],
+                    borderColor: isSel ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)',
                   }}
                   onClick={() => setSelected(key)}
                 >
                   <span className="cwm-widget-label">{WIDGET_LABELS[key]}</span>
-                  <span className="cwm-widget-cols">{col.colStart}–{col.colEnd}</span>
+                  <span className="cwm-widget-meta">
+                    ↔{col.colStart}–{col.colEnd} ↕{row.rowStart}–{row.rowEnd}
+                  </span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* ── Ovládání vybraného widgetu ── */}
+        {/* Ovládání vybraného widgetu */}
         <div className="cwm-controls">
-          {selected && sel ? (
+          {selected && selCol && selRow ? (
             <>
-              <div className="cwm-controls-title">
-                <span
-                  className="cwm-controls-dot"
-                  style={{ background: WIDGET_COLORS[selected] }}
-                />
+              <div className="cwm-sel-title">
+                <span className="cwm-sel-dot" style={{ background: WIDGET_COLORS[selected] }} />
                 {WIDGET_LABELS[selected]}
               </div>
 
-              <div className="cwm-controls-row">
-                <label className="cwm-controls-label">Sloupec od</label>
+              <div className="cwm-ctrl-grid">
+                {/* Šířka */}
+                <span className="cwm-ctrl-lbl">Sloupec od</span>
                 <button className="cwm-step" onClick={() => updateCol(selected, 'colStart', -1)}>◄</button>
-                <span className="cwm-val">{sel.colStart}</span>
+                <span className="cwm-val">{selCol.colStart}</span>
                 <button className="cwm-step" onClick={() => updateCol(selected, 'colStart', +1)}>►</button>
 
-                <label className="cwm-controls-label cwm-controls-label--gap">Sloupec do</label>
+                <span className="cwm-ctrl-lbl">Sloupec do</span>
                 <button className="cwm-step" onClick={() => updateCol(selected, 'colEnd', -1)}>◄</button>
-                <span className="cwm-val">{sel.colEnd}</span>
+                <span className="cwm-val">{selCol.colEnd}</span>
                 <button className="cwm-step" onClick={() => updateCol(selected, 'colEnd', +1)}>►</button>
 
-                <span className="cwm-width-hint">
-                  ({sel.colEnd - sel.colStart} / {TOTAL_COLS} = {Math.round((sel.colEnd - sel.colStart) / TOTAL_COLS * 100)} %)
+                <span className="cwm-ctrl-hint">
+                  {selCol.colEnd - selCol.colStart} / {TOTAL_COLS} = {Math.round((selCol.colEnd - selCol.colStart) / TOTAL_COLS * 100)} %
+                </span>
+
+                {/* Výška */}
+                <span className="cwm-ctrl-lbl">Řádek od</span>
+                <button className="cwm-step" onClick={() => updateRow(selected, 'rowStart', -1)}>▲</button>
+                <span className="cwm-val">{selRow.rowStart}</span>
+                <button className="cwm-step" onClick={() => updateRow(selected, 'rowStart', +1)}>▼</button>
+
+                <span className="cwm-ctrl-lbl">Řádek do</span>
+                <button className="cwm-step" onClick={() => updateRow(selected, 'rowEnd', -1)}>▲</button>
+                <span className="cwm-val">{selRow.rowEnd}</span>
+                <button className="cwm-step" onClick={() => updateRow(selected, 'rowEnd', +1)}>▼</button>
+
+                <span className="cwm-ctrl-hint">
+                  {selRow.rowEnd - selRow.rowStart} / {TOTAL_ROWS} = {Math.round((selRow.rowEnd - selRow.rowStart) / TOTAL_ROWS * 100)} %
                 </span>
               </div>
             </>
           ) : (
-            <span className="cwm-controls-empty">← Klikni na widget v náhledu</span>
+            <span className="cwm-empty">← Klikni na widget v náhledu</span>
           )}
         </div>
 
-        {/* ── Patička ── */}
+        {/* Patička */}
         <div className="cwm-footer">
           <button className="cwm-btn cwm-btn--save" onClick={handleSave}>💾 Uložit</button>
         </div>
 
       </div>
     </div>,
-    modalRoot,
+    document.getElementById('modal-root') ?? document.body,
   );
 };
 

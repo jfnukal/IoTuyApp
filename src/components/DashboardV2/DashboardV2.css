@@ -13,14 +13,13 @@
 
 /* ==================== PRVNÍ OBRAZOVKA — flat CSS Grid ==================== */
 /*
-  20 řádků × 20 sloupců, vše přesně v 100dvh.
-  Výška widgetu: row-start / row-end  → GridConfigPanel (ozubené kolečko)
-  Šířka widgetu: col-start / col-end  → ColWidthModal (tlačítko ↔)
+  21 řádků × 31 sloupců, vše přesně v 100dvh.
+  Výška + šířka widgetu → ⤢ Změna velikosti (ColWidthModal)
 */
 .v2-screen {
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  grid-template-rows: repeat(20, 1fr);
+  grid-template-columns: repeat(31, 1fr);
+  grid-template-rows: repeat(21, 1fr);
   gap: 6px;
   padding: 6px;
   height: 100dvh;
@@ -30,12 +29,11 @@
 /* ==================== GRID POZICE — upravuj tady ==================== */
 
 /* Výchozí hodnoty:
-   - řádky: přepisuje GridConfigPanel
-   - sloupce (col-start/col-end): přepisuje ColWidthModal
-   Výchozí rozvržení odpovídá původnímu 1fr:2fr:1fr
-   (levý=5, střed=10, pravý=5 sloupců z 20) */
+   Řádky: přepisuje applyGridConfig (GridConfigPanel / ColWidthModal)
+   Sloupce: přepisuje applyColWidths (ColWidthModal)
+   Výchozí rozvržení odpovídá 1fr:2fr:1fr → 8:15:8 sloupců z 31 */
 :root {
-  /* Řádky (beze změny) */
+  /* Řádky */
   --grid-greeting-start:    1; --grid-greeting-end:   7;
   --grid-shopping-start:    7; --grid-shopping-end:  15;
   --grid-recipes-start:    15; --grid-recipes-end:   21;
@@ -45,15 +43,15 @@
   --grid-dishwasher-start: 13; --grid-dishwasher-end:19;
   --grid-controls-start:   19; --grid-controls-end:  21;
 
-  /* Sloupce — col-start / col-end (z 20) */
-  --grid-greeting-col-start:    1; --grid-greeting-col-end:    6;
-  --grid-shopping-col-start:    1; --grid-shopping-col-end:    6;
-  --grid-recipes-col-start:     1; --grid-recipes-col-end:     6;
-  --grid-calendar-col-start:    6; --grid-calendar-col-end:   16;
-  --grid-weather-col-start:    16; --grid-weather-col-end:    21;
-  --grid-schedule-col-start:   16; --grid-schedule-col-end:   21;
-  --grid-dishwasher-col-start: 16; --grid-dishwasher-col-end: 21;
-  --grid-controls-col-start:   16; --grid-controls-col-end:   21;
+  /* Sloupce — col-start / col-end (z 31, end je exkluzivní → max 32) */
+  --grid-greeting-col-start:    1; --grid-greeting-col-end:    9;
+  --grid-shopping-col-start:    1; --grid-shopping-col-end:    9;
+  --grid-recipes-col-start:     1; --grid-recipes-col-end:     9;
+  --grid-calendar-col-start:    9; --grid-calendar-col-end:   24;
+  --grid-weather-col-start:    24; --grid-weather-col-end:    32;
+  --grid-schedule-col-start:   24; --grid-schedule-col-end:   32;
+  --grid-dishwasher-col-start: 24; --grid-dishwasher-col-end: 32;
+  --grid-controls-col-start:   24; --grid-controls-col-end:   32;
 
   /* Výchozí pořadí widgetů na mobilu — přepisuje mobileOrderConfig.ts */
   --mo-greeting:   1;

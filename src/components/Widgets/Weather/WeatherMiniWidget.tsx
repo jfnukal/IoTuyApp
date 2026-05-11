@@ -210,7 +210,6 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
     primaryWeather.current.conditionCode
   );
   const playfulComment = getPlayfulComment(primaryLocation!.id);
-  const todayForecast = primaryWeather.daily[0];
   const tomorrowForecast = primaryWeather.daily[1];
 
   // Získání gradient barvy podle počasí

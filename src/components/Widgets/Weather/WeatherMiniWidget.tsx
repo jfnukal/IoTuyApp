@@ -272,24 +272,8 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
             </div>
           </div>
 
-          {/* Today vs Tomorrow */}
+          {/* Zítra + Pozítří */}
           <div className="forecast-comparison">
-            <div className="forecast-day today">
-              <span className="day-label">Dnes</span>
-              <div className="day-temps">
-                <span className="temp-high">{todayForecast?.maxTemp}°</span>
-                <span className="temp-low">{todayForecast?.minTemp}°</span>
-              </div>
-              <div className="rain-chance">
-                <span className="rain-icon">☔</span>
-                <span className="rain-percentage">
-                  {todayForecast?.chanceOfRain}%
-                </span>
-              </div>
-            </div>
-
-            <div className="forecast-separator"></div>
-
             <div className="forecast-day tomorrow">
               <span className="day-label">Zítra</span>
               <div className="day-temps">
@@ -300,6 +284,22 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
                 <span className="rain-icon">☔</span>
                 <span className="rain-percentage">
                   {tomorrowForecast?.chanceOfRain}%
+                </span>
+              </div>
+            </div>
+
+            <div className="forecast-separator"></div>
+
+            <div className="forecast-day day-after">
+              <span className="day-label">Pozítří</span>
+              <div className="day-temps">
+                <span className="temp-high">{primaryWeather.daily[2]?.maxTemp}°</span>
+                <span className="temp-low">{primaryWeather.daily[2]?.minTemp}°</span>
+              </div>
+              <div className="rain-chance">
+                <span className="rain-icon">☔</span>
+                <span className="rain-percentage">
+                  {primaryWeather.daily[2]?.chanceOfRain}%
                 </span>
               </div>
             </div>
@@ -492,24 +492,8 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
           </div>
         </div>
 
-        {/* Today vs Tomorrow */}
+        {/* Zítra + Pozítří */}
         <div className="forecast-comparison">
-          <div className="forecast-day today">
-            <span className="day-label">Dnes</span>
-            <div className="day-temps">
-              <span className="temp-high">{todayForecast?.maxTemp}°</span>
-              <span className="temp-low">{todayForecast?.minTemp}°</span>
-            </div>
-            <div className="rain-chance">
-              <span className="rain-icon">☔</span>
-              <span className="rain-percentage">
-                {todayForecast?.chanceOfRain}%
-              </span>
-            </div>
-          </div>
-
-          <div className="forecast-separator"></div>
-
           <div className="forecast-day tomorrow">
             <span className="day-label">Zítra</span>
             <div className="day-temps">
@@ -520,6 +504,22 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
               <span className="rain-icon">☔</span>
               <span className="rain-percentage">
                 {tomorrowForecast?.chanceOfRain}%
+              </span>
+            </div>
+          </div>
+
+          <div className="forecast-separator"></div>
+
+          <div className="forecast-day day-after">
+            <span className="day-label">Pozítří</span>
+            <div className="day-temps">
+              <span className="temp-high">{primaryWeather.daily[2]?.maxTemp}°</span>
+              <span className="temp-low">{primaryWeather.daily[2]?.minTemp}°</span>
+            </div>
+            <div className="rain-chance">
+              <span className="rain-icon">☔</span>
+              <span className="rain-percentage">
+                {primaryWeather.daily[2]?.chanceOfRain}%
               </span>
             </div>
           </div>

@@ -1071,40 +1071,45 @@
 /* ==================== RESPONSIVE - DUAL TEMP ==================== */
 
 @media (max-width: 768px) {
+  /* 3 sloupce na jednom řádku: předpověď | ikona | reálná teplota */
   .current-weather-section.dual-temp-layout {
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: flex-start;
   }
 
   .forecast-temp-container {
     order: 1;
-    flex: 1 1 45%;
-  }
-
-  .real-temp-container {
-    order: 2;
-    flex: 1 1 45%;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .dual-temp-layout .weather-icon-container {
-    order: 3;
-    flex: 1 1 100%;
+    order: 2;
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
-    margin-top: 8px;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  .real-temp-container {
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .forecast-temp {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .real-temp {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 
   .dual-temp-layout .weather-icon {
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
   }
 }
 
@@ -1113,41 +1118,6 @@
   gap: 8px;
 }
 
-/* ==================== FORCE COMPACT MODE na mobilu ==================== */
-/* Přebíjí @media (max-width: 768px) pravidla výše — ikona zůstane uprostřed, ne na novém řádku */
-@media (max-width: 768px) {
-  .weather-mini-widget.force-compact-mode .current-weather-section.dual-temp-layout {
-    flex-wrap: nowrap;   /* zabránit přenosu ikony na nový řádek */
-    gap: 4px;
-    align-items: flex-start;
-  }
-
-  .weather-mini-widget.force-compact-mode .forecast-temp-container {
-    order: 1;
-    flex: 1 1 0;         /* levý sloupec - předpověď */
-    min-width: 0;
-  }
-
-  .weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon-container {
-    order: 2;
-    flex: 0 0 auto;      /* střed - ikona, nepřizpůsobuje se */
-    align-self: flex-start;
-    margin-top: 0;
-    display: flex;
-    justify-content: center;
-  }
-
-  .weather-mini-widget.force-compact-mode .real-temp-container {
-    order: 3;
-    flex: 1 1 0;         /* pravý sloupec - reálná teplota */
-    min-width: 0;
-  }
-
-  .weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon {
-    width: 46px;
-    height: 46px;
-  }
-}
 
 .weather-mini-widget.force-compact-mode .forecast-temp {
   font-size: 1.4rem;

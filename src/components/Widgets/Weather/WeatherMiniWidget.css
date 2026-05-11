@@ -1108,9 +1108,45 @@
   }
 }
 
-/* Force compact mode - dual temp */
+/* ==================== FORCE COMPACT MODE (V2 desktop) — dual temp ==================== */
 .weather-mini-widget.force-compact-mode .dual-temp-layout {
   gap: 8px;
+}
+
+/* ==================== FORCE COMPACT MODE na mobilu ==================== */
+/* Přebíjí @media (max-width: 768px) pravidla výše — ikona zůstane uprostřed, ne na novém řádku */
+@media (max-width: 768px) {
+  .weather-mini-widget.force-compact-mode .current-weather-section.dual-temp-layout {
+    flex-wrap: nowrap;   /* zabránit přenosu ikony na nový řádek */
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .weather-mini-widget.force-compact-mode .forecast-temp-container {
+    order: 1;
+    flex: 1 1 0;         /* levý sloupec - předpověď */
+    min-width: 0;
+  }
+
+  .weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon-container {
+    order: 2;
+    flex: 0 0 auto;      /* střed - ikona, nepřizpůsobuje se */
+    align-self: flex-start;
+    margin-top: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .weather-mini-widget.force-compact-mode .real-temp-container {
+    order: 3;
+    flex: 1 1 0;         /* pravý sloupec - reálná teplota */
+    min-width: 0;
+  }
+
+  .weather-mini-widget.force-compact-mode .dual-temp-layout .weather-icon {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 .weather-mini-widget.force-compact-mode .forecast-temp {

@@ -1,5 +1,6 @@
 // src/components/DashboardV2/GridConfigPanel.tsx
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../Notifications/NotificationProvider';
@@ -25,7 +26,7 @@ const GridConfigPanel: React.FC = () => {
 
       {showSizeModal && <ColWidthModal onClose={() => setShowSizeModal(false)} />}
 
-      {open && (
+      {open && createPortal(
         <div className="gcp-panel">
 
           {/* ── NAVIGACE & AKCE ── */}
@@ -63,7 +64,8 @@ const GridConfigPanel: React.FC = () => {
           <div className="gcp-section-title">Pořadí widgetů na mobilu</div>
           <MobileOrderPanel order={mobileOrder} onChange={setMobileOrder} />
 
-        </div>
+        </div>,
+        document.getElementById('modal-root') ?? document.body,
       )}
     </>
   );

@@ -1,8 +1,10 @@
 /* GridConfigPanel.css */
 
 .gcp-fab {
-  /* Sedí uvnitř v2-slot--controls — slot ho centruje automaticky */
-  position: relative;
+  /* Absolutně v pravém dolním rohu slotu controls */
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
   width: 40px;
   height: 40px;
   border-radius: 50%;

@@ -231,31 +231,68 @@
   padding: 20px 0;
 }
 
-/* ==================== Responsive ==================== */
+/* ==================== KOMPAKTNÍ LAYOUT na mobilu (v V2 slotu) ==================== */
 @media (max-width: 600px) {
   .dishwasher-widget {
-    flex-direction: column;
+    flex-direction: row;
     min-height: auto;
+    padding: 8px;
+    gap: 10px;
+    align-items: center;
   }
 
+  /* Levá sekce: button + info vedle sebe */
   .dw-left {
     flex-direction: row;
-    min-width: auto;
+    min-width: 0;
+    flex: 1;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
+  /* Label (název widgetu) nad jménem, menší */
+  .dw-label {
+    font-size: 0.65rem;
+    margin-bottom: 2px;
+  }
+
+  /* Menší tlačítko — jen emoji + jméno */
   .dw-main-btn {
-    width: 100px;
-    height: 90px;
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    gap: 2px;
   }
 
   .dw-person-emoji {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 
-  .dw-history-list {
-    max-height: 100px;
+  .dw-person-name {
+    font-size: 0.75rem;
+  }
+
+  .dw-btn-label {
+    font-size: 0.55rem;
+    opacity: 0.7;
+  }
+
+  /* Info sloupec: widget label + jméno + naposledy */
+  .dw-last-info {
+    align-items: flex-start;
+    text-align: left;
+    gap: 1px;
+    font-size: 0.75rem;
+  }
+
+  .dw-last-time {
+    font-size: 0.68rem;
+  }
+
+  /* Pravá sekce (historie) — skryta na mobilu, šetří místo */
+  .dw-right {
+    display: none;
   }
 }

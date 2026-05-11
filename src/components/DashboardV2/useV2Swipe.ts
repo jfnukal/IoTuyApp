@@ -1,13 +1,15 @@
 // src/components/DashboardV2/useV2Swipe.ts
 // Detekuje swipe gesta a naviguje mezi V2 stránkami.
 //
-// Aktivní gesta:
-//   Na /:     swipe LEFT  → /more   (widgety jsou "vpravo")
-//   Na /more: swipe RIGHT → /       (zpět)
+// 3 stránky v řadě (horizontálně):
+//   /devices  ←  /  →  /more
 //
-// Vertikální navigace (↑ zařízení, ↓ zpět) je záměrně ZAKÁZÁNA —
-// kolize se scrollem způsobuje příliš mnoho accidental přechodů.
-// Na /devices se naviguje přes ⚙️ panel → 📱 Zařízení.
+//   Na /:        swipe RIGHT → /devices,  swipe LEFT  → /more
+//   Na /more:    swipe RIGHT → /
+//   Na /devices: swipe LEFT  → /
+//
+// Vertikální navigace je záměrně ZAKÁZÁNA — kolize se scrollem widgetů.
+// Systémová lišta tabletu navíc zachycuje swipe od spodního okraje.
 //
 // Horizontální swipe: min 100 px a musí dominovat 3× nad vertikálou.
 
@@ -43,14 +45,24 @@ export function useV2Swipe() {
 
       // Horizontální swipe — dominuje 3× a je alespoň 100 px
       if (absDx >= THRESHOLD_H && absDx > absDy * RATIO_H) {
-        if (dx < 0 && pathname === '/') {
-          // SWIPE LEFT → /more
-          setNavDir('from-right');
-          navigate('/more');
-        } else if (dx > 0 && pathname === '/more') {
-          // SWIPE RIGHT → zpět na /
-          setNavDir('from-left');
-          navigate('/');
+        if (dx < 0) {
+          // SWIPE LEFT
+          if (pathname === '/') {
+            setNavDir('from-right');
+            navigate('/more');         // / → more
+          } else if (pathname === '/devices') {
+            setNavDir('from-right');
+            navigate('/');             // devices → /
+          }
+        } else {
+          // SWIPE RIGHT
+          if (pathname === '/') {
+            setNavDir('from-left');
+            navigate('/devices');      // / → devices
+          } else if (pathname === '/more') {
+            setNavDir('from-left');
+            navigate('/');             // more → /
+          }
         }
       }
     };

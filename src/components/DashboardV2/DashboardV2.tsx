@@ -47,8 +47,10 @@ const DashboardV2: React.FC = () => {
           <DishwasherWidget />
         </div>
 
-        {/* Placeholder pro budoucí ovládací prvky */}
-        <div id="widget-controls" className="v2-slot v2-slot--controls" />
+        {/* Nastavení — gear button v kontrolním slotu */}
+        <div id="widget-controls" className="v2-slot v2-slot--controls">
+          <GridConfigPanel />
+        </div>
 
       </div>
 
@@ -56,8 +58,6 @@ const DashboardV2: React.FC = () => {
       <div className="v2-swipe-hint v2-swipe-hint--bottom">
         přejeď nahoru pro zařízení · doleva pro widgety
       </div>
-
-      <GridConfigPanel />
 
     </div>
   );

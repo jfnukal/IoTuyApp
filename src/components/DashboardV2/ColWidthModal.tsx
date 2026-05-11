@@ -95,10 +95,7 @@ const ColWidthModal: React.FC<Props> = ({ onClose }) => {
         {/* Záhlaví */}
         <div className="cwm-header">
           <span className="cwm-title">⤢ Změna velikosti</span>
-          <div className="cwm-header-actions">
-            <button className="cwm-btn cwm-btn--reset" onClick={handleReset}>↺ Reset</button>
-            <button className="cwm-btn cwm-btn--close" onClick={onClose}>✕</button>
-          </div>
+          <button className="cwm-btn cwm-btn--close" onClick={onClose}>✕</button>
         </div>
 
         <p className="cwm-hint">Klikni na widget v náhledu → uprav šířku a výšku</p>
@@ -202,8 +199,9 @@ const ColWidthModal: React.FC<Props> = ({ onClose }) => {
           )}
         </div>
 
-        {/* Patička */}
+        {/* Patička — Reset vlevo, Uložit vpravo */}
         <div className="cwm-footer">
+          <button className="cwm-btn cwm-btn--reset" onClick={handleReset}>↺ Reset rozložení</button>
           <button className="cwm-btn cwm-btn--save" onClick={handleSave}>💾 Uložit</button>
         </div>
 

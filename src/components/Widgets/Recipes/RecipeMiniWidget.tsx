@@ -6,6 +6,7 @@ import type { Recipe } from '../../../types';
 import RecipeModal from './RecipeModal';
 import RecipeForm from './RecipeForm';
 import RecipeImportModal from './RecipeImportModal';
+import RecipeListModal from './RecipeListModal';
 import './RecipeMiniWidget.css';
 
 const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minut
@@ -13,7 +14,6 @@ const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minut
 function getSeasonScore(recipe: Recipe, month: number): number {
   if (!recipe.seasonMonths || recipe.seasonMonths.length === 0) return 1;
   if (recipe.seasonMonths.includes(month)) return 3;
-  // blízké měsíce dostávají slabší skóre
   const closest = recipe.seasonMonths.reduce((min, m) => {
     const diff = Math.min(Math.abs(m - month), 12 - Math.abs(m - month));
     return Math.min(min, diff);
@@ -31,7 +31,6 @@ function pickSeasonalRecipe(recipes: Recipe[], excludeId?: string): Recipe | nul
     .map((r) => ({ recipe: r, score: getSeasonScore(r, month) }))
     .filter((x) => x.score > 0);
   if (!scored.length) return recipes.find((r) => r.id !== excludeId) ?? null;
-  // vážená náhoda — vyšší skóre = vyšší šance
   const total = scored.reduce((s, x) => s + x.score, 0);
   let rand = Math.random() * total;
   for (const x of scored) {
@@ -42,30 +41,30 @@ function pickSeasonalRecipe(recipes: Recipe[], excludeId?: string): Recipe | nul
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
-  'polévka': '🍲',
-  'hlavní jídlo': '🍽️',
-  'dezert': '🍰',
-  'pečení': '🥐',
-  'salát': '🥗',
-  'příloha': '🥔',
-  'nápoj': '🥤',
-  'ostatní': '🍴',
+  'polévka':     '🍲',
+  'hlavní jídlo':'🍽️',
+  'dezert':      '🍰',
+  'pečení':      '🥐',
+  'salát':       '🥗',
+  'příloha':     '🥔',
+  'nápoj':       '🥤',
+  'ostatní':     '🍴',
 };
 
 const RecipeMiniWidget: React.FC = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [current, setCurrent] = useState<Recipe | null>(null);
+  const [recipes, setRecipes]         = useState<Recipe[]>([]);
+  const [current, setCurrent]         = useState<Recipe | null>(null);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
-  const [showForm, setShowForm]     = useState(false);
-  const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
-  const [showImport, setShowImport] = useState(false);
+  const [showForm, setShowForm]       = useState(false);
+  const [editRecipe, setEditRecipe]   = useState<Recipe | null>(null);
+  const [showImport, setShowImport]   = useState(false);
+  const [showList, setShowList]       = useState(false);
   const [importPrefill, setImportPrefill] = useState<Partial<Recipe> | null>(null);
   const seeded = useRef(false);
 
   useEffect(() => {
     const unsub = firestoreService.subscribeToRecipes((data) => {
       setRecipes(data);
-      // Pokud je kolekce prázdná a ještě jsme neseedovali, nahraje vzorové recepty automaticky
       if (data.length === 0 && !seeded.current) {
         seeded.current = true;
         seedRecipesToFirestore();
@@ -94,6 +93,8 @@ const RecipeMiniWidget: React.FC = () => {
     setCurrent(null);
   };
 
+  const closeForm = () => { setShowForm(false); setEditRecipe(null); setImportPrefill(null); };
+
   if (!current && !recipes.length) {
     return (
       <div className="recipe-mini recipe-mini--empty">
@@ -102,9 +103,7 @@ const RecipeMiniWidget: React.FC = () => {
         <button className="recipe-mini__add-btn" onClick={() => setShowForm(true)}>
           + Přidat první recept
         </button>
-        {showForm && (
-          <RecipeForm onClose={() => setShowForm(false)} />
-        )}
+        {showForm && <RecipeForm onClose={closeForm} />}
       </div>
     );
   }
@@ -119,21 +118,10 @@ const RecipeMiniWidget: React.FC = () => {
           </span>
           <span className="recipe-mini__title">{current?.name ?? '...'}</span>
           <div className="recipe-mini__actions" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="recipe-mini__btn recipe-mini__btn--rotate"
-              onClick={rotate}
-              title="Jiný recept"
-            >↻</button>
-            <button
-              className="recipe-mini__btn recipe-mini__btn--add"
-              onClick={() => { setEditRecipe(null); setShowForm(true); }}
-              title="Přidat recept"
-            >＋</button>
-            <button
-              className="recipe-mini__btn recipe-mini__btn--import"
-              onClick={() => setShowImport(true)}
-              title="Import z URL"
-            >🔗</button>
+            <button className="recipe-mini__btn recipe-mini__btn--rotate" onClick={rotate} title="Jiný recept">↻</button>
+            <button className="recipe-mini__btn recipe-mini__btn--list"   onClick={() => setShowList(true)}    title="Všechny recepty">📋</button>
+            <button className="recipe-mini__btn recipe-mini__btn--add"    onClick={() => { setEditRecipe(null); setShowForm(true); }} title="Přidat recept">＋</button>
+            <button className="recipe-mini__btn recipe-mini__btn--import" onClick={() => setShowImport(true)}  title="Import z URL">🔗</button>
           </div>
         </div>
 
@@ -144,33 +132,36 @@ const RecipeMiniWidget: React.FC = () => {
               <li key={i} className="recipe-mini__ingredient">
                 <span className="recipe-mini__ing-name">{ing.name}</span>
                 {ing.amount && (
-                  <span className="recipe-mini__ing-amount">
-                    {ing.amount} {ing.unit}
-                  </span>
+                  <span className="recipe-mini__ing-amount">{ing.amount} {ing.unit}</span>
                 )}
               </li>
             ))}
             {current.ingredients.length > 3 && (
-              <li className="recipe-mini__more">
-                +{current.ingredients.length - 3} dalších surovin
-              </li>
+              <li className="recipe-mini__more">+{current.ingredients.length - 3} dalších surovin</li>
             )}
           </ul>
         )}
 
-        {/* Čas a porce */}
+        {/* Meta */}
         {current && (
           <div className="recipe-mini__meta">
-            {current.prepTime && (
-              <span>⏱ {current.prepTime + (current.cookTime ?? 0)} min</span>
-            )}
+            {current.prepTime && <span>⏱ {current.prepTime + (current.cookTime ?? 0)} min</span>}
             {current.servings && <span>👤 {current.servings} porcí</span>}
             <span className="recipe-mini__hint">👆 detail</span>
           </div>
         )}
       </div>
 
-      {/* Modal s detailem receptu */}
+      {/* Seznam všech receptů */}
+      {showList && (
+        <RecipeListModal
+          recipes={recipes}
+          onClose={() => setShowList(false)}
+          onOpen={(r) => setModalRecipe(r)}
+        />
+      )}
+
+      {/* Detail receptu */}
       {modalRecipe && (
         <RecipeModal
           recipe={modalRecipe}
@@ -185,7 +176,7 @@ const RecipeMiniWidget: React.FC = () => {
         <RecipeForm
           recipe={editRecipe ?? undefined}
           prefill={importPrefill ?? undefined}
-          onClose={() => { setShowForm(false); setEditRecipe(null); setImportPrefill(null); }}
+          onClose={closeForm}
         />
       )}
 

@@ -82,7 +82,8 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
       };
       await firestoreService.addRecipe(formData);
       onClose();
-    } catch {
+    } catch (e) {
+      console.error('RecipeImportModal save error:', e);
       setErrorMsg('Chyba při ukládání. Zkus to znovu.');
     } finally {
       setSaving(false);

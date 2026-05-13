@@ -98,6 +98,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, prefill, onClose }) => 
       }
       onClose();
     } catch (e) {
+      console.error('RecipeForm save error:', e);
       setError('Chyba při ukládání. Zkus to znovu.');
     } finally {
       setSaving(false);

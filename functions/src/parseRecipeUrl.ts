@@ -145,9 +145,7 @@ function extractImageUrl(img: unknown): string {
 
 // ── HTML Scraping Fallback ─────────────────────────────────────────
 
-const ING_CLASS = /suroviny|ingredien|ingredient|ing[-_]list|recipe[-_]ing|material/i;
-const ING_HEADING = /suroviny|ingredien|ingredients?|složení/i;
-const STEP_CLASS = /postup|kroky?|krok|příprava|instrukc|steps?|directions?|method|recipe[-_]step|preparation/i;
+const ING_HEADING  = /suroviny|ingredien|ingredients?|složení/i;
 const STEP_HEADING = /postup|návod|příprava|instrukc|kroky?|steps?|directions?|method/i;
 const UNIT_PATTERN = /\b(\d[\d.,/]*)\s*(g|kg|ml|l|dl|ks|lžíce?|lžičky?|hrnek|hrnky?|špetka?|balení|sáček)/i;
 

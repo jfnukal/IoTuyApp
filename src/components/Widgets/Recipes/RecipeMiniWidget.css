@@ -63,6 +63,13 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.recipe-mini__btn--import {
+  background: rgba(99, 102, 241, 0.25);
+}
+.recipe-mini__btn--import:hover {
+  background: rgba(99, 102, 241, 0.45);
+}
+
 /* Ingredience */
 .recipe-mini__ingredients {
   list-style: none;

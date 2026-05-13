@@ -7,6 +7,8 @@ import './RecipeForm.css';
 
 interface RecipeFormProps {
   recipe?: Recipe;
+  /** Předvyplnění bez editačního módu (import z URL) */
+  prefill?: Partial<Recipe>;
   onClose: () => void;
 }
 
@@ -21,26 +23,28 @@ const MONTH_LABELS = [
 
 const emptyIngredient = (): RecipeIngredient => ({ name: '', amount: '', unit: '' });
 
-const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onClose }) => {
+const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, prefill, onClose }) => {
   const isEdit = !!recipe;
+  // Zdroj dat: editace existujícího receptu NEBO předvyplnění z importu
+  const src = recipe ?? prefill;
 
-  const [name, setName] = useState(recipe?.name ?? '');
-  const [description, setDescription] = useState(recipe?.description ?? '');
-  const [category, setCategory] = useState<RecipeCategory>(recipe?.category ?? 'hlavní jídlo');
-  const [seasonMonths, setSeasonMonths] = useState<number[]>(recipe?.seasonMonths ?? []);
+  const [name, setName] = useState(src?.name ?? '');
+  const [description, setDescription] = useState(src?.description ?? '');
+  const [category, setCategory] = useState<RecipeCategory>(src?.category ?? 'hlavní jídlo');
+  const [seasonMonths, setSeasonMonths] = useState<number[]>(src?.seasonMonths ?? []);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>(
-    recipe?.ingredients.length ? recipe.ingredients : [emptyIngredient()]
+    src?.ingredients?.length ? src.ingredients : [emptyIngredient()]
   );
   const [steps, setSteps] = useState<string[]>(
-    recipe?.steps.length ? recipe.steps : ['']
+    src?.steps?.length ? src.steps : ['']
   );
-  const [prepTime, setPrepTime] = useState(recipe?.prepTime?.toString() ?? '');
-  const [cookTime, setCookTime] = useState(recipe?.cookTime?.toString() ?? '');
-  const [servings, setServings] = useState(recipe?.servings?.toString() ?? '');
+  const [prepTime, setPrepTime] = useState(src?.prepTime?.toString() ?? '');
+  const [cookTime, setCookTime] = useState(src?.cookTime?.toString() ?? '');
+  const [servings, setServings] = useState(src?.servings?.toString() ?? '');
   const [youtubeLinks, setYoutubeLinks] = useState<string[]>(
-    recipe?.youtubeLinks?.length ? recipe.youtubeLinks : ['', '']
+    src?.youtubeLinks?.length ? src.youtubeLinks : ['', '']
   );
-  const [tags, setTags] = useState(recipe?.tags?.join(', ') ?? '');
+  const [tags, setTags] = useState(src?.tags?.join(', ') ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 

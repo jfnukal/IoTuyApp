@@ -5,6 +5,7 @@ import { seedRecipesToFirestore } from './seedRecipes';
 import type { Recipe } from '../../../types';
 import RecipeModal from './RecipeModal';
 import RecipeForm from './RecipeForm';
+import RecipeImportModal from './RecipeImportModal';
 import './RecipeMiniWidget.css';
 
 const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minut
@@ -55,8 +56,10 @@ const RecipeMiniWidget: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [current, setCurrent] = useState<Recipe | null>(null);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm]     = useState(false);
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importPrefill, setImportPrefill] = useState<Partial<Recipe> | null>(null);
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -126,6 +129,11 @@ const RecipeMiniWidget: React.FC = () => {
               onClick={() => { setEditRecipe(null); setShowForm(true); }}
               title="Přidat recept"
             >＋</button>
+            <button
+              className="recipe-mini__btn recipe-mini__btn--import"
+              onClick={() => setShowImport(true)}
+              title="Import z URL"
+            >🔗</button>
           </div>
         </div>
 
@@ -176,7 +184,21 @@ const RecipeMiniWidget: React.FC = () => {
       {showForm && (
         <RecipeForm
           recipe={editRecipe ?? undefined}
-          onClose={() => { setShowForm(false); setEditRecipe(null); }}
+          prefill={importPrefill ?? undefined}
+          onClose={() => { setShowForm(false); setEditRecipe(null); setImportPrefill(null); }}
+        />
+      )}
+
+      {/* Import z URL */}
+      {showImport && (
+        <RecipeImportModal
+          onClose={() => setShowImport(false)}
+          onEdit={(prefill) => {
+            setShowImport(false);
+            setImportPrefill(prefill);
+            setEditRecipe(null);
+            setShowForm(true);
+          }}
         />
       )}
     </>

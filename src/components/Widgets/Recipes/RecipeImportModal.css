@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9200;
+  z-index: 10100;  /* nad AI widgetem (9999) */
   padding: 16px;
 }
 
@@ -256,6 +256,7 @@
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
   overflow: hidden;
+  flex-shrink: 0;  /* nesmí krást výšku sousedním elementům */
 }
 
 .rim-details summary {

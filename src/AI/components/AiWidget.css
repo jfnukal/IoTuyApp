@@ -6,7 +6,7 @@
   bottom: 40px; /* Odsazení od spodního okraje */
   left: 50%;
   transform: translateX(-50%); /* Přesný střed */
-  z-index: 9999;
+  z-index: 1000;  /* pod modaly (9000+), nad běžným obsahem */
   
   display: flex;
   flex-direction: column; /* Prvky pod sebou (bublina nahoře, koule dole) */

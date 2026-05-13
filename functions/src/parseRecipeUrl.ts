@@ -1,6 +1,6 @@
 // functions/src/parseRecipeUrl.ts
 // Cloud Function — stáhne URL, parsuje Schema.org JSON-LD Recipe,
-// vrátí strukturovaná data pro import do kuchařky.
+// při chybějících datech fallback na HTML scraping.
 
 import * as functions from 'firebase-functions';
 
@@ -29,7 +29,20 @@ export interface ParsedRecipeResult {
   schemaFound: boolean;
 }
 
-// ── Pomocné funkce ────────────────────────────────────────────────
+// ── Obecné utility ────────────────────────────────────────────────
+
+/** Odstraní HTML tagy a dekóduje základní entity */
+function stripHtml(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#\d+;/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /** ISO 8601 duration → minuty. PT1H30M → 90, PT20M → 20 */
 function parseDuration(iso: string): number | undefined {
@@ -50,7 +63,7 @@ const UNITS = new Set([
   'lžíce', 'lžičky', 'lžička', 'hrnek', 'hrnky', 'hrnku',
   'ks', 'kus', 'kusy', 'kusů',
   'špetka', 'špetky', 'špetku',
-  'balíček', 'sáček', 'sáčky', 'sáčku',
+  'balení', 'balíček', 'sáček', 'sáčky', 'sáčku',
   'plátky', 'plátek', 'plátků',
   'stroužky', 'stroužek', 'stroužků',
   'větvička', 'větvičky', 'list', 'listy',
@@ -59,17 +72,15 @@ const UNITS = new Set([
 
 /** "200 g hladká mouka" → { name, amount, unit } */
 function parseIngredient(raw: string): ParsedIngredient {
-  const text = raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const text = stripHtml(raw);
   const parts = text.split(/\s+/);
   let amount = '';
   let unit = '';
   let nameStart = 0;
 
-  // První token číslicový? (200, 1/2, ½, ¾, …)
   if (parts[0] && /^[\d.,/½⅓¼¾⅔⅛⅜⅝⅞]+$/.test(parts[0])) {
     amount = parts[0].replace(',', '.');
     nameStart = 1;
-    // Druhý token jednotka?
     if (parts[1] && UNITS.has(parts[1].toLowerCase())) {
       unit = parts[1];
       nameStart = 2;
@@ -99,13 +110,11 @@ function mapCategory(raw: string | string[]): string {
 function extractYouTube(video: unknown): string | null {
   if (!video) return null;
   const candidates: string[] = [];
-
   const pushFromObj = (v: Record<string, unknown>) => {
     ['embedUrl', 'contentUrl', 'url', '@id'].forEach((k) => {
       if (v[k]) candidates.push(String(v[k]));
     });
   };
-
   if (typeof video === 'string') candidates.push(video);
   else if (Array.isArray(video)) {
     video.forEach((v) => {
@@ -115,7 +124,6 @@ function extractYouTube(video: unknown): string | null {
   } else if (typeof video === 'object' && video !== null) {
     pushFromObj(video as Record<string, unknown>);
   }
-
   for (const url of candidates) {
     const m = url.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
     if (m) return `https://www.youtube.com/watch?v=${m[1]}`;
@@ -123,7 +131,7 @@ function extractYouTube(video: unknown): string | null {
   return null;
 }
 
-/** Extrahuje první string URL z image pole (string | object | array) */
+/** Extrahuje první string URL z image (string | object | array) */
 function extractImageUrl(img: unknown): string {
   if (!img) return '';
   if (typeof img === 'string') return img;
@@ -133,6 +141,101 @@ function extractImageUrl(img: unknown): string {
     return String(o.url || o['@id'] || o.contentUrl || '');
   }
   return '';
+}
+
+// ── HTML Scraping Fallback ─────────────────────────────────────────
+
+const ING_CLASS = /suroviny|ingredien|ingredient|ing[-_]list|recipe[-_]ing|material/i;
+const ING_HEADING = /suroviny|ingredien|ingredients?|složení/i;
+const STEP_CLASS = /postup|kroky?|krok|příprava|instrukc|steps?|directions?|method|recipe[-_]step|preparation/i;
+const STEP_HEADING = /postup|návod|příprava|instrukc|kroky?|steps?|directions?|method/i;
+const UNIT_PATTERN = /\b(\d[\d.,/]*)\s*(g|kg|ml|l|dl|ks|lžíce?|lžičky?|hrnek|hrnky?|špetka?|balení|sáček)/i;
+
+/** Scraping surovin z HTML když JSON-LD chybí nebo je neúplné */
+function scrapeIngredients(html: string): ParsedIngredient[] {
+  const items: string[] = [];
+
+  // 1. Kontejner s ingredient třídou/id
+  const containerRe = /<(?:div|ul|ol|section)[^>]+(?:class|id)="[^"]*(?:suroviny|ingredien|ingredient|ing[-_]list)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|ul|ol|section)>/gi;
+  for (const m of html.matchAll(containerRe)) {
+    for (const li of m[1].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+      const t = stripHtml(li[1]);
+      if (t && t.length < 150) items.push(t);
+    }
+    if (items.length >= 3) break;
+  }
+
+  // 2. ul/ol za headingem se "suroviny"
+  if (items.length < 3) {
+    const headingSplit = html.split(/<h[1-6][^>]*>/i);
+    for (const chunk of headingSplit) {
+      const htEnd = chunk.indexOf('<');
+      if (htEnd < 0) continue;
+      if (!ING_HEADING.test(stripHtml(chunk.slice(0, htEnd)))) continue;
+      const ul = chunk.match(/<(?:ul|ol)[^>]*>([\s\S]*?)<\/(?:ul|ol)>/i);
+      if (ul) {
+        for (const li of ul[1].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+          const t = stripHtml(li[1]);
+          if (t && t.length < 150) items.push(t);
+        }
+        if (items.length >= 3) break;
+      }
+    }
+  }
+
+  // 3. li elementy které vypadají jako ingredience (číslo + jednotka)
+  if (items.length < 3) {
+    for (const li of html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+      const t = stripHtml(li[1]);
+      if (UNIT_PATTERN.test(t) && t.length < 150) items.push(t);
+    }
+  }
+
+  return items
+    .map(parseIngredient)
+    .filter((i) => i.name.length > 1)
+    .slice(0, 35);
+}
+
+/** Scraping kroků postupu z HTML */
+function scrapeSteps(html: string): string[] {
+  const steps: string[] = [];
+
+  // 1. Kontejner se step třídou/id
+  const containerRe = /<(?:div|section|ol|ul)[^>]+(?:class|id)="[^"]*(?:postup|kroky?|příprava|instrukc|steps?|directions?|method|recipe[-_]step)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|section|ol|ul)>/gi;
+  for (const m of html.matchAll(containerRe)) {
+    for (const item of m[1].matchAll(/<(?:li|p)[^>]*>([\s\S]*?)<\/(?:li|p)>/gi)) {
+      const t = stripHtml(item[1]);
+      if (t && t.length > 15) steps.push(t);
+    }
+    if (steps.length >= 3) break;
+  }
+
+  // 2. ol/p za headingem se "postup"
+  if (steps.length < 3) {
+    const headingSplit = html.split(/<h[1-6][^>]*>/i);
+    for (const chunk of headingSplit) {
+      const htEnd = chunk.indexOf('<');
+      if (htEnd < 0) continue;
+      if (!STEP_HEADING.test(stripHtml(chunk.slice(0, htEnd)))) continue;
+      const ol = chunk.match(/<(?:ol|ul)[^>]*>([\s\S]*?)<\/(?:ol|ul)>/i);
+      if (ol) {
+        for (const li of ol[1].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+          const t = stripHtml(li[1]);
+          if (t && t.length > 15) steps.push(t);
+        }
+      }
+      if (steps.length < 3) {
+        for (const p of chunk.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)) {
+          const t = stripHtml(p[1]);
+          if (t && t.length > 20) steps.push(t);
+        }
+      }
+      if (steps.length >= 3) break;
+    }
+  }
+
+  return steps.filter((s) => s.length > 10).slice(0, 20);
 }
 
 // ── Cloud Function ────────────────────────────────────────────────
@@ -170,14 +273,11 @@ export const parseRecipeUrl = functions
       );
     }
 
-    // ── Hledáme JSON-LD ────────────────────────────────────────
-    const jsonLdBlocks = [...html.matchAll(
-      /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
-    )];
-
+    // ── JSON-LD ────────────────────────────────────────────────
     let schema: Record<string, unknown> | null = null;
-
-    for (const block of jsonLdBlocks) {
+    for (const block of html.matchAll(
+      /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+    )) {
       try {
         const parsed = JSON.parse(block[1]);
         const candidates: unknown[] = parsed?.['@graph']
@@ -193,7 +293,7 @@ export const parseRecipeUrl = functions
           }
         }
         if (schema) break;
-      } catch { /* nevalidní JSON, přeskočíme */ }
+      } catch { /* přeskočíme nevalidní JSON */ }
     }
 
     // ── Sestavujeme výsledek ───────────────────────────────────
@@ -212,100 +312,88 @@ export const parseRecipeUrl = functions
     };
 
     if (schema) {
-      // Název
-      result.name = String(schema.name || '').replace(/<[^>]+>/g, '').trim();
+      result.name        = stripHtml(String(schema.name        || ''));
+      result.description = stripHtml(String(schema.description || ''));
 
-      // Popis
-      result.description = String(schema.description || '').replace(/<[^>]+>/g, '').trim();
-
-      // Kategorie
       if (schema.recipeCategory) {
         result.category = mapCategory(schema.recipeCategory as string | string[]);
       }
-
-      // Porce
       if (schema.recipeYield) {
-        const y = Array.isArray(schema.recipeYield)
-          ? schema.recipeYield[0]
-          : schema.recipeYield;
-        const num = parseInt(String(y));
-        if (!isNaN(num) && num > 0) result.servings = num;
+        const y = Array.isArray(schema.recipeYield) ? schema.recipeYield[0] : schema.recipeYield;
+        const n = parseInt(String(y));
+        if (!isNaN(n) && n > 0) result.servings = n;
       }
-
-      // Časy
       if (schema.prepTime) result.prepTime = parseDuration(String(schema.prepTime));
-      if (schema.cookTime) result.cookTime = parseDuration(String(schema.cookTime));
+      if (schema.cookTime) result.cookTime  = parseDuration(String(schema.cookTime));
       if (!result.prepTime && !result.cookTime && schema.totalTime) {
-        const total = parseDuration(String(schema.totalTime));
-        if (total) result.prepTime = total;
+        result.prepTime = parseDuration(String(schema.totalTime));
       }
-
-      // Suroviny
       if (Array.isArray(schema.recipeIngredient)) {
         result.ingredients = (schema.recipeIngredient as string[]).map(parseIngredient);
       }
-
-      // Postup
       if (Array.isArray(schema.recipeInstructions)) {
         result.steps = (schema.recipeInstructions as unknown[]).flatMap((s) => {
-          if (typeof s === 'string') return [s.replace(/<[^>]+>/g, '').trim()];
+          if (typeof s === 'string') return [stripHtml(s)];
           if (s && typeof s === 'object') {
             const o = s as Record<string, unknown>;
-            // HowToSection má itemListElement
             if (o['@type'] === 'HowToSection' && Array.isArray(o.itemListElement)) {
               return (o.itemListElement as unknown[]).map((item) => {
-                if (typeof item === 'string') return item.trim();
                 const i = item as Record<string, unknown>;
-                return String(i.text || i.name || '').replace(/<[^>]+>/g, '').trim();
+                return stripHtml(String(i.text || i.name || ''));
               });
             }
-            return [String(o.text || o.name || '').replace(/<[^>]+>/g, '').trim()];
+            return [stripHtml(String(o.text || o.name || ''))];
           }
           return [String(s).trim()];
         }).filter(Boolean);
       }
-
-      // Obrázek
       result.imageUrl = extractImageUrl(schema.image);
-
-      // Video → YouTube
       if (schema.video) {
         const yt = extractYouTube(schema.video);
         if (yt) result.youtubeLinks.push(yt);
       }
-
-      // Tagy / klíčová slova
       if (schema.keywords) {
         const kw = Array.isArray(schema.keywords)
           ? (schema.keywords as string[]).join(',')
           : String(schema.keywords);
-        result.tags = kw
-          .split(/[,;]/)
-          .map((t: string) => t.trim())
-          .filter(Boolean)
-          .slice(0, 10);
+        result.tags = kw.split(/[,;]/).map((t) => t.trim()).filter(Boolean).slice(0, 10);
       }
     } else {
-      // Fallback: Open Graph meta tagy
-      const pick = (pattern: RegExp) => {
-        const m = html.match(pattern);
-        return m ? m[1].trim() : '';
-      };
-      result.name = pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-        || pick(/<title>([^<]+)<\/title>/i);
+      // Fallback: Open Graph / meta tagy
+      const pick = (re: RegExp) => { const m = html.match(re); return m ? m[1].trim() : ''; };
+      result.name        = pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
+                        || pick(/<title>([^<]+)<\/title>/i);
       result.description = pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
-        || pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
-      result.imageUrl = pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+                        || pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+      result.imageUrl    = pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    }
+
+    // ── HTML scraping fallback pro chybějící suroviny / postup ─
+    if (!result.ingredients.length) {
+      result.ingredients = scrapeIngredients(html);
+    }
+    if (!result.steps.length) {
+      result.steps = scrapeSteps(html);
+    }
+    // Zkusíme doplnit obrázek z og:image pokud JSON-LD ho nemělo
+    if (!result.imageUrl) {
+      const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+      if (m) result.imageUrl = m[1];
+    }
+    // YouTube z iframe v HTML
+    if (!result.youtubeLinks.length) {
+      const iframeYt = html.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if (iframeYt) result.youtubeLinks.push(`https://www.youtube.com/watch?v=${iframeYt[1]}`);
     }
 
     // ── Chybějící pole ─────────────────────────────────────────
-    if (!result.name)                 result.missingFields.push('name');
-    if (!result.description)          result.missingFields.push('description');
-    if (!result.ingredients.length)   result.missingFields.push('ingredients');
-    if (!result.steps.length)         result.missingFields.push('steps');
-    if (!result.servings)             result.missingFields.push('servings');
+    if (!result.name)               result.missingFields.push('name');
+    if (!result.description)        result.missingFields.push('description');
+    if (!result.ingredients.length) result.missingFields.push('ingredients');
+    if (!result.steps.length)       result.missingFields.push('steps');
+    if (!result.servings)           result.missingFields.push('servings');
     if (!result.prepTime && !result.cookTime) result.missingFields.push('times');
-    if (!result.imageUrl)             result.missingFields.push('imageUrl');
+    if (!result.imageUrl)           result.missingFields.push('imageUrl');
 
     return result;
   });

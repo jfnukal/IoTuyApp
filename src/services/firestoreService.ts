@@ -797,11 +797,12 @@ class FirestoreService {
 
   async addRecipe(data: RecipeFormData): Promise<string> {
     const now = Date.now();
-    const docRef = await addDoc(collection(db, 'recipes'), {
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    });
+    // Strip undefined values — Firestore rejects them
+    const clean = Object.fromEntries(
+      Object.entries({ ...data, createdAt: now, updatedAt: now })
+        .filter(([, v]) => v !== undefined)
+    );
+    const docRef = await addDoc(collection(db, 'recipes'), clean);
     return docRef.id;
   }
 

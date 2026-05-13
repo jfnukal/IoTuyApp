@@ -17,15 +17,21 @@ const CATEGORY_EMOJI: Record<string, string> = {
   'ostatní':     '🍴',
 };
 
+const PAGE_SIZE = 12;
+
 interface Props {
   recipes: Recipe[];
   onClose: () => void;
-  onOpen: (recipe: Recipe) => void;
+  onOpen:   (recipe: Recipe) => void;
+  onEdit:   (recipe: Recipe) => void;
+  onDelete: (id: string) => void;
+  onAdd:    () => void;
 }
 
-const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
-  const [search, setSearch] = useState('');
+const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen, onEdit, onDelete, onAdd }) => {
+  const [search, setSearch]       = useState('');
   const [filterCat, setFilterCat] = useState('');
+  const [page, setPage]           = useState(0);
 
   const categories = useMemo(() =>
     [...new Set(recipes.map(r => r.category))].sort(),
@@ -35,7 +41,7 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return recipes.filter(r => {
-      const matchCat = !filterCat || r.category === filterCat;
+      const matchCat    = !filterCat || r.category === filterCat;
       const matchSearch = !q
         || r.name.toLowerCase().includes(q)
         || r.tags?.some(t => t.toLowerCase().includes(q))
@@ -44,6 +50,20 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
     });
   }, [recipes, search, filterCat]);
 
+  const totalPages  = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated   = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    onDelete(id);
+  };
+
+  const handleEdit = (e: React.MouseEvent, recipe: Recipe) => {
+    e.stopPropagation();
+    onEdit(recipe);
+    onClose();
+  };
+
   return createPortal(
     <div className="rlm-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="rlm-dialog">
@@ -51,7 +71,10 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
         {/* Záhlaví */}
         <div className="rlm-header">
           <span className="rlm-title">📖 Kuchařka ({recipes.length})</span>
-          <button className="rlm-close" onClick={onClose}>✕</button>
+          <div className="rlm-header-actions">
+            <button className="rlm-add-btn" onClick={() => { onAdd(); onClose(); }} title="Přidat recept">＋ Přidat</button>
+            <button className="rlm-close" onClick={onClose}>✕</button>
+          </div>
         </div>
 
         {/* Filtrování */}
@@ -59,17 +82,17 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
           <input
             className="rlm-search"
             type="search"
-            placeholder="Hledat recept…"
+            placeholder="🔍 Hledat podle názvu, tagu nebo popisu…"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(0); }}
             autoFocus
           />
           <select
             className="rlm-cat-select"
             value={filterCat}
-            onChange={e => setFilterCat(e.target.value)}
+            onChange={e => { setFilterCat(e.target.value); setPage(0); }}
           >
-            <option value="">Vše</option>
+            <option value="">Vše kategorie</option>
             {categories.map(c => (
               <option key={c} value={c}>{CATEGORY_EMOJI[c] ?? '🍴'} {c}</option>
             ))}
@@ -81,11 +104,14 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
           {filtered.length === 0 && (
             <div className="rlm-empty">Žádný recept nenalezen</div>
           )}
-          {filtered.map(recipe => (
-            <button
+          {paginated.map(recipe => (
+            <div
               key={recipe.id}
               className="rlm-card"
               onClick={() => { onOpen(recipe); onClose(); }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && (onOpen(recipe), onClose())}
             >
               {recipe.imageUrl ? (
                 <img className="rlm-card-img" src={recipe.imageUrl} alt={recipe.name} loading="lazy" />
@@ -111,9 +137,38 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen }) => {
                   </div>
                 )}
               </div>
-            </button>
+              <div className="rlm-card-controls" onClick={e => e.stopPropagation()}>
+                <button
+                  className="rlm-ctrl-btn rlm-ctrl-btn--edit"
+                  onClick={e => handleEdit(e, recipe)}
+                  title="Upravit"
+                >✏️</button>
+                <button
+                  className="rlm-ctrl-btn rlm-ctrl-btn--del"
+                  onClick={e => handleDelete(e, recipe.id)}
+                  title="Smazat"
+                >🗑</button>
+              </div>
+            </div>
           ))}
         </div>
+
+        {/* Stránkování */}
+        {totalPages > 1 && (
+          <div className="rlm-pagination">
+            <button
+              className="rlm-page-btn"
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+            >‹ Předchozí</button>
+            <span className="rlm-page-info">{page + 1} / {totalPages}</span>
+            <button
+              className="rlm-page-btn"
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+            >Další ›</button>
+          </div>
+        )}
 
       </div>
     </div>,

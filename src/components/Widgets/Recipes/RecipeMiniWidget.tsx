@@ -158,6 +158,9 @@ const RecipeMiniWidget: React.FC = () => {
           recipes={recipes}
           onClose={() => setShowList(false)}
           onOpen={(r) => setModalRecipe(r)}
+          onEdit={(r) => { setEditRecipe(r); setImportPrefill(null); setShowForm(true); }}
+          onDelete={(id) => handleDelete(id)}
+          onAdd={() => { setEditRecipe(null); setImportPrefill(null); setShowForm(true); }}
         />
       )}
 

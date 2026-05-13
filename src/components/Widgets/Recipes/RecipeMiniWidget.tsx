@@ -1,5 +1,5 @@
 // src/components/Widgets/Recipes/RecipeMiniWidget.tsx
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { firestoreService } from '../../../services/firestoreService';
 import { seedRecipesToFirestore } from './seedRecipes';
 import type { Recipe } from '../../../types';
@@ -8,37 +8,6 @@ import RecipeForm from './RecipeForm';
 import RecipeImportModal from './RecipeImportModal';
 import RecipeListModal from './RecipeListModal';
 import './RecipeMiniWidget.css';
-
-const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minut
-
-function getSeasonScore(recipe: Recipe, month: number): number {
-  if (!recipe.seasonMonths || recipe.seasonMonths.length === 0) return 1;
-  if (recipe.seasonMonths.includes(month)) return 3;
-  const closest = recipe.seasonMonths.reduce((min, m) => {
-    const diff = Math.min(Math.abs(m - month), 12 - Math.abs(m - month));
-    return Math.min(min, diff);
-  }, 99);
-  if (closest <= 1) return 2;
-  if (closest <= 2) return 1;
-  return 0;
-}
-
-function pickSeasonalRecipe(recipes: Recipe[], excludeId?: string): Recipe | null {
-  if (!recipes.length) return null;
-  const month = new Date().getMonth() + 1;
-  const scored = recipes
-    .filter((r) => r.id !== excludeId)
-    .map((r) => ({ recipe: r, score: getSeasonScore(r, month) }))
-    .filter((x) => x.score > 0);
-  if (!scored.length) return recipes.find((r) => r.id !== excludeId) ?? null;
-  const total = scored.reduce((s, x) => s + x.score, 0);
-  let rand = Math.random() * total;
-  for (const x of scored) {
-    rand -= x.score;
-    if (rand <= 0) return x.recipe;
-  }
-  return scored[scored.length - 1].recipe;
-}
 
 const CATEGORY_EMOJI: Record<string, string> = {
   'polévka':     '🍲',
@@ -53,7 +22,6 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 const RecipeMiniWidget: React.FC = () => {
   const [recipes, setRecipes]         = useState<Recipe[]>([]);
-  const [current, setCurrent]         = useState<Recipe | null>(null);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [showForm, setShowForm]       = useState(false);
   const [editRecipe, setEditRecipe]   = useState<Recipe | null>(null);
@@ -73,29 +41,15 @@ const RecipeMiniWidget: React.FC = () => {
     return unsub;
   }, []);
 
-  useEffect(() => {
-    if (!recipes.length) return;
-    setCurrent((prev) => prev ?? pickSeasonalRecipe(recipes));
-  }, [recipes]);
-
-  const rotate = useCallback(() => {
-    setCurrent((prev) => pickSeasonalRecipe(recipes, prev?.id ?? undefined));
-  }, [recipes]);
-
-  useEffect(() => {
-    const id = setInterval(rotate, ROTATION_INTERVAL);
-    return () => clearInterval(id);
-  }, [rotate]);
-
   const handleDelete = async (id: string) => {
     if (!window.confirm('Opravdu smazat recept?')) return;
     await firestoreService.deleteRecipe(id);
-    setCurrent(null);
   };
 
   const closeForm = () => { setShowForm(false); setEditRecipe(null); setImportPrefill(null); };
 
-  if (!current && !recipes.length) {
+  // Prázdný stav
+  if (!recipes.length) {
     return (
       <div className="recipe-mini recipe-mini--empty">
         <div className="recipe-mini__empty-icon">📖</div>
@@ -110,46 +64,52 @@ const RecipeMiniWidget: React.FC = () => {
 
   return (
     <>
-      <div className="recipe-mini" onClick={() => current && setModalRecipe(current)}>
+      <div className="recipe-mini">
         {/* Hlavička */}
         <div className="recipe-mini__header">
-          <span className="recipe-mini__icon">
-            {current ? CATEGORY_EMOJI[current.category] ?? '🍴' : '📖'}
-          </span>
-          <span className="recipe-mini__title">{current?.name ?? '...'}</span>
-          <div className="recipe-mini__actions" onClick={(e) => e.stopPropagation()}>
-            <button className="recipe-mini__btn recipe-mini__btn--rotate" onClick={rotate} title="Jiný recept">↻</button>
-            <button className="recipe-mini__btn recipe-mini__btn--list"   onClick={() => setShowList(true)}    title="Všechny recepty">📋</button>
-            <button className="recipe-mini__btn recipe-mini__btn--add"    onClick={() => { setEditRecipe(null); setShowForm(true); }} title="Přidat recept">＋</button>
-            <button className="recipe-mini__btn recipe-mini__btn--import" onClick={() => setShowImport(true)}  title="Import z URL">🔗</button>
+          <span className="recipe-mini__icon">📖</span>
+          <span className="recipe-mini__title">Recepty</span>
+          <div className="recipe-mini__actions">
+            <button
+              className="recipe-mini__btn recipe-mini__btn--list"
+              onClick={() => setShowList(true)}
+              title="Všechny recepty"
+            >📋</button>
+            <button
+              className="recipe-mini__btn recipe-mini__btn--add"
+              onClick={() => { setEditRecipe(null); setImportPrefill(null); setShowForm(true); }}
+              title="Přidat recept"
+            >＋</button>
+            <button
+              className="recipe-mini__btn recipe-mini__btn--import"
+              onClick={() => setShowImport(true)}
+              title="Import z URL"
+            >🔗</button>
           </div>
         </div>
 
-        {/* Ingredience — první 3 */}
-        {current && (
-          <ul className="recipe-mini__ingredients">
-            {current.ingredients.slice(0, 3).map((ing, i) => (
-              <li key={i} className="recipe-mini__ingredient">
-                <span className="recipe-mini__ing-name">{ing.name}</span>
-                {ing.amount && (
-                  <span className="recipe-mini__ing-amount">{ing.amount} {ing.unit}</span>
-                )}
-              </li>
-            ))}
-            {current.ingredients.length > 3 && (
-              <li className="recipe-mini__more">+{current.ingredients.length - 3} dalších surovin</li>
-            )}
-          </ul>
-        )}
-
-        {/* Meta */}
-        {current && (
-          <div className="recipe-mini__meta">
-            {current.prepTime && <span>⏱ {current.prepTime + (current.cookTime ?? 0)} min</span>}
-            {current.servings && <span>👤 {current.servings} porcí</span>}
-            <span className="recipe-mini__hint">👆 detail</span>
-          </div>
-        )}
+        {/* Seznam receptů */}
+        <ul className="recipe-mini__list">
+          {recipes.map((r) => (
+            <li
+              key={r.id}
+              className="recipe-mini__item"
+              onClick={() => setModalRecipe(r)}
+              title={r.name}
+            >
+              <span className="recipe-mini__item-emoji">
+                {CATEGORY_EMOJI[r.category] ?? '🍴'}
+              </span>
+              <span className="recipe-mini__item-name">{r.name}</span>
+              {r.sourceUrl && <span className="recipe-mini__item-link" title="Uloženo jako odkaz">🔗</span>}
+              {(r.prepTime || r.cookTime) && (
+                <span className="recipe-mini__item-time">
+                  {(r.prepTime ?? 0) + (r.cookTime ?? 0)}m
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Seznam všech receptů */}

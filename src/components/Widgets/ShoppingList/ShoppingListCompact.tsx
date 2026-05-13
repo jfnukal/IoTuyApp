@@ -144,12 +144,6 @@ if (loading) {
         )}
       </div>
 
-      {/* Footer - kliknutím otevře celý seznam */}
-      {items.length > 0 && onOpenFull && (
-        <div className="shopping-compact-footer" onClick={onOpenFull}>
-          <span>👆 Zobrazit vše</span>
-        </div>
-      )}
     </div>
   );
 };

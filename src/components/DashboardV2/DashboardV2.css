@@ -193,6 +193,12 @@
   width: 100%;
   min-height: 0;
   border-radius: 7px;
+  /* Zákaz hover posunu — widget by přetekl přes okraj slotu */
+  transition: background 0.2s !important;
+}
+.v2-slot--weather .weather-mini-widget:hover {
+  transform: none !important;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
 }
 
 .v2-slot--weather .forecast-comparison,
@@ -362,12 +368,19 @@
   align-items: start;
 }
 
+/* ==================== MIN WIDTH — zabrání kolapsu levé strany ==================== */
+/* Pro ne-mobilní rozměry: grid neklesne pod 820px, zbytek se scrolluje horizontálně */
+@media (min-width: 769px) {
+  .v2-screen {
+    min-width: 820px;
+  }
+  .v2-layout {
+    overflow-x: auto;
+  }
+}
+
 /* ==================== TABLET (≤ 1100px) ==================== */
 @media (max-width: 1100px) {
-  .v2-screen {
-    grid-template-columns: 1fr 1.6fr 1fr;
-  }
-
   .v2-secondary-grid {
     grid-template-columns: 1fr 1.6fr 1fr;
   }

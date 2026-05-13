@@ -121,7 +121,10 @@ const RecipeListModal: React.FC<Props> = ({ recipes, onClose, onOpen, onEdit, on
                 </div>
               )}
               <div className="rlm-card-body">
-                <div className="rlm-card-name">{recipe.name}</div>
+                <div className="rlm-card-name">
+                  {recipe.sourceUrl && <span className="rlm-link-badge" title="Uloženo jako odkaz">🔗</span>}
+                  {recipe.name}
+                </div>
                 <div className="rlm-card-meta">
                   <span>{CATEGORY_EMOJI[recipe.category] ?? '🍴'} {recipe.category}</span>
                   {(recipe.prepTime || recipe.cookTime) && (

@@ -83,14 +83,16 @@
 /* ── Filtry ── */
 .rlm-filters {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 10px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 
 .rlm-search {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
@@ -98,21 +100,21 @@
   padding: 9px 14px;
   font-size: 0.9rem;
   outline: none;
-  min-width: 0;
 }
 .rlm-search:focus { border-color: rgba(99, 102, 241, 0.7); }
 .rlm-search::placeholder { color: rgba(255,255,255,0.4); }
 
 .rlm-cat-select {
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   color: white;
-  padding: 9px 10px;
+  padding: 8px 10px;
   font-size: 0.85rem;
   outline: none;
   cursor: pointer;
-  flex-shrink: 0;
 }
 .rlm-cat-select option { background: #1e1444; color: white; }
 
@@ -190,6 +192,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rlm-link-badge {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .rlm-card-meta {
@@ -282,6 +293,5 @@
 @media (max-width: 500px) {
   .rlm-dialog { border-radius: 12px 12px 0 0; max-height: 95vh; }
   .rlm-overlay { align-items: flex-end; padding: 0; }
-  .rlm-filters { flex-direction: column; }
   .rlm-card-controls { opacity: 1; }
 }

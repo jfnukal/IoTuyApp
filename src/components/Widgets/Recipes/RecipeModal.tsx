@@ -66,6 +66,17 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, onClose, onEdit, onDe
               {recipe.description && (
                 <p className="rmodal-description">{recipe.description}</p>
               )}
+              {recipe.sourceUrl && (
+                <a
+                  className="rmodal-source-link"
+                  href={recipe.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                >
+                  🔗 Otevřít originální recept ↗
+                </a>
+              )}
               <div className="rmodal-meta">
                 {totalTime > 0 && <span>⏱ {totalTime} min</span>}
                 {recipe.prepTime && recipe.cookTime && (

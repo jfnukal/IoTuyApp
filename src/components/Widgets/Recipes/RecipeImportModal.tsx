@@ -41,6 +41,7 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
   const [data, setData]           = useState<ImportedRecipe | null>(null);
   const [errorMsg, setErrorMsg]   = useState('');
   const [saving, setSaving]       = useState(false);
+  const [linkName, setLinkName]   = useState('');  // název pro "uložit jen odkaz"
   const inputRef                  = useRef<HTMLInputElement>(null);
 
   const handleAnalyze = async () => {
@@ -52,6 +53,7 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
     try {
       const result = await parseRecipeFromUrl(trimmed);
       setData(result);
+      setLinkName(result.name || '');
       setStatus('done');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -110,6 +112,38 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
       addedBy:      'url-import',
     } as Partial<Recipe>;
     onEdit(prefill);
+  };
+
+  const handleSaveLink = async () => {
+    const name = linkName.trim();
+    if (!name) return;
+    setSaving(true);
+    try {
+      const formData: RecipeFormData = {
+        name,
+        description:  data?.description || '',
+        category:     ((data?.category as RecipeCategory) || 'ostatní'),
+        seasonMonths: [],
+        ingredients:  data?.ingredients ?? [],
+        steps:        data?.steps ?? [],
+        ...(data?.prepTime != null && { prepTime: data.prepTime }),
+        ...(data?.cookTime != null && { cookTime: data.cookTime }),
+        ...(data?.servings != null && { servings: data.servings }),
+        youtubeLinks: data?.youtubeLinks ?? [],
+        tags:         data?.tags ?? [],
+        imageUrl:     data?.imageUrl || '',
+        originalPhotoUrl: '',
+        sourceUrl:    url.trim(),
+        addedBy:      'url-link',
+      };
+      await firestoreService.addRecipe(formData);
+      onClose();
+    } catch (e) {
+      console.error('RecipeImportModal saveLink error:', e);
+      setErrorMsg('Chyba při ukládání. Zkus to znovu.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const allFields = Object.keys(FIELD_LABELS);
@@ -255,6 +289,31 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
           </div>
         )}
 
+        {/* Sekce: Uložit jen odkaz */}
+        {status === 'done' && data && (
+          <div className="rim-save-link">
+            <div className="rim-save-link__label">
+              🔗 <strong>Uložit jen jako odkaz</strong>
+              <span className="rim-save-link__hint">— uloží URL, recepty doplníš ručně později</span>
+            </div>
+            <div className="rim-save-link__row">
+              <input
+                className="rim-save-link__input"
+                value={linkName}
+                onChange={e => setLinkName(e.target.value)}
+                placeholder="Název receptu (povinný) *"
+              />
+              <button
+                className="rim-btn rim-btn--link"
+                onClick={handleSaveLink}
+                disabled={saving || !linkName.trim()}
+              >
+                {saving ? 'Ukládám…' : '🔗 Uložit odkaz'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Patička */}
         {status === 'done' && data && (
           <div className="rim-footer">
@@ -268,7 +327,7 @@ const RecipeImportModal: React.FC<RecipeImportModalProps> = ({ onClose, onEdit }
                 onClick={handleSave}
                 disabled={saving || !data.name}
               >
-                {saving ? 'Ukládám…' : '💾 Uložit'}
+                {saving ? 'Ukládám…' : '💾 Uložit vše'}
               </button>
             </div>
           </div>

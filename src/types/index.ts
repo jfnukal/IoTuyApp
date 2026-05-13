@@ -678,6 +678,7 @@ export interface Recipe {
   youtubeLinks?: string[];  // max 2
   originalPhotoUrl?: string; // foto skenovaného originálu
   imageUrl?: string;         // fotka hotového jídla
+  sourceUrl?: string;        // původní URL (import odkazu)
   tags: string[];
   addedBy: string;
   createdAt: number;

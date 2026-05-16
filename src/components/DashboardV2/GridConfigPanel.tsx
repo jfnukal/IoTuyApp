@@ -27,11 +27,16 @@ const GridConfigPanel: React.FC = () => {
       {showSizeModal && <ColWidthModal onClose={() => setShowSizeModal(false)} />}
 
       {open && createPortal(
-        <div className="gcp-panel">
+        <>
+          {/* Backdrop — klik mimo zavře panel */}
+          <div className="gcp-backdrop" onClick={() => setOpen(false)} />
+
+          <div className="gcp-panel">
 
           {/* ── NAVIGACE & AKCE ── */}
           <div className="gcp-header">
             <span>Nastavení</span>
+            <button className="gcp-header-close" onClick={() => setOpen(false)} title="Zavřít">✕</button>
           </div>
 
           <div className="gcp-actions">
@@ -64,7 +69,8 @@ const GridConfigPanel: React.FC = () => {
           <div className="gcp-section-title">Pořadí widgetů na mobilu</div>
           <MobileOrderPanel order={mobileOrder} onChange={setMobileOrder} />
 
-        </div>,
+          </div>
+        </>,
         document.getElementById('modal-root') ?? document.body,
       )}
     </>

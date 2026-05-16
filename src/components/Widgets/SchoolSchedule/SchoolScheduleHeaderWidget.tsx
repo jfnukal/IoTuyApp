@@ -247,17 +247,26 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     setActiveTooltip(activeTooltip === cellId ? null : cellId);
   };
 
-  // Zavření tooltip při kliknutí mimo
+  // Zavření tooltip a jídelníčku při kliknutí mimo nebo Escape
   useEffect(() => {
     const handleClickOutside = () => {
-      if (activeTooltip) {
+      if (activeTooltip) setActiveTooltip(null);
+      if (showLunchDetail) setShowLunchDetail(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setActiveTooltip(null);
+        setShowLunchDetail(false);
       }
     };
-    
+
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [activeTooltip]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTooltip, showLunchDetail]);
 
   // Loading stav
   if (loading) {

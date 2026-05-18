@@ -9,6 +9,7 @@ import { getNavDir, clearNavDir } from './navDirection';
 import { applyGridConfig, loadGridConfig } from './gridConfig';
 import { applyMobileOrder, loadMobileOrder } from './mobileOrderConfig';
 import { applyColWidths, loadColWidths } from './colWidthConfig';
+import { useAutoReload } from '../../hooks/useAutoReload';
 
 // Načti konfigurace jednou při mountu shellu
 applyGridConfig(loadGridConfig());
@@ -16,7 +17,8 @@ applyMobileOrder(loadMobileOrder());
 applyColWidths(loadColWidths());
 
 const V2Shell: React.FC = () => {
-  useV2Swipe(); // aktivní na všech /v2/* stránkách
+  useV2Swipe();      // aktivní na všech /v2/* stránkách
+  useAutoReload();   // denní 5:00 reload + visibility + heartbeat
 
   const location = useLocation();
   const dir = getNavDir(); // čtení synchronně při renderu

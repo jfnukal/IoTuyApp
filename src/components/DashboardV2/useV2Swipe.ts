@@ -26,7 +26,12 @@ export function useV2Swipe() {
   const startRef     = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
+    /** Vrátí true pokud je nějaký modal otevřený — všechny používají portal do #modal-root. */
+    const isModalOpen = () =>
+      (document.getElementById('modal-root')?.childElementCount ?? 0) > 0;
+
     const onTouchStart = (e: TouchEvent) => {
+      if (isModalOpen()) return; // modal pohltí dotyk sám
       startRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
@@ -37,6 +42,7 @@ export function useV2Swipe() {
       const start = startRef.current;
       startRef.current = null;
       if (!start) return;
+      if (isModalOpen()) return; // pro jistotu ignoruj i touchend
 
       const dx    = e.changedTouches[0].clientX - start.x;
       const dy    = e.changedTouches[0].clientY - start.y;

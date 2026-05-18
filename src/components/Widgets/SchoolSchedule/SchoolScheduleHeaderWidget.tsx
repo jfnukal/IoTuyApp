@@ -1,5 +1,6 @@
 // src/components/Widgets/SchoolSchedule/SchoolScheduleHeaderWidget.tsx
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { bakalariAPI } from '../../../api/bakalariAPI';
 import { firestoreService } from '../../../services/firestoreService';
 import type { TimetableDay, TimetableLesson } from '../../../types/index';
@@ -225,12 +226,13 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Jídla pro vybraný den
-  const todayDate = getDateForDay(selectedDay);
-  const todayMeals = mealOrders[todayDate] || [];
-  const hasMeals = todayMeals.length > 0;
-  const snack = todayMeals.find(m => m.type === 'Svačina');
-  const lunch = todayMeals.find(m => m.type.toLowerCase().startsWith('oběd'));
+  // Kontrola zda existují vůbec nějaká jídla
+  const hasMeals = Object.keys(mealOrders).length > 0;
+
+  // Ikona pro týden — pokud má svačinu v libovolný den
+  const hasAnySnack = Object.values(mealOrders).some(meals =>
+    meals.some(m => m.type === 'Svačina')
+  );
 
   // Emoji pro předmět
   const getEmoji = (subject: string): string => {
@@ -383,45 +385,18 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
                   <span className="kid-icon">👧</span>
                   <span className="kid-name">JOH</span>
                   {hasMeals && (
-                    <span 
-                      className={`lunch-icon ${snack ? 'has-snack' : ''}`}
+                    <span
+                      className={`lunch-icon ${hasAnySnack ? 'has-snack' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowLunchDetail(!showLunchDetail);
+                        setShowLunchDetail(true);
                       }}
-                      title={snack ? 'Svačina objednaná – klikni pro detail' : 'Klikni pro detail obědu'}
+                      title="Jídelníček celý týden"
                     >
-                      {snack ? '🥪' : '🍴'}
+                      {hasAnySnack ? '🥪' : '🍴'}
                     </span>
                   )}
                 </div>
-                {showLunchDetail && hasMeals && (
-                  <div className="lunch-detail-popup">
-                    <div className="lunch-detail-content">
-                    {snack && (
-                        <div className="meal-snack-highlight">
-                          <strong>🥪 Svačina</strong>
-                          <p>{snack.name}</p>
-                        </div>
-                      )}
-                      {lunch && (
-                        <div className="meal-lunch-info">
-                          <strong>🍽️ {lunch.type}</strong>
-                          <p>{lunch.name}</p>
-                        </div>
-                      )}
-                      <button 
-                        className="lunch-close-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowLunchDetail(false);
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                )}
               </td>
               {johTimes.map(time => {
                 const lesson = getLessonAtTime(johankaDay?.lessons, time);
@@ -464,6 +439,74 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
           onSave={handleSaveSchedule}
           initialSchedule={jarecekSchedule}
         />
+      )}
+
+      {/* Týdenní jídelníček */}
+      {showLunchDetail && hasMeals && createPortal(
+        <div
+          className="lunch-week-overlay"
+          onClick={() => setShowLunchDetail(false)}
+        >
+          <div
+            className="lunch-week-modal"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="lunch-week-header">
+              <span className="lunch-week-title">🍽️ Jídelníček Johanky</span>
+              <button
+                className="lunch-week-close"
+                onClick={() => setShowLunchDetail(false)}
+              >✕</button>
+            </div>
+
+            <div className="lunch-week-days">
+              {[0,1,2,3,4].map(dayIdx => {
+                const date = getDateForDay(dayIdx);
+                const meals = mealOrders[date] || [];
+                const daySnack = meals.find(m => m.type === 'Svačina');
+                const dayLunch = meals.find(m => m.type.toLowerCase().startsWith('oběd'));
+                const isToday = dayIdx === selectedDay;
+
+                return (
+                  <div
+                    key={dayIdx}
+                    className={`lunch-day-card ${isToday ? 'lunch-day-card--today' : ''} ${!meals.length ? 'lunch-day-card--empty' : ''}`}
+                  >
+                    <div className="lunch-day-label">
+                      {DAYS_SHORT[dayIdx]}
+                      {isToday && <span className="lunch-day-today-dot" />}
+                    </div>
+
+                    {daySnack ? (
+                      <div className="lunch-meal lunch-meal--snack">
+                        <span className="lunch-meal-type">🥪 Svačina</span>
+                        <span className="lunch-meal-name">{daySnack.name}</span>
+                      </div>
+                    ) : (
+                      <div className="lunch-meal lunch-meal--none">
+                        <span className="lunch-meal-type">🥪</span>
+                        <span className="lunch-meal-name lunch-meal-name--empty">—</span>
+                      </div>
+                    )}
+
+                    {dayLunch ? (
+                      <div className="lunch-meal lunch-meal--lunch">
+                        <span className="lunch-meal-type">🍽️ Oběd</span>
+                        <span className="lunch-meal-name">{dayLunch.name}</span>
+                      </div>
+                    ) : (
+                      <div className="lunch-meal lunch-meal--none">
+                        <span className="lunch-meal-type">🍽️</span>
+                        <span className="lunch-meal-name lunch-meal-name--empty">—</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.getElementById('modal-root') ?? document.body,
       )}
     </div>
   );

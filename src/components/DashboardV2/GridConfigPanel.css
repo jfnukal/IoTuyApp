@@ -30,7 +30,10 @@
   position: fixed;
   inset: 0;
   z-index: 8998;
-  /* průhledný — jen blokuje kliknutí pod panelem */
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 .gcp-panel {
@@ -76,18 +79,20 @@
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   color: white;
-  border-radius: 6px;
-  width: 26px;
-  height: 26px;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   margin-left: auto;
+  touch-action: manipulation;
 }
 .gcp-header-close:hover { background: rgba(255,255,255,0.28); }
+.gcp-header-close:active { background: rgba(255,255,255,0.4); }
 
 .gcp-header small {
   font-weight: 400;

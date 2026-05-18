@@ -1,5 +1,5 @@
 // src/components/DashboardV2/GridConfigPanel.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +17,14 @@ const GridConfigPanel: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { requestPermission, unreadCount } = useNotificationContext();
+
+  // Escape zavře panel
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open]);
 
   return (
     <>

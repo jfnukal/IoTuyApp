@@ -23,11 +23,10 @@ export interface GeminiLiveCallbacks {
 
 // ==================== KONSTANTY ====================
 
-// Dostupné Live modely (2025-2026):
-// 'gemini-2.0-flash-live-001'        — stabilní, ověřený
-// 'gemini-live-2.5-flash-preview'    — preview, lepší kvalita
-// 'gemini-2.5-flash-preview-native-audio-dialog' — nativní audio dialog
-const MODEL = 'gemini-2.0-flash-live-001';
+// Dostupné Live modely přes v1beta (ověřeno ze SDK source):
+// 'gemini-2.0-flash-live-preview-04-09'  — stabilní preview (SDK příklady)
+// 'gemini-live-2.5-flash-preview'        — 2.5, lepší kvalita
+const MODEL = 'gemini-2.0-flash-live-preview-04-09';
 
 // Wake word fráze v češtině (Android transkribuje různě)
 const WAKE_PHRASES = [

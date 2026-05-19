@@ -50,7 +50,9 @@ const MODEL = 'gemini-3.1-flash-live-preview';
 //   Sadaltager   — Knowledgeable Sulafat      — Warm
 //
 // Pro češtinu jsou nejlepší kandidáti: Kore, Iapetus, Erinome, Charon, Sulafat
-const VOICE = 'Kore';   // ← ZMĚŇ ZDE pro testování jiného hlasu
+export const VOICE_KEY = 'gemini.voice';
+export const VOICE_DEFAULT = 'Kore';
+const getVoice = () => { try { return localStorage.getItem(VOICE_KEY) || VOICE_DEFAULT; } catch { return VOICE_DEFAULT; } };
 
 // Wake word fráze v češtině (Android transkribuje různě)
 const WAKE_PHRASES = [
@@ -226,7 +228,8 @@ export class GeminiLiveService {
 
     const ai = new GoogleGenAI({ apiKey: key });
 
-    aiLog('INFO', `GeminiLive: připojuji k modelu ${MODEL}, hlas: ${VOICE}`);
+    const voice = getVoice();
+    aiLog('INFO', `GeminiLive: připojuji k modelu ${MODEL}, hlas: ${voice}`);
 
     this.session = await ai.live.connect({
       model: MODEL,
@@ -235,7 +238,7 @@ export class GeminiLiveService {
         systemInstruction: { parts: [{ text: LIVE_SYSTEM_PROMPT }] },
         tools: buildLiveTools() as any,
         speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE } },
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
         },
         inputAudioTranscription: {},   // chceme přepis vstupu
         outputAudioTranscription: {},  // chceme přepis výstupu

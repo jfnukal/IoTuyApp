@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGeminiLive } from '../hooks/useGeminiLive';
 import { LogPanel } from './LogPanel';
+import { VoiceSelector } from './VoiceSelector';
 import './AiWidget.css';
 
 const DISMISS_DELAY_MS = 6000;
@@ -24,6 +25,7 @@ export const AiWidget: React.FC = () => {
   } = useGeminiLive();
 
   const [showLog, setShowLog] = useState(false);
+  const [showVoices, setShowVoices] = useState(false);
 
   // Auto-dismiss bubliny po návratu do klidového stavu
   useEffect(() => {
@@ -116,6 +118,16 @@ export const AiWidget: React.FC = () => {
         {alwaysOn ? '🎙️' : '🎙'}
       </button>
 
+      {/* Výběr hlasu */}
+      <button
+        className="ai-log-btn"
+        onClick={() => setShowVoices(v => !v)}
+        title="Vybrat hlas asistenta"
+        aria-label="Výběr hlasu"
+      >
+        🗣️
+      </button>
+
       {/* Log tlačítko */}
       <button
         className="ai-log-btn"
@@ -128,6 +140,9 @@ export const AiWidget: React.FC = () => {
 
       {/* Candidate bubble — portal mimo ai-widget-container */}
       {candidateBubble}
+
+      {/* Voice selector panel */}
+      {showVoices && <VoiceSelector onClose={() => setShowVoices(false)} />}
 
       {/* Log panel */}
       {showLog && <LogPanel onClose={() => setShowLog(false)} />}

@@ -1,5 +1,5 @@
 // src/AI/services/geminiTts.ts
-// Gemini TTS (gemini-2.5-flash-preview-tts, hlas Aoede)
+// Gemini TTS (gemini-2.5-flash-preview-tts)
 // Fallback: browser SpeechSynthesis cs-CZ
 
 import { configService } from '../../services/configService';
@@ -35,72 +35,56 @@ function pcm16ToWav(base64: string, sampleRate = 24000): Blob {
   return new Blob([buf], { type: 'audio/wav' });
 }
 
-export const playGeminiVoice = async (text: string): Promise<void> => {
+// Přehraje text zadaným hlasem přes Gemini TTS REST API.
+// Vrátí true pokud se podařilo, false pokud fallback na browser.
+export async function playGeminiVoiceNamed(text: string, voiceName: string): Promise<boolean> {
   const key = await getKey();
+  if (!key) return false;
 
-  if (key) {
-    // Pokus 1: gemini-2.5-flash-preview-tts přes v1alpha
-    for (const apiVersion of ['v1alpha', 'v1beta']) {
-      try {
-        aiLog('INFO', `TTS fetch ${apiVersion} (${text.length} znaků)`);
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/${apiVersion}/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text }] }],
-              generationConfig: {
-                responseModalities: ['AUDIO'],
-                speechConfig: {
-                  voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: 'Aoede' },
-                  },
-                },
+  for (const apiVersion of ['v1alpha', 'v1beta']) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/${apiVersion}/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text }] }],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName } },
               },
-            }),
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          const audioPart = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-          if (audioPart?.data) {
-            aiLog('INFO', `TTS ${apiVersion} OK — přehrávám WAV`);
-            const wav = pcm16ToWav(audioPart.data);
-            const url = URL.createObjectURL(wav);
-            const audio = new Audio(url);
-            audio.playbackRate = 1.3; // Aoede mluví přirozeně rychleji
-            return new Promise((resolve) => {
-              audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-              audio.onerror = (e) => {
-                aiLog('WARN', `Audio.onerror: ${String(e)}`);
-                URL.revokeObjectURL(url); resolve();
-              };
-              audio.play().catch((e) => {
-                aiLog('WARN', `audio.play() rejected: ${String(e)}`);
-                resolve();
-              });
-            });
-          }
-          aiLog('WARN', `TTS ${apiVersion} OK ale bez audio dat`);
-        } else if (res.status === 404) {
-          aiLog('WARN', `TTS ${apiVersion} 404 — zkouším další`);
-          continue; // zkus další API verzi
-        } else {
-          aiLog('WARN', `TTS ${apiVersion} HTTP ${res.status}`);
+            },
+          }),
         }
-      } catch (e) {
-        aiLog('WARN', `TTS ${apiVersion} fetch chyba: ${String(e)}`);
-      }
-    }
-  } else {
-    aiLog('WARN', 'TTS: chybí Gemini API klíč — fallback na browserTts');
+      );
+      if (!res.ok) { if (res.status === 404) continue; return false; }
+      const data = await res.json();
+      const audioPart = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!audioPart?.data) return false;
+      const wav = pcm16ToWav(audioPart.data);
+      const url = URL.createObjectURL(wav);
+      const audio = new Audio(url);
+      audio.playbackRate = 1.1;
+      await new Promise<void>((resolve) => {
+        audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.play().catch(() => resolve());
+      });
+      return true;
+    } catch { continue; }
   }
+  return false;
+}
 
-  // Fallback: browser SpeechSynthesis
-  aiLog('INFO', 'browserTts fallback');
-  return browserTts(text);
+export const playGeminiVoice = async (text: string): Promise<void> => {
+  const activeVoice = (() => { try { return localStorage.getItem('gemini.voice') || 'Kore'; } catch { return 'Kore'; } })();
+  const ok = await playGeminiVoiceNamed(text, activeVoice);
+  if (!ok) {
+    aiLog('INFO', 'browserTts fallback');
+    return browserTts(text);
+  }
 };
 
 function browserTts(text: string): Promise<void> {

@@ -23,10 +23,10 @@ export interface GeminiLiveCallbacks {
 
 // ==================== KONSTANTY ====================
 
-// Dostupné Live modely přes v1beta (ověřeno ze SDK source):
-// 'gemini-2.0-flash-live-preview-04-09'  — stabilní preview (SDK příklady)
-// 'gemini-live-2.5-flash-preview'        — 2.5, lepší kvalita
-const MODEL = 'gemini-2.0-flash-live-preview-04-09';
+// Gemini 3 Live model (https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview)
+// "High-quality, low-latency Live API model for real-time dialogue and voice-first AI applications"
+// Fallback pokud selže: 'gemini-live-2.5-flash-preview' nebo 'gemini-2.0-flash-live-preview-04-09'
+const MODEL = 'gemini-3.1-flash-live-preview';
 
 // Wake word fráze v češtině (Android transkribuje různě)
 const WAKE_PHRASES = [

@@ -34,11 +34,17 @@ const WAKE_PHRASES = [
   'hej džemini', 'hey džemini',
   'hej jemini',  'hey jemini',
   'ahoj gemini',
+  // Android kontrakce — slova splývají dohromady
+  'hegemi', 'hejgemini', 'hejgemi', 'heygemi', 'heygemini',
+  'ajgemini', 'ajgemi',
 ];
 
+// Fallback: samotné "gemini" a varianty — detekujeme jako substring (includes)
+// → zachytí i "hegemi" pokud by bylo vepsáno jinak
 const WAKE_FALLBACK = [
   'gemini', 'džemíni', 'džemini', 'jemini', 'gimini',
   'dżemini', 'gemíni', 'žemini',
+  'gемini',  // cyrilice g — některé klávesnice
 ];
 
 const FALLBACK_MIN_CONFIDENCE = 0.5;
@@ -63,7 +69,8 @@ const containsWakeWord = (text: string): boolean =>
 
 const containsFallback = (text: string, confidence: number): boolean => {
   if (confidence < FALLBACK_MIN_CONFIDENCE) return false;
-  return WAKE_FALLBACK.some(w => text === w || text.startsWith(w + ' ') || text.endsWith(' ' + w));
+  // includes → zachytí varianty i uprostřed věty nebo srostlé s dalším slovem
+  return WAKE_FALLBACK.some(w => text.includes(w));
 };
 
 const stripWakeWord = (text: string): string => {

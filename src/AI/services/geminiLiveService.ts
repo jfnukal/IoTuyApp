@@ -1,5 +1,5 @@
 // src/AI/services/geminiLiveService.ts
-// Gemini HomeMade 2.0 — Live API (gemini-3.1-flash-live-preview)
+// Gemini HomeMade 2.0 — Live API
 // WebSocket streaming: mikrofon → PCM 16kHz → Gemini → PCM 24kHz → reproduktory
 // Wake word detection z inputTranscription, function calling, VAD.
 
@@ -23,7 +23,11 @@ export interface GeminiLiveCallbacks {
 
 // ==================== KONSTANTY ====================
 
-const MODEL = 'gemini-3.1-flash-live-preview';
+// Dostupné Live modely (2025-2026):
+// 'gemini-2.0-flash-live-001'        — stabilní, ověřený
+// 'gemini-live-2.5-flash-preview'    — preview, lepší kvalita
+// 'gemini-2.5-flash-preview-native-audio-dialog' — nativní audio dialog
+const MODEL = 'gemini-2.0-flash-live-001';
 
 // Wake word fráze v češtině (Android transkribuje různě)
 const WAKE_PHRASES = [
@@ -116,6 +120,7 @@ export class GeminiLiveService {
   private player: PcmPlayer | null = null;
   private state: LiveState = 'off';
   private _destroyed = false;
+  private _wsOk = false;   // true po úspěšném onopen, false po onclose/onerror
 
   // Průběžný přepis modelu
   private modelTranscriptBuf = '';
@@ -134,6 +139,12 @@ export class GeminiLiveService {
     aiLog('INFO', 'GeminiLive: start()');
     try {
       await this._openSession();
+      // Počkáme krátce — onclose přijde asynchronně těsně po connect()
+      await new Promise<void>(r => setTimeout(r, 300));
+      // Zkontrolujeme, že WebSocket je stále otevřen (mohl selhat s 1011)
+      if (!this._wsOk) {
+        throw new Error('Session se ihned uzavřela — zkontroluj model a API klíč.');
+      }
       await this._startMic();
       this._setState('dormant');
     } catch (e) {
@@ -197,7 +208,7 @@ export class GeminiLiveService {
     this.session = await ai.live.connect({
       model: MODEL,
       config: {
-        responseModalities: [Modality.AUDIO, Modality.TEXT],
+        responseModalities: [Modality.AUDIO],   // Live API: jen AUDIO; přepis přes outputAudioTranscription
         systemInstruction: { parts: [{ text: LIVE_SYSTEM_PROMPT }] },
         tools: buildLiveTools() as any,
         speechConfig: {
@@ -216,14 +227,25 @@ export class GeminiLiveService {
         },
       },
       callbacks: {
-        onopen: () => aiLog('INFO', 'GeminiLive: WebSocket otevřen'),
+        onopen: () => {
+          this._wsOk = true;
+          aiLog('INFO', 'GeminiLive: WebSocket otevřen');
+        },
         onmessage: (msg: LiveServerMessage) => this._handleMessage(msg),
         onerror: (e: ErrorEvent) => {
+          this._wsOk = false;
           aiLog('ERR', `GeminiLive WS error: ${e.message ?? String(e)}`);
           this.callbacks.onError(`Chyba spojení: ${e.message ?? 'neznámá chyba'}`);
         },
         onclose: (e: CloseEvent) => {
-          aiLog('INFO', `GeminiLive: WS uzavřen (code=${e.code}, reason=${e.reason})`);
+          this._wsOk = false;
+          const hint = e.code === 1011
+            ? ' (1011 = server error — zkus jiný model nebo zkontroluj API klíč)'
+            : e.code === 1008
+            ? ' (1008 = policy violation — zkontroluj API klíč / quota)'
+            : '';
+          aiLog('INFO', `GeminiLive: WS uzavřen (code=${e.code}, reason=${e.reason})${hint}`);
+          this.session = null;   // explicitně nullujeme
           if (!this._destroyed && this.state !== 'off') {
             this._setState('off');
           }

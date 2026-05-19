@@ -3,6 +3,7 @@
 // Fallback: browser SpeechSynthesis cs-CZ
 
 import { configService } from '../../services/configService';
+import { aiLog } from './aiLogger';
 
 let cachedKey: string | null = null;
 const getKey = async () => {
@@ -41,6 +42,7 @@ export const playGeminiVoice = async (text: string): Promise<void> => {
     // Pokus 1: gemini-2.5-flash-preview-tts přes v1alpha
     for (const apiVersion of ['v1alpha', 'v1beta']) {
       try {
+        aiLog('INFO', `TTS fetch ${apiVersion} (${text.length} znaků)`);
         const res = await fetch(
           `https://generativelanguage.googleapis.com/${apiVersion}/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`,
           {
@@ -64,26 +66,40 @@ export const playGeminiVoice = async (text: string): Promise<void> => {
           const data = await res.json();
           const audioPart = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
           if (audioPart?.data) {
+            aiLog('INFO', `TTS ${apiVersion} OK — přehrávám WAV`);
             const wav = pcm16ToWav(audioPart.data);
             const url = URL.createObjectURL(wav);
             const audio = new Audio(url);
             audio.playbackRate = 1.3; // Aoede mluví přirozeně rychleji
             return new Promise((resolve) => {
               audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-              audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
-              audio.play().catch(() => resolve());
+              audio.onerror = (e) => {
+                aiLog('WARN', `Audio.onerror: ${String(e)}`);
+                URL.revokeObjectURL(url); resolve();
+              };
+              audio.play().catch((e) => {
+                aiLog('WARN', `audio.play() rejected: ${String(e)}`);
+                resolve();
+              });
             });
           }
+          aiLog('WARN', `TTS ${apiVersion} OK ale bez audio dat`);
         } else if (res.status === 404) {
+          aiLog('WARN', `TTS ${apiVersion} 404 — zkouším další`);
           continue; // zkus další API verzi
+        } else {
+          aiLog('WARN', `TTS ${apiVersion} HTTP ${res.status}`);
         }
-      } catch {
-        // zkus další
+      } catch (e) {
+        aiLog('WARN', `TTS ${apiVersion} fetch chyba: ${String(e)}`);
       }
     }
+  } else {
+    aiLog('WARN', 'TTS: chybí Gemini API klíč — fallback na browserTts');
   }
 
   // Fallback: browser SpeechSynthesis
+  aiLog('INFO', 'browserTts fallback');
   return browserTts(text);
 };
 
@@ -92,7 +108,7 @@ function browserTts(text: string): Promise<void> {
     // Fix #3: na Androidu window.speechSynthesis občas nikdy nespustí onend/onerror
     // → záchranný timeout aby handleCommand nezůstal viset navždy
     const timeout = setTimeout(() => {
-      console.warn('[TTS] browserTts timeout — resolve bez audio');
+      aiLog('ERR', 'browserTts timeout 12s — SpeechSynthesis neodpověděl (Android bug)');
       resolve();
     }, 12_000);
 

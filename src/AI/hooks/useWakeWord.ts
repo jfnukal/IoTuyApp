@@ -20,6 +20,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { sendToGemini } from '../services/geminiApi';
 import { playGeminiVoice } from '../services/geminiTts';
+import { aiLog } from '../services/aiLogger';
 
 export type WakeState = 'off' | 'dormant' | 'listening' | 'processing' | 'speaking';
 
@@ -121,12 +122,6 @@ export const useWakeWord = () => {
     r.maxAlternatives = 3; // více alternativ = větší šance zachytit "gemini"
     awakeRef.current = false;
 
-    r.onstart = () => {
-      if (!awakeRef.current && enabledRef.current) {
-        setState('dormant');
-      }
-    };
-
     r.onresult = (event: any) => {
       // Zpracováváme jen finální výsledky pro wake word detekci
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -138,7 +133,7 @@ export const useWakeWord = () => {
           const text = result[alt].transcript.toLowerCase().trim();
           const confidence: number = result[alt].confidence ?? 0.5;
 
-          console.log('[WakeWord] slyším:', JSON.stringify(text), 'confidence:', confidence.toFixed(2), 'final:', result.isFinal);
+          aiLog('INFO', `slyším: ${JSON.stringify(text)} conf:${confidence.toFixed(2)} final:${result.isFinal}`);
 
           if (!awakeRef.current) {
             const phraseMatch  = containsWakeWord(text);
@@ -169,8 +164,15 @@ export const useWakeWord = () => {
       }
     };
 
+    r.onstart = () => {
+      aiLog('INFO', `recognition START lang:${r.lang} continuous:${r.continuous}`);
+      if (!awakeRef.current && enabledRef.current) {
+        setState('dormant');
+      }
+    };
+
     r.onerror = (e: any) => {
-      console.log('[WakeWord] onerror:', e.error);
+      aiLog('WARN', `onerror: ${e.error}`);
       if (e.error === 'no-speech' || e.error === 'aborted') {
         if (enabledRef.current && !processingRef.current) {
           scheduleRestart();
@@ -184,14 +186,14 @@ export const useWakeWord = () => {
         }
         return;
       }
-      console.warn('[WakeWord] recognition error:', e.error);
+      aiLog('ERR', `recognition error: ${e.error}`);
       const msg = RECOGNITION_ERRORS[e.error] ?? `Chyba rozpoznávání: ${e.error}`;
       setErrorMsg(msg);
       if (enabledRef.current) scheduleRestart(2000);
     };
 
     r.onend = () => {
-      console.log('[WakeWord] onend, enabled:', enabledRef.current, 'processing:', processingRef.current);
+      aiLog('INFO', `onend enabled:${enabledRef.current} processing:${processingRef.current}`);
       // Fix #2: označíme, že žádná recognition neběží → startListening to detekuje
       if (recognitionRef.current === r) recognitionRef.current = null;
       if (enabledRef.current && !processingRef.current) {
@@ -201,14 +203,16 @@ export const useWakeWord = () => {
 
     try {
       r.start();
+      aiLog('INFO', 'recognition.start() voláno');
     } catch (err) {
-      console.warn('[WakeWord] start error:', err);
+      aiLog('ERR', `recognition.start() selhalo: ${String(err)}`);
       if (enabledRef.current) scheduleRestart(2000);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ───────── Zpracování příkazu ─────────
   const handleCommand = useCallback(async (text: string) => {
+    aiLog('INFO', `příkaz: "${text}"`);
     processingRef.current = true;
     try { recognitionRef.current?.stop(); } catch (_) { /* ignore */ }
 
@@ -218,11 +222,13 @@ export const useWakeWord = () => {
 
     try {
       const reply = await sendToGemini(text);
+      aiLog('INFO', `Gemini odpověď (${reply.length} znaků)`);
       setResponse(reply);
       setState('speaking');
       await playGeminiVoice(reply);
+      aiLog('INFO', 'TTS dokončeno');
     } catch (err) {
-      console.error('[WakeWord] Gemini error:', err);
+      aiLog('ERR', `Gemini/TTS error: ${String(err)}`);
       setErrorMsg('Chyba komunikace s Gemini');
     }
 
@@ -246,8 +252,10 @@ export const useWakeWord = () => {
     // Fix #1: persist → přežije page reload
     if (nowEnabled) {
       localStorage.setItem(STORAGE_KEY, 'true');
+      aiLog('INFO', 'always-on ZAPNUTO');
     } else {
       localStorage.removeItem(STORAGE_KEY);
+      aiLog('INFO', 'always-on VYPNUTO');
     }
 
     if (nowEnabled) {
@@ -261,7 +269,9 @@ export const useWakeWord = () => {
 
   // Fix #1: auto-start po mountu pokud bylo always-on aktivní před reloadem
   useEffect(() => {
+    aiLog('INFO', `mount — alwaysOn z localStorage: ${enabledRef.current}`);
     if (enabledRef.current) {
+      aiLog('INFO', 'auto-start dormant po reloadu');
       startDormant();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

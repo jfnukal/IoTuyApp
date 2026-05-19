@@ -1,6 +1,7 @@
 // src/AI/components/AiWidget.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWakeWord } from '../hooks/useWakeWord';
+import { LogPanel } from './LogPanel';
 import './AiWidget.css';
 
 const DISMISS_DELAY_MS = 6000; // bublina zmizí 6s po konci odpovědi
@@ -17,6 +18,8 @@ export const AiWidget: React.FC = () => {
     cancel,
     clearConversation,
   } = useWakeWord();
+
+  const [showLog, setShowLog] = useState(false);
 
   // Auto-dismiss bubliny po návratu do klidového stavu
   useEffect(() => {
@@ -81,6 +84,19 @@ export const AiWidget: React.FC = () => {
       >
         {alwaysOn ? '🎙️' : '🎙'}
       </button>
+
+      {/* Log tlačítko — diagnostika bez DevTools */}
+      <button
+        className="ai-log-btn"
+        onClick={() => setShowLog(v => !v)}
+        title="Zobrazit AI log (diagnostika)"
+        aria-label="AI log"
+      >
+        📋
+      </button>
+
+      {/* Log panel */}
+      {showLog && <LogPanel onClose={() => setShowLog(false)} />}
 
     </div>
   );

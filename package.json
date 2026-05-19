@@ -11,6 +11,7 @@
     "netlify": "netlify dev"
   },
   "dependencies": {
+    "@google/genai": "^2.4.0",
     "axios": "^1.13.2",
     "firebase": "^12.9.0",
     "holidays-cs": "^2.1.12",

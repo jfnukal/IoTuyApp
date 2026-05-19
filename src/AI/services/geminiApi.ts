@@ -20,7 +20,7 @@ const getApiKey = async (): Promise<string> => {
   return API_KEY || '';
 };
 
-const SYSTEM_PROMPT = `
+export const SYSTEM_PROMPT = `
 Jsi rodinný asistent. Spravuješ kalendář, nákupní seznam a domácnost.
 
 KRITICKÁ PRAVIDLA — musíš je vždy dodržet:
@@ -44,7 +44,7 @@ export const resetChat = () => { chatHistory = freshHistory(); };
 
 // ==================== DISPATCHER FUNKCÍ ====================
 
-async function executeFunction(name: string, args: Record<string, any>): Promise<string> {
+export async function executeFunction(name: string, args: Record<string, any>): Promise<string> {
   switch (name) {
 
     // --- Nákupní seznam ---

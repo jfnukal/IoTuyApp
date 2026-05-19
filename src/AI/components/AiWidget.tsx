@@ -1,7 +1,7 @@
 // src/AI/components/AiWidget.tsx
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useWakeWord } from '../hooks/useWakeWord';
+import { useGeminiLive } from '../hooks/useGeminiLive';
 import { LogPanel } from './LogPanel';
 import './AiWidget.css';
 
@@ -21,7 +21,7 @@ export const AiWidget: React.FC = () => {
     clearConversation,
     confirmCandidate,
     rejectCandidate,
-  } = useWakeWord();
+  } = useGeminiLive();
 
   const [showLog, setShowLog] = useState(false);
 

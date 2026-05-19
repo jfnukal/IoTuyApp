@@ -28,6 +28,30 @@ export interface GeminiLiveCallbacks {
 // Fallback pokud selže: 'gemini-live-2.5-flash-preview' nebo 'gemini-2.0-flash-live-preview-04-09'
 const MODEL = 'gemini-3.1-flash-live-preview';
 
+// ── Výběr hlasu ─────────────────────────────────────────────────────────────
+// Všech 30 dostupných hlasů (https://ai.google.dev/gemini-api/docs/speech-generation)
+// Zkus je postupně, pokud je přízvuk špatný — změň VOICE níže.
+//
+// Charakter hlasu:
+//   Zephyr       — Bright        Puck         — Upbeat
+//   Charon       — Informative   Kore         — Firm
+//   Fenrir       — Excitable     Leda         — Youthful
+//   Orus         — Firm          Aoede        — Breezy       ← původní, špatný přízvuk
+//   Callirrhoe   — Easy-going    Autonoe      — Bright
+//   Enceladus    — Breathy       Iapetus      — Clear        ← dobrý kandidát pro CZ
+//   Umbriel      — Easy-going    Algieba      — Smooth
+//   Despina      — Smooth        Erinome      — Clear        ← dobrý kandidát pro CZ
+//   Algenib      — Gravelly      Rasalgethi   — Informative
+//   Laomedeia    — Upbeat        Achernar     — Soft
+//   Alnilam      — Firm          Schedar      — Even
+//   Gacrux       — Mature        Pulcherrima  — Forward
+//   Achird       — Friendly      Zubenelgenubi— Casual
+//   Vindemiatrix — Gentle        Sadachbia    — Lively
+//   Sadaltager   — Knowledgeable Sulafat      — Warm
+//
+// Pro češtinu jsou nejlepší kandidáti: Kore, Iapetus, Erinome, Charon, Sulafat
+const VOICE = 'Kore';   // ← ZMĚŇ ZDE pro testování jiného hlasu
+
 // Wake word fráze v češtině (Android transkribuje různě)
 const WAKE_PHRASES = [
   'gemini', 'hej gemini', 'hey gemini', 'ahoj gemini',
@@ -202,7 +226,7 @@ export class GeminiLiveService {
 
     const ai = new GoogleGenAI({ apiKey: key });
 
-    aiLog('INFO', `GeminiLive: připojuji k modelu ${MODEL}`);
+    aiLog('INFO', `GeminiLive: připojuji k modelu ${MODEL}, hlas: ${VOICE}`);
 
     this.session = await ai.live.connect({
       model: MODEL,
@@ -211,7 +235,7 @@ export class GeminiLiveService {
         systemInstruction: { parts: [{ text: LIVE_SYSTEM_PROMPT }] },
         tools: buildLiveTools() as any,
         speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } },
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE } },
         },
         inputAudioTranscription: {},   // chceme přepis vstupu
         outputAudioTranscription: {},  // chceme přepis výstupu

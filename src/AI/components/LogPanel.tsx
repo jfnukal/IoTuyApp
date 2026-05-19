@@ -3,7 +3,8 @@
 // Přístup: tlačítko 📋 v AiWidget. Funguje bez DevTools na tabletu.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getLogs, subscribeToLogs, clearLogs, LogEntry } from '../services/aiLogger';
+import { getLogs, subscribeToLogs, clearLogs } from '../services/aiLogger';
+import type { LogEntry } from '../services/aiLogger';
 
 const LEVEL_COLOR: Record<LogEntry['level'], string> = {
   INFO: '#94a3b8',

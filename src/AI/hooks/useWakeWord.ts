@@ -12,6 +12,10 @@
 //   - interimResults:true udržuje session živou déle (interim traffic = "ne ticho")
 //   - cs-CZ nemusí být na tabletu nainstalovaná → fallback na en-US detekci "gemini"
 //   - confidence na Androidu bývá nízká (~0.4–0.6), proto snižujeme práh
+//
+// Fix #1: alwaysOn se persistuje do localStorage → přežije page reload (5:00, 4h heartbeat)
+// Fix #2: po onend→restart okně se recognitionRef.current nastaví na null → startListening to detekuje
+// Fix #3: browserTts má timeout 12s → nezůstane viset navždy na Androidu
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { sendToGemini } from '../services/geminiApi';
@@ -76,15 +80,19 @@ const stripWakeWord = (text: string): string => {
   return text.trim();
 };
 
+const STORAGE_KEY = 'wakeWord.alwaysOn';
+
 export const useWakeWord = () => {
   const [state, setState]           = useState<WakeState>('off');
-  const [alwaysOn, setAlwaysOn]     = useState(false);
+  // Fix #1: inicializace z localStorage → přežije reload
+  const [alwaysOn, setAlwaysOn]     = useState(() => localStorage.getItem(STORAGE_KEY) === 'true');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse]     = useState('');
   const [errorMsg, setErrorMsg]     = useState('');
 
   const recognitionRef  = useRef<any>(null);
-  const enabledRef      = useRef(false);
+  // Fix #1: inicializace enabledRef z localStorage zároveň se state
+  const enabledRef      = useRef(localStorage.getItem(STORAGE_KEY) === 'true');
   const awakeRef        = useRef(false);
   const processingRef   = useRef(false);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -184,6 +192,8 @@ export const useWakeWord = () => {
 
     r.onend = () => {
       console.log('[WakeWord] onend, enabled:', enabledRef.current, 'processing:', processingRef.current);
+      // Fix #2: označíme, že žádná recognition neběží → startListening to detekuje
+      if (recognitionRef.current === r) recognitionRef.current = null;
       if (enabledRef.current && !processingRef.current) {
         scheduleRestart();
       }
@@ -233,6 +243,12 @@ export const useWakeWord = () => {
     const nowEnabled = !enabledRef.current;
     enabledRef.current = nowEnabled;
     setAlwaysOn(nowEnabled);
+    // Fix #1: persist → přežije page reload
+    if (nowEnabled) {
+      localStorage.setItem(STORAGE_KEY, 'true');
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
 
     if (nowEnabled) {
       startDormant();
@@ -243,11 +259,21 @@ export const useWakeWord = () => {
     }
   }, [startDormant]);
 
+  // Fix #1: auto-start po mountu pokud bylo always-on aktivní před reloadem
+  useEffect(() => {
+    if (enabledRef.current) {
+      startDormant();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ───────── Manuální spuštění (klik na orb) ─────────
   const startListening = useCallback(() => {
     if (state === 'dormant') {
       awakeRef.current = true;
       setState('listening');
+      // Fix #2: recognition mohla zemřít mezi onend a scheduled restartem
+      // → pokud teď neběží, okamžitě ji nahoď
+      if (!recognitionRef.current) startDormant();
       return;
     }
 

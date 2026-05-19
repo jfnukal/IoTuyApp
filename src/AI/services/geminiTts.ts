@@ -89,14 +89,23 @@ export const playGeminiVoice = async (text: string): Promise<void> => {
 
 function browserTts(text: string): Promise<void> {
   return new Promise((resolve) => {
+    // Fix #3: na Androidu window.speechSynthesis občas nikdy nespustí onend/onerror
+    // → záchranný timeout aby handleCommand nezůstal viset navždy
+    const timeout = setTimeout(() => {
+      console.warn('[TTS] browserTts timeout — resolve bez audio');
+      resolve();
+    }, 12_000);
+
+    const done = () => { clearTimeout(timeout); resolve(); };
+
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'cs-CZ';
     const czVoice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('cs')) ?? null;
     if (czVoice) u.voice = czVoice;
     u.rate = 1.2;
-    u.onend = () => resolve();
-    u.onerror = () => resolve();
+    u.onend  = done;
+    u.onerror = done;
     window.speechSynthesis.speak(u);
   });
 }

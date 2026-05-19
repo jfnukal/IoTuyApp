@@ -59,7 +59,24 @@ const RECOGNITION_ERRORS: Record<string, string> = {
   'language-not-supported': 'Čeština není podporována v tomto prohlížeči',
 };
 
-const STORAGE_KEY = 'wakeWord.alwaysOn';
+const STORAGE_KEY         = 'wakeWord.alwaysOn';
+const LEARNED_KEY         = 'wakeWord.learned';   // naučené přepisy pro tento tablet
+// Minimální confidence pro zobrazení "Myslel jsi Gemini?" dotazu
+const CANDIDATE_MIN_CONF  = 0.55;
+
+// ── Learned phrases helpers ──────────────────────────────────────────────────
+const getLearnedPhrases = (): string[] => {
+  try { return JSON.parse(localStorage.getItem(LEARNED_KEY) || '[]'); } catch { return []; }
+};
+const addLearnedPhrase = (phrase: string): void => {
+  const list = getLearnedPhrases();
+  const norm = phrase.toLowerCase().trim();
+  if (!list.includes(norm)) {
+    list.push(norm);
+    localStorage.setItem(LEARNED_KEY, JSON.stringify(list));
+    aiLog('INFO', `learned: přidáno "${norm}" (celkem ${list.length})`);
+  }
+};
 
 const getSpeechRecognition = () =>
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null;
@@ -69,12 +86,14 @@ const containsWakeWord = (text: string): boolean =>
 
 const containsFallback = (text: string, confidence: number): boolean => {
   if (confidence < FALLBACK_MIN_CONFIDENCE) return false;
-  // includes → zachytí varianty i uprostřed věty nebo srostlé s dalším slovem
   return WAKE_FALLBACK.some(w => text.includes(w));
 };
 
+const containsLearned = (text: string): boolean =>
+  getLearnedPhrases().some(p => text.includes(p));
+
 const stripWakeWord = (text: string): string => {
-  const allPhrases = [...WAKE_PHRASES, ...WAKE_FALLBACK];
+  const allPhrases = [...WAKE_PHRASES, ...WAKE_FALLBACK, ...getLearnedPhrases()];
   for (const w of allPhrases) {
     const idx = text.indexOf(w);
     if (idx !== -1) return text.slice(idx + w.length).trim();
@@ -88,6 +107,9 @@ export const useWakeWord = () => {
   const [transcript, setTranscript] = useState('');
   const [response, setResponse]     = useState('');
   const [errorMsg, setErrorMsg]     = useState('');
+  // candidate: přepis který tablet slyšel, ale nebyl rozpoznán jako wake word
+  // → zobrazíme "Myslel jsi Gemini?" dotaz
+  const [candidate, setCandidate]   = useState<string | null>(null);
 
   const recognitionRef  = useRef<any>(null);
   const enabledRef      = useRef(localStorage.getItem(STORAGE_KEY) === 'true');
@@ -140,27 +162,31 @@ export const useWakeWord = () => {
 
           if (awakeRef.current) continue; // čekáme na command session, ignoruj
 
-          const hit = containsWakeWord(text) || containsFallback(text, conf);
-          if (!hit) continue;
-
-          awakeRef.current = true;
-          setState('listening');
-          setTranscript('');
-          setResponse('');
-          setErrorMsg('');
-          aiLog('INFO', `wake word detekován (alt:${alt} conf:${conf.toFixed(2)})`);
-
-          // Příkaz ve stejné promluvě (např. "hej gemini co je dnes k obědu")
-          const inlineCmd = stripWakeWord(text);
-          if (inlineCmd.length > 3) {
-            aiLog('INFO', `inline příkaz: "${inlineCmd}"`);
-            handleCommand(inlineCmd);
-          } else {
-            // Fix #4: Android ukončí tuto session okamžitě po výsledku →
-            // spustíme novou dedicated command session ještě PŘED onend
-            startCommandListening();
+          const hit = containsWakeWord(text) || containsFallback(text, conf) || containsLearned(text);
+          if (hit) {
+            awakeRef.current = true;
+            setState('listening');
+            setTranscript('');
+            setResponse('');
+            setErrorMsg('');
+            setCandidate(null);
+            aiLog('INFO', `wake word detekován (alt:${alt} conf:${conf.toFixed(2)})`);
+            const inlineCmd = stripWakeWord(text);
+            if (inlineCmd.length > 3) {
+              aiLog('INFO', `inline příkaz: "${inlineCmd}"`);
+              handleCommand(inlineCmd);
+            } else {
+              startCommandListening();
+            }
+            return;
           }
-          return; // konec zpracování tohoto onresult
+
+          // Nesedí na wake word — ale mohlo jít o přepis "hej gemini" jiným způsobem.
+          // Pokud confidence dost vysoká, zeptáme se uživatele.
+          if (conf >= CANDIDATE_MIN_CONF && text.length >= 3 && text.length <= 30) {
+            aiLog('INFO', `candidate wake word: "${text}" conf:${conf.toFixed(2)}`);
+            setCandidate(text);
+          }
         }
       }
     };
@@ -385,5 +411,28 @@ export const useWakeWord = () => {
     setErrorMsg('');
   }, []);
 
-  return { state, alwaysOn, transcript, response, errorMsg, toggleAlwaysOn, startListening, cancel, clearConversation };
+  // ─── Potvrzení kandidáta wake wordu ─────────────────────────────────────────
+  // Uživatel potvrdil že "hegemi" (nebo jiný přepis) = "hej Gemini"
+  const confirmCandidate = useCallback((phrase: string) => {
+    addLearnedPhrase(phrase);
+    setCandidate(null);
+    // Ihned přejdeme do naslouchání příkazu
+    awakeRef.current = true;
+    setState('listening');
+    setTranscript('');
+    setResponse('');
+    setErrorMsg('');
+    startCommandListening();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rejectCandidate = useCallback(() => {
+    aiLog('INFO', `candidate zamítnut`);
+    setCandidate(null);
+  }, []);
+
+  return {
+    state, alwaysOn, transcript, response, errorMsg, candidate,
+    toggleAlwaysOn, startListening, cancel, clearConversation,
+    confirmCandidate, rejectCandidate,
+  };
 };

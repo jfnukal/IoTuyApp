@@ -17,6 +17,10 @@ const firebaseConfig = {
   measurementId: 'G-3WFPE82CYD',
 };
 
+// Okamžitá aktivace nové verze SW (bez čekání na zavření všech tabů)
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+
 // Inicializace Firebase
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();

@@ -100,13 +100,15 @@ async function sendPushNotification(
       return;
     }
 
+    // DATA-ONLY zpráva — browser neukáže notifikaci automaticky,
+    // ukáže ji pouze service worker onBackgroundMessage (→ žádné duplikáty)
+    const messageId = `reminder-${familyMemberId || createdBy}-${Date.now()}`;
     const messages = tokens.map((token: string) => ({
-      notification: {
-        title,
-        body,
-      },
       data: {
         type: 'calendar_reminder',
+        title,
+        body,
+        messageId,
         timestamp: Date.now().toString(),
       },
       token,
@@ -264,21 +266,23 @@ export const onNewCalendarEvent = functions
         }
 
         // Sestav notifikaci
-        const title = '📅 Nová událost';
-        const body = `${event.title} - přidal/a ${authorName}`;
+        const title = '📅 Nová událost v kalendáři';
+        // Přidej datum do textu notifikace
+        const eventDateStr = event.time
+          ? `${event.date} v ${event.time}`
+          : event.date;
+        const body = `${event.title} (${eventDateStr}) — přidal/a ${authorName}`;
 
+        // DATA-ONLY zpráva — browser neukáže notifikaci automaticky.
+        // Service worker onBackgroundMessage ji ukáže jednou.
+        // Stabilní messageId zajistí, že OS deduplikuje případné duplikáty.
+        const messageId = `cal-${context.params.eventId}-${memberDoc.id}`;
         const messages = tokens.map((token: string) => ({
-          notification: {
-            title,
-            body,
-          },
-          webpush: {
-            notification: {
-              icon: '/icon-192x192.png',
-            },
-          },
           data: {
             type: 'new_calendar_event',
+            title,
+            body,
+            messageId,
             eventId: context.params.eventId,
             timestamp: Date.now().toString(),
           },

@@ -30,21 +30,21 @@ export async function sendPushNotification(
   
   if (tokens.length === 0) return;
   
-  // Pošli notifikaci
+  // DATA-ONLY zpráva — žádné notification pole = žádné automatické zobrazení browserem.
+  // Service worker onBackgroundMessage ji ukáže jednou se stabilním tagem.
+  const messageId = `reminder-${familyMemberId}-${Date.now()}`;
   const message = {
-    notification: {
-      title,
-      body,
-      icon: '/icons/calendar-192x192.png'
-    },
     data: {
       type: 'calendar_reminder',
-      timestamp: Date.now().toString()
-    }
+      title,
+      body,
+      messageId,
+      timestamp: Date.now().toString(),
+    },
   };
-  
+
   await admin.messaging().sendEachForMulticast({
     tokens,
-    ...message
+    ...message,
   });
 }

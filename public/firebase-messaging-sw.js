@@ -22,22 +22,31 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 // KLÍČOVÁ ČÁST: Zobraz notifikaci když přijde zpráva na pozadí
+// Pozor: zprávy mají POUZE data pole (žádné notification pole),
+// aby browser neukázal notifikaci automaticky → žádné duplikáty.
 messaging.onBackgroundMessage((payload) => {
   console.log('📨 Background Message received:', payload);
-  console.log('🔍 Zobrazuji notifikaci, timestamp:', Date.now());
 
-  const notificationTitle = payload.notification?.title || 'Nová zpráva';
+  // Title a body bereme z data pole (ne z notification pole)
+  const notificationTitle =
+    payload.data?.title || payload.notification?.title || 'Nová zpráva';
+  const notificationBody =
+    payload.data?.body || payload.notification?.body || '';
+
+  // Stabilní tag = OS zamítne duplicitní notifikaci se stejným tagem
+  const stableTag = payload.data?.messageId || payload.data?.type || 'smarthome-msg';
+
   const notificationOptions = {
-    body: payload.notification?.body || '',
+    body: notificationBody,
     icon: '/icon-192x192.png',
     badge: '/badge-24x24.png',
-    // tag: payload.data?.messageId || 'family-message',
-    tag: payload.data?.messageId || `msg-${Date.now()}`,
+    tag: stableTag,           // ← stabilní, ne Date.now()
+    renotify: false,          // nesound znovu, pokud stejný tag existuje
     requireInteraction: payload.data?.urgent === 'true',
     data: payload.data,
   };
 
-  console.log('🔔 Notification title:', notificationTitle);
+  console.log('🔔 Notification:', notificationTitle, '| tag:', stableTag);
 
   return self.registration.showNotification(
     notificationTitle,

@@ -84,15 +84,12 @@ export const useNotifications = (
         try {
       
           const token = await fcmService.requestPermissionAndGetToken(authUid);
-      
+
           if (token) {
             setPermission('granted');
-      
-            // Inicializuj listening pro zprávy v popředí
-            fcmService.listenForMessages(() => {
-              console.log('📨 Nová zpráva z FCM:', );
-            });
-      
+            // listenForMessages() je už zaregistrován v FCM init efektu výše,
+            // druhé volání by pouze vytvořilo nový listener (i když fcmService
+            // odregistruje ten předchozí, je to zbytečné a matoucí).
             return true;
           } else {
             setPermission(Notification.permission);

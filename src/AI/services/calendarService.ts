@@ -174,7 +174,22 @@ export const addCalendarEvent = async (
 
   const timeStr = time ? ` v ${time}` : '';
   const memberStr = memberName ? ` pro ${memberName}` : '';
-  return `Přidáno: ${title}${memberStr} — ${formatDateCz(date)}${timeStr}.`;
+
+  // Relativní čas — žena ví jestli je to za 3 dny nebo za rok
+  const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+  const daysDiff = Math.round((date.getTime() - todayMidnight.getTime()) / 86400000);
+  const relativeStr =
+    daysDiff < 0  ? `${Math.abs(daysDiff)} dní zpět` :
+    daysDiff === 0 ? 'dnes' :
+    daysDiff === 1 ? 'zítra' :
+    daysDiff === 2 ? 'pozítří' :
+    daysDiff < 7  ? `za ${daysDiff} dní` :
+    daysDiff < 14 ? 'příští týden' :
+    daysDiff < 31 ? `za ${Math.round(daysDiff / 7)} týdny` :
+    daysDiff < 60 ? 'příští měsíc' :
+    `za ${Math.round(daysDiff / 30)} měsíce`;
+
+  return `Přidáno: ${title}${memberStr} — ${formatDateCz(date)}${timeStr} (${relativeStr}).`;
 };
 
 /** Vrátí narozeniny z rodiny v daném rozmezí */

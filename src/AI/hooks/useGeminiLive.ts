@@ -3,7 +3,7 @@
 // Stejné rozhraní jako useWakeWord, takže AiWidget.tsx vyžaduje minimální změny.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GeminiLiveService } from '../services/geminiLiveService';
+import { GeminiLiveService, isQuietHours } from '../services/geminiLiveService';
 import type { LiveState } from '../services/geminiLiveService';
 import { aiLog } from '../services/aiLogger';
 
@@ -27,10 +27,8 @@ export function useGeminiLive() {
   const makeCallbacks = useCallback(() => ({
     onStateChange: (s: LiveState) => {
       setState(s);
-      // Při návratu do dormant vymažeme přepis uživatele
       if (s === 'dormant' || s === 'off') {
         setTranscript('');
-        // response necháme — zmizí po DISMISS_DELAY v AiWidget
       }
     },
     onTranscript:  (t: string) => setTranscript(t),
@@ -39,11 +37,31 @@ export function useGeminiLive() {
       setErrorMsg(msg);
       aiLog('ERR', `useGeminiLive onError: ${msg}`);
     },
+    onAutoOff: (reason: string) => {
+      // Auto-vypnutí po nečinnosti — aktualizujeme stav a localStorage
+      aiLog('INFO', `useGeminiLive onAutoOff: ${reason}`);
+      setAlwaysOn(false);
+      setErrorMsg(`🔕 ${reason}`);
+      try { localStorage.setItem(STORAGE_KEY, 'false'); } catch { /* ignore */ }
+      svcRef.current = null;
+      setState('off');
+    },
   }), []);
 
   // ─── Spustíme / zastavíme session podle alwaysOn ───
   useEffect(() => {
     if (alwaysOn) {
+      // Tiché hodiny — nespouštíme, jen zobrazíme info
+      if (isQuietHours()) {
+        const h = new Date().getHours();
+        const msg = `🌙 Tiché hodiny (${h}:00) — Gemini se spustí ráno od 7:00.`;
+        aiLog('INFO', `useGeminiLive: ${msg}`);
+        setErrorMsg(msg);
+        setAlwaysOn(false);
+        try { localStorage.setItem(STORAGE_KEY, 'false'); } catch { /* ignore */ }
+        return;
+      }
+
       aiLog('INFO', 'useGeminiLive: spouštím GeminiLiveService');
       const svc = new GeminiLiveService(makeCallbacks());
       svcRef.current = svc;

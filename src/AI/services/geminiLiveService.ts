@@ -19,6 +19,26 @@ export interface GeminiLiveCallbacks {
   onTranscript: (text: string) => void;       // přepis uživatele
   onResponse: (text: string) => void;         // přepis odpovědi modelu
   onError: (msg: string) => void;
+  onAutoOff?: (reason: string) => void;        // auto-vypnutí po nečinnosti / tichých hodinách
+}
+
+// ── Cost-control konfigurace ──────────────────────────────────────────────────
+// Tiché hodiny: Gemini se NESPUSTÍ, pokud je čas mimo povolené rozmezí
+const QUIET_HOURS_START = 21;  // od 21:00
+const QUIET_HOURS_END   = 7;   // do  7:00
+// Auto-off: po N minutách dormant bez aktivace → vypne se
+const DORMANT_AUTO_OFF_MINUTES = 25;
+// Amplitude gate: v dormant módu NEPOSÍLÁME zvuk do Gemini dokud je ticho
+// Tím šetříme tokeny — platíme jen za zvuk, ne za ticho
+const DORMANT_RMS_THRESHOLD_OPEN  = 0.025;  // nad touto hodnotou → posílej audio
+const DORMANT_RMS_THRESHOLD_CLOSE = 0.012;  // pod touto hodnotou po N chuncích → zastav
+const DORMANT_SILENCE_CHUNKS_GATE = 100;    // ~800ms ticha → gate zavřen
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Vrátí true pokud jsou aktuálně tiché hodiny */
+export function isQuietHours(): boolean {
+  const h = new Date().getHours();
+  return h >= QUIET_HOURS_START || h < QUIET_HOURS_END;
 }
 
 // ==================== KONSTANTY ====================
@@ -147,6 +167,13 @@ export class GeminiLiveService {
   private _destroyed = false;
   private _wsOk = false;   // true po úspěšném onopen, false po onclose/onerror
 
+  // ── Amplitude gate (cost control) ──
+  private _silenceGated = false;        // true = audio NEPOSÍLÁME (gate zavřen)
+  private _silenceCount = 0;            // počet po sobě jdoucích tichých chunků
+
+  // ── Auto-off timer ──
+  private _dormantTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Průběžný přepis modelu
   private modelTranscriptBuf = '';
 
@@ -172,6 +199,7 @@ export class GeminiLiveService {
       }
       await this._startMic();
       this._setState('dormant');
+      this._resetDormantTimer(); // spustíme auto-off odpočet
     } catch (e) {
       const msg = `Nepodařilo se spustit Live API: ${String(e)}`;
       aiLog('ERR', msg);
@@ -183,6 +211,7 @@ export class GeminiLiveService {
   /** Zastaví session a mikrofon */
   stop(): void {
     aiLog('INFO', 'GeminiLive: stop()');
+    this._clearDormantTimer();
     this._closeMic();
     this._closeSession();
     this.player?.stop();
@@ -208,10 +237,42 @@ export class GeminiLiveService {
   /** Zničí instanci (cleanup při unmount) */
   destroy(): void {
     this._destroyed = true;
+    this._clearDormantTimer();
     this._closeMic();
     this._closeSession();
     this.player?.destroy();
     this.player = null;
+  }
+
+  // ─────────────────────────────────────────────
+  //  PRIVATE: COST CONTROL
+  // ─────────────────────────────────────────────
+
+  /** Spustí / resetuje auto-off timer pro dormant režim */
+  private _resetDormantTimer(): void {
+    this._clearDormantTimer();
+    this._dormantTimer = setTimeout(() => {
+      if (this._destroyed || this.state !== 'dormant') return;
+      const mins = DORMANT_AUTO_OFF_MINUTES;
+      aiLog('INFO', `GeminiLive: ${mins} min bez aktivace → auto-vypnutí`);
+      this.callbacks.onAutoOff?.(`${mins} minut nečinnosti — Gemini se vypnul.`);
+      this.stop();
+    }, DORMANT_AUTO_OFF_MINUTES * 60 * 1000);
+  }
+
+  private _clearDormantTimer(): void {
+    if (this._dormantTimer) { clearTimeout(this._dormantTimer); this._dormantTimer = null; }
+  }
+
+  /** RMS amplituda Int16Array — pro silence gate */
+  private _rms(int16: Int16Array): number {
+    if (int16.length === 0) return 0;
+    let sum = 0;
+    for (let i = 0; i < int16.length; i++) {
+      const s = int16[i] / 32768;
+      sum += s * s;
+    }
+    return Math.sqrt(sum / int16.length);
   }
 
   getState(): LiveState {
@@ -318,13 +379,44 @@ export class GeminiLiveService {
     this.workletNode.port.onmessage = (ev: MessageEvent<ArrayBuffer>) => {
       if (!this.session || this._destroyed) return;
       const int16 = new Int16Array(ev.data);
+
+      // ── Amplitude gate: v dormant šetříme tokeny ───────────────────────────
+      if (this.state === 'dormant') {
+        const rms = this._rms(int16);
+
+        if (rms < DORMANT_RMS_THRESHOLD_CLOSE) {
+          // Ticho
+          this._silenceCount++;
+          if (this._silenceCount >= DORMANT_SILENCE_CHUNKS_GATE && !this._silenceGated) {
+            // Přešli jsme do ticha — pauza streamu
+            this._silenceGated = true;
+            try { this.session.sendRealtimeInput({ audioStreamEnd: true }); } catch (_) {}
+          }
+          if (this._silenceGated) return; // nepřenášej ticho
+        } else if (rms >= DORMANT_RMS_THRESHOLD_OPEN) {
+          // Zvuk detekován — otevři gate
+          this._silenceCount = 0;
+          if (this._silenceGated) {
+            this._silenceGated = false;
+            // Gemini automaticky resumuje po prvním audio chunku
+          }
+        }
+        // Pokud jsme gated a rms je mezi thresholds — nepřenášej (hystereze)
+        if (this._silenceGated) return;
+      } else {
+        // V aktivním stavu vždy otevřený gate
+        this._silenceCount = 0;
+        this._silenceGated = false;
+      }
+      // ── Konec amplitude gate ───────────────────────────────────────────────
+
       const base64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)));
       try {
         this.session.sendRealtimeInput({
           audio: { data: base64, mimeType: 'audio/pcm;rate=16000' },
         });
-      } catch (e) {
-        // Silence — session může být momentálně uzavřena
+      } catch (_) {
+        // Session může být momentálně uzavřena
       }
     };
 
@@ -367,6 +459,9 @@ export class GeminiLiveService {
         if (this.state === 'dormant') {
           if (this._containsWakeWord(text)) {
             aiLog('INFO', `Wake word detekován: "${text}"`);
+            this._resetDormantTimer(); // reset auto-off (uživatel je aktivní)
+            this._silenceGated = false; // otevři gate pro aktivní konverzaci
+            this._silenceCount = 0;
             this._setState('listening');
             this.callbacks.onTranscript(text);
           }

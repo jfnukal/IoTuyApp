@@ -319,7 +319,136 @@
 .v2-devices-layout {
   position: relative;
   min-height: 100dvh;
-  overflow-y: auto;
+  /* Mobil: scrolluje window (overflow: visible z v2-page)     */
+  /* Desktop: viz @media níže — scrolluje tento element        */
+}
+
+/* Desktop — v2-page má overflow:hidden → devices musí scrollovat sám */
+@media (min-width: 769px) {
+  .v2-devices-layout {
+    height: 100dvh;
+    min-height: unset;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/* ── TOOLBAR ── */
+.v2-devices-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+.v2-devices-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.v2-devices-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.v2-devices-toolbar__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.v2-devices-toolbar__count {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Toolbar tlačítka */
+.v2-devices-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.v2-devices-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.v2-devices-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.v2-devices-btn--back {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+}
+
+.v2-devices-btn--active {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+.v2-devices-btn--active:hover {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+/* GridConfigPanel FAB — v toolbaru má být inline, ne fixed */
+.v2-devices-toolbar .gcp-fab {
+  position: static !important;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Edit mode banner */
+.v2-devices-edit-banner {
+  background: rgba(59, 130, 246, 0.15);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  text-align: center;
+}
+
+/* Swipe hint — skrytý na desktopu, viditelný jen na touch */
+.v2-swipe-hint--touch-only {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .v2-swipe-hint--touch-only {
+    display: block;
+  }
 }
 
 .v2-devices-content {

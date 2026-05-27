@@ -74,6 +74,17 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   const realHumidity = outdoorSensor ? getHumidity(outdoorSensor.status) : undefined;
   const sensorOnline = outdoorSensor?.online ?? false;
 
+  // Jak dávno byl senzor naposledy aktualizován
+  const sensorAgoText = (() => {
+    const ts = outdoorSensor?.lastUpdated;
+    if (!ts) return null;
+    const diff = Math.floor((Date.now() - ts) / 60000); // minuty
+    if (diff < 1) return 'právě teď';
+    if (diff < 60) return `před ${diff} min`;
+    const h = Math.floor(diff / 60);
+    return `před ${h} hod`;
+  })();
+
   const {
     isLoading,
     error,
@@ -483,6 +494,11 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
                     <span className="humidity-icon">💧</span>
                     <span className="humidity-value">{realHumidity}%</span>
                   </div>
+                )}
+                {sensorAgoText && (
+                  <span style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>
+                    {sensorAgoText}
+                  </span>
                 )}
               </>
             ) : (

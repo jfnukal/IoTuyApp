@@ -62,16 +62,15 @@ export const formatBrightness = (value: number): number => {
  * Zjistí typ karty podle kategorie zařízení a product_id
  */
  export const getDeviceCardType = (category: string, productId?: string): string => {
-  // Speciální případ: kategorie 'sp' může být doorbell NEBO kamera
-  if (category === 'sp' && productId) {
-    // Doorbell produkty
-    if (productId === 'kzatr9ohaiy4iokw') {
-      return 'doorbell';
-    }
-    // PTZ Camera produkty
-    if (productId === '2aancrpmmj91oxqb') {
+  // Speciální případ: kategorie 'sp' může být doorbell NEBO PTZ kamera
+  if (category === 'sp') {
+    // Známé PTZ kamery (product_id)
+    const PTZ_CAMERA_PRODUCTS = ['2aancrpmmj91oxqb'];
+    if (productId && PTZ_CAMERA_PRODUCTS.includes(productId)) {
       return 'ptz_camera';
     }
+    // Vše ostatní v kategorii 'sp' = video zvonek (R9061 a jiné modely)
+    return 'doorbell';
   }
   
   return DEVICE_CATEGORY_MAP[category] || 'basic';

@@ -229,10 +229,16 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
   // Kontrola zda existují vůbec nějaká jídla
   const hasMeals = Object.keys(mealOrders).length > 0;
 
-  // Ikona pro týden — pokud má svačinu v libovolný den
-  const hasAnySnack = Object.values(mealOrders).some(meals =>
-    meals.some(m => m.type === 'Svačina')
-  );
+  // Ikona pro DNEŠNÍ den — signalizuje, zda má Johanka dnes svačinu ve škole
+  // (ne celý týden — jinak by byla ikona 🥪 pořád, když je objednáno kdekoliv v týdnu)
+  const todayActualIndex = (() => {
+    const d = new Date().getDay(); // 0=Ne, 1=Po ... 6=So
+    if (d === 0 || d === 6) return -1; // víkend → žádná svačina
+    return d - 1; // 0=Po, 4=Pá
+  })();
+  const hasTodaySnack = todayActualIndex >= 0
+    ? (mealOrders[getDateString(todayActualIndex)] || []).some(m => m.type === 'Svačina')
+    : false;
 
   // Emoji pro předmět
   const getEmoji = (subject: string): string => {
@@ -386,14 +392,14 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
                   <span className="kid-name">JOH</span>
                   {hasMeals && (
                     <span
-                      className={`lunch-icon ${hasAnySnack ? 'has-snack' : ''}`}
+                      className={`lunch-icon ${hasTodaySnack ? 'has-snack' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowLunchDetail(true);
                       }}
-                      title="Jídelníček celý týden"
+                      title={hasTodaySnack ? 'Dnes má svačinu ve škole 🥪' : 'Jídelníček celý týden'}
                     >
-                      {hasAnySnack ? '🥪' : '🍴'}
+                      {hasTodaySnack ? '🥪' : '🍴'}
                     </span>
                   )}
                 </div>

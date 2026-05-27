@@ -1,0 +1,352 @@
+/* ============================================================
+   GLASSMORPHISM THEME — Smart T Home
+   ============================================================
+   Aktivuje se třídou .theme-glass na containeru.
+   Dark mode: html.dark-theme .theme-glass { ... } (smarthome)
+              nebo .theme-glass.dark (přímé nastavení)
+   ============================================================ */
+
+/* === CSS VARIABLES === */
+.theme-glass {
+  --glass-blur: 20px;
+  --glass-saturate: 1.4;
+  --glass-radius: 20px;
+  --glass-radius-sm: 12px;
+  --glass-radius-xs: 8px;
+  --glass-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass-font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Accent colors (shared) */
+  --accent-green: #00d4aa;
+  --accent-blue: #3b82f6;
+  --accent-red: #ff6b6b;
+  --accent-orange: #ff9500;
+  --accent-purple: #a78bfa;
+  --accent-yellow: #fbbf24;
+}
+
+/* --- DARK MODE --- */
+/* Podporuje oba způsoby: html.dark-theme (smarthome) i .dark třída */
+html.dark-theme .theme-glass,
+.theme-glass.dark {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.09);
+  --glass-bg-active: rgba(255, 255, 255, 0.12);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-border-active: 1px solid rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-border-color: rgba(255, 255, 255, 0.1);
+
+  --text-primary: #f0f0f0;
+  --text-secondary: rgba(255, 255, 255, 0.5);
+  --text-tertiary: rgba(255, 255, 255, 0.3);
+
+  --card-divider: rgba(255, 255, 255, 0.06);
+  --input-bg: rgba(255, 255, 255, 0.07);
+  --input-bg-active: rgba(255, 255, 255, 0.12);
+  --switch-bg-off: rgba(255, 255, 255, 0.1);
+  --dot-online: #00d4aa;
+  --dot-offline: #666;
+}
+
+/* --- LIGHT MODE (výchozí, bez dark-theme) --- */
+html:not(.dark-theme) .theme-glass,
+.theme-glass.light {
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-hover: rgba(255, 255, 255, 0.65);
+  --glass-bg-active: rgba(255, 255, 255, 0.75);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+  --glass-border-active: 1px solid rgba(255, 255, 255, 0.8);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-border-color: rgba(255, 255, 255, 0.6);
+
+  --text-primary: #1a1a2e;
+  --text-secondary: rgba(0, 0, 0, 0.45);
+  --text-tertiary: rgba(0, 0, 0, 0.25);
+
+  --card-divider: rgba(0, 0, 0, 0.06);
+  --input-bg: rgba(0, 0, 0, 0.04);
+  --input-bg-active: rgba(0, 0, 0, 0.08);
+  --switch-bg-off: rgba(0, 0, 0, 0.12);
+  --dot-online: #00b894;
+  --dot-offline: #bbb;
+}
+
+/* === GLASS CARD BASE === */
+.theme-glass .glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  padding: 18px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: var(--glass-transition);
+  cursor: pointer;
+  font-family: var(--glass-font);
+  animation: glass-fade-in 0.4s ease backwards;
+}
+
+.theme-glass .glass-card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Offline dimming */
+.theme-glass .glass-card.is-offline {
+  opacity: 0.55;
+  filter: grayscale(0.3);
+}
+
+.theme-glass .glass-card.is-offline:hover {
+  transform: none;
+}
+
+/* === GLOW EFFECTS === */
+.theme-glass .glass-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  pointer-events: none;
+  top: -40px;
+  right: -40px;
+  opacity: 0.8;
+  transition: opacity 0.5s ease;
+}
+
+.theme-glass .glass-glow.glow-heating {
+  background: radial-gradient(circle, rgba(255, 100, 50, 0.25) 0%, transparent 70%);
+}
+
+.theme-glass .glass-glow.glow-green {
+  background: radial-gradient(circle, rgba(0, 212, 170, 0.2) 0%, transparent 70%);
+}
+
+.theme-glass .glass-glow.glow-blue {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+}
+
+.theme-glass .glass-glow.glow-purple {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 70%);
+}
+
+/* === CARD HEADER === */
+.theme-glass .glass-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  min-height: 36px;
+}
+
+.theme-glass .glass-card-type {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-glass .glass-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 3px;
+  color: var(--text-primary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-glass .glass-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: var(--glass-transition);
+}
+
+.theme-glass .glass-status-dot.online {
+  background: var(--dot-online);
+  box-shadow: 0 0 8px var(--dot-online);
+}
+
+.theme-glass .glass-status-dot.offline {
+  background: var(--dot-offline);
+}
+
+/* === CARD BODY === */
+.theme-glass .glass-card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+/* === CARD FOOTER === */
+.theme-glass .glass-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  min-height: 16px;
+}
+
+.theme-glass .glass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--input-bg);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* === SWITCH TOGGLE === */
+.theme-glass .glass-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+}
+
+.theme-glass .glass-toggle.on {
+  background: var(--accent-green);
+}
+
+.theme-glass .glass-toggle.off {
+  background: var(--switch-bg-off);
+}
+
+.theme-glass .glass-toggle-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 2px;
+  transition: left 0.25s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-glass .glass-toggle.on .glass-toggle-knob {
+  left: 20px;
+}
+
+.theme-glass .glass-toggle.off .glass-toggle-knob {
+  left: 2px;
+}
+
+/* === POWER BUTTON (single switch) === */
+.theme-glass .glass-power-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--glass-transition);
+  font-size: 24px;
+}
+
+.theme-glass .glass-power-btn.on {
+  background: rgba(0, 212, 170, 0.2);
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+  color: var(--accent-green);
+}
+
+.theme-glass .glass-power-btn.off {
+  background: var(--input-bg);
+  color: var(--text-secondary);
+}
+
+.theme-glass .glass-power-btn:hover {
+  transform: scale(1.05);
+}
+
+/* === CONTACT SENSOR === */
+.theme-glass .glass-contact-icon.open {
+  animation: glass-pulse 2s infinite;
+}
+
+.theme-glass .glass-contact-label.open {
+  color: var(--accent-red);
+}
+
+.theme-glass .glass-contact-label.closed {
+  color: var(--accent-green);
+}
+
+/* === MOTION SENSOR === */
+.theme-glass .glass-motion-icon.active {
+  animation: glass-wiggle 0.5s ease infinite;
+}
+
+/* === ANIMATIONS === */
+@keyframes glass-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes glass-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes glass-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered animation for grid items */
+.theme-glass .grid-item-container:nth-child(1) .glass-card { animation-delay: 0.02s; }
+.theme-glass .grid-item-container:nth-child(2) .glass-card { animation-delay: 0.04s; }
+.theme-glass .grid-item-container:nth-child(3) .glass-card { animation-delay: 0.06s; }
+.theme-glass .grid-item-container:nth-child(4) .glass-card { animation-delay: 0.08s; }
+.theme-glass .grid-item-container:nth-child(5) .glass-card { animation-delay: 0.10s; }
+.theme-glass .grid-item-container:nth-child(6) .glass-card { animation-delay: 0.12s; }
+.theme-glass .grid-item-container:nth-child(7) .glass-card { animation-delay: 0.14s; }
+.theme-glass .grid-item-container:nth-child(8) .glass-card { animation-delay: 0.16s; }
+
+/* === SCROLLBAR === */
+.theme-glass ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.theme-glass ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.theme-glass ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+html:not(.dark-theme) .theme-glass ::-webkit-scrollbar-thumb,
+.theme-glass.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}

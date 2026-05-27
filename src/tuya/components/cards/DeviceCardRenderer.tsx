@@ -2,16 +2,15 @@
 import React from 'react';
 import type { TuyaDevice } from '../../../types';
 import { getDeviceCardType } from '../../utils/deviceHelpers';
+import type { CardSize } from '../../config/cardConfig';
 
-// Import všech karet
-import TempSensorCard from './TempSensorCard';
+// Specializované karty (zachovány pro plnou funkčnost)
 import HeatingCard from './HeatingCard';
-import MultiSwitchCard from './MultiSwitchCard';
-import MultiSocketCard from './MultiSocketCard';
-import SmartLightCard from './SmartLightCard';
 import DoorbellCard from './DoorbellCard';
 import PTZCameraCard from './PTZCameraCard';
-import BasicCard from './BasicCard';
+
+// Nová glassmorphism karta pro všechny ostatní typy
+import GlassCard from './GlassCard';
 
 interface DeviceCardRendererProps {
   device: TuyaDevice;
@@ -21,7 +20,8 @@ interface DeviceCardRendererProps {
     commands: { code: string; value: any }[]
   ) => Promise<void>;
   isDebugVisible?: boolean;
-  onHeaderClick?: () => void; // NOVÉ - callback pro klik na hlavičku
+  onHeaderClick?: () => void;
+  cardSize?: CardSize;
 }
 
 const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
@@ -29,53 +29,60 @@ const DeviceCardRenderer: React.FC<DeviceCardRendererProps> = ({
   onToggle,
   onControl,
   isDebugVisible = false,
-  onHeaderClick, // NOVÉ
+  onHeaderClick,
+  cardSize = 'M',
 }) => {
-  // Zjisti typ karty podle kategorie a product_id
   const cardType = getDeviceCardType(device.category, device.product_id);
 
-  // Společné props pro všechny karty
-  const commonProps = {
-    device,
-    onToggle,
-    onControl,
-    isDebugVisible,
-    onHeaderClick, // NOVÉ - předáváme do všech karet
-  };
-
-  // Vyber správnou kartu podle typu
-  switch (cardType) {
-    case 'temp_sensor':
-      return <TempSensorCard {...commonProps} />;
-
-    case 'heating':
-      return <HeatingCard {...commonProps} />;
-
-    case 'multi_switch':
-      return <MultiSwitchCard {...commonProps} />;
-
-    case 'multi_socket':
-      return <MultiSocketCard {...commonProps} />;
-
-    case 'smart_light':
-      return <SmartLightCard {...commonProps} />;
-
-    case 'doorbell':
-      return <DoorbellCard {...commonProps} />;
-
-    case 'ptz_camera':
-      return <PTZCameraCard {...commonProps} />; // ← Odkomentujeme po vytvoření
-
-    case 'motion_sensor':
-    case 'door_sensor':
-    case 'gateway':
-    case 'valve':
-    case 'soil_sensor':
-    case 'basic':
-    default:
-      // Pro zatím neimplementované typy použij BasicCard
-      return <BasicCard {...commonProps} />;
+  // Specializované karty zachovány pro plnou funkčnost
+  if (cardType === 'heating') {
+    return (
+      <HeatingCard
+        device={device}
+        onToggle={onToggle}
+        onControl={onControl}
+        isDebugVisible={isDebugVisible}
+        onHeaderClick={onHeaderClick}
+      />
+    );
   }
+
+  if (cardType === 'doorbell') {
+    return (
+      <DoorbellCard
+        device={device}
+        onToggle={onToggle}
+        onControl={onControl}
+        isDebugVisible={isDebugVisible}
+        onHeaderClick={onHeaderClick}
+      />
+    );
+  }
+
+  if (cardType === 'ptz_camera') {
+    return (
+      <PTZCameraCard
+        device={device}
+        onToggle={onToggle}
+        onControl={onControl}
+        isDebugVisible={isDebugVisible}
+        onHeaderClick={onHeaderClick}
+      />
+    );
+  }
+
+  // Všechny ostatní typy → GlassCard
+  // (temp_sensor, multi_switch, multi_socket, smart_light, motion_sensor,
+  //  door_sensor, gateway, valve, soil_sensor, basic, ...)
+  return (
+    <GlassCard
+      device={device}
+      onToggle={onToggle}
+      onControl={onControl}
+      onHeaderClick={onHeaderClick}
+      cardSize={cardSize}
+    />
+  );
 };
 
 export default React.memo(DeviceCardRenderer);

@@ -237,7 +237,7 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     return d - 1; // 0=Po, 4=Pá
   })();
   const hasTodaySnack = todayActualIndex >= 0
-    ? (mealOrders[getDateString(todayActualIndex)] || []).some(m => m.type === 'Svačina')
+    ? (mealOrders[getDateForDay(todayActualIndex)] || []).some(m => m.type === 'Svačina')
     : false;
 
   // Emoji pro předmět

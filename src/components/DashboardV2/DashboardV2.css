@@ -333,122 +333,221 @@
   }
 }
 
-/* ── TOOLBAR ── */
-.v2-devices-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* ── EDIT MODE BANNER ── */
+.v2-devices-edit-banner {
   position: sticky;
   top: 0;
-  z-index: 20;
-  flex-wrap: wrap;
-}
-
-.v2-devices-toolbar__left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.v2-devices-toolbar__right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.v2-devices-toolbar__title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.v2-devices-toolbar__count {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Toolbar tlačítka */
-.v2-devices-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 6px 10px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
-  font-family: inherit;
-}
-
-.v2-devices-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.v2-devices-btn:disabled {
-  opacity: 0.5;
-  cursor: wait;
-}
-
-.v2-devices-btn--back {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.8rem;
-}
-
-.v2-devices-btn--active {
-  background: rgba(59, 130, 246, 0.3);
-  border-color: rgba(59, 130, 246, 0.5);
+  z-index: 22;
+  background: rgba(59, 130, 246, 0.2);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(8px);
   color: #93c5fd;
-}
-
-.v2-devices-btn--active:hover {
-  background: rgba(59, 130, 246, 0.4);
-}
-
-/* GridConfigPanel FAB — v toolbaru má být inline, ne fixed */
-.v2-devices-toolbar .gcp-fab {
-  position: static !important;
-  width: 34px;
-  height: 34px;
-  font-size: 1rem;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-/* Edit mode banner */
-.v2-devices-edit-banner {
-  background: rgba(59, 130, 246, 0.15);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.25);
-  color: #93c5fd;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  padding: 6px 12px;
+  padding: 7px 56px 7px 12px; /* pravý okraj kvůli side handle */
   text-align: center;
 }
 
-/* Swipe hint — skrytý na desktopu, viditelný jen na touch */
-.v2-swipe-hint--touch-only {
-  display: none;
+/* ── SIDE HANDLE — vždy viditelný, pravý okraj ── */
+.v2-side-handle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  width: 36px;
+  min-height: 72px;
+  padding: 10px 0;
+  border-radius: 12px 0 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: none;
+
+  background: rgba(20, 10, 50, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.2s, width 0.2s;
+  font-family: inherit;
+  box-shadow: -3px 0 16px rgba(0, 0, 0, 0.3);
 }
-@media (hover: none) and (pointer: coarse) {
-  .v2-swipe-hint--touch-only {
-    display: block;
-  }
+
+.v2-side-handle:hover,
+.v2-side-handle--open {
+  background: rgba(102, 126, 234, 0.55);
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
+.v2-side-handle__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.v2-side-handle__count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.v2-side-handle__sep {
+  opacity: 0.4;
+}
+
+/* ── BACKDROP ── */
+.v2-side-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: v2FadeIn 0.18s ease;
+}
+
+@keyframes v2FadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── SIDE PANEL — vysouvá se zprava ── */
+.v2-side-panel {
+  position: fixed;
+  right: -280px;   /* schováno mimo obrazovku */
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  z-index: 29;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  background: rgba(18, 10, 48, 0.92);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+
+  padding: 20px 0 24px;
+  transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.v2-side-panel--open {
+  right: 0;
+}
+
+.v2-side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px 14px;
+  gap: 8px;
+}
+
+.v2-side-panel__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.v2-side-panel__stats {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.v2-side-panel__divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0 10px;
+}
+
+/* ── NAVIGAČNÍ AKCE ── */
+.v2-side-panel__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 10px;
+}
+
+.v2-side-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 14px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  touch-action: manipulation;
+  /* Velká plocha pro dotyk */
+  min-height: 52px;
+}
+
+.v2-side-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.v2-side-action:active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.v2-side-action:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.v2-side-action--primary {
+  background: rgba(102, 126, 234, 0.18);
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+.v2-side-action--primary:hover {
+  background: rgba(102, 126, 234, 0.32);
+  color: white;
+}
+
+.v2-side-action--active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.v2-side-action--active:hover {
+  background: rgba(59, 130, 246, 0.32);
+}
+
+.v2-side-action__icon {
+  font-size: 1.3rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.v2-side-action__label {
+  flex: 1;
+  line-height: 1.3;
 }
 
 .v2-devices-content {

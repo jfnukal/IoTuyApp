@@ -71,7 +71,7 @@ const FloorPlanPage: React.FC = () => {
           <span className="error-icon">⚠️</span>
           <h3>Chyba při načítání</h3>
           <p>{devicesError}</p>
-          <button onClick={() => navigate('/?mode=tech')}>← Zpět</button>
+          <button onClick={() => navigate('/devices')}>← Zpět</button>
         </div>
       </div>
     );
@@ -85,7 +85,7 @@ const FloorPlanPage: React.FC = () => {
         <div className="header-left">
           <button
             className="btn-back"
-            onClick={() => navigate('/?mode=tech')}
+            onClick={() => navigate('/devices')}
             title="Zpět na dashboard"
           >
             ←

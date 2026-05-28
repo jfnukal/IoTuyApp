@@ -325,7 +325,8 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
           preserveAspectRatio="xMidYMid meet"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          onMouseMove={(e: any) => {
+          style={{ touchAction: draggedDeviceId ? 'none' : 'pan-y' }}
+          onPointerMove={(e: React.PointerEvent<SVGSVGElement>) => {
             if (draggedDeviceId && svgRef.current) {
               const svg = svgRef.current;
               const pt = svg.createSVGPoint();
@@ -343,7 +344,7 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
               }
             }
           }}
-          onMouseUp={(e: any) => {
+          onPointerUp={(e: React.PointerEvent<SVGSVGElement>) => {
             if (draggedDeviceId && svgRef.current && onDeviceDrop) {
               const svg = svgRef.current;
               const pt = svg.createSVGPoint();
@@ -357,6 +358,10 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
               );
               setDraggedDeviceId(null);
             }
+          }}
+          onPointerLeave={() => {
+            // Pokud prst/kurzor opustí SVG, zrušíme drag (zabrání zaseknutí)
+            setDraggedDeviceId(null);
           }}
         >
           {/* Obrázek půdorysu */}
@@ -458,9 +463,10 @@ const FloorPlan1NP: React.FC<FloorPlan1NPProps> = ({
                   height="80"
                   fill="transparent"
                   style={{ pointerEvents: 'auto' }}
-                  onMouseDown={(e: any) => {
+                  onPointerDown={(e: any) => {
                     if (isDeviceEditMode) {
                       e.stopPropagation();
+                      e.currentTarget.setPointerCapture(e.pointerId);
                       setDraggedDeviceId(device.id);
                     }
                   }}

@@ -679,6 +679,15 @@
     grid-template-columns: 1fr;
   }
 
+  /* Stránka "widgety" (MorePage) — na mobilu jeden sloupec pod sebou */
+  .v2-more-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .v2-more-content {
+    padding: 6px;
+  }
+
   .v2-slot--sticky,
   .v2-slot--full-schedule,
   .v2-slot--bus {
@@ -699,8 +708,13 @@
 /* ==================== MALÝ MOBIL (≤ 480px) ==================== */
 @media (max-width: 480px) {
   .v2-screen,
-  .v2-secondary-grid {
+  .v2-secondary-grid,
+  .v2-more-grid {
     gap: 4px;
+    padding: 4px;
+  }
+
+  .v2-more-content {
     padding: 4px;
   }
 }

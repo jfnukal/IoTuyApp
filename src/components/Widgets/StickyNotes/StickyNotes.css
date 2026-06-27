@@ -145,8 +145,8 @@
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
-  max-height: calc(100% - 150px);
-  min-height: 300px;
+  flex: 1;        /* zabere zbývající výšku widgetu */
+  min-height: 0;  /* bez tohoto flex ignoruje overflow */
   padding-right: 8px;
 }
 

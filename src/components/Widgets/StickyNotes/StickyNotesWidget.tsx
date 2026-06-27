@@ -1,110 +1,158 @@
 // src/components/Widgets/StickyNotes/StickyNotesWidget.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './StickyNotes.css';
-
-
-interface StickyNote {
-  id: string;
-  author: string;
-  authorEmoji: string;
-  content: string;
-  timestamp: number;
-  color?: string;
-}
+import { stickyNotesService } from '../../../services/stickyNotesService';
+import type { StickyNote } from '../../../services/stickyNotesService';
+import { firestoreService } from '../../../services/firestoreService';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { FamilyMember } from '../../../types/index';
 
 interface StickyNotesWidgetProps {
   selectedMember: string | null;
 }
 
-// Mock data - později nahradíme Firebase
-const MOCK_NOTES: StickyNote[] = [
-  {
-    id: '1',
-    author: 'Máma',
-    authorEmoji: '👩',
-    content: 'Nezapomeňte vyvenčit psa! 🐕',
-    timestamp: Date.now() - 3600000,
-    color: '#ffeaa7',
-  },
-  {
-    id: '2',
-    author: 'Táta',
-    authorEmoji: '👨',
-    content: 'Večer pizza party! 🍕',
-    timestamp: Date.now() - 7200000,
-    color: '#74b9ff',
-  },
-  {
-    id: '3',
-    author: 'Jareček',
-    authorEmoji: '👦',
-    content: 'Chci zmrzlinu! 🍦',
-    timestamp: Date.now() - 1800000,
-    color: '#a29bfe',
-  },
-];
+const FALLBACK_COLORS = ['#ffeaa7', '#74b9ff', '#a29bfe', '#fd79a8', '#fdcb6e'];
 
-const StickyNotesWidget: React.FC<StickyNotesWidgetProps> = ({ selectedMember }) => {
-  // Načíst poznámky z localStorage při načtení komponenty
-  const [notes, setNotes] = useState<StickyNote[]>(() => {
-    const saved = localStorage.getItem('sticky-notes');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return MOCK_NOTES;
-      }
-    }
-    return MOCK_NOTES;
-  });
-  
+const getRandomColor = () =>
+  FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
+
+// Dynamická velikost písma podle délky textu — krátký vzkaz je velký, dlouhý se zmenší
+const getFontSize = (len: number): string => {
+  if (len <= 30) return '1.6rem';
+  if (len <= 60) return '1.3rem';
+  if (len <= 100) return '1.1rem';
+  if (len <= 150) return '0.95rem';
+  return '0.85rem';
+};
+
+const getRelativeTime = (timestamp: number) => {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (days > 0) return `před ${days}d`;
+  if (hours > 0) return `před ${hours}h`;
+  if (minutes > 0) return `před ${minutes}m`;
+  return 'právě teď';
+};
+
+const StickyNotesWidget: React.FC<StickyNotesWidgetProps> = ({
+  selectedMember,
+}) => {
+  const { currentUser } = useAuth();
+
+  const [notes, setNotes] = useState<StickyNote[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState('');
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string | null>(null);
 
-  // Uložit poznámky do localStorage při každé změně
+  // ─── Real-time vzkazy z Firestore ───
   useEffect(() => {
-    localStorage.setItem('sticky-notes', JSON.stringify(notes));
-  }, [notes]);
+    const unsub = stickyNotesService.subscribeToNotes(setNotes);
+    return () => unsub();
+  }, []);
 
-  const handleAddNote = () => {
-    if (newNoteContent.trim()) {
-      const newNote: StickyNote = {
-        id: Date.now().toString(),
-        author: 'Táta', // Později z auth
-        authorEmoji: '👨',
-        content: newNoteContent,
+  // ─── Rodinní členové (pro výběr autora) ───
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    firestoreService
+      .subscribeToFamilyMembers((m) => setMembers(m))
+      .then((fn) => {
+        unsub = fn;
+      })
+      .catch((e) => console.error('[StickyNotes] members error:', e));
+    return () => unsub?.();
+  }, []);
+
+  // ─── Jednorázová migrace starých vzkazů z localStorage do Firestore ───
+  useEffect(() => {
+    if (localStorage.getItem('sticky-notes-migrated')) return;
+
+    const saved = localStorage.getItem('sticky-notes');
+    if (!saved) {
+      localStorage.setItem('sticky-notes-migrated', 'true');
+      return;
+    }
+
+    try {
+      const local: StickyNote[] = JSON.parse(saved);
+      // Přeskoč mock vzkazy (id '1','2','3'); reálné mají timestamp-id (>3 znaky)
+      const real = local.filter((n) => n.id && n.id.length > 3);
+      if (real.length === 0) {
+        localStorage.setItem('sticky-notes-migrated', 'true');
+        return;
+      }
+      Promise.all(
+        real.map((n) =>
+          stickyNotesService.addNote({
+            author: n.author,
+            authorEmoji: n.authorEmoji,
+            content: n.content,
+            timestamp: n.timestamp || Date.now(),
+            color: n.color || getRandomColor(),
+          })
+        )
+      )
+        .then(() => {
+          localStorage.setItem('sticky-notes-migrated', 'true');
+          console.log(`[StickyNotes] Migrováno ${real.length} vzkazů do cloudu`);
+        })
+        .catch((e) => console.error('[StickyNotes] migrace selhala:', e));
+    } catch {
+      localStorage.setItem('sticky-notes-migrated', 'true');
+    }
+  }, []);
+
+  // ─── Výchozí autor: přihlášený uživatel → vybraný člen → první člen ───
+  const defaultAuthor = useMemo<FamilyMember | null>(() => {
+    if (members.length === 0) return null;
+    const byAuth = members.find((m) => m.authUid === currentUser?.uid);
+    if (byAuth) return byAuth;
+    const bySelected = members.find((m) => m.name === selectedMember);
+    if (bySelected) return bySelected;
+    return members[0];
+  }, [members, currentUser, selectedMember]);
+
+  // Nastav výchozího autora, jakmile známe členy
+  useEffect(() => {
+    if (selectedAuthorId === null && defaultAuthor) {
+      setSelectedAuthorId(defaultAuthor.id);
+    }
+  }, [defaultAuthor, selectedAuthorId]);
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim()) return;
+
+    const author =
+      members.find((m) => m.id === selectedAuthorId) || defaultAuthor;
+
+    try {
+      await stickyNotesService.addNote({
+        author: author?.name || 'Anonym',
+        authorEmoji: author?.emoji || '🙂',
+        content: newNoteContent.trim(),
         timestamp: Date.now(),
-        color: getRandomColor(),
-      };
-      setNotes([newNote, ...notes]);
+        color: author?.color || getRandomColor(),
+      });
       setNewNoteContent('');
       setIsAdding(false);
+    } catch (e) {
+      console.error('[StickyNotes] přidání selhalo:', e);
     }
   };
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id));
-  };
-
-  const getRandomColor = () => {
-    const colors = ['#ffeaa7', '#74b9ff', '#a29bfe', '#fd79a8', '#fdcb6e'];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-
-  const getRelativeTime = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (days > 0) return `před ${days}d`;
-    if (hours > 0) return `před ${hours}h`;
-    if (minutes > 0) return `před ${minutes}m`;
-    return 'právě teď';
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await stickyNotesService.deleteNote(id);
+    } catch (e) {
+      console.error('[StickyNotes] smazání selhalo:', e);
+    }
   };
 
   const filteredNotes = selectedMember
-    ? notes.filter(note => note.author === selectedMember)
+    ? notes.filter((note) => note.author === selectedMember)
     : notes;
 
   return (
@@ -125,6 +173,30 @@ const StickyNotesWidget: React.FC<StickyNotesWidgetProps> = ({ selectedMember })
 
       {isAdding && (
         <div className="add-note-form">
+          {members.length > 0 && (
+            <div className="note-author-picker">
+              {members.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`author-chip ${
+                    selectedAuthorId === m.id ? 'author-chip--active' : ''
+                  }`}
+                  style={
+                    selectedAuthorId === m.id
+                      ? { backgroundColor: m.color, borderColor: m.color }
+                      : undefined
+                  }
+                  onClick={() => setSelectedAuthorId(m.id)}
+                  title={m.name}
+                >
+                  <span className="author-chip-emoji">{m.emoji}</span>
+                  <span className="author-chip-name">{m.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <textarea
             className="note-textarea"
             placeholder="Napiš něco rodině..."
@@ -137,10 +209,13 @@ const StickyNotesWidget: React.FC<StickyNotesWidgetProps> = ({ selectedMember })
             <button className="note-save-btn" onClick={handleAddNote}>
               Přidat
             </button>
-            <button className="note-cancel-btn" onClick={() => {
-              setIsAdding(false);
-              setNewNoteContent('');
-            }}>
+            <button
+              className="note-cancel-btn"
+              onClick={() => {
+                setIsAdding(false);
+                setNewNoteContent('');
+              }}
+            >
               Zrušit
             </button>
           </div>
@@ -179,9 +254,16 @@ const StickyNotesWidget: React.FC<StickyNotesWidgetProps> = ({ selectedMember })
                   ✕
                 </button>
               </div>
-              <div className="note-content">{note.content}</div>
+              <div
+                className="note-content"
+                style={{ fontSize: getFontSize(note.content.length) }}
+              >
+                {note.content}
+              </div>
               <div className="note-footer">
-                <span className="note-timestamp">{getRelativeTime(note.timestamp)}</span>
+                <span className="note-timestamp">
+                  {getRelativeTime(note.timestamp)}
+                </span>
               </div>
             </div>
           ))

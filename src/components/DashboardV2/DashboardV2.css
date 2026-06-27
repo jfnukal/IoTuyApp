@@ -234,6 +234,12 @@
   min-height: 300px;
 }
 
+/* Sticky slot — omezená výška + flex sloupec, aby fungoval vnitřní scroll */
+.v2-slot--sticky {
+  flex-direction: column;
+  max-height: 75vh;
+}
+
 .v2-slot--sticky .sticky-notes-widget,
 .v2-slot--full-schedule .school-schedule-widget,
 .v2-slot--bus .bus-schedule-widget {
@@ -243,6 +249,13 @@
   border-radius: 7px;
   box-shadow: none;
   margin: 0 !important;
+}
+
+/* Widget vyplní slot přes flex (ne height:100%), aby se aktivoval overflow */
+.v2-slot--sticky .sticky-notes-widget {
+  flex: 1;
+  min-height: 0;
+  height: auto;
 }
 
 /* ==================== V2 SHELL — animace přechodů ==================== */
@@ -670,6 +683,11 @@
   .v2-slot--full-schedule,
   .v2-slot--bus {
     min-height: 200px;
+  }
+
+  /* Na mobilu omez výšku sticky widgetu, ať se dlouhý seznam scrolluje uvnitř */
+  .v2-slot--sticky {
+    max-height: 65vh;
   }
 
   .v2-slot {

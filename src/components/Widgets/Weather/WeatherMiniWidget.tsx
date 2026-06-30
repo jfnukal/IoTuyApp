@@ -66,8 +66,8 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   compactMode = false,
 }) => {
   // Tuya hook pro reálnou venkovní teplotu
-  const { devices } = useTuya();
-  
+  const { devices, syncCategory, isSyncing } = useTuya();
+
   // Najdi venkovní teploměr
   const outdoorSensor = devices.find(d => d.id === OUTDOOR_TEMP_SENSOR_ID);
   const realTemperature = outdoorSensor ? getTemperature(outdoorSensor.status) : undefined;
@@ -170,7 +170,14 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
 
   const handleRefresh = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Obnov předpověď
     refreshWeather();
+    // A zároveň vynuť čerstvé čtení reálného Tuya teploměru (ne jen předpověď)
+    if (outdoorSensor?.category) {
+      syncCategory([outdoorSensor.category]).catch((err) =>
+        console.error('[Weather] Tuya refresh selhal:', err)
+      );
+    }
   };
 
   if (isLoading && !primaryWeather) {
@@ -425,9 +432,9 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
             <button
               className="refresh-btn"
               onClick={handleRefresh}
-              title="Obnovit"
+              title="Obnovit předpověď i reálnou teplotu"
             >
-              {isLoading ? (
+              {isLoading || isSyncing ? (
                 <div
                   className="spinner-mini"
                   style={{

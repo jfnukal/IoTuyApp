@@ -16,31 +16,64 @@ interface SettingsPanelProps {
   onSettingsChange: (settings: AppSettings) => void;
 }
 
+// Mapování API sekce → klíč v apiStatuses + popis
+const API_META: Record<
+  string,
+  {
+    key: keyof AppSettings['apiStatuses'];
+    title: string;
+    icon: string;
+    description: string;
+  }
+> = {
+  'api-weather': {
+    key: 'weather',
+    title: 'Weather API',
+    icon: '🌤️',
+    description: 'Předpověď počasí (weatherapi.com). Klíč je uložen v konfiguraci aplikace.',
+  },
+  'api-unsplash': {
+    key: 'unsplash',
+    title: 'Unsplash API',
+    icon: '🖼️',
+    description: 'Obrázky na pozadí widgetu počasí.',
+  },
+  'api-vision': {
+    key: 'googleVision',
+    title: 'Google Vision',
+    icon: '👁️',
+    description: 'Rozpoznávání textu z ručně psaných poznámek (OCR).',
+  },
+  'api-bakalari': {
+    key: 'bakalari',
+    title: 'Bakaláři',
+    icon: '🎓',
+    description: 'Zdroj dat pro školní rozvrh.',
+  },
+};
+
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   section,
   settings,
   onSettingsChange,
 }) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  const handleRefreshAPIs = async () => {
+    setIsRefreshing(true);
+    try {
+      await settingsService.checkAllAPIs();
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const updatedSettings = await settingsService.loadSettings();
+      onSettingsChange(updatedSettings);
+    } catch (error) {
+      console.error('Chyba při kontrole API:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const renderDashboard = () => {
-    const [isRefreshing, setIsRefreshing] = React.useState(false);
-
-    const handleRefreshAPIs = async () => {
-      setIsRefreshing(true);
-      try {
-        await settingsService.checkAllAPIs();
-        // Počkat 2 sekundy a jen refreshnout data
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        // Reload settings bez page refresh
-        const updatedSettings = await settingsService.loadSettings();
-        onSettingsChange(updatedSettings);
-        setIsRefreshing(false);
-      } catch (error) {
-        console.error('Chyba při kontrole API:', error);
-        setIsRefreshing(false);
-      }
-    };
-
     return (
       <div className="settings-section">
         <div className="dashboard-header-row">
@@ -149,20 +182,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     );
   };
 
-  const renderFamilyWidgets = () => (
-    <SettingsWidgets settings={settings} onSettingsChange={onSettingsChange} />
-  );
-
-  const renderFamilyGeneral = () => (
-    <div className="settings-section">
-      <h2>⚙️ Obecné nastavení</h2>
-      <p className="placeholder-text">Zatím žádná obecná nastavení</p>
-    </div>
-  );
-
   const renderNotifications = () => (
     <div className="settings-section">
       <h2>🔔 Notifikace (FCM)</h2>
+
+      <div className="widget-group">
+        <ToggleSwitch
+          label="Firebase Cloud Messaging"
+          checked={settings.systemSettings.fcmEnabled}
+          onChange={(val) => {
+            const newSettings = { ...settings };
+            newSettings.systemSettings.fcmEnabled = val;
+            onSettingsChange(newSettings);
+          }}
+        />
+        <p className="setting-description">
+          📝 Hlavní vypínač push notifikací (události v kalendáři, rodinné
+          zprávy). Když je vypnuto, notifikace se neodesílají.
+        </p>
+      </div>
+
       <div className="stats-section">
         <h3>📊 Statistiky</h3>
         <div className="stats-grid">
@@ -179,16 +218,52 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     </div>
   );
 
-  const renderAPIServices = () => (
-    <div className="settings-section">
-      <h2>🌐 API Služby</h2>
-      <p className="placeholder-text">Status jednotlivých API služeb</p>
-    </div>
-  );
+  // Detail jedné API služby — status, poslední kontrola, tlačítko na test
+  const renderApiDetail = (sectionId: string) => {
+    const meta = API_META[sectionId];
+    if (!meta) return renderDashboard();
+    const status = settings.apiStatuses[meta.key];
 
-  const renderTuya = () => (
-    <SettingsTuya settings={settings} onSettingsChange={onSettingsChange} />
-  );
+    return (
+      <div className="settings-section">
+        <div className="dashboard-header-row">
+          <h2>
+            {meta.icon} {meta.title}
+          </h2>
+          <button
+            className="btn-refresh"
+            onClick={handleRefreshAPIs}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? '🔄 Kontroluji...' : '🔄 Zkontrolovat teď'}
+          </button>
+        </div>
+
+        <div className="status-card" style={{ maxWidth: 420 }}>
+          <div className={`status-indicator ${status.status}`}>
+            {status.status === 'online'
+              ? '✅ Online'
+              : status.status === 'offline'
+              ? '❌ Offline'
+              : '❔ Neznámý stav'}
+          </div>
+          <p className="status-time">
+            Poslední kontrola:{' '}
+            {status.lastCheck
+              ? new Date(status.lastCheck).toLocaleString('cs-CZ')
+              : '—'}
+          </p>
+          {status.errorMessage && (
+            <p className="status-time" style={{ color: '#e74c3c' }}>
+              ⚠️ {status.errorMessage}
+            </p>
+          )}
+        </div>
+
+        <p className="setting-description">{meta.description}</p>
+      </div>
+    );
+  };
 
   const renderSystemSettings = () => (
     <div className="settings-section">
@@ -226,33 +301,28 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           všech API služeb v nastaveném intervalu.
         </p>
       </div>
-
-      <div className="widget-group">
-        <h3>🔔 Firebase & Tuya</h3>
-
-        <ToggleSwitch
-          label="Firebase Cloud Messaging"
-          checked={settings.systemSettings.fcmEnabled}
-          onChange={(val) => {
-            const newSettings = { ...settings };
-            newSettings.systemSettings.fcmEnabled = val;
-            onSettingsChange(newSettings);
-          }}
-        />
-        <p className="setting-description">
-          📝 Zapnout/vypnout Firebase notifikace
-        </p>
-      </div>
     </div>
   );
 
   switch (section) {
     case 'dashboard':
       return renderDashboard();
-    case 'family-widgets':
-      return renderFamilyWidgets();
-    case 'family-general':
-      return renderFamilyGeneral();
+    case 'widget-weather':
+    case 'widget-school':
+    case 'widget-calendar':
+    case 'widget-sticky':
+    case 'widget-handwriting':
+    case 'widget-messages':
+    case 'widget-bus':
+      return (
+        <SettingsWidgets
+          section={section}
+          settings={settings}
+          onSettingsChange={onSettingsChange}
+        />
+      );
+    case 'shopping-aliases':
+      return <ShoppingAliasesPanel />;
     case 'notifications':
       return renderNotifications();
     case 'system':
@@ -261,13 +331,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     case 'api-unsplash':
     case 'api-vision':
     case 'api-bakalari':
-      return renderAPIServices();
+      return renderApiDetail(section);
     case 'tuya':
-      return renderTuya();
+      return <SettingsTuya settings={settings} onSettingsChange={onSettingsChange} />;
     default:
       return renderDashboard();
-    case 'shopping-aliases':
-      return <ShoppingAliasesPanel />;
   }
 };
 

@@ -11,9 +11,18 @@ import DishwasherWidget from '../Widgets/Dishwasher/DishwasherFAB';
 import CalendarV2 from './CalendarV2';
 import RecipeMiniWidget from '../Widgets/Recipes/RecipeMiniWidget';
 import GridConfigPanel from './GridConfigPanel';
+import { useWidgetSettings } from '../../hooks/useWidgetSettings';
 import './DashboardV2.css';
 
 const DashboardV2: React.FC = () => {
+  const { settings } = useWidgetSettings();
+  const w = settings?.widgets;
+
+  // Widgety s vlastním přepínačem (dokud se nenačte nastavení, zobrazujeme)
+  const showWeather = w?.weather?.enabled ?? true;
+  const showCalendar = w?.calendar?.enabled ?? true;
+  const showSchool = w?.schoolSchedule?.enabled ?? true;
+
   return (
     <div className="v2-layout">
 
@@ -32,17 +41,23 @@ const DashboardV2: React.FC = () => {
         </div>
 
         {/* STŘED — col 2, celá výška */}
-        <div id="widget-calendar" className="v2-slot v2-slot--calendar">
-          <CalendarV2 />
-        </div>
+        {showCalendar && (
+          <div id="widget-calendar" className="v2-slot v2-slot--calendar">
+            <CalendarV2 />
+          </div>
+        )}
 
         {/* PRAVÝ SLOUPEC — col 3 */}
-        <div id="widget-weather" className="v2-slot v2-slot--weather">
-          <WeatherMiniWidget />
-        </div>
-        <div id="widget-schedule" className="v2-slot v2-slot--schedule">
-          <SchoolScheduleHeaderWidget />
-        </div>
+        {showWeather && (
+          <div id="widget-weather" className="v2-slot v2-slot--weather">
+            <WeatherMiniWidget />
+          </div>
+        )}
+        {showSchool && (
+          <div id="widget-schedule" className="v2-slot v2-slot--schedule">
+            <SchoolScheduleHeaderWidget />
+          </div>
+        )}
         <div id="widget-dishwasher" className="v2-slot v2-slot--dishwasher">
           <DishwasherWidget />
         </div>

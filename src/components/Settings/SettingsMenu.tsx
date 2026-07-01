@@ -4,8 +4,14 @@ import './SettingsMenu.css';
 
 export type MenuSection =
   | 'dashboard'
-  | 'family-widgets'
-  | 'family-general'
+  // Widgety — každý zvlášť
+  | 'widget-weather'
+  | 'widget-school'
+  | 'widget-calendar'
+  | 'widget-sticky'
+  | 'widget-handwriting'
+  | 'widget-messages'
+  | 'widget-bus'
   | 'shopping-aliases'
   | 'notifications'
   | 'api-weather'
@@ -34,12 +40,17 @@ const menuItems: MenuItem[] = [
     icon: '📊',
   },
   {
-    id: 'family-widgets',
-    label: 'Family Dashboard',
-    icon: '👨‍👩‍👧‍👦',
+    id: 'widget-weather',
+    label: 'Widgety',
+    icon: '🧩',
     children: [
-      { id: 'family-widgets', label: 'Widgety', icon: '🧩' },
-      { id: 'family-general', label: 'Obecné', icon: '⚙️' },
+      { id: 'widget-weather', label: 'Počasí', icon: '🌤️' },
+      { id: 'widget-school', label: 'Školní rozvrh', icon: '📚' },
+      { id: 'widget-calendar', label: 'Kalendář', icon: '📅' },
+      { id: 'widget-sticky', label: 'Sticky Notes', icon: '📝' },
+      { id: 'widget-handwriting', label: 'Ruční poznámky', icon: '✏️' },
+      { id: 'widget-messages', label: 'Historie zpráv', icon: '💬' },
+      { id: 'widget-bus', label: 'Autobusy', icon: '🚌' },
     ],
   },
   {
@@ -52,11 +63,6 @@ const menuItems: MenuItem[] = [
     label: 'Notifikace (FCM)',
     icon: '🔔',
   },
-  {
-    id: 'system',       
-    label: 'Systém',     
-    icon: '🖥️',         
-  },    
   {
     id: 'api-weather',
     label: 'API Služby',
@@ -73,6 +79,11 @@ const menuItems: MenuItem[] = [
     label: 'TUYA',
     icon: '🏠',
   },
+  {
+    id: 'system',
+    label: 'Systém',
+    icon: '🖥️',
+  },
 ];
 
 const SettingsMenu: React.FC<SettingsMenuProps> = ({
@@ -80,7 +91,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
   onSectionChange,
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['family-widgets', 'api-weather'])
+    new Set(['widget-weather', 'api-weather'])
   );
 
   const toggleSection = (id: string) => {

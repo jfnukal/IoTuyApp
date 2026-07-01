@@ -6,9 +6,22 @@ import StickyNotesWidget from '../Widgets/StickyNotes/StickyNotesWidget';
 import SchoolScheduleWidget from '../Widgets/SchoolSchedule/SchoolScheduleWidget';
 import BusScheduleWidget from '../Widgets/SchoolSchedule/BusScheduleWidget';
 import GridConfigPanel from './GridConfigPanel';
+import { useWidgetSettings } from '../../hooks/useWidgetSettings';
 import './DashboardV2.css';
 
 const MorePage: React.FC = () => {
+  const { settings } = useWidgetSettings();
+  const w = settings?.widgets;
+
+  // Sticky a bus: řídí jen jejich přepínač
+  const showSticky = w?.stickyNotes?.enabled ?? true;
+  const showBus = w?.busSchedule?.enabled ?? true;
+
+  // Školní rozvrh: musí být zapnutý A NESMÍ být "jen na hlavní stránce"
+  const showSchool =
+    (w?.schoolSchedule?.enabled ?? true) &&
+    !(w?.schoolSchedule?.keepOnMain ?? false);
+
   return (
     <div className="v2-layout v2-more-layout">
 
@@ -21,17 +34,23 @@ const MorePage: React.FC = () => {
 
         <div className="v2-more-grid">
 
-          <div className="v2-slot v2-slot--sticky">
-            <StickyNotesWidget selectedMember={null} />
-          </div>
+          {showSticky && (
+            <div className="v2-slot v2-slot--sticky">
+              <StickyNotesWidget selectedMember={null} />
+            </div>
+          )}
 
-          <div className="v2-slot v2-slot--full-schedule">
-            <SchoolScheduleWidget />
-          </div>
+          {showSchool && (
+            <div className="v2-slot v2-slot--full-schedule">
+              <SchoolScheduleWidget />
+            </div>
+          )}
 
-          <div className="v2-slot v2-slot--bus">
-            <BusScheduleWidget />
-          </div>
+          {showBus && (
+            <div className="v2-slot v2-slot--bus">
+              <BusScheduleWidget />
+            </div>
+          )}
 
         </div>
       </div>

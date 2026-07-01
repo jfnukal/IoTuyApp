@@ -1,15 +1,18 @@
 // src/components/Settings/SettingsWidgets.tsx
 import React from 'react';
 import type { AppSettings } from '../../services/settingsService';
+import type { MenuSection } from './SettingsMenu';
 import ToggleSwitch from './ToggleSwitch';
 import NumberInput from './NumberInput';
 
 interface SettingsWidgetsProps {
+  section: MenuSection;
   settings: AppSettings;
   onSettingsChange: (settings: AppSettings) => void;
 }
 
 const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
+  section,
   settings,
   onSettingsChange,
 }) => {
@@ -29,12 +32,11 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
     onSettingsChange(newSettings);
   };
 
-  return (
+  // ==================== POČASÍ ====================
+  const renderWeather = () => (
     <div className="settings-section">
-      <h2>🧩 Nastavení Widgetů</h2>
-
+      <h2>🌤️ Počasí</h2>
       <div className="widget-group">
-        <h3>🌤️ Weather Widget</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets?.weather?.enabled ?? true}
@@ -46,9 +48,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           onChange={(val) => updateWidgetSetting('weather', 'compactMode', val)}
         />
       </div>
+    </div>
+  );
 
+  // ==================== ŠKOLNÍ ROZVRH ====================
+  const renderSchool = () => (
+    <div className="settings-section">
+      <h2>📚 Školní rozvrh</h2>
       <div className="widget-group">
-        <h3>📚 Školní rozvrh</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets?.schoolSchedule?.enabled ?? true}
@@ -56,6 +63,17 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
             updateWidgetSetting('schoolSchedule', 'enabled', val)
           }
         />
+        <ToggleSwitch
+          label="Zachovat na hlavní stránce"
+          checked={settings.widgets?.schoolSchedule?.keepOnMain ?? false}
+          onChange={(val) =>
+            updateWidgetSetting('schoolSchedule', 'keepOnMain', val)
+          }
+        />
+        <p className="setting-description">
+          🏠 Když zapneš, rozvrh zůstane na hlavním dashboardu, ale zmizí ze
+          stránky „widgety". Vypnutím „Zobrazit widget" se skryje úplně všude.
+        </p>
         <NumberInput
           label="Interval kontroly aktuální hodiny"
           value={
@@ -119,9 +137,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           Například hodnota 14 = po 14:00 se zobrazí zítřejší rozvrh.
         </p>
       </div>
+    </div>
+  );
 
+  // ==================== KALENDÁŘ ====================
+  const renderCalendar = () => (
+    <div className="settings-section">
+      <h2>📅 Kalendář</h2>
       <div className="widget-group">
-        <h3>📅 Calendar Widget</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets.calendar.enabled}
@@ -172,9 +195,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           }
         />
       </div>
+    </div>
+  );
 
+  // ==================== STICKY NOTES ====================
+  const renderSticky = () => (
+    <div className="settings-section">
+      <h2>📝 Sticky Notes</h2>
       <div className="widget-group">
-        <h3>📝 Sticky Notes</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets.stickyNotes.enabled}
@@ -200,9 +228,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           max={100}
         />
       </div>
+    </div>
+  );
 
+  // ==================== HANDWRITING ====================
+  const renderHandwriting = () => (
+    <div className="settings-section">
+      <h2>✏️ Ruční poznámky</h2>
       <div className="widget-group">
-        <h3>✏️ Handwriting Notes</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets.handwritingNotes.enabled}
@@ -230,9 +263,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           max={200}
         />
       </div>
+    </div>
+  );
 
+  // ==================== HISTORIE ZPRÁV ====================
+  const renderMessages = () => (
+    <div className="settings-section">
+      <h2>💬 Historie zpráv</h2>
       <div className="widget-group">
-        <h3>💬 Message History</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets.messageHistory.enabled}
@@ -266,9 +304,14 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           max={500}
         />
       </div>
+    </div>
+  );
 
+  // ==================== AUTOBUSY ====================
+  const renderBus = () => (
+    <div className="settings-section">
+      <h2>🚌 Autobusy</h2>
       <div className="widget-group">
-        <h3>🚌 Bus Schedule</h3>
         <ToggleSwitch
           label="Zobrazit widget"
           checked={settings.widgets.busSchedule.enabled}
@@ -284,6 +327,25 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
       </div>
     </div>
   );
+
+  switch (section) {
+    case 'widget-weather':
+      return renderWeather();
+    case 'widget-school':
+      return renderSchool();
+    case 'widget-calendar':
+      return renderCalendar();
+    case 'widget-sticky':
+      return renderSticky();
+    case 'widget-handwriting':
+      return renderHandwriting();
+    case 'widget-messages':
+      return renderMessages();
+    case 'widget-bus':
+      return renderBus();
+    default:
+      return renderWeather();
+  }
 };
 
 export default SettingsWidgets;

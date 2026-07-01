@@ -17,6 +17,7 @@ export interface WidgetSettings {
   };
   schoolSchedule: {
     enabled: boolean;
+    keepOnMain: boolean; // widget zůstane na hlavní stránce, ale zmizí ze stránky "widgety"
     currentLessonCheckInterval: number; // v sekundách
     displayHours: number; // kolik hodin dopředu zobrazit
     kidRotationInterval: number; // interval přepínání mezi dětmi (sekundy)
@@ -109,6 +110,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     },
     schoolSchedule: {
       enabled: true,
+      keepOnMain: false, // výchozí: zobrazit i na stránce widgety
       currentLessonCheckInterval: 60, // Kontrola každou minutu
       displayHours: 3, // Zobrazit 3 hodiny dopředu
       kidRotationInterval: 10, // Přepínat děti každých 10 sekund

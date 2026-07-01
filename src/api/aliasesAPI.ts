@@ -25,24 +25,28 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hodina
 
 // Jednorázový úplný reset naučených aliasů — POČKÁ se na něj, aby první hledání
 // už vidělo čistá data (auto-učení nadělalo odpad typu "mouka → vejce").
+const RESET_FLAG = 'aliases-reset-v3'; // zvýšit číslo = vynutí nový reset u všech
 let resetPromise: Promise<void> | null = null;
 const ensureResetOnce = async (): Promise<void> => {
   try {
-    if (localStorage.getItem('aliases-reset-v2')) return;
+    if (localStorage.getItem(RESET_FLAG)) {
+      return;
+    }
   } catch {
     return;
   }
   if (!resetPromise) {
     resetPromise = (async () => {
       try {
+        console.log('[AliasesAPI] 🧹 Spouštím reset naučených aliasů…');
         const snap = await getDocs(collection(db, 'productAliases'));
         await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
         cachedAliases = null;
         cacheTimestamp = 0;
-        if (snap.size > 0) console.log(`[AliasesAPI] Reset: smazáno ${snap.size} naučených aliasů`);
-        try { localStorage.setItem('aliases-reset-v2', '1'); } catch { /* ignore */ }
+        console.log(`[AliasesAPI] ✅ Reset hotov: smazáno ${snap.size} aliasů`);
+        try { localStorage.setItem(RESET_FLAG, '1'); } catch { /* ignore */ }
       } catch (err) {
-        console.error('[AliasesAPI] Reset selhal:', err);
+        console.error('[AliasesAPI] ❌ Reset selhal:', err);
       }
     })();
   }

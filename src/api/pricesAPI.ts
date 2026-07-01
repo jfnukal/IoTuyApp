@@ -2,12 +2,13 @@
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { findCanonical } from './aliasesAPI';
-import { normalizeText, tokenize, relatedTerms } from './productDictionary';
+import { normalizeText, tokenize, relatedTerms, detectCategory } from './productDictionary';
 
 interface PriceDeal {
   id: string;
   productName: string;
   keywords: string[];
+  category?: string | null;
   store: string;
   price: number;
   unit: string | null;
@@ -158,27 +159,29 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
     const canonicals = await findCanonical(productName);
     const searchTerms = [productName, ...canonicals];
 
+    // Kategorie hledané položky — pro upřednostnění akcí ze stejné kategorie
+    const queryCategory = detectCategory(productName);
+
     const matches: Array<{ deal: PriceDeal; score: number }> = [];
-    
+
     for (const deal of deals) {
       // Zkusíme všechny varianty hledání a vezmeme nejlepší skóre
       let bestScore = 0;
-      
+
       for (const searchTerm of searchTerms) {
         const score = calculateMatchScore(searchTerm, deal);
         if (score > bestScore) {
           bestScore = score;
         }
       }
-      
+
       // Požadujeme alespoň skóre 3 pro shodu
       if (bestScore >= 3) {
-        matches.push({ deal, score: bestScore });
-        
-        // Debug: log prvních 5 shod
-        if (matches.length <= 5) {
-          // console.log(`[PricesAPI] Match: "${deal.productName}" (score: ${bestScore}, keywords: ${deal.keywords?.join(', ')})`);
+        // Bonus/penalizace podle kategorie (jen když ji známe u obou)
+        if (queryCategory && deal.category) {
+          bestScore += queryCategory === deal.category ? 4 : -4;
         }
+        matches.push({ deal, score: bestScore });
       }
     }
     

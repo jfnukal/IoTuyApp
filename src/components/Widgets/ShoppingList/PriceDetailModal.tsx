@@ -3,7 +3,6 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import {
   type PriceResult,
-  learnAlias,
   clearPriceCache,
 } from '../../../api/pricesAPI';
 import { deleteAliasBySearch, clearAliasCache } from '../../../api/aliasesAPI';
@@ -65,130 +64,10 @@ const PriceDetailModal: React.FC<PriceDetailModalProps> = ({
   const bestOffer = offers[0];
   const otherOffers = offers.slice(1, 6); // Max 5 dalších
 
-  // Učení aliasů - když uživatel potvrdí správný produkt
-  const handleLearn = async (productName?: string) => {
-    if (!productName || !itemName) return;
-
-    // Extrahujeme klíčová slova z hledání
-    const searchWords = itemName
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length > 2 && !/^\d+$/.test(w));
-
-    // Extrahujeme OBECNÁ klíčová slova z produktu (ne značky)
-    // Hledáme slova jako "mouka", "pivo", "mleko" - ne "Karlova Koruna"
-    const commonProductWords = [
-      'mouka',
-      'pivo',
-      'mleko',
-      'chleb',
-      'maslo',
-      'syry',
-      'jogurt',
-      'sunka',
-      'salam',
-      'kava',
-      'caj',
-      'dzus',
-      'voda',
-      'olej',
-      'cukr',
-      'sul',
-      'ryze',
-      'testoviny',
-      'kecup',
-      'majoneza',
-      'horcice',
-      'ocet',
-      'vejce',
-      'tvaroh',
-      'smetana',
-      'cokolada',
-      'susanky',
-      'chipsy',
-      'oriseky',
-      'maso',
-      'kure',
-      'veprove',
-      'hovezi',
-      'ryba',
-      'zelenina',
-      'ovoce',
-      'banany',
-      'jablka',
-      'pomerance',
-      'brambory',
-      'cibule',
-      'cesnek',
-      'rajcata',
-      'papriky',
-      'okurky',
-      'salat',
-      'mrkev',
-      'petrzl',
-      'radegast',
-      'gambrinus',
-      'pilsner',
-      'kozel',
-      'staropramen',
-      'budvar',
-      'kofola',
-      'cola',
-      'sprite',
-      'fanta',
-      'rum',
-      'vodka',
-      'vino',
-      'sekt',
-      'whisky',
-      'gin',
-      'hladka',
-      'polohruba',
-      'hruba',
-    ];
-
-    const productNameNorm = productName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
-    // Najdeme obecná slova v názvu produktu
-    const foundProductWords = commonProductWords.filter((word) =>
-      productNameNorm.includes(word)
-    );
-
-    let learned = false;
-
-    // Pro každé hledané slovo
-    for (const searchWord of searchWords) {
-      const searchNorm = searchWord
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-      // Pokud hledané slovo není v obecných slovech produktu
-      const isInProduct = foundProductWords.some(
-        (pw) => pw.includes(searchNorm) || searchNorm.includes(pw)
-      );
-
-      if (!isInProduct && foundProductWords.length > 0) {
-        // Vezmeme nejrelevantnější obecné slovo (nejdelší shoda)
-        const canonical = foundProductWords.sort(
-          (a, b) => b.length - a.length
-        )[0];
-        if (canonical) {
-          await learnAlias(searchWord, canonical);
-          learned = true;
-          console.log(`[Learn] Naučeno: "${searchWord}" → "${canonical}"`);
-        }
-      }
-    }
-
-    // Zobrazíme zpětnou vazbu
-    setLearnedProduct(productName);
-
-    if (!learned) {
-      console.log('[Learn] Nic nového k naučení');
-    }
+  // Potvrzení správného produktu — jen zpětná vazba.
+  // Auto-učení aliasů je vypnuté (dělalo odpad); aliasy se spravují ručně v Nastavení.
+  const handleLearn = (productName?: string) => {
+    if (productName) setLearnedProduct(productName);
   };
 
   return createPortal(

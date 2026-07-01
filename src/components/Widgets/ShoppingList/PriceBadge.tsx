@@ -1,6 +1,6 @@
 // src/components/Widgets/ShoppingList/PriceBadge.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { findAllDeals, type PriceResult, learnAlias } from '../../../api/pricesAPI';
+import { findAllDeals, type PriceResult } from '../../../api/pricesAPI';
 import PriceDetailModal from './PriceDetailModal';
 
 interface PriceBadgeProps {
@@ -81,25 +81,8 @@ const handleBadgeClick = (e: React.MouseEvent) => {
     setSearchLoading(false);
     
     if (results.length > 0) {
-      // Uložíme alias: původní hledání → nové hledání
-      const originalWords = itemName.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !/^\d+$/.test(w));
-      const newWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !/^\d+$/.test(w));
-      
-      // Najdeme slova která jsou v novém ale ne v původním
-      for (const origWord of originalWords) {
-        const origNorm = origWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const isInNew = newWords.some(nw => nw.includes(origNorm) || origNorm.includes(nw));
-        
-        if (!isInNew && newWords.length > 0) {
-          // Vezmeme hlavní slovo z nového hledání
-          const canonical = newWords.find(w => w.length > 3) || newWords[0];
-          if (canonical) {
-            await learnAlias(origWord, canonical);
-            console.log(`[PriceBadge] Naučeno: "${origWord}" → "${canonical}"`);
-          }
-        }
-      }
-      
+      // Auto-učení aliasů je vypnuté (dělalo odpad typu "bez → maso").
+      // Aliasy se spravují ručně v Nastavení → Nákupní seznam.
       setOffers(results);
       setNotFound(false);
       setShowSearch(false);

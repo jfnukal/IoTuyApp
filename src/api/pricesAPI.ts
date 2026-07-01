@@ -2,6 +2,7 @@
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { findCanonical } from './aliasesAPI';
+import { normalizeText, tokenize, relatedTerms } from './productDictionary';
 
 interface PriceDeal {
   id: string;
@@ -71,77 +72,57 @@ const loadDeals = async (): Promise<PriceDeal[]> => {
 };
 
 // Normalizuje text pro porovnání (bez diakritiky, malá písmena)
-const normalizeText = (text: string): string => {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
+const matchTerm = (term: string, dealKeywords: string[], nameWords: string[]): number => {
+  if (dealKeywords.includes(term)) return 5;
+  if (term.length >= 4 && dealKeywords.some(kw => kw.startsWith(term) || term.startsWith(kw))) return 4;
+  if (nameWords.includes(term)) return 3;
+  if (term.length >= 4 && nameWords.some(w => w.startsWith(term) || term.startsWith(w))) return 2;
+  return 0;
 };
 
 // Fuzzy matching - hledá shodu klíčových slov s kontrolou čísel
 const calculateMatchScore = (searchText: string, deal: PriceDeal): number => {
-  const normalizedSearch = normalizeText(searchText);
-  const normalizedName = normalizeText(deal.productName);
-  
-  // Rozdělíme na slova a čísla
-  const searchWords = normalizedSearch.split(/\s+/).filter(w => w.length > 1 && !/^\d+$/.test(w));
+  const tokens = tokenize(searchText);
   const searchNumbers = searchText.match(/\d+/g) || [];
-  
-  if (searchWords.length === 0 && searchNumbers.length === 0) return 0;
-  
+
+  if (tokens.length === 0 && searchNumbers.length === 0) return 0;
+
+  const dealKeywords = (deal.keywords || []).map(normalizeText);
+  const nameWords = normalizeText(deal.productName).split(/\s+/);
+
   let score = 0;
-  let matchedWords = 0;
-  
-  // 1. Hlavní slova (ne čísla) - MUSÍ se shodovat alespoň jedno
-  for (const searchWord of searchWords) {
-    // Přesná shoda v keywords
-    if (deal.keywords?.some(kw => kw === searchWord)) {
-      score += 5;
-      matchedWords++;
-    }
-    // Částečná shoda v keywords
-    else if (deal.keywords?.some(kw => kw.includes(searchWord) || searchWord.includes(kw))) {
-      score += 3;
-      matchedWords++;
-    }
-    // Shoda v názvu produktu
-    else if (normalizedName.includes(searchWord)) {
-      score += 2;
-      matchedWords++;
-    }
-  }
-  
-  // Pokud máme hledaná slova a žádné se neshoduje, vracíme 0
-  if (searchWords.length > 0 && matchedWords === 0) {
-    return 0;
-  }
-  
-  // BONUS: Čím více slov se shoduje, tím lepší skóre
-  // Pokud hledáme 2 slova a obě se shodují = bonus
-  if (searchWords.length > 1 && matchedWords === searchWords.length) {
-    score += 10; // Velký bonus za úplnou shodu
-  } else if (searchWords.length > 1 && matchedWords < searchWords.length) {
-    // Penalizace za částečnou shodu (matchuje jen některá slova)
-    score -= (searchWords.length - matchedWords) * 3;
-  }
-  
-  // 2. Kontrola čísel - pouze pokud hlavní slovo sedí
-  if (searchNumbers.length > 0 && matchedWords > 0) {
-    const productNumbersMatch = deal.productName.match(/\d+/g);
-    const productNumbers: string[] = productNumbersMatch ? productNumbersMatch : [];
-    
-    for (const searchNum of searchNumbers) {
-      if (productNumbers.includes(searchNum)) {
-        // Číslo se shoduje - bonus
-        score += 3;
-      } else if (productNumbers.length > 0) {
-        // Produkt má jiné číslo - penalizace
-        score -= 5;
+  let matched = 0;
+
+  for (const token of tokens) {
+    let best = matchTerm(token, dealKeywords, nameWords);
+    // Když přímá shoda selže, zkusíme synonyma (měkčí — max 2 body)
+    if (best === 0) {
+      for (const rel of relatedTerms(token)) {
+        const s = matchTerm(rel, dealKeywords, nameWords);
+        if (s > 0) { best = Math.min(2, s); break; }
       }
     }
+    if (best > 0) { score += best; matched++; }
   }
-  
+
+  // Žádné smysluplné slovo nesedí → není to shoda
+  if (matched === 0) return 0;
+
+  // Frázový bonus/penalizace podle poměru shody
+  if (tokens.length > 1) {
+    if (matched === tokens.length) score += 6;
+    else score -= (tokens.length - matched) * 2;
+  }
+
+  // Kontrola čísel (gramáž) — jen pokud hlavní slovo sedí
+  if (searchNumbers.length > 0 && matched > 0) {
+    const productNumbers: string[] = deal.productName.match(/\d+/g) || [];
+    for (const searchNum of searchNumbers) {
+      if (productNumbers.includes(searchNum)) score += 3;
+      else if (productNumbers.length > 0) score -= 4;
+    }
+  }
+
   return score;
 };
 
@@ -173,32 +154,10 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
     const deals = await loadDeals();
     if (deals.length === 0) return [];
     
-    // Získáme kanonické názvy z aliasů
+    // Hledáme originál + kanonické názvy z naučených aliasů (každý jako samostatný výraz)
     const canonicals = await findCanonical(productName);
-    
-    // Rozšířený hledaný text (originál + aliasy)
-    const searchTerms = [productName];
-    if (canonicals.length > 0) {
-      // Přidáme verzi s nahrazenými aliasy
-      let expandedSearch = productName.toLowerCase();
-      const words = expandedSearch.split(/\s+/);
-      
-      for (const canonical of canonicals) {
-        // Najdeme které slovo nahradit
-        for (const word of words) {
-          const aliases = await findCanonical(word);
-          if (aliases.includes(canonical)) {
-            expandedSearch = expandedSearch.replace(word, canonical);
-          }
-        }
-      }
-      
-      if (expandedSearch !== productName.toLowerCase()) {
-        searchTerms.push(expandedSearch);
-        // console.log(`[PricesAPI] Rozšířeno hledání: "${productName}" → "${expandedSearch}"`);
-      }
-    }
-    
+    const searchTerms = [productName, ...canonicals];
+
     const matches: Array<{ deal: PriceDeal; score: number }> = [];
     
     for (const deal of deals) {

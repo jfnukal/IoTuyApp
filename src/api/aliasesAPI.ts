@@ -9,6 +9,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { normalizeText, tokenize, isStopWord } from './productDictionary';
 
 interface ProductAlias {
   id: string;
@@ -42,6 +43,9 @@ export const loadAliases = async (): Promise<ProductAlias[]> => {
     cacheTimestamp = now;
     // console.log(`[AliasesAPI] Načteno ${cachedAliases.length} aliasů`);
 
+    // Jednorázový úklid odpadních aliasů (stop-slova jako "bez", "celku"…)
+    triggerCleanupOnce();
+
     return cachedAliases;
   } catch (error) {
     console.error('[AliasesAPI] Chyba při načítání aliasů:', error);
@@ -49,22 +53,60 @@ export const loadAliases = async (): Promise<ProductAlias[]> => {
   }
 };
 
-// Najde kanonický název pro alias
+// Najde kanonický název pro alias (normalizovaně, bez stop-slov)
 export const findCanonical = async (searchTerm: string): Promise<string[]> => {
   const aliases = await loadAliases();
-  const normalized = searchTerm.toLowerCase().trim();
-  const words = normalized.split(/\s+/);
+  const words = tokenize(searchTerm); // bez diakritiky, bez stop-slov
 
   const canonicals: string[] = [];
 
   for (const word of words) {
-    const match = aliases.find((a) => a.alias === word);
+    const match = aliases.find((a) => normalizeText(a.alias) === word);
     if (match) {
-      canonicals.push(match.canonical);
+      canonicals.push(normalizeText(match.canonical));
     }
   }
 
   return canonicals;
+};
+
+// Smaže aliasy, jejichž levá strana je stop-slovo (předložka apod.) — čistí odpad
+export const cleanupBadAliases = async (): Promise<number> => {
+  const aliases = await loadAliases();
+  const bad = aliases.filter((a) => isStopWord(a.alias));
+
+  let deleted = 0;
+  for (const a of bad) {
+    try {
+      await deleteDoc(doc(db, 'productAliases', a.id));
+      deleted++;
+      console.log(`[AliasesAPI] Smazán odpadní alias: ${a.alias} → ${a.canonical}`);
+    } catch (err) {
+      console.error('[AliasesAPI] Chyba při čištění aliasu:', err);
+    }
+  }
+
+  if (deleted > 0) {
+    cachedAliases = null;
+    cacheTimestamp = 0;
+  }
+  return deleted;
+};
+
+// Spustí úklid jen jednou za běh aplikace (guard přes localStorage)
+let cleanupTriggered = false;
+const triggerCleanupOnce = () => {
+  if (cleanupTriggered) return;
+  cleanupTriggered = true;
+  try {
+    if (localStorage.getItem('aliases-cleaned-v1')) return;
+  } catch { /* ignore */ }
+  cleanupBadAliases()
+    .then((n) => {
+      try { localStorage.setItem('aliases-cleaned-v1', '1'); } catch { /* ignore */ }
+      if (n > 0) console.log(`[AliasesAPI] Vyčištěno ${n} odpadních aliasů`);
+    })
+    .catch(() => { /* ignore */ });
 };
 
 // Uloží nový alias (učení)

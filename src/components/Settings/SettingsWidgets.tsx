@@ -64,15 +64,16 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           }
         />
         <ToggleSwitch
-          label="Zachovat na hlavní stránce"
+          label="Zachovat JEN na hlavní stránce"
           checked={settings.widgets?.schoolSchedule?.keepOnMain ?? false}
           onChange={(val) =>
             updateWidgetSetting('schoolSchedule', 'keepOnMain', val)
           }
         />
         <p className="setting-description">
-          🏠 Když zapneš, rozvrh zůstane na hlavním dashboardu, ale zmizí ze
-          stránky „widgety". Vypnutím „Zobrazit widget" se skryje úplně všude.
+          🏠 Když zapneš, rozvrh bude JEN na hlavním dashboardu a zmizí ze
+          stránky „widgety". Vypnutím „Zobrazit widget" se skryje úplně všude
+          (to má absolutní přednost).
         </p>
         <NumberInput
           label="Interval kontroly aktuální hodiny"

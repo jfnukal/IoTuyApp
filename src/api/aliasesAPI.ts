@@ -93,18 +93,40 @@ export const cleanupBadAliases = async (): Promise<number> => {
   return deleted;
 };
 
+// Smaže VŠECHNY naučené aliasy (auto-učení je vypnuté, staré aliasy jsou jen odpad,
+// který přesměrovává hledání na blbost — např. "mouka → vejce"). Ruční aliasy si
+// uživatel přidá znovu v Nastavení; synonyma pokrývá vestavěný slovník.
+export const resetAllLearnedAliases = async (): Promise<number> => {
+  const aliases = await loadAliases();
+  let deleted = 0;
+  for (const a of aliases) {
+    try {
+      await deleteDoc(doc(db, 'productAliases', a.id));
+      deleted++;
+    } catch (err) {
+      console.error('[AliasesAPI] Chyba při mazání aliasu:', err);
+    }
+  }
+  if (deleted > 0) {
+    cachedAliases = null;
+    cacheTimestamp = 0;
+  }
+  return deleted;
+};
+
 // Spustí úklid jen jednou za běh aplikace (guard přes localStorage)
 let cleanupTriggered = false;
 const triggerCleanupOnce = () => {
   if (cleanupTriggered) return;
   cleanupTriggered = true;
   try {
-    if (localStorage.getItem('aliases-cleaned-v1')) return;
+    if (localStorage.getItem('aliases-reset-v2')) return;
   } catch { /* ignore */ }
-  cleanupBadAliases()
+  // Jednorázový úplný reset odpadních naučených aliasů
+  resetAllLearnedAliases()
     .then((n) => {
-      try { localStorage.setItem('aliases-cleaned-v1', '1'); } catch { /* ignore */ }
-      if (n > 0) console.log(`[AliasesAPI] Vyčištěno ${n} odpadních aliasů`);
+      try { localStorage.setItem('aliases-reset-v2', '1'); } catch { /* ignore */ }
+      if (n > 0) console.log(`[AliasesAPI] Reset: smazáno ${n} naučených aliasů`);
     })
     .catch(() => { /* ignore */ });
 };

@@ -23,8 +23,37 @@ let cachedAliases: ProductAlias[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hodina
 
+// Jednorázový úplný reset naučených aliasů — POČKÁ se na něj, aby první hledání
+// už vidělo čistá data (auto-učení nadělalo odpad typu "mouka → vejce").
+let resetPromise: Promise<void> | null = null;
+const ensureResetOnce = async (): Promise<void> => {
+  try {
+    if (localStorage.getItem('aliases-reset-v2')) return;
+  } catch {
+    return;
+  }
+  if (!resetPromise) {
+    resetPromise = (async () => {
+      try {
+        const snap = await getDocs(collection(db, 'productAliases'));
+        await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+        cachedAliases = null;
+        cacheTimestamp = 0;
+        if (snap.size > 0) console.log(`[AliasesAPI] Reset: smazáno ${snap.size} naučených aliasů`);
+        try { localStorage.setItem('aliases-reset-v2', '1'); } catch { /* ignore */ }
+      } catch (err) {
+        console.error('[AliasesAPI] Reset selhal:', err);
+      }
+    })();
+  }
+  await resetPromise;
+};
+
 // Načte všechny aliasy
 export const loadAliases = async (): Promise<ProductAlias[]> => {
+  // Nejdřív dokonči jednorázový reset (počká se), pak čti
+  await ensureResetOnce();
+
   const now = Date.now();
 
   if (cachedAliases && now - cacheTimestamp < CACHE_DURATION) {
@@ -41,11 +70,6 @@ export const loadAliases = async (): Promise<ProductAlias[]> => {
     })) as ProductAlias[];
 
     cacheTimestamp = now;
-    // console.log(`[AliasesAPI] Načteno ${cachedAliases.length} aliasů`);
-
-    // Jednorázový úklid odpadních aliasů (stop-slova jako "bez", "celku"…)
-    triggerCleanupOnce();
-
     return cachedAliases;
   } catch (error) {
     console.error('[AliasesAPI] Chyba při načítání aliasů:', error);
@@ -112,23 +136,6 @@ export const resetAllLearnedAliases = async (): Promise<number> => {
     cacheTimestamp = 0;
   }
   return deleted;
-};
-
-// Spustí úklid jen jednou za běh aplikace (guard přes localStorage)
-let cleanupTriggered = false;
-const triggerCleanupOnce = () => {
-  if (cleanupTriggered) return;
-  cleanupTriggered = true;
-  try {
-    if (localStorage.getItem('aliases-reset-v2')) return;
-  } catch { /* ignore */ }
-  // Jednorázový úplný reset odpadních naučených aliasů
-  resetAllLearnedAliases()
-    .then((n) => {
-      try { localStorage.setItem('aliases-reset-v2', '1'); } catch { /* ignore */ }
-      if (n > 0) console.log(`[AliasesAPI] Reset: smazáno ${n} naučených aliasů`);
-    })
-    .catch(() => { /* ignore */ });
 };
 
 // Uloží nový alias (učení)

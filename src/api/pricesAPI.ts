@@ -179,6 +179,11 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
         }
       }
 
+      // DEBUG: u dotazu s "mouk" vypiš každou shodu i s keywords (dočasné ladění)
+      if (bestScore > 0 && /mouk/i.test(productName)) {
+        console.log(`[DBG] "${deal.productName}" score=${bestScore} kw=[${(deal.keywords || []).join('|')}] cat=${deal.category || '-'}`);
+      }
+
       // Požadujeme alespoň skóre 3 pro shodu
       if (bestScore >= 3) {
         // Bonus/penalizace podle kategorie (jen když ji známe u obou)

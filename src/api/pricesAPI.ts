@@ -72,12 +72,15 @@ const loadDeals = async (): Promise<PriceDeal[]> => {
   }
 };
 
-// Normalizuje text pro porovnání (bez diakritiky, malá písmena)
+// Kmenová shoda dvou slov — jen když jsou OBĚ ≥4 znaky (jinak by "m" sedělo na "mouka")
+const stemMatch = (a: string, b: string): boolean =>
+  a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a));
+
 const matchTerm = (term: string, dealKeywords: string[], nameWords: string[]): number => {
   if (dealKeywords.includes(term)) return 5;
-  if (term.length >= 4 && dealKeywords.some(kw => kw.startsWith(term) || term.startsWith(kw))) return 4;
+  if (term.length >= 4 && dealKeywords.some(kw => stemMatch(term, kw))) return 4;
   if (nameWords.includes(term)) return 3;
-  if (term.length >= 4 && nameWords.some(w => w.startsWith(term) || term.startsWith(w))) return 2;
+  if (term.length >= 4 && nameWords.some(w => stemMatch(term, w))) return 2;
   return 0;
 };
 
@@ -177,11 +180,6 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
         if (score > bestScore) {
           bestScore = score;
         }
-      }
-
-      // DEBUG: u dotazu s "mouk" vypiš každou shodu i s keywords (dočasné ladění)
-      if (bestScore > 0 && /mouk/i.test(productName)) {
-        console.log(`[DBG] "${deal.productName}" score=${bestScore} kw=[${(deal.keywords || []).join('|')}] cat=${deal.category || '-'}`);
       }
 
       // Požadujeme alespoň skóre 3 pro shodu

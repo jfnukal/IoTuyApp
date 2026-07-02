@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: notificationBody,
     icon: '/icon-192x192.png',
-    badge: '/badge-24x24.png',
+    badge: '/badge-96x96.png',
     tag: stableTag,           // ← stabilní, ne Date.now()
     renotify: false,          // nesound znovu, pokud stejný tag existuje
     requireInteraction: payload.data?.urgent === 'true',

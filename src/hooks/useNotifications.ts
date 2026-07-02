@@ -52,7 +52,7 @@ export const useNotifications = (
                     body,
                     tag, // stabilní tag → OS deduplikuje případný duplikát
                     icon: '/icon-192x192.png',
-                    badge: '/badge-24x24.png',
+                    badge: '/badge-96x96.png',
                     data,
                   });
                 } catch {

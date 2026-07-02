@@ -5,6 +5,8 @@ import { firestoreService } from '../../../services/firestoreService';
 import type { TimetableDay } from '../../../types/index';
 import './SchoolSchedule.css';
 import { SchoolScheduleModal } from './SchoolScheduleModal';
+import { isSummerBreak } from './holidayMode';
+import HolidayOverlay from './HolidayOverlay';
 
 const DAYS_OF_WEEK = [
   'Pondělí',
@@ -127,6 +129,15 @@ const SchoolScheduleWidget: React.FC = () => {
     };
     return emojiMap[subject] || '📚';
   };
+
+  // 🏖️ Prázdninový režim — přes rozvrh sváteční nápis
+  if (isSummerBreak()) {
+    return (
+      <div className="school-schedule-widget">
+        <HolidayOverlay />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

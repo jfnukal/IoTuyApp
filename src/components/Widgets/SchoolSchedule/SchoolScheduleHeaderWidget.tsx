@@ -8,6 +8,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import './SchoolScheduleHeader.css';
 import { SchoolScheduleModal } from './SchoolScheduleModal';
+import { isSummerBreak } from './holidayMode';
+import HolidayOverlay from './HolidayOverlay';
 
 const DAYS_SHORT = ['Po', 'Út', 'St', 'Čt', 'Pá'];
 
@@ -275,6 +277,15 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeTooltip, showLunchDetail]);
+
+  // 🏖️ Prázdninový režim — přes rozvrh sváteční nápis
+  if (isSummerBreak()) {
+    return (
+      <div className="school-schedule-widget compact">
+        <HolidayOverlay />
+      </div>
+    );
+  }
 
   // Loading stav
   if (loading) {

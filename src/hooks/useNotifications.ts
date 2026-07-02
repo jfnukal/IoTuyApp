@@ -38,8 +38,29 @@ export const useNotifications = (
 
             if (token) {
 
-              // Naslouchej zprávám v popředí
-              fcmService.listenForMessages(() => {
+              // Naslouchej zprávám v popředí — když je appka OTEVŘENÁ, service worker
+              // notifikaci neukáže, musíme ji zobrazit sami (jinak by nepřišla nic).
+              fcmService.listenForMessages(async (payload: any) => {
+                const data = payload?.data || {};
+                const title =
+                  data.title || payload?.notification?.title || 'Nová zpráva';
+                const body = data.body || payload?.notification?.body || '';
+                const tag = data.messageId || data.type || 'smarthome-msg';
+                try {
+                  const reg = await navigator.serviceWorker.ready;
+                  await reg.showNotification(title, {
+                    body,
+                    tag, // stabilní tag → OS deduplikuje případný duplikát
+                    icon: '/icon-192x192.png',
+                    badge: '/badge-24x24.png',
+                    data,
+                  });
+                } catch {
+                  // Fallback, kdyby SW nebyl dostupný
+                  if (Notification.permission === 'granted') {
+                    new Notification(title, { body, tag });
+                  }
+                }
               });
             }
           } else {

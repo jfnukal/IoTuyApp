@@ -162,10 +162,6 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
     const canonicals = await findCanonical(productName);
     const searchTerms = [productName, ...canonicals];
 
-    if (canonicals.length > 0) {
-      console.log(`[PricesAPI] "${productName}" → aliasy: ${canonicals.join(', ')}`);
-    }
-
     // Kategorie hledané položky — pro upřednostnění akcí ze stejné kategorie
     const queryCategory = detectCategory(productName);
 
@@ -252,12 +248,6 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
     
     // Uložit do cache
     searchCache.set(cacheKey, { offers: results, timestamp: Date.now() });
-
-    if (results.length > 0) {
-      console.log(`[PricesAPI] "${productName}" → ${results.length} nabídek, nejlepší: "${results[0].productName}" (${results[0].store} ${results[0].price})`);
-    } else {
-      console.log(`[PricesAPI] "${productName}" → nic nenalezeno`);
-    }
 
     return results;
   } catch (error) {

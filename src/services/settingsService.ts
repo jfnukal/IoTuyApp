@@ -25,6 +25,7 @@ export interface WidgetSettings {
   };
   stickyNotes: {
     enabled: boolean;
+    notifyOnNew: boolean; // poslat push tomu, komu je vzkaz určen
     deleteAfterDays: number;
     maxNotes: number;
   };
@@ -118,6 +119,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     },
     stickyNotes: {
       enabled: true,
+      notifyOnNew: true,
       deleteAfterDays: 90,
       maxNotes: 20,
     },

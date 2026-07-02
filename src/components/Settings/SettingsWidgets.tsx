@@ -209,6 +209,15 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           checked={settings.widgets.stickyNotes.enabled}
           onChange={(val) => updateWidgetSetting('stickyNotes', 'enabled', val)}
         />
+        <ToggleSwitch
+          label="Upozornit na nový vzkaz"
+          checked={settings.widgets?.stickyNotes?.notifyOnNew ?? true}
+          onChange={(val) => updateWidgetSetting('stickyNotes', 'notifyOnNew', val)}
+        />
+        <p className="setting-description">
+          🔔 Když někomu přiřadíš vzkaz (vybereš jeho jméno), přijde mu push
+          notifikace do aplikace, že má nový vzkaz/úkol.
+        </p>
         <NumberInput
           label="Mazat poznámky starší než"
           value={settings.widgets.stickyNotes.deleteAfterDays}

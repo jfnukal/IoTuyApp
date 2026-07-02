@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onNewCalendarEvent = exports.checkReminders = exports.parseRecipeUrl = void 0;
+exports.onNewStickyNote = exports.onNewCalendarEvent = exports.checkReminders = exports.parseRecipeUrl = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 var parseRecipeUrl_1 = require("./parseRecipeUrl");
@@ -271,6 +271,77 @@ exports.onNewCalendarEvent = functions
         catch (error) {
             console.error(`❌ Chyba push pro ${member.name}:`, error);
         }
+    }
+    return null;
+});
+// ==================== TRIGGER: NOVÝ VZKAZ / ÚKOL (sticky note) ====================
+exports.onNewStickyNote = functions
+    .region('europe-west1')
+    .firestore.document('stickyNotes/{noteId}')
+    .onCreate(async (snapshot, context) => {
+    var _a, _b, _c, _d;
+    const note = snapshot.data();
+    if (!note)
+        return null;
+    const db = admin.firestore();
+    // Přepínač v nastavení (appSettings/main → widgets.stickyNotes.notifyOnNew)
+    try {
+        const settingsDoc = await db.collection('appSettings').doc('main').get();
+        const notifyOnNew = (_c = (_b = (_a = settingsDoc.data()) === null || _a === void 0 ? void 0 : _a.widgets) === null || _b === void 0 ? void 0 : _b.stickyNotes) === null || _c === void 0 ? void 0 : _c.notifyOnNew;
+        if (notifyOnNew === false) {
+            console.log('🔕 Notifikace vzkazů vypnuté v nastavení');
+            return null;
+        }
+    }
+    catch (err) {
+        console.warn('⚠️ Nelze načíst nastavení, pokračuji s notifikací:', err);
+    }
+    // Komu je vzkaz určen = note.author (jméno člena rodiny)
+    const targetName = note.author;
+    if (!targetName)
+        return null;
+    const membersSnapshot = await db
+        .collection('familyMembers')
+        .where('name', '==', targetName)
+        .limit(1)
+        .get();
+    if (membersSnapshot.empty) {
+        console.log(`⚠️ Člen "${targetName}" nenalezen`);
+        return null;
+    }
+    const authUid = membersSnapshot.docs[0].data().authUid;
+    if (!authUid) {
+        console.log(`⚠️ Člen "${targetName}" nemá authUid`);
+        return null;
+    }
+    const userSettingsDoc = await db.collection('userSettings').doc(authUid).get();
+    const tokens = ((_d = userSettingsDoc.data()) === null || _d === void 0 ? void 0 : _d.fcmTokens) || [];
+    if (tokens.length === 0) {
+        console.log(`⚠️ "${targetName}" nemá FCM tokeny`);
+        return null;
+    }
+    const title = '📝 Nový vzkaz pro tebe';
+    const body = (note.content || '').length > 80
+        ? `${note.content.substring(0, 80)}…`
+        : note.content || 'Máš nový vzkaz.';
+    const messageId = `note-${context.params.noteId}`;
+    const messages = tokens.map((token) => ({
+        data: {
+            type: 'new_sticky_note',
+            title,
+            body,
+            messageId,
+            noteId: context.params.noteId,
+            timestamp: Date.now().toString(),
+        },
+        token,
+    }));
+    try {
+        const response = await admin.messaging().sendEach(messages);
+        console.log(`✅ Vzkaz pro "${targetName}": odesláno ${response.successCount}`);
+    }
+    catch (error) {
+        console.error(`❌ Chyba push vzkazu pro "${targetName}":`, error);
     }
     return null;
 });

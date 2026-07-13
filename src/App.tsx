@@ -218,7 +218,7 @@ function App() {
           <AiWidget />
           <div className="app-layout">
             <Suspense fallback={<PageLoader />}>
-              <AppRoutes familyMemberId={familyMemberId} />
+              <AppRoutes />
             </Suspense>
 
             <div id="modal-root"></div>

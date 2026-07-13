@@ -20,6 +20,11 @@ export const useTuya = () => {
   const discoveryIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const syncSettingsRef = useRef<TuyaSyncSettings | null>(null);
 
+  // Aktuální zařízení pro sync intervaly — ref, aby smyčky vždy viděly
+  // čerstvý stav (online/offline, kategorie) a ne snímek z doby spuštění
+  const devicesRef = useRef<TuyaDevice[]>([]);
+  devicesRef.current = devices;
+
   // 📡 Real-time subscribe k Firestore
   useEffect(() => {
     if (!currentUser) {
@@ -93,19 +98,21 @@ export const useTuya = () => {
           return baseMinutes * 60 * 1000;
         };
 
-        // Připrav data pro sync
-        const devicesForSync = devices.map(d => ({
-          id: d.id,
-          category: d.category,
-          online: d.online,
-        }));
+        // Data pro sync se čtou z ref až v okamžiku každého ticku
+        const getDevicesForSync = () =>
+          devicesRef.current.map(d => ({
+            id: d.id,
+            category: d.category,
+            online: d.online,
+          }));
 
         // Pasivní kategorie = vše co není critical ani standard
-        const passiveCategories = [...new Set(devices.map(d => d.category))]
-          .filter(cat => 
-            !tuyaSync.criticalCategories.includes(cat) && 
-            !tuyaSync.standardCategories.includes(cat)
-          );
+        const getPassiveCategories = () =>
+          [...new Set(devicesRef.current.map(d => d.category))]
+            .filter(cat =>
+              !tuyaSync.criticalCategories.includes(cat) &&
+              !tuyaSync.standardCategories.includes(cat)
+            );
 
         // 🔴 Critical interval
         if (tuyaSync.criticalCategories.length > 0) {
@@ -113,7 +120,7 @@ export const useTuya = () => {
           
           criticalIntervalRef.current = setInterval(async () => {
             await tuyaService.syncDevicesByCategory(
-              devicesForSync,
+              getDevicesForSync(),
               tuyaSync.criticalCategories,
               tuyaSync.syncOnlyOnline
             );
@@ -126,7 +133,7 @@ export const useTuya = () => {
           
           standardIntervalRef.current = setInterval(async () => {
             await tuyaService.syncDevicesByCategory(
-              devicesForSync,
+              getDevicesForSync(),
               tuyaSync.standardCategories,
               tuyaSync.syncOnlyOnline
             );
@@ -134,13 +141,13 @@ export const useTuya = () => {
         }
 
         // 🟢 Passive interval
-        if (passiveCategories.length > 0) {
+        if (getPassiveCategories().length > 0) {
           const passiveMs = getInterval(tuyaSync.intervals.passive);
-          
+
           passiveIntervalRef.current = setInterval(async () => {
             await tuyaService.syncDevicesByCategory(
-              devicesForSync,
-              passiveCategories,
+              getDevicesForSync(),
+              getPassiveCategories(),
               tuyaSync.syncOnlyOnline
             );
           }, passiveMs);

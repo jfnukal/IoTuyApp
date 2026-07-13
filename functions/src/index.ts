@@ -7,6 +7,36 @@ export { parseRecipeUrl } from './parseRecipeUrl';
 // ✅ Inicializace Firebase Admin SDK
 admin.initializeApp();
 
+// Offset zóny Europe/Prague vůči UTC v daném okamžiku (ms).
+// Řeší letní/zimní čas přesně — včetně přechodů poslední neděli v březnu a říjnu.
+function pragueOffsetMs(ts: number): number {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Prague',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts: Record<string, string> = {};
+  for (const p of dtf.formatToParts(new Date(ts))) parts[p.type] = p.value;
+  const asUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour) % 24, Number(parts.minute), Number(parts.second)
+  );
+  return asUtc - ts;
+}
+
+// Převede pražský lokální čas na UTC timestamp.
+function pragueTimeToUtc(
+  year: number, month: number, day: number,
+  hours: number, minutes: number
+): number {
+  const utcGuess = Date.UTC(year, month - 1, day, hours, minutes, 0, 0);
+  // druhá iterace zpřesňuje výsledek těsně kolem přechodu času
+  let ts = utcGuess - pragueOffsetMs(utcGuess);
+  ts = utcGuess - pragueOffsetMs(ts);
+  return ts;
+}
+
 function calculateReminderTime(
   eventDate: string,
   reminderValue: number,
@@ -14,26 +44,14 @@ function calculateReminderTime(
   eventTime?: string
 ): number {
   const [year, monthNum, day] = eventDate.split('-').map(Number);
-  const eventDateTime = new Date(year, monthNum - 1, day, 0, 0, 0, 0);
 
+  let hours = 8;   // celodenní událost → připomínka se počítá od 8:00
+  let minutes = 0;
   if (eventTime && typeof eventTime === 'string') {
-    const [hours, minutes] = eventTime.split(':').map(Number);
-    eventDateTime.setHours(hours, minutes, 0, 0);
-  } else {
-    eventDateTime.setHours(8, 0, 0, 0);
+    [hours, minutes] = eventTime.split(':').map(Number);
   }
 
-  // ✅ PRAGUE TIMEZONE: Automatická detekce letního/zimního času
-  const eventMonth = eventDateTime.getMonth(); // 0-11
-  // Letní čas v ČR: duben-říjen = UTC+2, listopad-březen = UTC+1
-  const isSummerTime = eventMonth >= 3 && eventMonth <= 9;
-  const pragueOffsetMinutes = isSummerTime ? -120 : -60;
-
-  const serverOffsetMinutes = eventDateTime.getTimezoneOffset();
-  const offsetDifference = pragueOffsetMinutes - -serverOffsetMinutes;
-  eventDateTime.setMinutes(eventDateTime.getMinutes() + offsetDifference);
-
-  const eventTimestamp = eventDateTime.getTime();
+  const eventTimestamp = pragueTimeToUtc(year, monthNum, day, hours, minutes);
 
   let reminderTime: number;
 

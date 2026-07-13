@@ -7,9 +7,6 @@ import Login from './components/Login';
 // 🚀 LAZY IMPORTS - Optimalizace výkonu (Code Splitting)
 // Komponenty se stáhnou až ve chvíli, kdy na ně uživatel klikne/přejde.
 
-// Hlavní Dashboard
-const DashboardLayout = lazy(() => import('./components/Dashboard/DashboardLayout'));
-
 // Dashboard V2 — shell + podstránky
 const V2Shell     = lazy(() => import('./components/DashboardV2/V2Shell'));
 const DashboardV2 = lazy(() => import('./components/DashboardV2/DashboardV2'));
@@ -27,11 +24,7 @@ const TuyaDeviceList = lazy(() =>
   import('./tuya').then(module => ({ default: module.TuyaDeviceList }))
 );
 
-interface AppRoutesProps {
-  familyMemberId: string | null;
-}
-
-export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
+export const AppRoutes: React.FC = () => {
   const { currentUser } = useAuth();
 
   // Pokud uživatel není přihlášen, zobrazíme Login (ten necháváme načtený hned)
@@ -49,17 +42,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ familyMemberId }) => {
         <Route path="devices"   element={<DevicesPage />} />
         <Route path="more"      element={<MorePage />} />
       </Route>
-
-      {/* 🏠 Dashboard V1 — záloha na /v1 */}
-      <Route
-        path="/v1"
-        element={
-          <DashboardLayout
-            familyMemberId={familyMemberId}
-            onNavigateToSettings={() => {}}
-          />
-        }
-      />
 
       {/* ⚙️ Nastavení */}
       <Route path="/settings"  element={<SettingsPage />} />

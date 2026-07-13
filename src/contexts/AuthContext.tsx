@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -14,8 +12,6 @@ import type { User } from '../types/index';
 interface AuthContextType {
   currentUser: User | null; // <-- Používáme zpět váš typ User
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -35,24 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  };
-
-  const register = async (email: string, password: string): Promise<void> => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error('Register error:', error);
-      throw error;
-    }
-  };
 
   const loginWithGoogle = async (): Promise<void> => {
     try {
@@ -100,8 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const value: AuthContextType = {
     currentUser,
     loading,
-    login,
-    register,
     loginWithGoogle,
     logout,
   };

@@ -413,3 +413,85 @@ export const onNewStickyNote = functions
       return null;
     }
   );
+
+// ==================== TRIGGER: NOVÁ ZPRÁVA (familyMessages) ====================
+// Obnoveno: funkce se v říjnu 2025 omylem ztratila ze zdrojáku při přepisu
+// index.ts, ale v produkci běžela dál stará verze. Tato verze posílá
+// DATA-ONLY zprávy (stejný formát jako ostatní triggery po opravě duplicit).
+
+export const sendPushOnNewMessage = functions
+  .region('europe-west1')
+  .firestore.document('familyMessages/{messageId}')
+  .onCreate(
+    async (
+      snapshot: functions.firestore.QueryDocumentSnapshot,
+      context: functions.EventContext
+    ) => {
+      const messageData = snapshot.data();
+      if (!messageData) return null;
+
+      const db = admin.firestore();
+
+      // Příjemci bez odesílatele
+      const recipientsIds: string[] = (messageData.recipients || []).filter(
+        (id: string) => id !== messageData.senderId
+      );
+      if (recipientsIds.length === 0) return null;
+
+      // familyMember id → authUid
+      const authUids = (
+        await Promise.all(
+          recipientsIds.map(async (memberId) => {
+            const memberDoc = await db
+              .collection('familyMembers')
+              .doc(memberId)
+              .get();
+            return memberDoc.exists ? memberDoc.data()?.authUid : null;
+          })
+        )
+      ).filter((uid): uid is string => !!uid);
+
+      if (authUids.length === 0) {
+        console.warn('⚠️ Žádné authUid pro příjemce', recipientsIds);
+        return null;
+      }
+
+      // authUid → FCM tokeny
+      const settingsDocs = await Promise.all(
+        authUids.map((uid) => db.collection('userSettings').doc(uid).get())
+      );
+      const allTokens: string[] = settingsDocs
+        .flatMap((d) => (d.exists ? d.data()?.fcmTokens || [] : []))
+        .filter((t: string) => !!t);
+
+      if (allTokens.length === 0) {
+        console.log('Nenalezeny žádné FCM tokeny pro příjemce.');
+        return null;
+      }
+
+      // DATA-ONLY zpráva — notifikaci zobrazí jen service worker,
+      // stabilní tag (messageId) brání duplikátům
+      const messages = allTokens.map((token) => ({
+        data: {
+          type: 'family_message',
+          title: `💬 Nová zpráva od ${messageData.senderName}`,
+          body: String(messageData.message || ''),
+          messageId: context.params.messageId,
+          senderId: String(messageData.senderId || ''),
+          senderName: String(messageData.senderName || ''),
+          urgent: messageData.urgent ? 'true' : 'false',
+          timestamp: Date.now().toString(),
+        },
+        token,
+      }));
+
+      const response = await admin.messaging().sendEach(messages);
+      console.log(
+        `✅ Zpráva ${context.params.messageId}: notifikace ${response.successCount}/${allTokens.length}`
+      );
+      if (response.failureCount > 0) {
+        console.warn(`⚠️ Selhalo: ${response.failureCount}`);
+      }
+      return null;
+    }
+  );

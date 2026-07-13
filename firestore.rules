@@ -2,16 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // ===== RODINNÝ ALLOWLIST =====
+    // Přístup k datům mají POUZE tyto Google účty.
+    // Nový člen rodiny = přidat e-mail na řádek níže a nasadit pravidla.
+    function isFamily() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'jarek.fuki@gmail.com',
+          'jarda.fnukal@gmail.com',
+          'johankafnukalova@gmail.com',
+          'misaelka@gmail.com'
+        ];
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return isFamily() && request.auth.uid == userId;
     }
 
     match /appConfig/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isFamily();
       allow write: if false;
     }
 
@@ -21,168 +30,118 @@ service cloud.firestore {
     }
 
     match /familyMembers/{memberId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
     match /schedules/{scheduleId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
     match /mealOrders/{docId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
-match /calendarEvents/{eventId} {
-  allow read: if request.auth != null;
-  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-  allow update, delete: if request.auth != null;
-}
+    match /calendarEvents/{eventId} {
+      allow read: if isFamily();
+      allow create: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isFamily();
+    }
 
-match /recipes/{recipeId} {
-  allow read: if request.auth != null;
-  allow create, update, delete: if request.auth != null;
-}
+    match /recipes/{recipeId} {
+      allow read: if isFamily();
+      allow create, update, delete: if isFamily();
+    }
 
     match /namedayPreferences/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
 
-    // Rodinná nástěnka — všichni přihlášení čtou i píšou (sdílené, jako familyMessages)
+    // Rodinná nástěnka — všichni členové rodiny čtou i píšou
     match /stickyNotes/{noteId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
     match /familyMessages/{messageId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.recipients.hasAny([request.auth.uid]);
-      allow delete: if isSignedIn();
+      allow read: if isFamily();
+      allow create: if isFamily();
+      allow update: if isFamily() && resource.data.recipients.hasAny([request.auth.uid]);
+      allow delete: if isFamily();
     }
 
-
-      // 🔧 TODO: Implementovat role-based access control pro Tuya zařízení
-      // Plán:
-      // 1. Přidat do familyMembers pole "permissions" nebo "role"
-      // 2. Role: 'admin' (plný přístup), 'user' (čtení + ovládání), 'viewer' (jen čtení)
-      // 3. Citlivá zařízení (security, critical) jen pro 'admin'
-      // 4. Funkce checkDevicePermission(userId, deviceId, action)
-      //
-      // Příklad budoucí struktury:
-      // - familyMembers/{memberId} → { role: 'admin' | 'user' | 'viewer' }
-      // - devices/{deviceId} → { userId, category, restrictedAccess: boolean }
-      //
-      // Dočasně: Všichni přihlášení mají plný přístup
-      match /devices/{deviceId} {
-        allow read, write: if request.auth != null;
-      }
-
-match /notifications/{notificationId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    // 🔧 TODO: Implementovat role-based access control pro Tuya zařízení
+    // (admin / user / viewer) — do té doby mají všichni členové rodiny plný přístup
+    match /devices/{deviceId} {
+      allow read, write: if isFamily();
     }
 
-    // 🆕 Pravidla pro rodinný tablet - allFamily kolekce
+    match /notifications/{notificationId} {
+      allow read, write: if isFamily() && request.auth.uid == resource.data.userId;
+    }
+
+    // Rodinný tablet - allFamily kolekce
     match /allFamily/{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
-     // Handwriting Notes - Ručně psané poznámky
+    // Handwriting Notes - ručně psané poznámky (jen vlastník)
     match /handwritingNotes/{noteId} {
-      // Čtení: pouze vlastník poznámky
-      allow read: if request.auth != null &&
-                     resource.data.userId == request.auth.uid;
-
-      // Vytvoření: pouze přihlášený uživatel, a musí být vlastníkem
-      allow create: if request.auth != null &&
-                       request.resource.data.userId == request.auth.uid;
-
-      // Aktualizace: pouze vlastník poznámky
-      allow update: if request.auth != null &&
-                       resource.data.userId == request.auth.uid;
-
-      // Smazání: pouze vlastník poznámky
-      allow delete: if request.auth != null &&
-                       resource.data.userId == request.auth.uid;
+      allow read: if isFamily() && resource.data.userId == request.auth.uid;
+      allow create: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow update: if isFamily() && resource.data.userId == request.auth.uid;
+      allow delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-     // App Settings - pouze čtení pro všechny, zápis jen pro autentizované
+    // App Settings
     match /appSettings/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read, write: if isFamily();
     }
 
-    // ➕ NOVÉ: Pravidla pro vizualizaci domu - TOP-LEVEL kolekce
+    // Vizualizace domu
     match /houses/{houseId} {
-      allow read: if isSignedIn();
-
-      allow create: if isSignedIn() &&
-                         request.resource.data.userId == request.auth.uid;
-
-      allow update, delete: if isSignedIn() &&
-                                 resource.data.userId == request.auth.uid;
+      allow read: if isFamily();
+      allow create: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-    // 🏢 FLOORS - Patra domu (TOP-LEVEL kolekce)
+    // Patra domu (sdílená v rámci rodiny)
     match /floors/{floorId} {
-      // Čtení - všichni přihlášení (patra jsou sdílená v rámci domu)
-      allow read: if isSignedIn();
-
-      // Zápis - jen vlastník domu (kontrola přes houseId)
-      allow create, update, delete: if isSignedIn();
+      allow read: if isFamily();
+      allow create, update, delete: if isFamily();
     }
 
-    // 🚪 ROOMS - Místnosti (TOP-LEVEL kolekce)
+    // Místnosti (jen vlastní)
     match /rooms/{roomId} {
-      // Čtení - pouze vlastní místnosti
-      allow read: if isSignedIn() &&
-                     resource.data.userId == request.auth.uid;
-
-      // Vytvoření - jen pokud userId odpovídá auth
-      allow create: if isSignedIn() &&
-                       request.resource.data.userId == request.auth.uid;
-
-      // Update/Delete - jen vlastní místnosti
-      allow update, delete: if isSignedIn() &&
-                               resource.data.userId == request.auth.uid;
+      allow read: if isFamily() && resource.data.userId == request.auth.uid;
+      allow create: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-     // === DOORBELL EVENTS (volitelné - pokud budeš ukládat historii zvonění) ===
+    // Doorbell events
     match /doorbell_events/{eventId} {
-      // Čtení: pouze vlastník nebo sdílení uživatelé
-      allow read: if request.auth != null &&
+      allow read: if isFamily() &&
         (resource.data.userId == request.auth.uid ||
          exists(/databases/$(database)/documents/shared_rooms/$(request.auth.uid)));
-
-      // Zápis: pouze vlastník
-      allow create, update: if request.auth != null &&
-        request.resource.data.userId == request.auth.uid;
-
-      // Smazání: pouze vlastník
-      allow delete: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
+      allow create, update: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-    // === DOORBELL SNAPSHOTS (volitelné - pro ukládání snímků) ===
+    // Doorbell snapshots
     match /doorbell_snapshots/{snapshotId} {
-      allow read: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
-
-      allow create: if request.auth != null &&
-        request.resource.data.userId == request.auth.uid;
-
-      allow delete: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
+      allow read: if isFamily() && resource.data.userId == request.auth.uid;
+      allow create: if isFamily() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-        // Price deals - čtení pro všechny, zápis jen pro admina
+    // Price deals — čte appka (rodina), zapisuje jen Apify scraper přes Admin SDK
+    // (Admin SDK pravidla obchází, takže write: false scraperu nevadí)
     match /priceDeals/{dealId} {
-      allow read: if true;
+      allow read: if isFamily();
       allow write: if false;
     }
 
+    // Aliasy produktů — spravuje appka (dřív bylo write: true pro KOHOKOLIV — opraveno)
     match /productAliases/{aliasId} {
-      allow read: if true;
-      allow write: if true;  // Později omezíme na přihlášené uživatele
+      allow read, write: if isFamily();
     }
   }
 }

@@ -146,25 +146,46 @@ function trimHistory() {
   }
 }
 
+// Modely zkoušíme postupně — Google starší verze vypíná pro nové API klíče
+// (viz červenec 2026: gemini-2.0-flash i 2.5-flash vrací 404).
+const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-3.1-flash', 'gemini-3-flash'];
+let workingModel: string | null = null;
+
 async function callGeminiApi(history: any[], tools?: any[]) {
   trimHistory();
   const body: any = { contents: history };
   if (tools) body.tools = tools;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${await getApiKey()}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    }
-  );
+  const key = await getApiKey();
+  const models = workingModel
+    ? [workingModel, ...GEMINI_MODELS.filter((m) => m !== workingModel)]
+    : GEMINI_MODELS;
 
-  if (!res.ok) {
-    const err = await res.json();
-    console.error('Gemini API Error:', err);
+  let lastErr: unknown = null;
+  for (const model of models) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (res.ok) {
+      workingModel = model;
+      return res;
+    }
+
+    lastErr = await res.json().catch(() => null);
+    if (res.status === 404) {
+      console.warn(`Gemini: model ${model} nedostupný, zkouším další…`);
+      continue;
+    }
+    console.error('Gemini API Error:', lastErr);
     throw new Error(`API Error: ${res.status}`);
   }
 
-  return res;
+  console.error('Gemini: žádný dostupný model.', lastErr);
+  throw new Error('Žádný Gemini model není dostupný.');
 }

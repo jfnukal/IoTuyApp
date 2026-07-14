@@ -3,6 +3,7 @@
 // při chybějících datech fallback na HTML scraping.
 
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 
 // ── Typy ─────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ export interface ParsedRecipeResult {
   missingFields: string[];
   sourceUrl: string;
   schemaFound: boolean;
+  aiUsed?: boolean;
 }
 
 // ── Obecné utility ────────────────────────────────────────────────
@@ -236,11 +238,128 @@ function scrapeSteps(html: string): string[] {
   return steps.filter((s) => s.length > 10).slice(0, 20);
 }
 
+// ── Gemini fallback ────────────────────────────────────────────────
+// Poslední záchrana: když JSON-LD ani HTML scraping nedají suroviny/postup,
+// pošleme text stránky do Gemini a necháme ho recept vytáhnout.
+
+let cachedGeminiKey: string | null = null;
+async function getGeminiKey(): Promise<string> {
+  if (cachedGeminiKey) return cachedGeminiKey;
+  const doc = await admin.firestore().collection('appConfig').doc('apiKeys').get();
+  cachedGeminiKey = doc.data()?.gemini || '';
+  return cachedGeminiKey || '';
+}
+
+interface GeminiRecipe {
+  name?: string;
+  description?: string;
+  category?: string;
+  ingredients?: { name?: string; amount?: string; unit?: string }[];
+  steps?: string[];
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+  tags?: string[];
+}
+
+// Modely zkoušíme postupně — Google je průběžně vypíná pro nové klíče,
+// alias *-latest by měl mířit vždy na aktuální verzi.
+const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-3.1-flash', 'gemini-3-flash'];
+let workingModel: string | null = null;
+
+async function callGemini(key: string, body: unknown): Promise<Response | null> {
+  const models = workingModel ? [workingModel, ...GEMINI_MODELS.filter(m => m !== workingModel)] : GEMINI_MODELS;
+  for (const model of models) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(25000),
+      },
+    );
+    if (res.ok) {
+      if (workingModel !== model) console.log(`Gemini: používám model ${model}`);
+      workingModel = model;
+      return res;
+    }
+    if (res.status === 404) {
+      console.warn(`Gemini: model ${model} nedostupný (404), zkouším další…`);
+      continue;
+    }
+    console.error(`Gemini: HTTP ${res.status}`, await res.text().catch(() => ''));
+    return null;
+  }
+  console.error('Gemini: žádný z modelů není dostupný:', GEMINI_MODELS.join(', '));
+  return null;
+}
+
+async function geminiRecipeFallback(html: string, url: string): Promise<GeminiRecipe | null> {
+  const key = await getGeminiKey();
+  if (!key) {
+    console.warn('Gemini fallback: chybí klíč ve Firestore appConfig/apiKeys');
+    return null;
+  }
+
+  // HTML → čistý text, omezený na rozumnou délku (recepty jsou krátké)
+  const pageText = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 40000);
+
+  const prompt = `Z následujícího textu webové stránky (${url}) vytáhni recept.
+Odpověz POUZE validním JSON objektem s těmito poli (chybějící vynech):
+{
+  "name": "název receptu",
+  "description": "krátký popis (1-2 věty)",
+  "category": "jedna z: polévka | salát | nápoj | příloha | dezert | pečení | hlavní jídlo",
+  "ingredients": [{ "name": "hladká mouka", "amount": "200", "unit": "g" }],
+  "steps": ["krok 1", "krok 2"],
+  "servings": 4,
+  "prepTime": 20,
+  "cookTime": 60,
+  "tags": ["štítek"]
+}
+prepTime a cookTime jsou v minutách. Suroviny a kroky přepiš věrně, nic nevymýšlej.
+Pokud text žádný recept neobsahuje, vrať {}.
+
+TEXT STRÁNKY:
+${pageText}`;
+
+  try {
+    const res = await callGemini(key, {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1,
+      },
+    });
+    if (!res) return null;
+    const data = await res.json() as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) return null;
+    const parsed = JSON.parse(text) as GeminiRecipe;
+    // Prázdný objekt = Gemini na stránce recept nenašel
+    if (!parsed || (!parsed.ingredients?.length && !parsed.steps?.length)) return null;
+    return parsed;
+  } catch (e) {
+    console.error('Gemini fallback selhal:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
+
 // ── Cloud Function ────────────────────────────────────────────────
 
 export const parseRecipeUrl = functions
   .region('europe-west1')
-  .runWith({ timeoutSeconds: 30, memory: '256MB' })
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
   .https.onCall(async (data: { url: string }) => {
     const { url } = data;
 
@@ -382,6 +501,38 @@ export const parseRecipeUrl = functions
     if (!result.youtubeLinks.length) {
       const iframeYt = html.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
       if (iframeYt) result.youtubeLinks.push(`https://www.youtube.com/watch?v=${iframeYt[1]}`);
+    }
+
+    // ── Gemini fallback: když stále chybí suroviny nebo postup ─
+    if (!result.ingredients.length || !result.steps.length || !result.name) {
+      console.log('🤖 Scraping nestačil, zkouším Gemini fallback…');
+      const ai = await geminiRecipeFallback(html, url);
+      if (ai) {
+        result.aiUsed = true;
+        if (!result.name && ai.name)               result.name = ai.name;
+        if (!result.description && ai.description) result.description = ai.description;
+        if (ai.category && !schema?.recipeCategory) result.category = mapCategory(ai.category);
+        if (!result.ingredients.length && ai.ingredients?.length) {
+          result.ingredients = ai.ingredients
+            .map((i) => ({
+              name: String(i.name || '').trim(),
+              amount: String(i.amount ?? '').trim(),
+              unit: String(i.unit ?? '').trim(),
+            }))
+            .filter((i) => i.name.length > 1)
+            .slice(0, 35);
+        }
+        if (!result.steps.length && ai.steps?.length) {
+          result.steps = ai.steps.map((s) => String(s).trim()).filter((s) => s.length > 3).slice(0, 20);
+        }
+        if (!result.servings && ai.servings && ai.servings > 0) result.servings = ai.servings;
+        if (!result.prepTime && ai.prepTime && ai.prepTime > 0)  result.prepTime = ai.prepTime;
+        if (!result.cookTime && ai.cookTime && ai.cookTime > 0)  result.cookTime = ai.cookTime;
+        if (!result.tags.length && ai.tags?.length) {
+          result.tags = ai.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 10);
+        }
+        console.log(`🤖 Gemini doplnil: ${result.ingredients.length} surovin, ${result.steps.length} kroků`);
+      }
     }
 
     // ── Chybějící pole ─────────────────────────────────────────

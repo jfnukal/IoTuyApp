@@ -23,6 +23,7 @@ import type {
   FamilyMember,
   TimetableDay,
   NamedayPreferenceDoc,
+  DaySummaryConfig,
   HeaderConfigDoc,
   HeaderSlotConfig,
   ShoppingItem,
@@ -100,6 +101,30 @@ class FirestoreService {
       userSettingsRef,
       {
         fcmTokens: arrayUnion(token),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
+  // ==================== SOUHRN DNE (per-člen) ====================
+  /** Načte konfiguraci Souhrnu dne pro daného uživatele (authUid). */
+  async getDaySummaryConfig(userId: string): Promise<DaySummaryConfig | null> {
+    const ref = doc(db, 'userSettings', userId);
+    const snap = await getDoc(ref);
+    return (snap.data()?.daySummary as DaySummaryConfig) || null;
+  }
+
+  /** Uloží zapnutí + čas Souhrnu dne. lastSentDate needitujeme z klienta (spravuje Cloud Function). */
+  async saveDaySummaryConfig(
+    userId: string,
+    cfg: { enabled: boolean; time: string }
+  ): Promise<void> {
+    const ref = doc(db, 'userSettings', userId);
+    await setDoc(
+      ref,
+      {
+        daySummary: { enabled: cfg.enabled, time: cfg.time },
         updatedAt: serverTimestamp(),
       },
       { merge: true }

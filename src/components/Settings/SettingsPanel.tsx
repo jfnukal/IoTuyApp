@@ -9,6 +9,7 @@ import './SettingsPanel.css';
 import ShoppingAliasesPanel from './ShoppingAliasesPanel';
 import SettingsTuya from './SettingsTuya';
 import SettingsWidgets from './SettingsWidgets';
+import DaySummarySettings from './DaySummarySettings';
 
 interface SettingsPanelProps {
   section: MenuSection;
@@ -201,6 +202,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           zprávy). Když je vypnuto, notifikace se neodesílají.
         </p>
       </div>
+
+      {/* Souhrn dne — per-člen (self-contained, vlastní data z userSettings) */}
+      <DaySummarySettings />
 
       <div className="stats-section">
         <h3>📊 Statistiky</h3>

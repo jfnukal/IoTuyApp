@@ -512,6 +512,14 @@ export interface NamedayPreferenceDoc {
   markedDates: string[]; // Pole datumů ve formátu 'YYYY-MM-DD'
 }
 
+// ==================== SOUHRN DNE (denní push) ====================
+// Per-člen (ukládá se do userSettings/{authUid}.daySummary).
+export interface DaySummaryConfig {
+  enabled: boolean;
+  time: string; // "HH:MM" (24h) — kdy má souhrn dorazit
+  lastSentDate?: string; // "YYYY-MM-DD" (Praha) — spravuje Cloud Function, needitovat z klienta
+}
+
 // ==================== HEADER CONFIG ====================
 
 export type HeaderWidgetType = 'greeting' | 'weather' | 'upcoming' | 'none';

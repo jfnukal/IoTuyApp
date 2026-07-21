@@ -3,6 +3,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 export { parseRecipeUrl } from './parseRecipeUrl';
+export { daySummary } from './daySummary';
 
 // ✅ Inicializace Firebase Admin SDK
 admin.initializeApp();

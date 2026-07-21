@@ -4,6 +4,7 @@ import type { AppSettings } from '../../services/settingsService';
 import type { MenuSection } from './SettingsMenu';
 import ToggleSwitch from './ToggleSwitch';
 import NumberInput from './NumberInput';
+import TaskReminderSettings from './TaskReminderSettings';
 
 interface SettingsWidgetsProps {
   section: MenuSection;
@@ -238,6 +239,9 @@ const SettingsWidgets: React.FC<SettingsWidgetsProps> = ({
           max={100}
         />
       </div>
+
+      {/* Opakované připomínání nesplněných úkolů — per-člen (self-contained) */}
+      <TaskReminderSettings />
     </div>
   );
 

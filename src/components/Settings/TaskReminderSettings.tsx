@@ -117,7 +117,7 @@ const TaskReminderSettings: React.FC = () => {
               borderBottom: '1px solid rgba(0,0,0,0.08)',
             }}
           >
-            <span style={{ minWidth: 140, fontWeight: 600 }}>
+            <span style={{ minWidth: 120, fontWeight: 600 }}>
               {member.emoji || '👤'} {member.name}
             </span>
 
@@ -136,7 +136,15 @@ const TaskReminderSettings: React.FC = () => {
             />
 
             {enabled && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexWrap: 'nowrap',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 <span>každých</span>
                 <input
                   type="number"
@@ -145,8 +153,8 @@ const TaskReminderSettings: React.FC = () => {
                   value={value}
                   onChange={(e) => handleValue(e.target.value)}
                   style={{
-                    width: 80,
-                    padding: '6px 10px',
+                    width: 64,
+                    padding: '6px 8px',
                     borderRadius: 8,
                     border: '1px solid #ccc',
                   }}
@@ -155,7 +163,7 @@ const TaskReminderSettings: React.FC = () => {
                   value={unit}
                   onChange={(e) => handleUnit(e.target.value as TaskReminderUnit)}
                   style={{
-                    padding: '6px 10px',
+                    padding: '6px 8px',
                     borderRadius: 8,
                     border: '1px solid #ccc',
                   }}
@@ -164,8 +172,7 @@ const TaskReminderSettings: React.FC = () => {
                   <option value="hours">{UNIT_LABEL.hours}</option>
                   <option value="days">{UNIT_LABEL.days}</option>
                 </select>
-
-                <span style={{ marginLeft: 6 }}>, max</span>
+                <span>· max</span>
                 <input
                   type="number"
                   min={0}
@@ -174,16 +181,16 @@ const TaskReminderSettings: React.FC = () => {
                   onChange={(e) => handleMaxRepeats(e.target.value)}
                   title="0 = neomezeně"
                   style={{
-                    width: 70,
-                    padding: '6px 10px',
+                    width: 56,
+                    padding: '6px 8px',
                     borderRadius: 8,
                     border: '1px solid #ccc',
                   }}
                 />
-                <span title="0 = neomezeně">
-                  × {maxRepeats === 0 ? '(neomezeně)' : ''}
+                <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                  {maxRepeats === 0 ? '× (∞)' : '×'}
                 </span>
-              </span>
+              </div>
             )}
 
             {!hasAccount && (

@@ -10,6 +10,7 @@ import ShoppingAliasesPanel from './ShoppingAliasesPanel';
 import SettingsTuya from './SettingsTuya';
 import SettingsWidgets from './SettingsWidgets';
 import DaySummarySettings from './DaySummarySettings';
+import TaskReminderSettings from './TaskReminderSettings';
 
 interface SettingsPanelProps {
   section: MenuSection;
@@ -203,8 +204,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </p>
       </div>
 
-      {/* Souhrn dne — per-člen (self-contained, vlastní data z userSettings) */}
+      {/* Souhrn dne — per-člen (self-contained, vlastní data z familyMembers) */}
       <DaySummarySettings />
+
+      {/* Připomínání úkolů — per-člen (self-contained) */}
+      <TaskReminderSettings />
 
       <div className="stats-section">
         <h3>📊 Statistiky</h3>

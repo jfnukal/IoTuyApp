@@ -4,6 +4,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 export { parseRecipeUrl } from './parseRecipeUrl';
 export { daySummary } from './daySummary';
+export { taskReminders } from './taskReminders';
 
 // ✅ Inicializace Firebase Admin SDK
 admin.initializeApp();

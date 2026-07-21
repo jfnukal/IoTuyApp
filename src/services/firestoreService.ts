@@ -123,6 +123,23 @@ class FirestoreService {
     await updateDoc(ref, update);
   }
 
+  /**
+   * Nastaví opakované připomínání úkolů pro člena.
+   * Ukládá na familyMembers/{memberId}.taskReminder (dot-path → zachová lastRemindedAt od Cloud Function).
+   */
+  async setMemberTaskReminder(
+    memberId: string,
+    patch: { enabled?: boolean; intervalValue?: number; intervalUnit?: 'minutes' | 'hours' | 'days' }
+  ): Promise<void> {
+    const ref = doc(db, 'familyMembers', memberId);
+    const update: Record<string, boolean | number | string> = {};
+    if (patch.enabled !== undefined) update['taskReminder.enabled'] = patch.enabled;
+    if (patch.intervalValue !== undefined) update['taskReminder.intervalValue'] = patch.intervalValue;
+    if (patch.intervalUnit !== undefined) update['taskReminder.intervalUnit'] = patch.intervalUnit;
+    if (Object.keys(update).length === 0) return;
+    await updateDoc(ref, update);
+  }
+
   // ==================== FAMILY MEMBERS ====================
   async subscribeToFamilyMembers(
     callback: (members: FamilyMember[]) => void

@@ -325,6 +325,7 @@ export interface FamilyMember {
   headerIcon?: string;
   createdAt?: number;
   daySummary?: DaySummaryConfig; // Nastavení „Souhrnu dne" pro tohoto člena (spravuje admin)
+  taskReminder?: TaskReminderConfig; // Opakované připomínání úkolů pro tohoto člena (spravuje admin)
 }
 
 // ==================== NOVÉ TYPY PRO PŘIPOMÍNKY ====================
@@ -520,6 +521,16 @@ export interface DaySummaryConfig {
   enabled?: boolean; // undefined = zapnuto (výchozí)
   time?: string; // "HH:MM" (24h); undefined = 07:00
   lastSentDate?: string; // "YYYY-MM-DD" (Praha) — spravuje Cloud Function, needitovat z klienta
+}
+
+// Opakované připomínání nesplněných úkolů (sticky notes) pro člena.
+// Ukládá se na familyMembers/{memberId}.taskReminder. Interval per člen, max 4 týdny.
+export type TaskReminderUnit = 'minutes' | 'hours' | 'days';
+export interface TaskReminderConfig {
+  enabled?: boolean; // undefined/false = vypnuto (výchozí OFF — připomínání je otravnější)
+  intervalValue?: number;
+  intervalUnit?: TaskReminderUnit;
+  lastRemindedAt?: number; // ms — spravuje Cloud Function, needitovat z klienta
 }
 
 // ==================== HEADER CONFIG ====================

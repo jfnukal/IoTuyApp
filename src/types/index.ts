@@ -324,6 +324,7 @@ export interface FamilyMember {
   headerPosition?: 'left' | 'right';
   headerIcon?: string;
   createdAt?: number;
+  daySummary?: DaySummaryConfig; // Nastavení „Souhrnu dne" pro tohoto člena (spravuje admin)
 }
 
 // ==================== NOVÉ TYPY PRO PŘIPOMÍNKY ====================
@@ -513,10 +514,11 @@ export interface NamedayPreferenceDoc {
 }
 
 // ==================== SOUHRN DNE (denní push) ====================
-// Per-člen (ukládá se do userSettings/{authUid}.daySummary).
+// Ukládá se na člena: familyMembers/{memberId}.daySummary. Nastavuje admin pro každého.
+// Výchozí stav (když pole chybí) = ZAPNUTO, čas 07:00.
 export interface DaySummaryConfig {
-  enabled: boolean;
-  time: string; // "HH:MM" (24h) — kdy má souhrn dorazit
+  enabled?: boolean; // undefined = zapnuto (výchozí)
+  time?: string; // "HH:MM" (24h); undefined = 07:00
   lastSentDate?: string; // "YYYY-MM-DD" (Praha) — spravuje Cloud Function, needitovat z klienta
 }
 

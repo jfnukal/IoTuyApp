@@ -1,103 +1,114 @@
 // src/components/Settings/DaySummarySettings.tsx
-// Self-contained nastavení „Souhrnu dne" — per-člen (userSettings/{authUid}.daySummary).
-// Vlastní načítání i ukládání, žádné props od rodiče.
+// Admin přehled „Souhrnu dne" — dynamický seznam VŠECH členů rodiny.
+// Admin u každého zvlášť zapíná/vypíná a nastavuje čas. Výchozí stav = zapnuto.
+// Self-contained: vlastní subscribe na familyMembers, ukládá na familyMembers/{id}.daySummary.
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { firestoreService } from '../../services/firestoreService';
+import type { FamilyMember } from '../../types';
 import ToggleSwitch from './ToggleSwitch';
 
+const DEFAULT_TIME = '07:00';
+
 const DaySummarySettings: React.FC = () => {
-  const { currentUser } = useAuth();
-  const [enabled, setEnabled] = useState(false);
-  const [time, setTime] = useState('07:00');
+  const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!currentUser) return;
-    let active = true;
-    (async () => {
-      try {
-        const cfg = await firestoreService.getDaySummaryConfig(currentUser.uid);
-        if (active && cfg) {
-          setEnabled(cfg.enabled ?? false);
-          setTime(cfg.time || '07:00');
-        }
-      } catch (e) {
-        console.error('[DaySummary] load error:', e);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
+    let unsub: (() => void) | undefined;
+    firestoreService
+      .subscribeToFamilyMembers((list) => {
+        setMembers(list);
+        setLoading(false);
+      })
+      .then((u) => {
+        unsub = u;
+      })
+      .catch((e) => {
+        console.error('[DaySummary] subscribe error:', e);
+        setLoading(false);
+      });
     return () => {
-      active = false;
+      if (unsub) unsub();
     };
-  }, [currentUser]);
+  }, []);
 
-  const persist = async (next: { enabled: boolean; time: string }) => {
-    if (!currentUser) return;
-    try {
-      await firestoreService.saveDaySummaryConfig(currentUser.uid, next);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } catch (e) {
-      console.error('[DaySummary] save error:', e);
-    }
+  const handleToggle = (member: FamilyMember, val: boolean) => {
+    firestoreService
+      .setMemberDaySummary(member.id, { enabled: val })
+      .catch((e) => console.error('[DaySummary] save error:', e));
   };
 
-  const handleToggle = (val: boolean) => {
-    setEnabled(val);
-    persist({ enabled: val, time });
-  };
-
-  const handleTime = (val: string) => {
-    setTime(val);
-    if (val) persist({ enabled, time: val });
+  const handleTime = (member: FamilyMember, val: string) => {
+    if (!val) return;
+    firestoreService
+      .setMemberDaySummary(member.id, { time: val })
+      .catch((e) => console.error('[DaySummary] save error:', e));
   };
 
   if (loading) return null;
 
   return (
     <div className="widget-group">
-      <h3>☀️ Souhrn dne</h3>
-      <ToggleSwitch
-        label="Posílat mi Souhrn dne"
-        checked={enabled}
-        onChange={handleToggle}
-      />
+      <h3>☀️ Souhrn dne — členové</h3>
+      <p className="setting-description">
+        Zapni/vypni denní souhrn a nastav čas pro každého člena zvlášť. Výchozí stav je
+        zapnuto. Souhrn obsahuje označené svátky, narozeniny v rodině, dnešní události a
+        osobní úkoly z nástěnky. Chodí jen členům s přihlášením a povolenými notifikacemi.
+      </p>
 
-      {enabled && (
-        <div
-          style={{
-            marginTop: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            flexWrap: 'wrap',
-          }}
-        >
-          <label htmlFor="daySummaryTime">Čas doručení:</label>
-          <input
-            id="daySummaryTime"
-            type="time"
-            value={time}
-            onChange={(e) => handleTime(e.target.value)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 8,
-              border: '1px solid #ccc',
-            }}
-          />
-          {saved && <span style={{ color: '#2ecc71' }}>✅ Uloženo</span>}
-        </div>
+      {members.length === 0 && (
+        <p className="setting-description">Zatím nejsou žádní členové rodiny.</p>
       )}
 
-      <p className="setting-description">
-        📝 Ve zvolený čas ti přijde push s tím, co tě dnes čeká: označené svátky,
-        narozeniny v rodině, dnešní události z kalendáře a tvoje úkoly z nástěnky.
-        Nastavení platí jen pro tebe a je potřeba mít povolené notifikace.
-      </p>
+      {members.map((member) => {
+        const enabled = member.daySummary?.enabled !== false; // výchozí = zapnuto
+        const time = member.daySummary?.time || DEFAULT_TIME;
+        const hasAccount = !!member.authUid;
+
+        return (
+          <div
+            key={member.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+              padding: '10px 0',
+              borderBottom: '1px solid rgba(0,0,0,0.08)',
+            }}
+          >
+            <span style={{ minWidth: 140, fontWeight: 600 }}>
+              {member.emoji || '👤'} {member.name}
+            </span>
+
+            <ToggleSwitch
+              label={enabled ? 'Zapnuto' : 'Vypnuto'}
+              checked={enabled}
+              onChange={(val) => handleToggle(member, val)}
+            />
+
+            {enabled && (
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => handleTime(member, e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  border: '1px solid #ccc',
+                }}
+              />
+            )}
+
+            {!hasAccount && (
+              <span style={{ color: '#e67e22', fontSize: '0.85rem' }}>
+                ⚠️ bez přihlášení — notifikace nedostane
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

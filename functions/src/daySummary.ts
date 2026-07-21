@@ -1,7 +1,8 @@
 // /functions/src/daySummary.ts
-// „Souhrn dne" — denní push notifikace v čas, který si každý člen nastaví.
+// „Souhrn dne" — denní push notifikace v čas nastavený adminem pro každého člena.
 // Obsah: označené svátky + narozeniny v rodině + dnešní události + osobní úkoly.
-// Config je per-člen v userSettings/{authUid}.daySummary (opt-in).
+// Config je na členovi: familyMembers/{memberId}.daySummary {enabled,time,lastSentDate}.
+// VÝCHOZÍ STAV = ZAPNUTO (chybějící config → enabled, čas 07:00).
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
@@ -9,6 +10,8 @@ import { getNameDay } from 'namedays-cs';
 
 // Kolik minut po nastaveném čase ještě smíme souhrn poslat (tolerance výpadku scheduleru).
 const GRACE_MINUTES = 60;
+// Výchozí čas, když admin žádný nenastavil.
+const DEFAULT_TIME = '07:00';
 
 interface DaySummaryCfg {
   enabled?: boolean;
@@ -75,29 +78,32 @@ export const daySummary = functions
     const db = admin.firestore();
     const now = pragueParts(new Date());
 
-    // Kdo z uživatelů má souhrn zapnutý a je jeho čas → připrav data jen když je koho obeslat.
-    const usersSnap = await db.collection('userSettings').get();
-    const dueUsers = usersSnap.docs.filter((userDoc) => {
-      const cfg = (userDoc.data().daySummary || {}) as DaySummaryCfg;
-      if (cfg.enabled !== true) return false;
-      const sched = parseTimeToMinutes(cfg.time);
+    // Config Souhrnu dne je na členovi (familyMembers/{id}.daySummary), nastavuje admin.
+    const membersSnap = await db.collection('familyMembers').get();
+    const members = membersSnap.docs.map((d) => ({
+      id: d.id,
+      ref: d.ref,
+      ...(d.data() as any),
+    }));
+
+    // Kdo je "na řadě" teď: VÝCHOZÍ zapnuto (jen enabled===false vypíná), má účet, nastal čas, dnes ještě neodesláno.
+    const dueMembers = members.filter((m) => {
+      if (!m.authUid) return false; // bez účtu nemá kam poslat
+      const cfg = (m.daySummary || {}) as DaySummaryCfg;
+      if (cfg.enabled === false) return false;
+      const sched = parseTimeToMinutes(cfg.time || DEFAULT_TIME);
       if (sched === null) return false;
       if (cfg.lastSentDate === now.dateStr) return false; // dnes už odesláno
       // Pošli, jakmile nastal čas, ale jen v toleranci (ať pozdní zapnutí nespustí souhrn v divný čas).
       return now.minutes >= sched && now.minutes < sched + GRACE_MINUTES;
     });
 
-    if (dueUsers.length === 0) {
-      return null;
-    }
+    if (dueMembers.length === 0) return null;
 
     // --- Sdílená data pro dnešek (spočítej jednou) ---
     // Jméno(a) svátku pro dnešek (poledne UTC → getNameDay čte měsíc/den bez posunu).
     const noon = new Date(Date.UTC(now.year, now.month - 1, now.day, 12, 0, 0));
     const todaysNames: string[] = getNameDay(noon) || [];
-
-    const membersSnap = await db.collection('familyMembers').get();
-    const members = membersSnap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
 
     const birthdayNames = members
       .filter((m) => m.birthday && birthdayMMDD(String(m.birthday)) === now.mmdd)
@@ -115,13 +121,13 @@ export const daySummary = functions
       .filter(Boolean);
 
     let sent = 0;
-    for (const userDoc of dueUsers) {
-      const authUid = userDoc.id;
-      const data = userDoc.data();
-      const tokens: string[] = data.fcmTokens || [];
-      if (tokens.length === 0) continue; // bez zařízení nemáme kam poslat; zkusí se příště
+    for (const member of dueMembers) {
+      const authUid = member.authUid as string;
 
-      const member = members.find((m) => m.authUid === authUid);
+      // Tokeny členových zařízení z userSettings/{authUid}.
+      const userSettingsSnap = await db.collection('userSettings').doc(authUid).get();
+      const tokens: string[] = userSettingsSnap.data()?.fcmTokens || [];
+      if (tokens.length === 0) continue; // bez zařízení nemáme kam poslat; zkusí se příště
 
       // Označené svátky (per-uživatel) — porovnáváme podle MM-DD (nezávisle na roce).
       let namedayPart = '';
@@ -136,7 +142,7 @@ export const daySummary = functions
 
       // Osobní úkoly = sticky notes adresované tomuto členovi (podle jména).
       let tasksPart = '';
-      if (member?.name) {
+      if (member.name) {
         const notesSnap = await db
           .collection('stickyNotes')
           .where('author', '==', member.name)
@@ -181,9 +187,9 @@ export const daySummary = functions
       }
 
       // Označ jako odesláno pro dnešek (i kdyby část tokenů selhala — jinak by chodil dokola).
-      await userDoc.ref.update({ 'daySummary.lastSentDate': now.dateStr });
+      await member.ref.update({ 'daySummary.lastSentDate': now.dateStr });
     }
 
-    console.log(`✅ Souhrn dne: odesláno ${sent} notifikací (${dueUsers.length} členů)`);
+    console.log(`✅ Souhrn dne: odesláno ${sent} notifikací (${dueMembers.length} členů)`);
     return null;
   });

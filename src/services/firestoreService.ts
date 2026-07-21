@@ -23,7 +23,6 @@ import type {
   FamilyMember,
   TimetableDay,
   NamedayPreferenceDoc,
-  DaySummaryConfig,
   HeaderConfigDoc,
   HeaderSlotConfig,
   ShoppingItem,
@@ -107,28 +106,21 @@ class FirestoreService {
     );
   }
 
-  // ==================== SOUHRN DNE (per-člen) ====================
-  /** Načte konfiguraci Souhrnu dne pro daného uživatele (authUid). */
-  async getDaySummaryConfig(userId: string): Promise<DaySummaryConfig | null> {
-    const ref = doc(db, 'userSettings', userId);
-    const snap = await getDoc(ref);
-    return (snap.data()?.daySummary as DaySummaryConfig) || null;
-  }
-
-  /** Uloží zapnutí + čas Souhrnu dne. lastSentDate needitujeme z klienta (spravuje Cloud Function). */
-  async saveDaySummaryConfig(
-    userId: string,
-    cfg: { enabled: boolean; time: string }
+  // ==================== SOUHRN DNE (admin nastavuje per člena) ====================
+  /**
+   * Zapne/vypne nebo nastaví čas Souhrnu dne pro daného člena rodiny.
+   * Ukládá se na familyMembers/{memberId}.daySummary (dot-path → zachová lastSentDate od Cloud Function).
+   */
+  async setMemberDaySummary(
+    memberId: string,
+    patch: { enabled?: boolean; time?: string }
   ): Promise<void> {
-    const ref = doc(db, 'userSettings', userId);
-    await setDoc(
-      ref,
-      {
-        daySummary: { enabled: cfg.enabled, time: cfg.time },
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const ref = doc(db, 'familyMembers', memberId);
+    const update: Record<string, boolean | string> = {};
+    if (patch.enabled !== undefined) update['daySummary.enabled'] = patch.enabled;
+    if (patch.time !== undefined) update['daySummary.time'] = patch.time;
+    if (Object.keys(update).length === 0) return;
+    await updateDoc(ref, update);
   }
 
   // ==================== FAMILY MEMBERS ====================

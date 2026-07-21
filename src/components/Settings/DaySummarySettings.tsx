@@ -78,7 +78,7 @@ const DaySummarySettings: React.FC = () => {
               borderBottom: '1px solid rgba(0,0,0,0.08)',
             }}
           >
-            <span style={{ minWidth: 140, fontWeight: 600 }}>
+            <span style={{ minWidth: 120, fontWeight: 600 }}>
               {member.emoji || '👤'} {member.name}
             </span>
 
@@ -89,16 +89,27 @@ const DaySummarySettings: React.FC = () => {
             />
 
             {enabled && (
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => handleTime(member, e.target.value)}
+              <div
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  border: '1px solid #ccc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexWrap: 'nowrap',
+                  whiteSpace: 'nowrap',
                 }}
-              />
+              >
+                <span>v</span>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => handleTime(member, e.target.value)}
+                  style={{
+                    padding: '6px 8px',
+                    borderRadius: 8,
+                    border: '1px solid #ccc',
+                  }}
+                />
+              </div>
             )}
 
             {!hasAccount && (

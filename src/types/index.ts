@@ -530,7 +530,9 @@ export interface TaskReminderConfig {
   enabled?: boolean; // undefined/false = vypnuto (výchozí OFF — připomínání je otravnější)
   intervalValue?: number;
   intervalUnit?: TaskReminderUnit;
+  maxRepeats?: number; // 0/undefined = neomezeně; jinak max počet připomenutí na jednu dávku úkolů
   lastRemindedAt?: number; // ms — spravuje Cloud Function, needitovat z klienta
+  repeatCount?: number; // kolikrát už bylo připomenuto (pro maxRepeats) — spravuje Cloud Function
 }
 
 // ==================== HEADER CONFIG ====================

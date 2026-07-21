@@ -129,13 +129,19 @@ class FirestoreService {
    */
   async setMemberTaskReminder(
     memberId: string,
-    patch: { enabled?: boolean; intervalValue?: number; intervalUnit?: 'minutes' | 'hours' | 'days' }
+    patch: {
+      enabled?: boolean;
+      intervalValue?: number;
+      intervalUnit?: 'minutes' | 'hours' | 'days';
+      maxRepeats?: number;
+    }
   ): Promise<void> {
     const ref = doc(db, 'familyMembers', memberId);
     const update: Record<string, boolean | number | string> = {};
     if (patch.enabled !== undefined) update['taskReminder.enabled'] = patch.enabled;
     if (patch.intervalValue !== undefined) update['taskReminder.intervalValue'] = patch.intervalValue;
     if (patch.intervalUnit !== undefined) update['taskReminder.intervalUnit'] = patch.intervalUnit;
+    if (patch.maxRepeats !== undefined) update['taskReminder.maxRepeats'] = patch.maxRepeats;
     if (Object.keys(update).length === 0) return;
     await updateDoc(ref, update);
   }

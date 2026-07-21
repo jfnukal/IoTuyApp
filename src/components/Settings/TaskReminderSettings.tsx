@@ -47,7 +47,12 @@ const TaskReminderSettings: React.FC = () => {
 
   const save = (
     member: FamilyMember,
-    patch: { enabled?: boolean; intervalValue?: number; intervalUnit?: TaskReminderUnit }
+    patch: {
+      enabled?: boolean;
+      intervalValue?: number;
+      intervalUnit?: TaskReminderUnit;
+      maxRepeats?: number;
+    }
   ) => {
     firestoreService
       .setMemberTaskReminder(member.id, patch)
@@ -61,7 +66,9 @@ const TaskReminderSettings: React.FC = () => {
       <h3>🔁 Připomínání úkolů — členové</h3>
       <p className="setting-description">
         Když má člen nesplněný vzkaz/úkol (na nástěnce), v nastaveném intervalu mu přijde
-        připomenutí. Interval nastav pro každého zvlášť (max 4 týdny). Výchozí je vypnuto.
+        připomenutí. Interval i max. počet opakování nastav pro každého zvlášť (interval max
+        4 týdny). <strong>Max. opakování: 0 = neomezeně</strong> (jinak po tolika připomenutích
+        přestane; počítadlo se vynuluje, jakmile jsou všechny úkoly splněné). Výchozí je vypnuto.
         Připomínání běží po pětiminutových krocích, takže velmi krátké intervaly jsou
         orientační. Funguje jen členům s přihlášením a povolenými notifikacemi.
       </p>
@@ -75,6 +82,7 @@ const TaskReminderSettings: React.FC = () => {
         const enabled = cfg?.enabled === true; // výchozí = vypnuto
         const unit: TaskReminderUnit = cfg?.intervalUnit || 'days';
         const value = cfg?.intervalValue ?? 1;
+        const maxRepeats = cfg?.maxRepeats ?? 0; // 0 = neomezeně
         const hasAccount = !!member.authUid;
 
         const handleValue = (raw: string) => {
@@ -82,6 +90,13 @@ const TaskReminderSettings: React.FC = () => {
           if (!Number.isFinite(v) || v < 1) v = 1;
           if (v > MAX_BY_UNIT[unit]) v = MAX_BY_UNIT[unit];
           save(member, { intervalValue: v });
+        };
+
+        const handleMaxRepeats = (raw: string) => {
+          let v = Math.round(Number(raw));
+          if (!Number.isFinite(v) || v < 0) v = 0;
+          if (v > 999) v = 999;
+          save(member, { maxRepeats: v });
         };
 
         const handleUnit = (newUnit: TaskReminderUnit) => {
@@ -149,6 +164,25 @@ const TaskReminderSettings: React.FC = () => {
                   <option value="hours">{UNIT_LABEL.hours}</option>
                   <option value="days">{UNIT_LABEL.days}</option>
                 </select>
+
+                <span style={{ marginLeft: 6 }}>, max</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={999}
+                  value={maxRepeats}
+                  onChange={(e) => handleMaxRepeats(e.target.value)}
+                  title="0 = neomezeně"
+                  style={{
+                    width: 70,
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: '1px solid #ccc',
+                  }}
+                />
+                <span title="0 = neomezeně">
+                  × {maxRepeats === 0 ? '(neomezeně)' : ''}
+                </span>
               </span>
             )}
 

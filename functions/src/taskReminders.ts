@@ -13,7 +13,9 @@ interface TaskReminderCfg {
   enabled?: boolean;
   intervalValue?: number;
   intervalUnit?: 'minutes' | 'hours' | 'days';
+  maxRepeats?: number; // 0/undefined = neomezeně
   lastRemindedAt?: number;
+  repeatCount?: number;
 }
 
 function intervalToMs(cfg: TaskReminderCfg): number | null {
@@ -59,10 +61,11 @@ export const taskReminders = functions
         .get();
 
       if (notesSnap.empty) {
-        // Nemá úkoly → vynuluj baseline, ať nová dávka úkolů startuje čistě.
-        if (cfg.lastRemindedAt != null) {
+        // Nemá úkoly → vynuluj baseline i počítadlo, ať nová dávka úkolů startuje čistě.
+        if (cfg.lastRemindedAt != null || cfg.repeatCount != null) {
           await memberDoc.ref.update({
             'taskReminder.lastRemindedAt': admin.firestore.FieldValue.delete(),
+            'taskReminder.repeatCount': admin.firestore.FieldValue.delete(),
           });
         }
         continue;
@@ -74,6 +77,11 @@ export const taskReminders = functions
       );
       const reference = cfg.lastRemindedAt ?? oldest;
       if (now - reference < ms) continue;
+
+      // Strop opakování (0/undefined = neomezeně). Když je dosažen, dál nepřipomínáme.
+      const maxRepeats = cfg.maxRepeats;
+      const repeatCount = cfg.repeatCount ?? 0;
+      if (maxRepeats && maxRepeats > 0 && repeatCount >= maxRepeats) continue;
 
       // Tokeny členových zařízení.
       const userSettingsSnap = await db.collection('userSettings').doc(member.authUid).get();
@@ -109,7 +117,10 @@ export const taskReminders = functions
         console.error(`❌ Připomínka úkolů pro ${member.name} selhala:`, err);
       }
 
-      await memberDoc.ref.update({ 'taskReminder.lastRemindedAt': now });
+      await memberDoc.ref.update({
+        'taskReminder.lastRemindedAt': now,
+        'taskReminder.repeatCount': repeatCount + 1,
+      });
     }
 
     console.log(`✅ Připomínání úkolů: odesláno ${sent} notifikací`);

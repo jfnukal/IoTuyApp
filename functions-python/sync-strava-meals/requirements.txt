@@ -1,0 +1,4 @@
+functions-framework==3.*
+google-cloud-firestore==2.*
+requests>=2.25.0
+flask>=2.0.0

@@ -132,9 +132,19 @@ service cloud.firestore {
       allow delete: if isFamily() && resource.data.userId == request.auth.uid;
     }
 
-    // Price deals — čte appka (rodina), zapisuje jen Apify scraper přes Admin SDK
-    // (Admin SDK pravidla obchází, takže write: false scraperu nevadí)
+    // Price deals — čte appka (rodina), zapisuje jen Cloud Function `prijmiLetaky`
+    // přes Admin SDK. Do 8/2026 sem psal scraper na Apify přímo, generálním
+    // klíčem Firebase administrátora; ten je pryč a scraper už jen posílá data
+    // funkci, která se prokazuje sdíleným tajemstvím SCRAPER_SECRET.
+    // (Admin SDK pravidla obchází, takže write: false funkci nevadí.)
     match /priceDeals/{dealId} {
+      allow read: if isFamily();
+      allow write: if false;
+    }
+
+    // Razítko poslední dávky letáků — zapisuje `prijmiLetaky`, appce slouží
+    // k tomu, aby nemusela stahovat celou kolekci priceDeals při každém startu.
+    match /priceIndex/{docId} {
       allow read: if isFamily();
       allow write: if false;
     }

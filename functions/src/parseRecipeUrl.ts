@@ -2,7 +2,8 @@
 // Cloud Function — stáhne URL, parsuje Schema.org JSON-LD Recipe,
 // při chybějících datech fallback na HTML scraping.
 
-import * as functions from 'firebase-functions';
+// firebase-functions v6+ má v kořeni API v2; staré `functions.region(...)` žije pod /v1.
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 
 // ── Typy ─────────────────────────────────────────────────────────

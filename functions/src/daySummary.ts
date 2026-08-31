@@ -4,7 +4,8 @@
 // Config je na členovi: familyMembers/{memberId}.daySummary {enabled,time,lastSentDate}.
 // VÝCHOZÍ STAV = ZAPNUTO (chybějící config → enabled, čas 07:00).
 
-import * as functions from 'firebase-functions';
+// firebase-functions v6+ má v kořeni API v2; staré `functions.region(...)` žije pod /v1.
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { getNameDay } from 'namedays-cs';
 

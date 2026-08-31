@@ -1,6 +1,7 @@
 // /functions/src/index.ts
 
-import * as functions from 'firebase-functions';
+// firebase-functions v6+ má v kořeni API v2; staré `functions.region(...)` žije pod /v1.
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 export { parseRecipeUrl } from './parseRecipeUrl';
 export { daySummary } from './daySummary';

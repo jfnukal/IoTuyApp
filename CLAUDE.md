@@ -4,8 +4,19 @@ Vite + React + TypeScript + Firebase (projekt `iotuyapp`). Repo je **VEŘEJNÉ**
 
 ## Deploy (nic ručního přes Cloud Shell!)
 - **Web (hosting)**: `git push` → Netlify nasadí samo (~1–2 min). Ostrá adresa pro rodinu: **https://iottuyapp.netlify.app/** (`iotuyapp.web.app` je nepoužívaná Firebase kopie).
-- **Cloud Functions**: lokálně `npx firebase-tools deploy --only functions --project iotuyapp` (uživatel je přihlášený; před deployem `npx tsc` ve složce `functions/`). Log: `npx firebase-tools functions:log --project iotuyapp`.
+- **Cloud Functions**: `firebase.json` NEMÁ predeploy hook, takže se musí ručně přeložit a pak nasadit s delším limitem na načtení kódu (jinak spadne na „Cannot determine backend specification. Timeout after 10000"):
+  ```
+  cd functions && "C:/Program Files/nodejs/node.exe" node_modules/typescript/bin/tsc -p tsconfig.json && cd ..
+  FUNCTIONS_DISCOVERY_TIMEOUT=120 npx firebase-tools deploy --only functions --project iotuyapp
+  ```
+  Log: `npx firebase-tools functions:log --project iotuyapp`.
+- **Python funkce `sync-strava-meals`** (`functions-python/`) do `firebase deploy` NEPATŘÍ — nasazuje se přes `gcloud`, viz její README.
 - **Firestore rules**: jsou v repu (`firestore.rules`) → `npx firebase-tools deploy --only firestore:rules --project iotuyapp`. Neupravovat ručně v konzoli.
+
+## Verze runtime a knihoven ve funkcích (stav 31. 8. 2026)
+- Runtime **Node.js 22** (`functions/package.json` → `engines.node`). Node 20 byl zrušen k 30. 10. 2026, nešlo by už nasazovat.
+- **firebase-functions 7.x**. Pozor: od verze 6 ukazuje kořen balíčku na API v2, takže staré funkce (`functions.region(...).pubsub.schedule(...)`, `.https.onCall`, `.firestore.document(...)`) musí importovat z **`firebase-functions/v1`** — jinak `functions.region is not a function`. Verze 7 navíc úplně zrušila `functions.config()` (tenhle projekt ho nepoužívá, tajemství jdou přes `secrets:` / Secret Manager).
+- **firebase-admin ZÁMĚRNĚ zůstává na 13.x.** Verze 14 zrušila celý starý namespace, takže `admin.firestore()`, `admin.messaging()` ani `admin.firestore.FieldValue` by nefungovaly a všechny soubory by se musely přepsat na modulární importy (`getFirestore()`, `getMessaging()`, `FieldValue` z `firebase-admin/firestore`). Až na to dojde, je to mechanická, ale plošná změna — dělat ji samostatně a ověřit push notifikace.
 
 ## Letákové ceny (nákupní seznam)
 Scraper kupi.cz na Apify **nepíše do Firestore přímo** (do 8/2026 to dělal generálním klíčem Firebase administrátora — ten je pryč). Posílá surová data POSTem funkci `prijmiLetaky` (`functions/src/letaky.ts`), která se prokazuje tajemstvím `SCRAPER_SECRET`, položky znormalizuje (`functions/src/normalizacePotravin.ts`) a uloží do `priceDeals` + razítko do `priceIndex/aktualni`.

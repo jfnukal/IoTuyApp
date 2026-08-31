@@ -4,7 +4,8 @@
 // Config je na členovi: familyMembers/{memberId}.taskReminder {enabled,intervalValue,intervalUnit,lastRemindedAt}.
 // Interval per člen, max 4 týdny. Výchozí VYPNUTO (připomínání je otravnější než souhrn).
 
-import * as functions from 'firebase-functions';
+// firebase-functions v6+ má v kořeni API v2; staré `functions.region(...)` žije pod /v1.
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 
 const MAX_INTERVAL_MS = 28 * 24 * 60 * 60 * 1000; // 4 týdny

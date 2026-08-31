@@ -15,7 +15,6 @@
   "dependencies": {
     "firebase-admin": "^13.10.0",
     "firebase-functions": "^7.3.2",
-    "@sendgrid/mail": "^8.1.0",
     "namedays-cs": "^1.0.7"
   },
   "devDependencies": {

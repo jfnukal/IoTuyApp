@@ -145,26 +145,102 @@ class BakalariAPI {
   
     const hasToken = await this.ensureValidToken();
     if (!hasToken) throw new Error('Login failed');
-  
+
+    await this.logUserInfo();
+
     try {
-      const response = await fetch(`${this.serverUrl}/api/3/timetable/actual`, {
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-      });
-  
+      let response = await this.fetchTimetable();
+
+      /* Rozvrh „aktuálního týdne“ často selže (404/5xx), když se ten týden
+         neučí nebo škola rozvrh ještě nezveřejnila. Stejně jako na
+         rodinnypanel.cz se proto doptáme na konkrétní pondělí. */
       if (!response.ok) {
-        console.error('Timetable fetch failed:', response.status);
-        return [];
+        const telo = await this.textOdpovedi(response);
+        console.warn(
+          `Bakaláři rozvrh (aktuální týden): stav ${response.status}, odpověď: ${telo}`
+        );
+        const datum = this.pondeliOd(new Date());
+        console.log(`Zkouším rozvrh na konkrétní datum ${datum}...`);
+        const zaloha = await this.fetchTimetable(datum);
+        if (zaloha.ok) {
+          response = zaloha;
+        } else {
+          const telo2 = await this.textOdpovedi(zaloha);
+          console.error(
+            `Bakaláři rozvrh (${datum}): stav ${zaloha.status}, odpověď: ${telo2}`
+          );
+          return [];
+        }
       }
-  
+
       const data = await response.json();
       const timetable = this.parseTimetable(data);
-      
+
       this.cacheTimetable(timetable);
-      
+
       return timetable;
     } catch (error) {
       console.error('Bakaláři timetable error:', error);
       return [];
+    }
+  }
+
+  /** Jedno stažení rozvrhu. `datum` prázdné = „aktuální týden“. */
+  private fetchTimetable(datum?: string): Promise<Response> {
+    const url = datum
+      ? `${this.serverUrl}/api/3/timetable/actual?date=${datum}`
+      : `${this.serverUrl}/api/3/timetable/actual`;
+    return fetch(url, {
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+    });
+  }
+
+  /** Pondělí týdne, do kterého spadá zadaný den (YYYY-MM-DD). */
+  private pondeliOd(d: Date): string {
+    const p = new Date(d);
+    p.setDate(p.getDate() - ((p.getDay() + 6) % 7));
+    const mm = String(p.getMonth() + 1).padStart(2, '0');
+    const dd = String(p.getDate()).padStart(2, '0');
+    return `${p.getFullYear()}-${mm}-${dd}`;
+  }
+
+  /** Tělo chybové odpovědi do logu (zkrácené). */
+  private async textOdpovedi(resp: Response): Promise<string> {
+    try {
+      const t = await resp.clone().text();
+      return t ? t.slice(0, 300) : '(prázdná)';
+    } catch {
+      return '(nelze přečíst)';
+    }
+  }
+
+  /* KDO SE TO VLASTNĚ PŘIHLÁSIL a co ten účet umí. Bakaláři to hlásí
+     v /api/3/user (UserType + EnabledModules). Když škola nemá zapnutý modul
+     rozvrhu, endpoint rozvrhu vrací 404 — z tohohle logu to poznáme. */
+  private async logUserInfo(): Promise<void> {
+    try {
+      const resp = await fetch(`${this.serverUrl}/api/3/user`, {
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+      if (!resp.ok) {
+        console.warn(`Bakaláři /api/3/user: stav ${resp.status}`);
+        return;
+      }
+      const u = await resp.json();
+      const moduly = (u.EnabledModules || [])
+        .map((m: any) => m?.Module)
+        .filter(Boolean);
+      console.log(
+        `Bakaláři účet: typ="${u.UserType}", třída="${u.Class?.Abbrev || '?'}", moduly=[${moduly.join(', ')}]`
+      );
+    } catch (e) {
+      console.warn('Bakaláři /api/3/user — nepodařilo se zjistit typ účtu:', e);
     }
   }
 

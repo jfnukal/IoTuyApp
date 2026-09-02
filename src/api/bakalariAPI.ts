@@ -151,24 +151,33 @@ class BakalariAPI {
     try {
       let response = await this.fetchTimetable();
 
-      /* Rozvrh „aktuálního týdne“ často selže (404/5xx), když se ten týden
-         neučí nebo škola rozvrh ještě nezveřejnila. Stejně jako na
-         rodinnypanel.cz se proto doptáme na konkrétní pondělí. */
+      /* Rozvrh „aktuálního týdne“ často selže 404 s hláškou „Rozvrh není pro
+         toto období dostupný“ — týden je ještě prázdninový nebo škola rozvrh
+         nezveřejnila. Zkusíme proto konkrétní data: pondělí tohohle týdne
+         a pak pondělí příštího — jakmile škola rozvrh nahraje, appka ho
+         chytí sama, bez zásahu. */
       if (!response.ok) {
-        const telo = await this.textOdpovedi(response);
         console.warn(
-          `Bakaláři rozvrh (aktuální týden): stav ${response.status}, odpověď: ${telo}`
+          `Bakaláři rozvrh (aktuální týden): stav ${response.status}, odpověď: ${await this.textOdpovedi(response)}`
         );
-        const datum = this.pondeliOd(new Date());
-        console.log(`Zkouším rozvrh na konkrétní datum ${datum}...`);
-        const zaloha = await this.fetchTimetable(datum);
-        if (zaloha.ok) {
-          response = zaloha;
-        } else {
-          const telo2 = await this.textOdpovedi(zaloha);
-          console.error(
-            `Bakaláři rozvrh (${datum}): stav ${zaloha.status}, odpověď: ${telo2}`
+
+        const pondeli = this.pondeliOd(new Date());
+        const priste = this.pondeliOd(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+
+        for (const datum of [pondeli, priste]) {
+          console.log(`Zkouším rozvrh na konkrétní datum ${datum}...`);
+          const zaloha = await this.fetchTimetable(datum);
+          if (zaloha.ok) {
+            response = zaloha;
+            break;
+          }
+          console.warn(
+            `Bakaláři rozvrh (${datum}): stav ${zaloha.status}, odpověď: ${await this.textOdpovedi(zaloha)}`
           );
+        }
+
+        if (!response.ok) {
+          console.error('Škola rozvrh zatím nezveřejnila — zkusíme to při dalším načtení.');
           return [];
         }
       }

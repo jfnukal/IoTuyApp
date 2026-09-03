@@ -48,9 +48,19 @@ export const SYNONYMS: Record<string, string[]> = {
   // čajové značky
   caj: ['ahmad', 'pickwick', 'teekanne', 'jemca'],
   // kávové značky
-  kava: ['jihlavanka', 'tchibo', 'nescafe', 'douwe', 'jacobs'],
+  kava: ['kafe', 'jihlavanka', 'tchibo', 'nescafe', 'douwe', 'jacobs'],
   // kolové nápoje
   kola: ['cocacola', 'pepsi', 'kofola'],
+
+  /* --- HOVOROVÁ ČEŠTINA (převzato z Family-Dashboard, 25. 8. 2026) ---
+     Lidé si na seznam nepíšou „toaletní papír“, ale „toaleťák“. Dokud tady
+     tyhle tvary nebyly, vracelo hledání NULA nálezů — změřeno na skutečných
+     datech (`npm run test:ceny`). Sem patří jen běžná mluva, ne celé
+     kategorie: „kafe → káva“ ano, „maso → kuřecí“ ne. */
+  toaletni: ['toaletak', 'hajzlpapir'],
+  majoneza: ['majolka'],
+  brambory: ['bramboraky', 'bramburky'],
+  vepřove: ['bucek'],
 };
 
 // Reverzní mapa: varianta → canonical
@@ -91,7 +101,7 @@ export const tokenize = (text: string): string[] =>
 // === KATEGORIE — musí být SHODNÉ se scraperem (apify/src/main.js). Pořadí ROZHODUJE. ===
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   pecivo: ['chleb', 'chleba', 'rohlik', 'houska', 'housk', 'bageta', 'pecivo', 'peciv', 'veka', 'toustov', 'kolac', 'koblih', 'buchta', 'croissant', 'loupak', 'pletenka', 'vanocka', 'dalamanek', 'strudl', 'piskot', 'knacke'],
-  maso: ['maso', 'veprov', 'hovezi', 'kureci', 'kure', 'drubezi', 'slanina', 'klobasa', 'salam', 'sunka', 'sunkov', 'parek', 'parky', 'spekacky', 'vurt', 'krkovice', 'kotleta', 'sekana', 'rizek', 'plec', 'kyta', 'kridla', 'stehno', 'mlete', 'mleta', 'uzene', 'uzenina', 'uzeny', 'panceta', 'pastika', 'pate', 'jatra', 'tlacenka', 'jitrnice', 'jelito', 'reznik', 'debrecin', 'sadlo', 'ryba', 'rybi', 'losos', 'makrela', 'tunak', 'sled', 'filet', 'krevety', 'sardinky'],
+  maso: ['maso', 'veprov', 'hovezi', 'kureci', 'kure', 'drubezi', 'slanina', 'klobasa', 'salam', 'sunka', 'sunkov', 'parek', 'parky', 'spekacky', 'vurt', 'krkovice', 'kotleta', 'sekana', 'rizek', 'plec', 'kyta', 'kridla', 'stehno', 'uzene', 'uzenina', 'uzeny', 'panceta', 'pastika', 'pate', 'jatra', 'tlacenka', 'jitrnice', 'jelito', 'reznik', 'debrecin', 'sadlo', 'ryba', 'rybi', 'losos', 'makrela', 'tunak', 'sled', 'filet', 'krevety', 'sardinky'],
   mlecne: ['mleko', 'mlecny', 'maslo', 'jogurt', 'smetana', 'tvaroh', 'syr', 'syrov', 'eidam', 'gouda', 'hermelin', 'niva', 'mozzarella', 'mozarella', 'parenice', 'cottage', 'zakys', 'kefir', 'podmasli', 'skyr', 'termix', 'pribinacek', 'lucina', 'zervy', 'acidko', 'smetanov'],
   ovoce_zelenina: ['jablk', 'banan', 'pomeranc', 'hrusk', 'rajce', 'rajcat', 'paprik', 'okurk', 'cibul', 'cesnek', 'brambor', 'mrkev', 'salat', 'citron', 'limetk', 'hrozn', 'jahod', 'boruvk', 'malin', 'ovoce', 'ovocny', 'zelenina', 'zeleninov', 'meloun', 'ananas', 'kiwi', 'avokado', 'avocado', 'broskev', 'nektarink', 'svestk', 'merunk', 'tresn', 'kapust', 'zeli', 'kvetak', 'brokolic', 'spenat', 'redkev', 'celer', 'porek', 'dyne', 'cuketa', 'lilek', 'houby', 'zampion'],
   napoje: ['napoj', 'mineralk', 'mineralni', 'limonad', 'dzus', 'juice', 'stastn', 'pramenit', 'sodovk', 'malinovk', 'tonic', 'cola', 'kofola', 'pepsi', 'fanta', 'sprite', 'sirup', 'energetick', 'relax', 'magnesia', 'voda'],

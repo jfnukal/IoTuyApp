@@ -188,7 +188,12 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
         setJohankaSchedule(freshData);
         alert('Rozvrh aktualizován.');
       } else {
-        alert('Nepodařilo se načíst data z Bakalářů.');
+        /* Prázdný rozvrh není porucha: nejčastěji škola rozvrh na dané období
+           ještě nenahrála (Bakaláři na to odpovídají 404 „Rozvrh není pro toto
+           období dostupný“). Skutečná chyba spojení spadne do catch níže. */
+        alert(
+          'Škola zatím rozvrh na toto období nezveřejnila. Zkus to znovu později.'
+        );
       }
     } catch (error) {
       console.error('Chyba při refresh:', error);

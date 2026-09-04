@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { build } from 'esbuild';
-import { PRIPADY } from './ocekavani.mjs';
+import { PRIPADY, SLOVNIK } from './ocekavani.mjs';
 
 const KDE = dirname(fileURLToPath(import.meta.url));
 const KOREN = join(KDE, '..', '..');
@@ -75,7 +75,48 @@ for (const p of PRIPADY) {
   }
 }
 
-console.log(`\n${prosly} z ${PRIPADY.length} v pořádku, ${padly.length} padlo\n`);
+// Mezisoučet za tuhle část; co padlo, se vypíše pohromadě až úplně dole.
+console.log(`\n${prosly} z ${PRIPADY.length} v pořádku`);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SERVEROVÝ SLOVNÍK
+   ══════════════════════════════════════════════════════════════════════════
+   Filtr nepotravin rozhoduje o tom, co se vůbec dostane do databáze. Patří
+   to sem, i když to bydlí ve `functions/` — projeví se to totiž v nákupním
+   seznamu, který tahle zkouška měří. */
+const prelozenySlovnik = await build({
+  entryPoints: [join(KOREN, 'functions', 'src', 'normalizacePotravin.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  write: false,
+  logLevel: 'silent',
+});
+const { isNonFood } = await import(
+  'data:text/javascript;base64,' +
+    Buffer.from(prelozenySlovnik.outputFiles[0].text).toString('base64')
+);
+
+console.log(`\nServerový slovník — ${SLOVNIK.length} případů\n`);
+
+for (const p of SLOVNIK) {
+  const je = isNonFood(p.nazev);
+  if (je === p.nepotravina) {
+    prosly++;
+    console.log(
+      `  ${zeleny('✓')} ${p.nazev.slice(0, 40).padEnd(42)} ${seda(p.nepotravina ? 'nepotravina' : 'potravina')}`
+    );
+  } else {
+    const chyba = p.nepotravina
+      ? 'projde jako potravina, ale nemá'
+      : 'vyhozeno jako nepotravina, ale je to legitimní položka';
+    padly.push({ p: { dotaz: p.nazev, proc: p.proc }, chyby: [chyba] });
+    console.log(`  ${cerveny('✗')} ${p.nazev.slice(0, 40).padEnd(42)} ${cerveny(chyba)}`);
+  }
+}
+
+const celkem = PRIPADY.length + SLOVNIK.length;
+console.log(`\nCELKEM: ${prosly} z ${celkem} v pořádku, ${padly.length} padlo\n`);
 
 if (padly.length > 0) {
   console.log('Co padlo a proč to v seznamu je:');

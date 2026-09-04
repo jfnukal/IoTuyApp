@@ -50,7 +50,11 @@ export const SYNONYMS: Record<string, string[]> = {
   kava: ['kafe'],
   toaletni: ['toaletak', 'hajzlpapir'],
   majoneza: ['majolka'],
-  brambory: ['bramboraky', 'bramburky'],
+  /* „Brambůrky“ a „bramboráky“ tu SCHVÁLNĚ NEJSOU (odebráno 4. 9. 2026).
+     Výrobek Z něčeho není totéž co ta surovina: bylo to obousměrně, takže
+     „brambůrky“ vracelo syrové „Brambory konzumní rané“ za 9,90 a skutečné
+     brambůrky ve výsledku nebyly vůbec. Do `ZNACKY_A_DRUHY` to nepatří ani —
+     kdo píše „brambory“, chce brambory, ne chipsy. */
   /* Bez diakritiky! Tokeny se porovnávají po `normalizeText`, takže klíč
      s háčkem („vepřove") by se nikdy netrefil a „bůček" by nenašel nic. */
   veprove: ['bucek'],

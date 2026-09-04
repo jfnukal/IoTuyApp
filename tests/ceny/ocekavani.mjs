@@ -145,6 +145,14 @@ export const PRIPADY = [
     proc: 'V7 — 0 nálezů kvůli zdrobnělině „kapesníčky" v letáku',
   },
 
+  // --- vyrobek Z neceho neni totez co ta surovina ---
+  {
+    dotaz: 'brambůrky',
+    musi: /brambůrk|chips/i,
+    nesmi: /brambory konzumn/i,
+    proc: 'vracelo syrove „Brambory konzumní rané“ za 9,90; brambůrky ve vzorku jsou, ale nepropadly se do vysledku (nalezeno 4. 9. 2026 v Family-Dashboard)',
+  },
+
   // --- co se podle Jarkova rozhodnutí nesbírá vůbec ---
   {
     dotaz: 'granule pro psy',
@@ -157,5 +165,30 @@ export const PRIPADY = [
     aspon: 0,
     nesmi: /./,
     proc: 'prací prostředky jsou drogerie mimo povolený seznam (toaleťák, kapesníky, ubrousky, plenky)',
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// SERVEROVÝ SLOVNÍK — co se vůbec nesmí dostat do databáze
+// ══════════════════════════════════════════════════════════════════════════
+// `functions/src/normalizacePotravin.ts`. Kategorie a filtr nepotravin
+// rozhodují o tom, co se v nákupním seznamu vůbec může objevit, takže patří
+// pod stejnou zkoušku jako hledání.
+
+export const SLOVNIK = [
+  {
+    nazev: 'Mléko na opalování OF 20 Astrid Sun',
+    nepotravina: true,
+    proc: 'kosmetika. `detectCategory` bere PRVNÍ shodu, takže kvůli slovu „mléko“ spadla do kategorie mlecne a nabízela se mezi mléčnými výrobky (nalezeno 4. 9. 2026 v Family-Dashboard)',
+  },
+  {
+    nazev: 'Holicí pěna Nivea',
+    nepotravina: false,
+    proc: 'past z 25. 8.: „holici“ je zároveň klíčové slovo kategorie drogerie, takže by vyhazovalo legitimní položku',
+  },
+  {
+    nazev: 'Cereálie polštářky',
+    nepotravina: false,
+    proc: 'past: kmen „polstar“ by chytil i tohle a pamlsky pro kočky',
   },
 ];

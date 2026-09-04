@@ -88,6 +88,12 @@ export const NON_FOOD_KEYWORDS: string[] = [
        naprosto legitimní položka nákupního seznamu. Nasadil jsem ho tam
        25. 8. omylem a odhalilo se to až strojovým porovnáním obou seznamů. */
     'zastrihova', 'oneblade', 'epilator',
+    /* Opalovaci kosmetika (doplneno 4. 9. 2026). „Mleko na opalovani" ma
+       v nazvu slovo „mleko", a `detectCategory` bere PRVNI shodu, takze
+       spadlo do kategorie MLECNE a nabizelo se mezi mlecnymi vyrobky.
+       Stejna past jako u krmiva pro mazlicky. Na seznamu povolene drogerie
+       (toaletak, kapesniky, ubrousky, plenky) opalovani neni. */
+    'opalov',
 ];
 export const CHTENA_DROGERIE: string[] = ['toaletni', 'kapesnik', 'kapesnick', 'ubrousky', 'plenky'];
 

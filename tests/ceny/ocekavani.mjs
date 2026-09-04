@@ -97,6 +97,26 @@ export const PRIPADY = [
     proc: 'V4 — „mleta" je v kategorii maso, takže vyhrála mletá paprika a mletá káva',
   },
 
+  // --- V5: značka není synonymum jiné značky ---
+  {
+    dotaz: 'Radegast 10',
+    musi: /radegast/i,
+    nesmi: /gambrinus|kozel|staropramen|krušovice|braník|zubr|zlatopramen|urquell/i,
+    proc: 'V5 — nejžádanější položka; vracela Gambrinus 10°, protože byl o korunu levnější',
+  },
+  {
+    dotaz: 'gambrinus',
+    musi: /gambrinus/i,
+    nesmi: /braník|radegast|kozel|staropramen/i,
+    proc: 'V5 — vracela Braník za 9,90, protože značky byly ve slovníku navzájem záměnné',
+  },
+  {
+    dotaz: 'kofola',
+    musi: /kofola/i,
+    nesmi: /pepsi|coca[- ]?cola/i,
+    proc: 'V5 — totéž u kolových nápojů',
+  },
+
   // --- co se podle Jarkova rozhodnutí nesbírá vůbec ---
   {
     dotaz: 'granule pro psy',

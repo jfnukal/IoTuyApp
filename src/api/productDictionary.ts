@@ -34,36 +34,52 @@ export const isStopWord = (word: string): boolean =>
  * Synonyma / varianty. canonical → varianty (vše bez diakritiky).
  * Slouží jako MĚKKÉ rozšíření hledání (nižší skóre než přímá shoda),
  * takže nepřebijí přesnou shodu, jen pomůžou když nic jiného nesedí.
- * POZOR: dávat sem jen skutečné varianty/značky, ne celé kategorie
- * (jinak "vepřová" začne nacházet "hovězí").
+ *
+ * Tady jsou jen výrazy, které znamenají TOTÉŽ, a proto platí OBOUSMĚRNĚ:
+ * „kafe" ↔ „káva", „toaleťák" ↔ „toaletní". Konkrétní značky a druhy patří
+ * do `ZNACKY_A_DRUHY` níž — ty obousměrné být nesmějí.
  */
 export const SYNONYMS: Record<string, string[]> = {
   mouka: ['hladka', 'polohruba', 'hruba', 'psenicna'],
+
+  /* --- HOVOROVÁ ČEŠTINA (převzato z Family-Dashboard, 25. 8. 2026) ---
+     Lidé si na seznam nepíšou „toaletní papír", ale „toaleťák". Dokud tady
+     tyhle tvary nebyly, vracelo hledání NULA nálezů — změřeno na skutečných
+     datech (`npm run test:ceny`). Sem patří jen běžná mluva, ne celé
+     kategorie: „kafe → káva" ano, „maso → kuřecí" ne. */
+  kava: ['kafe'],
+  toaletni: ['toaletak', 'hajzlpapir'],
+  majoneza: ['majolka'],
+  brambory: ['bramboraky', 'bramburky'],
+  /* Bez diakritiky! Tokeny se porovnávají po `normalizeText`, takže klíč
+     s háčkem („vepřove") by se nikdy netrefil a „bůček" by nenašel nic. */
+  veprove: ['bucek'],
+};
+
+/**
+ * Obecný pojem → jeho konkrétní značky a druhy. Platí JEN JEDNÍM SMĚREM:
+ * „pivo" najde Radegast, ale „Radegast" NIKDY nenajde Gambrinus.
+ *
+ * PROČ ZVLÁŠŤ (3. 9. 2026): dokud tohle bylo v `SYNONYMS`, byly značky
+ * navzájem záměnné — vazba fungovala i zpět a do stran. „Radegast 10"
+ * proto dostalo Gambrinus 10° (o korunu levnější) a „gambrinus" vracelo
+ * Braník za 9,90. Značka ale není synonymum jiné značky; kdo píše
+ * „Radegast", chce Radegast, i kdyby byl dražší.
+ */
+export const ZNACKY_A_DRUHY: Record<string, string[]> = {
   pecivo: ['rohlik', 'houska', 'bageta'],
-  // pivní značky
   pivo: [
     'radegast', 'gambrinus', 'pilsner', 'kozel', 'staropramen',
     'budvar', 'bernard', 'birell',
   ],
-  // čajové značky
   caj: ['ahmad', 'pickwick', 'teekanne', 'jemca'],
-  // kávové značky
-  kava: ['kafe', 'jihlavanka', 'tchibo', 'nescafe', 'douwe', 'jacobs'],
-  // kolové nápoje
+  kava: ['jihlavanka', 'tchibo', 'nescafe', 'douwe', 'jacobs'],
   kola: ['cocacola', 'pepsi', 'kofola'],
-
-  /* --- HOVOROVÁ ČEŠTINA (převzato z Family-Dashboard, 25. 8. 2026) ---
-     Lidé si na seznam nepíšou „toaletní papír“, ale „toaleťák“. Dokud tady
-     tyhle tvary nebyly, vracelo hledání NULA nálezů — změřeno na skutečných
-     datech (`npm run test:ceny`). Sem patří jen běžná mluva, ne celé
-     kategorie: „kafe → káva“ ano, „maso → kuřecí“ ne. */
-  toaletni: ['toaletak', 'hajzlpapir'],
-  majoneza: ['majolka'],
-  brambory: ['bramboraky', 'bramburky'],
-  vepřove: ['bucek'],
 };
 
-// Reverzní mapa: varianta → canonical
+// Reverzní mapa: varianta → canonical. JEN ze `SYNONYMS` — u značek by
+// zpětná vazba znamenala, že „radegast" je totéž co „pivo", tedy i jako
+// každá jiná značka piva.
 const variantToCanonical: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   for (const [canonical, variants] of Object.entries(SYNONYMS)) {
@@ -73,18 +89,23 @@ const variantToCanonical: Record<string, string> = (() => {
 })();
 
 /**
- * Vrátí příbuzné výrazy k tokenu (obousměrně):
- * - je-li token canonical → jeho varianty
- * - je-li token varianta → canonical + sourozenci
+ * Vrátí příbuzné výrazy k tokenu:
+ * - synonyma OBOUSMĚRNĚ (canonical → varianty, varianta → canonical + sourozenci)
+ * - značky a druhy JEN SHORA DOLŮ (obecný pojem → konkrétní, nikdy naopak)
  */
 export const relatedTerms = (token: string): string[] => {
   const out = new Set<string>();
+
   if (SYNONYMS[token]) SYNONYMS[token].forEach((v) => out.add(v));
   const canonical = variantToCanonical[token];
   if (canonical) {
     out.add(canonical);
     SYNONYMS[canonical].forEach((v) => out.add(v));
   }
+
+  // Jednosměrně dolů. Zpětná vazba tu schválně NENÍ.
+  if (ZNACKY_A_DRUHY[token]) ZNACKY_A_DRUHY[token].forEach((v) => out.add(v));
+
   out.delete(token);
   return Array.from(out);
 };

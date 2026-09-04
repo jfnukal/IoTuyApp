@@ -161,8 +161,19 @@ export const calculateMatchScore = (
      dlouhého názvu o něčem jiném. Měříme to dvěma čísly: */
   const nazevTokeny = tokenize(deal.productName);
   if (nazevTokeny.length > 0) {
+    /* Do posuzování patří i KONKRETIZACE dotazu, ne jen slova, která člověk
+       napsal. Bez toho platilo, že „pečivo" uzná za svoje jen výrobek, který
+       má slovo „pečivo" přímo v názvu — takže vyhrála „Pečivo tyčinka sýrová"
+       (15 bodů) a rohlíky s houskami (8 bodů) filtr odstupu zahodil, přestože
+       jsou to přesně ty výrobky, které člověk myslel.
+       `relatedTerms` je jednosměrné: „pečivo" sem přidá rohlík a housku,
+       ale „radegast" nepřidá gambrinus. */
+    const pokryto = new Set<string>(tokens);
+    for (const t of tokens) {
+      for (const r of relatedTerms(t)) pokryto.add(r);
+    }
     const sedi = (n: string) =>
-      tokens.some((t) => t === n || stemMatch(t, n));
+      pokryto.has(n) || [...pokryto].some((t) => stemMatch(t, n));
 
     // 1) hlava názvu — první smysluplné slovo. „Vejce z podestýlky" ano,
     //    „Instantní polévka…" ne.

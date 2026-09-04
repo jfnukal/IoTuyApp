@@ -54,6 +54,15 @@ export const SYNONYMS: Record<string, string[]> = {
   /* Bez diakritiky! Tokeny se porovnávají po `normalizeText`, takže klíč
      s háčkem („vepřove") by se nikdy netrefil a „bůček" by nenašel nic. */
   veprove: ['bucek'],
+
+  /* --- ZKRÁCENÉ TVARY (doplněno 4. 9. 2026) ---
+     Nalezeno strojově: projelo se 131 běžných položek proti vzorku letáků
+     a hledalo se, kde appka vrátí NULA nálezů, přestože nabídka ve vzorku je.
+     Člověk napíše „minerálka", leták říká „Minerální voda" — kmenování to
+     nespojí, protože se slova liší víc než koncovkou. */
+  mineralni: ['mineralka'],
+  tatarska: ['tatarka'],
+  kapesnik: ['kapesniky', 'kapesnicky', 'kapesnicek'],
 };
 
 /**
@@ -65,6 +74,14 @@ export const SYNONYMS: Record<string, string[]> = {
  * proto dostalo Gambrinus 10° (o korunu levnější) a „gambrinus" vracelo
  * Braník za 9,90. Značka ale není synonymum jiné značky; kdo píše
  * „Radegast", chce Radegast, i kdyby byl dražší.
+ *
+ * NEROZŠIŘOVAT O POTRAVINÁŘSKÉ ZNAČKY. Zkoušeno a změřeno 4. 9. 2026:
+ * značka smí být v tomhle seznamu, jen když dělá JEDEN DRUH výrobku (pivovar
+ * dělá pivo). Olma, Madeta, Pilos nebo Orion vyrábějí napříč kategoriemi,
+ * takže „mléko → Olma" by začalo nabízet Sýr Niva Madeta a „čokoláda → Orion"
+ * Tyčinku Margot — přesně ty výrobky, které odsud pracně vyhazujeme.
+ * U minerálek se to zkusilo i s bezpečnými značkami (Mattoni, Vincentka…)
+ * a nezměnilo to ANI JEDEN výsledek — filtr odstupu je stejně odřízne.
  */
 export const ZNACKY_A_DRUHY: Record<string, string[]> = {
   pecivo: ['rohlik', 'houska', 'bageta'],

@@ -117,6 +117,34 @@ export const PRIPADY = [
     proc: 'V5 — totéž u kolových nápojů',
   },
 
+  // --- V6: obecný dotaz musí najít i konkrétní druhy ---
+  {
+    dotaz: 'pečivo',
+    musi: /rohl[íi]k|housk|baget|chl[ée]b/i,
+    nesmi: /ty[čc]ink/i,
+    proc: 'V6 — vracelo „Pečivo tyčinka sýrová“, protože mělo slovo přímo v názvu; rohlíky filtr odstupu zahodil',
+  },
+
+  /* --- V7: zkrácené tvary, které kmenování nespojí ---
+     Všechny tři našlo strojové projetí 131 běžných položek proti vzorku:
+     hledání vracelo NULA nálezů, ačkoliv nabídka ve vzorku byla. */
+  {
+    dotaz: 'minerálka',
+    musi: /miner[áa]ln/i,
+    proc: 'V7 — 0 nálezů, přitom ve vzorku je 13 minerálních vod',
+  },
+  {
+    dotaz: 'tatarka',
+    musi: /tatarsk[áa] om[áa][čc]ka/i,
+    nesmi: /biftek/i,
+    proc: 'V7 — 0 nálezů; navíc nesmí vyhrát tatarský biftek',
+  },
+  {
+    dotaz: 'kapesníky',
+    musi: /kapesn[íčičc]/i,
+    proc: 'V7 — 0 nálezů kvůli zdrobnělině „kapesníčky" v letáku',
+  },
+
   // --- co se podle Jarkova rozhodnutí nesbírá vůbec ---
   {
     dotaz: 'granule pro psy',

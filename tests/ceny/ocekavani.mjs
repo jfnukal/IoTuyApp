@@ -153,6 +153,23 @@ export const PRIPADY = [
     proc: 'vracelo syrove „Brambory konzumní rané“ za 9,90; brambůrky ve vzorku jsou, ale nepropadly se do vysledku (nalezeno 4. 9. 2026 v Family-Dashboard)',
   },
 
+  /* --- V8: čisticí chemie se vydává za potravinu ---
+     Tatáž past jako u opalovacího mléka, jen na jiných slovech:
+     `detectCategory` bere PRVNÍ shodu a `trvanlive` (kde je 'ocet' a 'sul')
+     se testuje dřív než `drogerie` (kde je 'cistic'). */
+  {
+    dotaz: 'ocet',
+    aspon: 0,
+    nesmi: /čistič|cistic/i,
+    proc: 'V8 — jediný výsledek byl „Čistič bílý ocet Tierra Verde" za 99,90',
+  },
+  {
+    dotaz: 'sůl',
+    musi: /sůl kamenná|mořská/i,
+    nesmi: /myčk/i,
+    proc: 'V8 — druhý výsledek byla „Sůl do myčky Somat" za 59,90',
+  },
+
   // --- co se podle Jarkova rozhodnutí nesbírá vůbec ---
   {
     dotaz: 'granule pro psy',
@@ -185,6 +202,26 @@ export const SLOVNIK = [
     nazev: 'Holicí pěna Nivea',
     nepotravina: false,
     proc: 'past z 25. 8.: „holici“ je zároveň klíčové slovo kategorie drogerie, takže by vyhazovalo legitimní položku',
+  },
+  {
+    nazev: 'Čistič bílý ocet Tierra Verde',
+    nepotravina: true,
+    proc: 'V8 — kvůli slovu „ocet" spadl do kategorie trvanlive a byl JEDINÝ výsledek dotazu „ocet"',
+  },
+  {
+    nazev: 'Sůl do myčky Somat',
+    nepotravina: true,
+    proc: 'V8 — kvůli slovu „sůl" spadla do kategorie trvanlive',
+  },
+  {
+    nazev: 'Ocet kvasný lihový',
+    nepotravina: false,
+    proc: 'protiváha k čističi: samotný ocet je potravina a vyhazovat se NESMÍ',
+  },
+  {
+    nazev: 'Sůl kamenná s jodem Gustito',
+    nepotravina: false,
+    proc: 'protiváha k soli do myčky: kuchyňská sůl je potravina',
   },
   {
     nazev: 'Cereálie polštářky',

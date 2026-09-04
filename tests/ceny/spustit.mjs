@@ -33,7 +33,32 @@ const { hledejVNabidkach } = await import(
   'data:text/javascript;base64,' + Buffer.from(kod).toString('base64')
 );
 
-const NABIDKY = JSON.parse(readFileSync(join(KDE, 'vzorek.json'), 'utf8'));
+const prelozenySlovnik = await build({
+  entryPoints: [join(KOREN, 'functions', 'src', 'normalizacePotravin.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  write: false,
+  logLevel: 'silent',
+});
+const { isNonFood, patriNaSeznam, detectCategory } = await import(
+  'data:text/javascript;base64,' +
+    Buffer.from(prelozenySlovnik.outputFiles[0].text).toString('base64')
+);
+
+const SUROVY = JSON.parse(readFileSync(join(KDE, 'vzorek.json'), 'utf8'));
+
+/* VZOREK SE PROŽENE STEJNÝM FILTREM JAKO OSTRÁ DATA.
+   `vzorek.json` je syrový výstup scraperu z 25. 8. 2026 — jsou v něm i věci,
+   které dnešní `prijmiLetaky` do databáze vůbec nepustí. Kdyby se testovalo
+   proti němu napřímo, měřila by zkouška obsah databáze, jaký byl loni, a
+   oprava filtru by se v ní nikdy neprojevila: „Čistič bílý ocet" by dál
+   vyhrával dotaz „ocet", i když ho server dnes zahazuje.
+   Filtr je schválně stejný jako ve `functions/src/letaky.ts`. */
+const NABIDKY = SUROVY.filter(
+  (d) => !isNonFood(d.productName) && patriNaSeznam(d.productName, detectCategory(d.productName))
+);
+const ZAHOZENO = SUROVY.length - NABIDKY.length;
 
 // Datum vzorku, ne dnešek — jinak by po vypršení letáků spadlo úplně všechno
 // a zkouška by přestala měřit hledání a začala měřit kalendář.
@@ -47,7 +72,7 @@ const seda = (t) => barva(t, 90);
 let prosly = 0;
 const padly = [];
 
-console.log(`\nZkouška vyhledávání cen — ${NABIDKY.length} nabídek, ${PRIPADY.length} případů\n`);
+console.log(`\nZkouška vyhledávání cen — ${NABIDKY.length} nabídek (filtr zahodil ${ZAHOZENO}), ${PRIPADY.length} případů\n`);
 
 for (const p of PRIPADY) {
   const vysledky = hledejVNabidkach(p.dotaz, NABIDKY, [], DEN_VZORKU);
@@ -84,18 +109,6 @@ console.log(`\n${prosly} z ${PRIPADY.length} v pořádku`);
    Filtr nepotravin rozhoduje o tom, co se vůbec dostane do databáze. Patří
    to sem, i když to bydlí ve `functions/` — projeví se to totiž v nákupním
    seznamu, který tahle zkouška měří. */
-const prelozenySlovnik = await build({
-  entryPoints: [join(KOREN, 'functions', 'src', 'normalizacePotravin.ts')],
-  bundle: true,
-  format: 'esm',
-  platform: 'neutral',
-  write: false,
-  logLevel: 'silent',
-});
-const { isNonFood } = await import(
-  'data:text/javascript;base64,' +
-    Buffer.from(prelozenySlovnik.outputFiles[0].text).toString('base64')
-);
 
 console.log(`\nServerový slovník — ${SLOVNIK.length} případů\n`);
 

@@ -94,6 +94,23 @@ export const NON_FOOD_KEYWORDS: string[] = [
        Stejna past jako u krmiva pro mazlicky. Na seznamu povolene drogerie
        (toaletak, kapesniky, ubrousky, plenky) opalovani neni. */
     'opalov',
+
+    /* Čisticí chemie (doplněno 4. 9. 2026). Tatáž past jako u opalovacího
+       mléka, jen na jiných slovech: `detectCategory` vrací PRVNÍ shodu
+       a `trvanlive` (kde je 'ocet' a 'sul') se testuje DŘÍV než `drogerie`
+       (kde je 'cistic'). „Čistič bílý ocet Tierra Verde" proto skákal na
+       dotaz „ocet" jako JEDINÝ výsledek a „Sůl do myčky Somat" se nabízela
+       mezi kuchyňskými solemi.
+
+       ⚠ 'sul' ani 'ocet' sem NEPATŘÍ — to jsou potraviny; rozlišuje až druhé
+       slovo v názvu. Každý kmen níž je zkoušený proti vzorku, ne vymyšlený:
+       'cistic' vyhodí 2 položky (včetně „Mléko pleťové čisticí Cien", které
+       kvůli slovu „mléko" sedělo v kategorii MLECNE), 'myck' jednu a 'praci'
+       osm — všechny právem. Zbytek ve vzorku netrefí nic, je preventivní.
+       Kmeny se porovnávají na ZAČÁTEK SLOVA, takže víceslovné tvary
+       („do myčky", „wc gel") tady nefungují — musí to být jedno slovo. */
+    'cistic', 'myck', 'praci', 'saponat', 'avivaz',
+    'odvapnov', 'odmast', 'dezinfek', 'desinfek', 'wc',
 ];
 export const CHTENA_DROGERIE: string[] = ['toaletni', 'kapesnik', 'kapesnick', 'ubrousky', 'plenky'];
 

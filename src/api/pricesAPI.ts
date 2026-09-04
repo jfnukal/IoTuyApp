@@ -4,7 +4,13 @@
 // není — sedí v `priceMatching.ts`, který nezná Firebase a jde proto vyzkoušet
 // nasucho proti uloženému vzorku letáků (`npm run test:ceny`).
 // Kdo mění chování vyhledávání, patří tam, ne sem.
-import { collection, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getDocsFromCache,
+} from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { findCanonical } from './aliasesAPI';
 import {
@@ -24,27 +30,88 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minut - data se mění max 1x týdn
 const searchCache = new Map<string, { offers: PriceResult[]; timestamp: number }>();
 const SEARCH_CACHE_DURATION = 10 * 60 * 1000; // 10 minut
 
-// Načte všechny deals z Firebase (s cache)
+/** Kterou dávku cen už tenhle prohlížeč jednou stáhl. */
+const KLIC_VERZE = 'ceny-verze-davky';
+
+const precti = (k: string): string | null => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null; // soukromé okno, zaplněné úložiště…
+  }
+};
+const zapis = (k: string, v: string): void => {
+  try {
+    localStorage.setItem(k, v);
+  } catch {
+    /* nevadí — příště se stáhne znovu */
+  }
+};
+
+/**
+ * Načte letákové ceny.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * PROČ TO NENÍ PROSTĚ `getDocs`
+ * ══════════════════════════════════════════════════════════════════════════
+ * Bylo. A byla to nejdražší věc v celé appce. Firestore neúčtuje dotazy, ale
+ * PŘEČTENÉ DOKUMENTY — takže jeden řádek `getDocs(collection('priceDeals'))`
+ * se počítá jako přes dva tisíce čtení. Při každém načtení stránky.
+ *
+ * Ceny se přitom mění DVAKRÁT TÝDNĚ (po běhu scraperu) a jsou pro všechny
+ * stejné. Nově se proto čte nejdřív jeden titěrný dokument `priceIndex`
+ * s verzí dávky (1 čtení). Když se verze nezměnila, vytáhnou se ceny
+ * z OFFLINE PAMĚTI prohlížeče přes `getDocsFromCache` — a to Firestore
+ * neúčtuje vůbec, protože na server vůbec nesáhne.
+ *
+ * Celá kolekce se tak stahuje jen po novém letáku, ne při každém startu.
+ *
+ * Když razítko chybí nebo offline paměť není k dispozici, spadne se na
+ * původní chování — appka funguje jako dosud, jen dráž.
+ */
 const loadDeals = async (): Promise<PriceDeal[]> => {
   const now = Date.now();
-  
-  // Použijeme cache pokud je čerstvá
-  if (cachedDeals && (now - cacheTimestamp) < CACHE_DURATION) {
+
+  if (cachedDeals && now - cacheTimestamp < CACHE_DURATION) {
     return cachedDeals;
   }
-  
+
+  // 1 čtení: jaká je nejnovější dávka cen?
+  let verzeNaServeru: string | null = null;
   try {
-    const dealsRef = collection(db, 'priceDeals');
+    const razitko = await getDoc(doc(db, 'priceIndex', 'aktualni'));
+    verzeNaServeru = (razitko.data()?.verze as string | undefined) ?? null;
+  } catch {
+    /* razítko není povinné — jede se dál po starém */
+  }
+
+  const dealsRef = collection(db, 'priceDeals');
+
+  // Verze sedí → ceny už v prohlížeči jsou. Na server se vůbec nesahá.
+  if (verzeNaServeru && verzeNaServeru === precti(KLIC_VERZE)) {
+    try {
+      const zPameti = await getDocsFromCache(dealsRef);
+      if (!zPameti.empty) {
+        cachedDeals = zPameti.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as PriceDeal[];
+        cacheTimestamp = now;
+        return cachedDeals;
+      }
+    } catch {
+      /* offline paměť není k dispozici → stáhneme ze serveru */
+    }
+  }
+
+  try {
     const snapshot = await getDocs(dealsRef);
-    
-    cachedDeals = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+    cachedDeals = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
     })) as PriceDeal[];
-    
     cacheTimestamp = now;
-    // console.log(`[PricesAPI] Načteno ${cachedDeals.length} deals z Firebase`);
-    
+    if (verzeNaServeru) zapis(KLIC_VERZE, verzeNaServeru);
     return cachedDeals;
   } catch (error) {
     console.error('[PricesAPI] Chyba při načítání deals:', error);
@@ -101,6 +168,13 @@ export const clearPriceCache = (): void => {
   cachedDeals = null;
   cacheTimestamp = 0;
   searchCache.clear();
+  /* I zapamatovanou verzi — jinak by se ruční obnovení spokojilo s offline
+     pamětí a člověk by dostal zase ta samá data, kvůli kterým obnovoval. */
+  try {
+    localStorage.removeItem(KLIC_VERZE);
+  } catch {
+    /* nevadí */
+  }
 };
 
 // Re-export pro použití v komponentách

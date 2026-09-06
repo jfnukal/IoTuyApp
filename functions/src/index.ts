@@ -7,8 +7,6 @@ export { parseRecipeUrl } from './parseRecipeUrl';
 export { daySummary } from './daySummary';
 export { taskReminders } from './taskReminders';
 export { prijmiLetaky } from './letaky';
-// DOČASNÉ — po úklidu smazat i s funkcí v letaky.ts
-export { uklidNepotraviny } from './letaky';
 
 // ✅ Inicializace Firebase Admin SDK
 admin.initializeApp();

@@ -77,6 +77,11 @@ export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
     return () => clearInterval(interval);
   }, [namedayInfos.length]);
 
+  // Po půlnoci může řádků ubýt (třeba zítra nikdo nemá svátek), ale index
+  // zůstane starý — sáhlo by se mimo seznam a celá appka spadla do bílé
+  const safeInfoIndex =
+    namedayInfos.length > 0 ? currentInfoIndex % namedayInfos.length : 0;
+
   const weekday = today.toLocaleDateString('cs-CZ', { weekday: 'long' });
   const dayComments: { [key: string]: string } = {
     pondělí: 'Začínáme nový týden! 💪',
@@ -96,7 +101,7 @@ export const useFamilyEvents = (familyMembers: FamilyMember[]) => {
     dayComment,
     birthdaysToday,
     namedayInfos,
-    currentInfoIndex,
+    currentInfoIndex: safeInfoIndex,
     markedToday,
     upcomingMarked,
   };

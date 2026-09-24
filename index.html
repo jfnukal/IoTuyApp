@@ -7,6 +7,210 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#6c5ce7" />
 
+    <!-- Záchranná síť proti bílé obrazovce. Musí být PŘED soubory aplikace,
+         které sem Vite při sestavení přidá, aby hlídala i jejich stažení. -->
+    <script>
+      /* ── ZÁCHRANNÁ SÍŤ PROTI BÍLÉ OBRAZOVCE ─────────────────────────────
+         Tablet na zdi běží 24/7. Dřív se stránka obnovovala naslepo — v 5:00
+         při zhasnutém displeji a hned po probuzení, kdy tablet ještě neměl
+         Wi-Fi. Načtení spadlo a ráno svítila bílá obrazovka.
+
+         Skript je schválně přímo v HTML: funguje, i když se zbytek aplikace
+         nestáhne.
+
+         window.bezpecnyReload(duvod, volby)
+           Obnoví stránku, až (1) svítí displej, (2) nikdo 15 s nesahal na
+           displej a (3) server opravdu odpovídá. Jinak nechá na obrazovce,
+           co tam je, a zkusí to znovu (2 s, 4 s, … nejvýš po 30 s).
+           volby.poChybe  obnova kvůli chybě: nečeká na klid u displeje
+                          a po pádech těsně za sebou čeká déle
+                          (0 s, 10 s, 30 s, pak 2 min), ať se to netočí.
+           volby.hned     tlačítko „Zkusit znovu": bez čekání.
+
+         Hlídač startu
+           Když se soubory aplikace nestáhnou, aplikace do 45 s nenaběhne
+           nebo z obrazovky zmizí, ukáže hlášku a zavolá bezpecnyReload. */
+      (function () {
+        var KLID_MS = 15000;
+        var START_MS = 45000;
+        var ZDRAVA_MS = 60000;
+        var KLIC_PADU = 'bezpecnyReload.pady';
+        var PRODLEVY_PO_PADECH = [0, 10000, 30000, 120000];
+
+        // ── Bezpečná obnova ───────────────────────────────────────────
+        var posledniDotyk = 0;
+        function dotyk() {
+          posledniDotyk = Date.now();
+        }
+        window.addEventListener('pointerdown', dotyk, true);
+        window.addEventListener('keydown', dotyk, true);
+
+        // Kolik obnov kvůli chybě proběhlo těsně za sebou (přežije reload)
+        function pocetPadu() {
+          try {
+            return parseInt(sessionStorage.getItem(KLIC_PADU), 10) || 0;
+          } catch (e) {
+            return 0;
+          }
+        }
+        function ulozPady(n) {
+          try {
+            sessionStorage.setItem(KLIC_PADU, String(n));
+          } catch (e) {
+            /* úložiště nemusí být dostupné */
+          }
+        }
+
+        function serverOdpovida() {
+          var ovladac = window.AbortController ? new AbortController() : null;
+          var limit = setTimeout(function () {
+            if (ovladac) ovladac.abort();
+          }, 8000);
+          return fetch('/?overeni-spojeni=' + Date.now(), {
+            cache: 'no-store',
+            signal: ovladac ? ovladac.signal : undefined,
+          }).then(
+            function (odpoved) {
+              clearTimeout(limit);
+              return odpoved.ok;
+            },
+            function () {
+              clearTimeout(limit);
+              return false;
+            }
+          );
+        }
+
+        var pozadano = false; // víc požadavků naráz = jedna obnova
+        var spech = false; // kvůli chybě / tlačítku → nečekat na klid u displeje
+        var overuji = false;
+        var nejdrive = 0; // dřív se po pádech za sebou nezkouší
+        var casovac = null;
+        var pokus = 0;
+
+        function naplanuj(ms) {
+          clearTimeout(casovac);
+          casovac = setTimeout(zkus, ms);
+        }
+
+        function zkus() {
+          if (!pozadano || overuji) return;
+          if (document.hidden) return; // displej zhasnutý → čeká se na rozsvícení
+          var ted = Date.now();
+          if (ted < nejdrive) return naplanuj(nejdrive - ted);
+          if (!spech && ted - posledniDotyk < KLID_MS) {
+            return naplanuj(KLID_MS - (ted - posledniDotyk));
+          }
+          overuji = true;
+          serverOdpovida().then(function (ok) {
+            overuji = false;
+            if (ok) {
+              console.log('[BezpecnyReload] server odpovídá → obnovuji stránku');
+              if (spech) ulozPady(pocetPadu() + 1);
+              location.reload();
+            } else {
+              pokus++;
+              console.log('[BezpecnyReload] server neodpovídá, zkusím znovu (pokus ' + pokus + ')');
+              naplanuj(Math.min(30000, 2000 * pokus));
+            }
+          });
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) naplanuj(0);
+        });
+        window.addEventListener('online', function () {
+          naplanuj(0);
+        });
+
+        window.bezpecnyReload = function (duvod, volby) {
+          volby = volby || {};
+          console.log('[BezpecnyReload] požadavek: ' + duvod);
+          if (volby.hned) {
+            spech = true;
+            nejdrive = 0;
+          } else if (volby.poChybe && !spech) {
+            spech = true;
+            var pady = pocetPadu();
+            var prodleva = PRODLEVY_PO_PADECH[Math.min(pady, PRODLEVY_PO_PADECH.length - 1)];
+            nejdrive = Date.now() + prodleva;
+          }
+          if (pozadano && !volby.hned && !volby.poChybe) return;
+          pozadano = true;
+          pokus = 0;
+          naplanuj(0);
+        };
+
+        // ── Hlídač startu ─────────────────────────────────────────────
+        var nacteno = Date.now();
+        var nahradni = null; // hláška „Načítám…" v #root, React ji po startu nahradí
+        var zdravaOd = 0;
+        var selhalo = false;
+
+        // Odkaz na hlášku si vzít hned, jak je HTML načtené — to je ještě
+        // předtím, než se spustí aplikace a hlášku odstraní
+        document.addEventListener('readystatechange', function () {
+          if (!nahradni) nahradni = document.getElementById('boot-fallback');
+          if (selhalo) ukazHlasku();
+        });
+
+        function aplikaceBezi() {
+          var root = document.getElementById('root');
+          return !!(nahradni && root && root.firstElementChild && !root.contains(nahradni));
+        }
+
+        function ukazHlasku() {
+          var root = document.getElementById('root');
+          if (!root || !nahradni) return; // HTML ještě není načtené — zavolá se znovu výš
+          if (!root.contains(nahradni)) root.appendChild(nahradni); // po pádu Reactu je #root prázdný
+          nahradni.querySelector('#boot-fallback-text').textContent =
+            'Aplikaci se nepodařilo načíst. Jakmile bude internet, načte se sama.';
+          nahradni.querySelector('#boot-fallback-retry').style.display = '';
+        }
+
+        function selhani(duvod) {
+          if (selhalo) return;
+          selhalo = true;
+          ukazHlasku();
+          window.bezpecnyReload(duvod, { poChybe: true });
+        }
+
+        // Nestažený soubor aplikace (typicky ještě nejede Wi-Fi). Chyby načtení
+        // se nešíří nahoru, ale na window jdou zachytit ve fázi capture.
+        window.addEventListener(
+          'error',
+          function (e) {
+            var prvek = e.target;
+            if (!prvek || prvek === window || aplikaceBezi()) return;
+            var adresa = prvek.src || prvek.href || '';
+            var jeSoubor =
+              prvek.tagName === 'SCRIPT' ||
+              (prvek.tagName === 'LINK' && /stylesheet|modulepreload/.test(prvek.rel));
+            if (jeSoubor && adresa.indexOf(location.origin) === 0) {
+              selhani('nestáhl se soubor ' + adresa);
+            }
+          },
+          true
+        );
+
+        setInterval(function () {
+          if (selhalo || !nahradni) return;
+          if (aplikaceBezi()) {
+            // Minutu běží bez chyby → počítadlo pádů za sebou vynulovat
+            if (!zdravaOd) zdravaOd = Date.now();
+            else if (!spech && Date.now() - zdravaOd > ZDRAVA_MS && pocetPadu() > 0) ulozPady(0);
+            return;
+          }
+          var root = document.getElementById('root');
+          if (root && root.contains(nahradni)) {
+            if (Date.now() - nacteno > START_MS) selhani('aplikace nenaběhla do 45 s');
+          } else {
+            selhani('aplikace zmizela z obrazovky');
+          }
+        }, 5000);
+      })();
+    </script>
+
     <!-- 🆕 Preconnect - navázání spojení PŘED stahováním -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -70,7 +274,24 @@
     </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Vidět jen do startu aplikace (React to nahradí). Když se aplikace
+           nenačte, zůstane tu tahle hláška místo bílé obrazovky. -->
+      <div
+        id="boot-fallback"
+        style="position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: rgba(255, 255, 255, 0.9); font-family: sans-serif; font-size: 1.2rem;"
+      >
+        <p id="boot-fallback-text" style="margin: 0; color: inherit">Načítám aplikaci…</p>
+        <button
+          id="boot-fallback-retry"
+          type="button"
+          onclick="window.bezpecnyReload('tlačítko Zkusit znovu', { hned: true })"
+          style="display: none; padding: 14px 32px; border: 0; border-radius: 12px; background: #fff; color: #5b4bc4; font-size: 1.1rem; font-weight: 600;"
+        >
+          Zkusit znovu
+        </button>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

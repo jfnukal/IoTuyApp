@@ -3,8 +3,14 @@
 //  1. Naplánovaný reload každý den v 5:00 ráno
 //  2. Page-visibility reload — po probuzení z >60 min. nečinnosti
 //  3. Periodický heartbeat reload každé 4 hodiny (záchranná síť)
+//
+// Všechny tři jdou přes bezpecnyReload: stránka se obnoví, až svítí displej
+// a server opravdu odpovídá. Dřív tu bylo rovnou location.reload() — v 5:00
+// při zhasnutém displeji a hned po rozsvícení, kdy tablet ještě neměl Wi-Fi.
+// Načtení spadlo a ráno svítila bílá obrazovka.
 
 import { useEffect, useRef } from 'react';
+import { bezpecnyReload } from '../utils/bezpecnyReload';
 
 const RELOAD_HOUR   = 5;      // hodina denního reloadu (5:00)
 const RELOAD_MINUTE = 0;
@@ -37,6 +43,7 @@ export function useAutoReload() {
   }, []);
 
   // ── 1. Denní reload v 5:00 ───────────────────────────────────────
+  // Když tablet v 5:00 spí, bezpecnyReload počká, až se displej rozsvítí.
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 
@@ -45,8 +52,7 @@ export function useAutoReload() {
       const hm = `${String(RELOAD_HOUR).padStart(2,'0')}:${String(RELOAD_MINUTE).padStart(2,'0')}`;
       console.log(`[AutoReload] Denní reload naplánován za ${Math.round(delay/60000)} minut (${hm}).`);
       timeout = setTimeout(() => {
-        console.log('[AutoReload] 🌅 Denní reload v 5:00');
-        window.location.reload();
+        bezpecnyReload('🌅 denní reload v 5:00');
       }, delay);
     }
 
@@ -56,6 +62,10 @@ export function useAutoReload() {
 
   // ── 2. Page Visibility — reload po dlouhé nečinnosti ────────────
   useEffect(() => {
+    // Stránka mohla naběhnout už se zhasnutým displejem — pak událost
+    // „skryto" nepřijde a bez tohohle by se po probuzení nic neobnovilo
+    if (document.hidden) hiddenAtRef.current = Date.now();
+
     function handleVisibilityChange() {
       if (document.hidden) {
         hiddenAtRef.current = Date.now();
@@ -64,8 +74,7 @@ export function useAutoReload() {
         if (hiddenAt !== null) {
           const elapsed = Date.now() - hiddenAt;
           if (elapsed >= IDLE_THRESHOLD_MS) {
-            console.log(`[AutoReload] 👁 Probuzení po ${Math.round(elapsed/60000)} minutách → reload`);
-            window.location.reload();
+            bezpecnyReload(`👁 probuzení po ${Math.round(elapsed/60000)} minutách`);
           } else {
             console.log(`[AutoReload] 👁 Probuzení po ${Math.round(elapsed/60000)} minutách — OK, reload nepotřeba`);
           }
@@ -88,8 +97,7 @@ export function useAutoReload() {
         console.log(`[AutoReload] 💓 Heartbeat odložen — uživatel byl aktivní před ${Math.round(idleMs / 60000)} min`);
         return;
       }
-      console.log('[AutoReload] 💓 Heartbeat reload (4h)');
-      window.location.reload();
+      bezpecnyReload('💓 heartbeat reload (4h)');
     }, HEARTBEAT_MS);
     return () => clearInterval(interval);
   }, []);

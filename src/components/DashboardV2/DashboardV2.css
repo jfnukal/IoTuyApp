@@ -361,6 +361,13 @@
   text-align: center;
 }
 
+/* Výsledek synchronizace: varování (nic se nesmazalo / nepovedlo se) */
+.v2-devices-edit-banner--warn {
+  background: rgba(245, 158, 11, 0.2);
+  border-bottom-color: rgba(245, 158, 11, 0.35);
+  color: #fcd34d;
+}
+
 /* ── SIDE HANDLE — vždy viditelný, pravý okraj ── */
 .v2-side-handle {
   position: fixed;

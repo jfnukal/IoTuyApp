@@ -33,6 +33,7 @@ Scraper kupi.cz na Apify **nepíše do Firestore přímo** (do 8/2026 to dělal 
 - Widgety V2 jsou self-contained: vlastní data/subscriptions, žádné props od rodiče.
 - Env klíče (Tuya, Gemini) jen v `.env` (gitignore) a Netlify UI.
 - Netlify funkce (`netlify/functions/`) pouští jen přihlášenou rodinu: klient posílá Firebase ID token (`tuyaService.callFunction`), funkce ho ověří v `netlify/lib/familyAuth.cjs` (podpis klíči Google + zkušební čtení `appSettings/main` → rozhodnou Firestore pravidla `isFamily()`, žádné env proměnné). Nová funkce = `exports.handler = protect(handler, { methods })`. Pravidlo pro `appSettings` musí zůstat jen pro rodinu.
+- Plná synchronizace (tlačítko Synchronizovat → `deviceService.saveUserDevices`) maže zařízení chybějící v Tuya jen podle úplného seznamu (`method: 'automatic'`) a nejvýš max(3, 10 %) naráz — jinak je nechá a stránka Zařízení ukáže hlášení. `get-device-list` při výpadku vrací 502, žádný „nouzový" seznam (ten dřív hrozil smazáním skoro všech zařízení i s místnostmi a nastavením karet).
 
 ## Známé otevřené problémy (neřešit znovu od nuly — viz paměť)
 - Duplicitní push notifikace (řešeno opakovaně, zatím nedořešeno).

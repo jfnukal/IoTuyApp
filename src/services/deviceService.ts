@@ -13,6 +13,20 @@ import {
 import { db } from '../config/firebase';
 import type { TuyaDevice, DeviceCategory } from '../types/index';
 
+/** Výsledek uložení seznamu zařízení z Tuya (plná synchronizace) */
+export interface SaveDevicesResult {
+  saved: number;
+  /** Zařízení, která v Tuya už nejsou a z appky se smazala */
+  deleted: string[];
+  /** Zařízení chybějící v seznamu, která se pro jistotu NEsmazala */
+  keptMissing: string[];
+}
+
+// Kolik chybějících zařízení se smí smazat naráz. Když by jich zmizelo víc,
+// skoro jistě jde o výpadek / neúplný seznam z Tuya, ne o odebraná zařízení —
+// smazáním by se ztratily místnosti, pozice a nastavení karet.
+const maxDeletions = (existingCount: number) => Math.max(3, Math.floor(existingCount * 0.1));
+
 class DeviceService {
   // ==================== WRITE BATCH ====================
   
@@ -60,7 +74,16 @@ class DeviceService {
     }
   }
 
-  async saveUserDevices(uid: string, devices: TuyaDevice[]): Promise<void> {
+  /**
+   * Uloží seznam zařízení z Tuya (zachová uživatelská nastavení). Chybějící
+   * zařízení smaže, JEN když `deleteMissing` (seznam je úplný) a není jich
+   * víc než pár — jinak je nechá být a vrátí jejich názvy v `keptMissing`.
+   */
+  async saveUserDevices(
+    uid: string,
+    devices: TuyaDevice[],
+    { deleteMissing = false }: { deleteMissing?: boolean } = {}
+  ): Promise<SaveDevicesResult> {
     try {
       const batch = writeBatch(db);
       const devicesRef = collection(db, 'devices');
@@ -111,17 +134,31 @@ class DeviceService {
         processedIds.add(device.id);
       });
 
-      // Smaž zařízení která už v Tuya nejsou
-      existingDevicesSnapshot.forEach((docSnap) => {
-        if (!processedIds.has(docSnap.id)) {
-          batch.delete(docSnap.ref);
-        }
-      });
+      // Zařízení, která už v Tuya nejsou — smazat jen podle spolehlivého seznamu
+      const missing = existingDevicesSnapshot.docs.filter(
+        (docSnap) => !processedIds.has(docSnap.id)
+      );
+      const canDelete =
+        deleteMissing && missing.length <= maxDeletions(existingDevicesSnapshot.size);
+      if (canDelete) {
+        missing.forEach((docSnap) => batch.delete(docSnap.ref));
+      }
+      const missingNames = missing.map(
+        (docSnap) => docSnap.data().customName || docSnap.data().name || docSnap.id
+      );
 
       await batch.commit();
       console.log(
-        `✅ Uloženo ${devices.length} zařízení (s preserved settings)`
+        `✅ Uloženo ${devices.length} zařízení (s preserved settings)` +
+          (canDelete
+            ? `, smazáno ${missing.length}`
+            : `, ${missing.length} chybějících ponecháno`)
       );
+      return {
+        saved: devices.length,
+        deleted: canDelete ? missingNames : [],
+        keptMissing: canDelete ? [] : missingNames,
+      };
     } catch (error) {
       console.error('Error saving user devices:', error);
       throw new Error('Nepodařilo se uložit zařízení');

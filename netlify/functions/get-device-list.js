@@ -115,40 +115,6 @@ async function getDeviceStatus(deviceId, clientId, clientSecret, accessToken) {
   return response.data.result;
 }
 
-// Funkce pro získání informací o zařízení
-async function getDeviceInfo(deviceId, clientId, clientSecret, accessToken) {
-  const url = `/v1.0/devices/${deviceId}`;
-
-  const headers = {
-    client_id: clientId,
-    access_token: accessToken,
-    sign_method: 'HMAC-SHA256',
-    'Content-Type': 'application/json',
-  };
-
-  const { timestamp, nonce, signature } = createSignatureWithToken(
-    'GET',
-    url,
-    headers,
-    '',
-    clientSecret
-  );
-
-  headers.t = timestamp;
-  headers.nonce = nonce;
-  headers.sign = signature;
-
-  const response = await axios.get(`https://openapi.tuyaeu.com${url}`, {
-    headers,
-  });
-
-  if (!response.data.success) {
-    throw new Error(`Failed to get device info: ${response.data.msg}`);
-  }
-
-  return response.data.result;
-}
-
 async function handler(event, context) {
   console.log('=== TUYA API - HYBRID APPROACH ===');
 
@@ -168,14 +134,6 @@ async function handler(event, context) {
     // Známé informace z konzole
     const userUID = 'eu1619248628147R93Os';
     const associationId = 'gg-111788887190429558614';
-
-    // Tvoje známá device ID jako fallback
-    const knownDeviceIds = [
-      { id: 'bfae2da6e578cdd1b0', name: 'Světlo chodba' },
-      { id: 'bffbfe2dad8680b2a8a9', name: 'Garazove svetlo' },
-      { id: '31311065c44f33b75eaf', name: 'Hl.zásuvka-roz' },
-      { id: 'bf0f8692301eaff1f6', name: 'Temperature and humidity sensor' },
-    ];
 
     console.log('Step 1: Getting access token...');
     const accessToken = await getTuyaAccessToken(clientId, clientSecret);
@@ -258,6 +216,10 @@ async function handler(event, context) {
             } else {
               break;
             }
+          } else if (allDevices.length > 0) {
+            // Další stránka nevyšla — neúplný seznam se nesmí vrátit, appka
+            // by podle něj smazala zařízení, která v něm chybí
+            throw new Error(`další stránka seznamu selhala: ${response.data.msg}`);
           } else {
             break;
           }
@@ -337,55 +299,17 @@ async function handler(event, context) {
       };
     }
 
-    // Fallback: použij známá device ID
-    console.log('Automatic discovery failed, using known device IDs...');
-
-    const devicesData = [];
-    for (const deviceInfo of knownDeviceIds) {
-      try {
-        const deviceDetails = await getDeviceInfo(
-          deviceInfo.id,
-          clientId,
-          clientSecret,
-          accessToken
-        );
-        const deviceStatus = await getDeviceStatus(
-          deviceInfo.id,
-          clientId,
-          clientSecret,
-          accessToken
-        );
-
-        devicesData.push({
-          ...deviceDetails,
-          status: deviceStatus,
-          custom_name: deviceInfo.name,
-        });
-
-        console.log(`Got data for: ${deviceInfo.name}`);
-      } catch (deviceError) {
-        console.warn(
-          `Failed to get ${deviceInfo.name}: ${deviceError.message}`
-        );
-        devicesData.push({
-          id: deviceInfo.id,
-          name: deviceInfo.name,
-          custom_name: deviceInfo.name,
-          status: null,
-          error: deviceError.message,
-          online: false,
-        });
-      }
-    }
-
+    // Tuya seznam nevrátila. Dřív tu byl „nouzový" seznam 4 natvrdo zapsaných
+    // (navíc zkrácených) ID — appka ho brala jako úplný a smazala by podle něj
+    // všechna ostatní zařízení i s místnostmi a nastavením karet. Teď poctivá
+    // chyba: nic se nezmění a zkusí se to později.
+    console.log('Automatic discovery failed — no device list');
     return {
-      statusCode: 200,
+      statusCode: 502,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        success: true,
-        method: 'fallback_known_ids',
-        total_devices: devicesData.length,
-        devices: devicesData.map(sanitizeDevice),
+        success: false,
+        error: 'Tuya teď nevrátila seznam zařízení — zkus to později',
       }),
     };
   } catch (error) {

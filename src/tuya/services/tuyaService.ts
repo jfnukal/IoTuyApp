@@ -1,6 +1,6 @@
 // src/services/tuyaService.ts
 import { auth } from '../../config/firebase';
-import { deviceService } from '../../services/deviceService';
+import { deviceService, type SaveDevicesResult } from '../../services/deviceService';
 import type { TuyaDevice, TuyaStatus } from '../../types';
 
 /** Co z Tuya přišlo pro jedno zařízení (netlify/functions/get-devices-status.js) */
@@ -59,22 +59,19 @@ class TuyaService {
   }
 
   /**
-   * Načte všechna Tuya zařízení ze serveru
+   * Načte všechna Tuya zařízení ze serveru. `complete` = úplný seznam
+   * (automaticky zjištěný v Tuya) — jen podle takového se smí mazat zařízení,
+   * která v něm chybí.
    */
-   async fetchDevices(): Promise<TuyaDevice[]> {
+   async fetchDevices(): Promise<{ devices: TuyaDevice[]; complete: boolean }> {
     try {
       console.log('📡 Načítám Tuya zařízení ze serveru...');
 
       const response = await this.callFunction('get-device-list', { method: 'GET' });
+      const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Nepodařilo se načíst zařízení');
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
       console.log(`✅ Načteno ${data.devices.length} zařízení`);
@@ -98,7 +95,9 @@ class TuyaService {
         ...(device.customName && { customName: device.customName }),
       }));
 
-      return devices;
+      // Starší verze funkce při výpadku posílala „nouzový" seznam 4 natvrdo
+      // zapsaných zařízení (method: 'fallback_known_ids') — ten úplný není
+      return { devices, complete: data.method === 'automatic' };
     } catch (error) {
       console.error('❌ Chyba při načítání Tuya zařízení:', error);
       throw error;
@@ -142,14 +141,18 @@ class TuyaService {
   }
 
   /**
-   * Synchronizuje Tuya zařízení do Firestore
+   * Synchronizuje Tuya zařízení do Firestore (plná synchronizace — najde
+   * nová zařízení a odebere ta, která v Tuya už nejsou; viz saveUserDevices)
    */
-  async syncToFirestore(userId: string): Promise<TuyaDevice[]> {
+  async syncToFirestore(userId: string): Promise<SaveDevicesResult> {
     try {
       console.log('🔄 Synchronizuji Tuya → Firestore...');
 
       // Načti zařízení z Tuya
-      const devices = await this.fetchDevices();
+      const { devices, complete } = await this.fetchDevices();
+      if (devices.length === 0) {
+        throw new Error('Tuya nevrátila žádná zařízení');
+      }
 
       // ✅ DŮLEŽITÉ: Přidej userId do každého zařízení
       const devicesWithUserId = devices.map((device) => ({
@@ -158,10 +161,12 @@ class TuyaService {
       }));
 
       // Ulož do Firestore
-      await deviceService.saveUserDevices(userId, devicesWithUserId);
+      const result = await deviceService.saveUserDevices(userId, devicesWithUserId, {
+        deleteMissing: complete,
+      });
 
       console.log('✅ Synchronizace dokončena');
-      return devicesWithUserId;
+      return result;
     } catch (error) {
       console.error('❌ Chyba při synchronizaci:', error);
       throw error;

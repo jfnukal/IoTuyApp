@@ -1,7 +1,7 @@
 // src/tuya/hooks/useTuya.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { deviceService } from '../../services/deviceService';
+import { deviceService, type SaveDevicesResult } from '../../services/deviceService';
 import { tuyaService } from '../services/tuyaService';
 import { startTuyaAutoSync, type AutoSyncScope } from '../services/tuyaAutoSync';
 import type { TuyaDevice } from '../../types';
@@ -77,9 +77,9 @@ export const useTuya = ({ autoSync = 'all' }: UseTuyaOptions = {}) => {
 
   /**
    * 🔄 Plná synchronizace: Tuya Cloud → Firestore → UI
-   * (Discovery nových zařízení)
+   * (Discovery nových zařízení). Vrací, co se uložilo / smazalo / nechalo.
    */
-  const syncDevices = useCallback(async () => {
+  const syncDevices = useCallback(async (): Promise<SaveDevicesResult> => {
     if (!currentUser) {
       throw new Error('Uživatel není přihlášen');
     }
@@ -88,9 +88,10 @@ export const useTuya = ({ autoSync = 'all' }: UseTuyaOptions = {}) => {
       setIsSyncing(true);
       setError(null);
 
-      await tuyaService.syncToFirestore(currentUser.uid);
+      const result = await tuyaService.syncToFirestore(currentUser.uid);
 
       console.log('✅ Tuya: Plná synchronizace dokončena');
+      return result;
     } catch (err: any) {
       console.error('❌ Tuya: Chyba při synchronizaci:', err);
       setError(err.message || 'Nepodařilo se synchronizovat zařízení');

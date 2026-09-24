@@ -14,6 +14,10 @@ const TuyaDeviceList = lazy(() =>
   import('../../tuya').then(m => ({ default: m.TuyaDeviceList }))
 );
 
+// „Pračka, Bojler, Sauna…" — pár názvů do hlášení
+const shortList = (names: string[]) =>
+  names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '');
+
 const DevicesPage: React.FC = () => {
   const navigate = useNavigate();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -29,9 +33,41 @@ const DevicesPage: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [panelOpen]);
 
+  // Výsledek ruční synchronizace — chvíli ukázat nahoře (dřív nebylo vidět
+  // nic, ani když se nepovedla)
+  const [syncNote, setSyncNote] = useState<{ text: string; warn: boolean } | null>(null);
+  useEffect(() => {
+    if (!syncNote) return;
+    const t = setTimeout(() => setSyncNote(null), syncNote.warn ? 15000 : 6000);
+    return () => clearTimeout(t);
+  }, [syncNote]);
+
   const handleSync = async () => {
-    await syncDevices();
-    setPanelOpen(false);
+    try {
+      const { saved, deleted, keptMissing } = await syncDevices();
+      if (keptMissing.length > 0) {
+        setSyncNote({
+          warn: true,
+          text: `⚠️ V seznamu z Tuya teď chybí ${keptMissing.length} zařízení (${shortList(keptMissing)}) — pro jistotu jsem je nesmazal. Nejspíš jde o výpadek Tuya, zkus to později.`,
+        });
+      } else {
+        setSyncNote({
+          warn: false,
+          text:
+            `✅ Načteno ${saved} zařízení z Tuya` +
+            (deleted.length > 0
+              ? ` · odebráno ${deleted.length} už neexistujících (${shortList(deleted)})`
+              : ''),
+        });
+      }
+    } catch (err) {
+      setSyncNote({
+        warn: true,
+        text: `⚠️ Synchronizace se nepovedla, nic se nezměnilo: ${err instanceof Error ? err.message : err}`,
+      });
+    } finally {
+      setPanelOpen(false);
+    }
   };
 
   return (
@@ -41,6 +77,17 @@ const DevicesPage: React.FC = () => {
       {editMode && (
         <div className="v2-devices-edit-banner">
           ✏️ Přetahuj karty myší · měň velikost za pravý dolní roh
+        </div>
+      )}
+
+      {/* Výsledek synchronizace (klepnutím zmizí) */}
+      {syncNote && (
+        <div
+          className={`v2-devices-edit-banner ${syncNote.warn ? 'v2-devices-edit-banner--warn' : ''}`}
+          onClick={() => setSyncNote(null)}
+          role="status"
+        >
+          {syncNote.text}
         </div>
       )}
 

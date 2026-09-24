@@ -15,8 +15,6 @@ export const useWeather = (initialSettings?: Partial<WeatherWidgetSettings>) => 
     settings: { ...DEFAULT_WEATHER_SETTINGS, ...initialSettings },
   });
 
-  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null);
-
   // Načítání počasí pro jednu konkrétní lokaci
   const fetchWeatherForLocation = useCallback(async (location: WeatherLocation): Promise<WeatherData | null> => {
     try {
@@ -132,26 +130,35 @@ const initialize = useCallback(async () => {
 
   // Manuální obnova počasí pro všechny lokace
   const refreshWeather = useCallback(async () => {
-    if (!state.locations.length) return;
+    // První načtení selhalo (třeba start bez internetu), takže není co
+    // obnovovat → začít znovu od začátku. Jinak by tlačítko „Zkusit znovu"
+    // ani pravidelná obnova nic neudělaly až do obnovení stránky.
+    if (!state.locations.length) {
+      await initialize();
+      return;
+    }
     setState(prev => ({ ...prev, isLoading: true }));
 
-    const weatherPromises = state.locations.map(loc => fetchWeatherForLocation(loc));
-    const results = await Promise.all(weatherPromises);
-    
-    const newCurrentWeather: { [locationId: string]: WeatherData } = {};
-    state.locations.forEach((loc, index) => {
-      if (results[index]) {
-        newCurrentWeather[loc.id] = results[index]!;
-      }
-    });
+    const locations = state.locations;
+    const results = await Promise.all(locations.map(loc => fetchWeatherForLocation(loc)));
 
-    setState(prev => ({
-      ...prev,
-      currentWeather: newCurrentWeather,
-      isLoading: false,
-      lastUpdate: Date.now(),
-    }));
-  }, [state.locations, fetchWeatherForLocation]);
+    // Co se nepodařilo stáhnout, nechat jak bylo — krátký výpadek Wi-Fi
+    // (třeba hned po probuzení tabletu) nesmí smazat dobrá data
+    setState(prev => {
+      const currentWeather = { ...prev.currentWeather };
+      locations.forEach((loc, index) => {
+        const data = results[index];
+        if (data) currentWeather[loc.id] = data;
+      });
+      return {
+        ...prev,
+        currentWeather,
+        isLoading: false,
+        // „Aktualizováno" posunout, jen když se opravdu něco stáhlo
+        lastUpdate: results.some(Boolean) ? Date.now() : prev.lastUpdate,
+      };
+    });
+  }, [state.locations, fetchWeatherForLocation, initialize]);
 
   // Získání hravého komentáře
   const getPlayfulComment = useCallback((locationId: string): string => {
@@ -168,16 +175,21 @@ const initialize = useCallback(async () => {
   }, [state.settings.isEnabled, initialize]);
 
   // Efekt pro automatický refresh
+  // Časovač jen v proměnné efektu. Dřív byl ve state a úklid rušil vždy ten
+  // předchozí, takže po zavření detailu počasí dál každých 15 min zbytečně stahoval.
   useEffect(() => {
-    if (refreshTimer) clearInterval(refreshTimer);
-    if (state.settings.isEnabled && state.settings.refreshInterval > 0) {
-      const timer = setInterval(refreshWeather, state.settings.refreshInterval * 60 * 1000);
-      setRefreshTimer(timer);
-    }
-    return () => {
-      if (refreshTimer) clearInterval(refreshTimer);
-    };
+    if (!state.settings.isEnabled || state.settings.refreshInterval <= 0) return;
+    const timer = setInterval(refreshWeather, state.settings.refreshInterval * 60 * 1000);
+    return () => clearInterval(timer);
   }, [state.settings.isEnabled, state.settings.refreshInterval, refreshWeather]);
+
+  // Jakmile se vrátí internet (tablet po probuzení chytá Wi-Fi), načíst hned,
+  // ne až při další pravidelné obnově za 15 minut
+  useEffect(() => {
+    if (!state.settings.isEnabled) return;
+    window.addEventListener('online', refreshWeather);
+    return () => window.removeEventListener('online', refreshWeather);
+  }, [state.settings.isEnabled, refreshWeather]);
 
 
   return {

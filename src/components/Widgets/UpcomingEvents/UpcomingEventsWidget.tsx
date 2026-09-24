@@ -4,6 +4,7 @@ import React, { useState, useEffect, lazy, Suspense, memo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCalendar } from '../Calendar/CalendarProvider';
 import { useWidgetSettings } from '../../../hooks/useWidgetSettings';
+import { useDnes } from '../../../hooks/useDnes';
 
 // 🚀 Lazy loading pro CalendarModal - načte se až když uživatel otevře modál
 const CalendarModal = lazy(() => import('../Calendar/CalendarModal'));
@@ -27,6 +28,8 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
   const { currentUser } = useAuth();
   const [newEventsPopupOpen, setNewEventsPopupOpen] = useState(false);
   const { settings } = useWidgetSettings();
+  // Po půlnoci přepočítat „Dnes" i bez obnovy stránky a bez změny událostí
+  const dnes = useDnes();
 
   // Načíst ze settings, nebo použít props, nebo fallback hodnoty
   const effectiveDaysAhead =
@@ -100,7 +103,7 @@ const UpcomingEventsWidget: React.FC<UpcomingEventsWidgetProps> = ({
     };
 
     loadEvents();
-  }, [getEventsByDate, effectiveDaysAhead, effectiveMaxEvents]);
+  }, [getEventsByDate, effectiveDaysAhead, effectiveMaxEvents, dnes]);
 
   // Helper funkce pro získání jmen
   const getAuthorName = (authUid: string | undefined): string => {

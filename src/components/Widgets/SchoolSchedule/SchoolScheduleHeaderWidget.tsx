@@ -10,6 +10,7 @@ import './SchoolScheduleHeader.css';
 import { SchoolScheduleModal } from './SchoolScheduleModal';
 import { isSummerBreak } from './holidayMode';
 import HolidayOverlay from './HolidayOverlay';
+import { useAktualni } from '../../../hooks/useDnes';
 
 const DAYS_SHORT = ['Po', 'Út', 'St', 'Čt', 'Pá'];
 
@@ -97,7 +98,8 @@ const getTargetDayIndex = (showNextDayHour: number = 14) => {
 };
 
 const SchoolScheduleHeaderWidget: React.FC = () => {
-  const [selectedDay, setSelectedDay] = useState(getTargetDayIndex(14));
+  const cilovyDen = useAktualni(() => getTargetDayIndex(14));
+  const [selectedDay, setSelectedDay] = useState(cilovyDen);
   const [johankaSchedule, setJohankaSchedule] = useState<TimetableDay[]>([]);
   const [jarecekSchedule, setJarecekSchedule] = useState<TimetableDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +135,13 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  // Ve 14:00 přepnout na zítřek i bez obnovy stránky. Tablet se přes den
+  // obnovuje nejdřív po 4 hodinách, takže by jinak ještě dlouho ukazoval
+  // dnešní rozvrh, i když už je po škole.
+  useEffect(() => {
+    setSelectedDay(cilovyDen);
+  }, [cilovyDen]);
 
   // Uložení Jarečkova rozvrhu
   const handleSaveSchedule = async (newSchedule: TimetableDay[]) => {
@@ -238,11 +247,12 @@ const SchoolScheduleHeaderWidget: React.FC = () => {
 
   // Ikona pro DNEŠNÍ den — signalizuje, zda má Johanka dnes svačinu ve škole
   // (ne celý týden — jinak by byla ikona 🥪 pořád, když je objednáno kdekoliv v týdnu)
-  const todayActualIndex = (() => {
+  // Po půlnoci se přepočítá samo, i bez obnovy stránky
+  const todayActualIndex = useAktualni(() => {
     const d = new Date().getDay(); // 0=Ne, 1=Po ... 6=So
     if (d === 0 || d === 6) return -1; // víkend → žádná svačina
     return d - 1; // 0=Po, 4=Pá
-  })();
+  });
   const hasTodaySnack = todayActualIndex >= 0
     ? (mealOrders[getDateForDay(todayActualIndex)] || []).some(m => m.type === 'Svačina')
     : false;

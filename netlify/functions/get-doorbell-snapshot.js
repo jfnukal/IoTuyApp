@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { protect } = require('../lib/familyAuth.cjs');
 
 // Funkce pro HTTP požadavky
 async function fetchWithTimeout(url, options, timeout = 10000) {
@@ -148,20 +149,8 @@ async function getSnapshot(deviceId, clientId, clientSecret, accessToken) {
   throw new Error('No working snapshot endpoint found');
 }
 
-exports.handler = async function (event, context) {
+async function handler(event, context) {
   console.log('=== DOORBELL SNAPSHOT REQUEST ===');
-
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: '',
-    };
-  }
 
   try {
     if (event.httpMethod !== 'POST') {
@@ -215,10 +204,7 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
         snapshot: snapshotData,
@@ -230,14 +216,14 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: false,
         error: error.message,
       }),
     };
   }
-};
+}
+
+// Jen pro přihlášenou rodinu, CORS jen pro vlastní web (netlify/lib/familyAuth.cjs)
+exports.handler = protect(handler, { methods: 'POST' });

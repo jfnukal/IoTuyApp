@@ -32,6 +32,7 @@ Scraper kupi.cz na Apify **nepíše do Firestore přímo** (do 8/2026 to dělal 
 - Slovníky kategorií/stop-slov nákupního seznamu existují 2× — v klientovi (`src/api/productDictionary.ts`) a ve funkci (`functions/src/normalizacePotravin.ts`). Klient určuje kategorii HLEDANÉHO výrazu, funkce kategorii NABÍDKY, a `pricesAPI.ts` je porovnává (shoda +4 body, neshoda −4) → když se rozejdou, appka zahazuje správné nabídky. Při změně upravit obě strany. (Do 8/2026 byla druhá kopie v Apify scraperu; ten už normalizaci nedělá.)
 - Widgety V2 jsou self-contained: vlastní data/subscriptions, žádné props od rodiče.
 - Env klíče (Tuya, Gemini) jen v `.env` (gitignore) a Netlify UI.
+- Netlify funkce (`netlify/functions/`) pouští jen přihlášenou rodinu: klient posílá Firebase ID token (`tuyaService.callFunction`), funkce ho ověří v `netlify/lib/familyAuth.cjs` (podpis klíči Google + zkušební čtení `appSettings/main` → rozhodnou Firestore pravidla `isFamily()`, žádné env proměnné). Nová funkce = `exports.handler = protect(handler, { methods })`. Pravidlo pro `appSettings` musí zůstat jen pro rodinu.
 
 ## Známé otevřené problémy (neřešit znovu od nuly — viz paměť)
 - Duplicitní push notifikace (řešeno opakovaně, zatím nedořešeno).

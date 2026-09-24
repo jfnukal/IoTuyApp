@@ -1,5 +1,15 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const { protect } = require('../lib/familyAuth.cjs');
+
+// Co z Tuya do prohlížeče nepatří: local_key (klíč k přímému ovládání
+// zařízení po síti), IP adresa a poloha domu. Appka nic z toho nepotřebuje.
+const HIDDEN_FIELDS = ['local_key', 'localKey', 'ip', 'lat', 'lon'];
+function sanitizeDevice(device) {
+  return Object.fromEntries(
+    Object.entries(device).filter(([key]) => !HIDDEN_FIELDS.includes(key))
+  );
+}
 
 // Funkce pro získání access tokenu
 async function getTuyaAccessToken(clientId, clientSecret) {
@@ -139,7 +149,7 @@ async function getDeviceInfo(deviceId, clientId, clientSecret, accessToken) {
   return response.data.result;
 }
 
-exports.handler = async function (event, context) {
+async function handler(event, context) {
   console.log('=== TUYA API - HYBRID APPROACH ===');
 
   try {
@@ -316,16 +326,13 @@ exports.handler = async function (event, context) {
 
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           success: true,
           method: 'automatic',
           endpoint_used: usedEndpoint,
           total_devices: automaticDevices.length,
-          devices: devicesWithStatus,
+          devices: devicesWithStatus.map(sanitizeDevice),
         }),
       };
     }
@@ -373,15 +380,12 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
         method: 'fallback_known_ids',
         total_devices: devicesData.length,
-        devices: devicesData,
+        devices: devicesData.map(sanitizeDevice),
       }),
     };
   } catch (error) {
@@ -402,4 +406,7 @@ exports.handler = async function (event, context) {
       }),
     };
   }
-};
+}
+
+// Jen pro přihlášenou rodinu, CORS jen pro vlastní web (netlify/lib/familyAuth.cjs)
+exports.handler = protect(handler, { methods: 'GET' });

@@ -92,6 +92,9 @@ service cloud.firestore {
     }
 
     // App Settings
+    // POZOR: podle toho, jestli jde appSettings/main přečíst, poznávají člena
+    // rodiny i Netlify funkce (netlify/lib/familyAuth.cjs) — čtení tu musí
+    // zůstat jen pro isFamily()
     match /appSettings/{document=**} {
       allow read, write: if isFamily();
     }

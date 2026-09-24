@@ -1,4 +1,5 @@
 // src/services/tuyaService.ts
+import { auth } from '../../config/firebase';
 import { deviceService } from '../../services/deviceService';
 import type { TuyaDevice, TuyaStatus } from '../../types';
 
@@ -29,7 +30,34 @@ const REQUEST_TIMEOUT_MS = 20 * 1000;
 class TuyaService {
   private baseUrl = '/.netlify/functions';
 
-  
+  /**
+   * Zavolá Netlify funkci s přihlašovacím tokenem (Authorization: Bearer).
+   * Bez něj funkce odmítnou — ovládají zařízení v domě a nesmí je volat
+   * kdokoli, kdo zná adresu (netlify/lib/familyAuth.cjs). Na 401 se zkusí
+   * jednou znovu s čerstvým tokenem (ten starý mohl právě vypršet).
+   */
+  private async callFunction(
+    name: string,
+    init: Omit<RequestInit, 'headers'> = {}
+  ): Promise<Response> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('Uživatel není přihlášen');
+    }
+
+    const send = async (forceRefresh: boolean) =>
+      fetch(`${this.baseUrl}/${name}`, {
+        ...init,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken(forceRefresh)}`,
+        },
+      });
+
+    const response = await send(false);
+    return response.status === 401 ? send(true) : response;
+  }
+
   /**
    * Načte všechna Tuya zařízení ze serveru
    */
@@ -37,12 +65,7 @@ class TuyaService {
     try {
       console.log('📡 Načítám Tuya zařízení ze serveru...');
 
-      const response = await fetch(`${this.baseUrl}/get-device-list`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await this.callFunction('get-device-list', { method: 'GET' });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -92,11 +115,8 @@ class TuyaService {
     try {
       console.log(`🎮 Ovládám zařízení ${deviceId}:`, commands);
 
-      const response = await fetch(`${this.baseUrl}/control-device`, {
+      const response = await this.callFunction('control-device', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           deviceId,
           commands,
@@ -163,11 +183,8 @@ class TuyaService {
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     let data: DevicesStatusResponse;
     try {
-      const response = await fetch(`${this.baseUrl}/get-devices-status`, {
+      const response = await this.callFunction('get-devices-status', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ deviceIds }),
         signal: controller.signal,
       });
@@ -289,11 +306,8 @@ class TuyaService {
     try {
       console.log(`📸 Získávám snapshot pro doorbell ${deviceId}...`);
 
-      const response = await fetch(`${this.baseUrl}/get-doorbell-snapshot`, {
+      const response = await this.callFunction('get-doorbell-snapshot', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           deviceId,
         }),
@@ -319,6 +333,8 @@ class TuyaService {
 
   /**
    * Proxy pro načítání obrázků (obchází CORS)
+   * POZOR: funkce image-proxy chce přihlašovací token, <img src> ho neposílá —
+   * obrázek je potřeba stáhnout přes callFunction (zatím se nikde nepoužívá)
    */
   getProxiedImageUrl(originalUrl: string): string {
     if (!originalUrl) return '';

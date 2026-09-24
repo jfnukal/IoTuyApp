@@ -1,20 +1,10 @@
-exports.handler = async function (event, context) {
+const { protect } = require('../lib/familyAuth.cjs');
+
+async function handler(event, context) {
   console.log('=== IMAGE PROXY REQUEST ===');
 
-  // CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
-  }
+  // CORS doplní protect()
+  const headers = { 'Content-Type': 'application/json' };
 
   try {
     if (event.httpMethod !== 'GET') {
@@ -57,7 +47,8 @@ exports.handler = async function (event, context) {
       headers: {
         ...headers,
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=3600', // Cache na 1 hodinu
+        // Cache na 1 hodinu — jen v prohlížeči (private), odpověď je pro přihlášeného
+        'Cache-Control': 'private, max-age=3600',
       },
       body: Buffer.from(buffer).toString('base64'),
       isBase64Encoded: true,
@@ -75,4 +66,8 @@ exports.handler = async function (event, context) {
       }),
     };
   }
-};
+}
+
+// Jen pro přihlášenou rodinu (jinak by to byl otevřený proxy server na cizí
+// účet), CORS jen pro vlastní web (netlify/lib/familyAuth.cjs)
+exports.handler = protect(handler, { methods: 'GET' });

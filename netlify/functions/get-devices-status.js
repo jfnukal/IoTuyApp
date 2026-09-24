@@ -1,5 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const { protect } = require('../lib/familyAuth.cjs');
 
 // Funkce pro získání access tokenu
 async function getTuyaAccessToken(clientId, clientSecret) {
@@ -153,23 +154,10 @@ async function getDeviceState(deviceId, clientId, clientSecret, accessToken) {
  * 🆕 Batch endpoint pro získání statusu více zařízení najednou
  * POST body: { deviceIds: ['id1', 'id2', ...] }
  */
-exports.handler = async function (event, context) {
+async function handler(event, context) {
   console.log('=== GET DEVICES STATUS (BATCH) ===');
 
   try {
-    // Povolíme GET i POST
-    if (event.httpMethod === 'OPTIONS') {
-      return {
-        statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-        body: '',
-      };
-    }
-
     if (event.httpMethod !== 'POST') {
       return {
         statusCode: 405,
@@ -249,10 +237,7 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
         total: deviceIds.length,
@@ -268,10 +253,7 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: false,
         error: 'Batch Status Error',
@@ -279,4 +261,7 @@ exports.handler = async function (event, context) {
       }),
     };
   }
-};
+}
+
+// Jen pro přihlášenou rodinu, CORS jen pro vlastní web (netlify/lib/familyAuth.cjs)
+exports.handler = protect(handler, { methods: 'POST' });

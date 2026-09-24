@@ -1,17 +1,9 @@
 const axios = require('axios');
+const { protect } = require('../lib/familyAuth.cjs');
 
-exports.handler = async function(event, context) {
-  // Povolíme CORS, aby to dashboard mohl číst
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-  };
-
-  // Pre-flight request pro prohlížeč
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
+async function handler(event, context) {
+  // CORS doplní protect()
+  const headers = { 'Content-Type': 'application/json' };
 
   const productName = event.queryStringParameters.q;
 
@@ -96,4 +88,7 @@ exports.handler = async function(event, context) {
       })
     };
   }
-};
+}
+
+// Jen pro přihlášenou rodinu, CORS jen pro vlastní web (netlify/lib/familyAuth.cjs)
+exports.handler = protect(handler, { methods: 'GET, POST' });

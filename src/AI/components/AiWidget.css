@@ -245,3 +245,9 @@
 .ai-log-btn:hover {
   opacity: 0.8;
 }
+
+/* Ladicí ikony vypnuté v Nastavení → Systém: nejsou vidět ani klikatelné,
+   ale drží své místo, aby se koule neposunula */
+.ai-log-btn.ai-diag-hidden {
+  visibility: hidden;
+}

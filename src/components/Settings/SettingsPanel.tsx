@@ -10,6 +10,7 @@ import ShoppingAliasesPanel from './ShoppingAliasesPanel';
 import SettingsTuya from './SettingsTuya';
 import SettingsWidgets from './SettingsWidgets';
 import DaySummarySettings from './DaySummarySettings';
+import AiDiagnosticsSettings from './AiDiagnosticsSettings';
 
 interface SettingsPanelProps {
   section: MenuSection;
@@ -305,6 +306,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           všech API služeb v nastaveném intervalu.
         </p>
       </div>
+
+      {/* Ladicí ikony AI koule — per zařízení (self-contained, localStorage) */}
+      <AiDiagnosticsSettings />
     </div>
   );
 

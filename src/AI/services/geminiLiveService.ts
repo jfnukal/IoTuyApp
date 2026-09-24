@@ -41,6 +41,15 @@ export function isQuietHours(): boolean {
   return h >= QUIET_HOURS_START || h < QUIET_HOURS_END;
 }
 
+/** Kolik ms zbývá do konce tichých hodin (do nejbližších 7:00) */
+export function msUntilQuietHoursEnd(): number {
+  const now = new Date();
+  const end = new Date(now);
+  end.setHours(QUIET_HOURS_END, 0, 0, 0);
+  if (end <= now) end.setDate(end.getDate() + 1); // 7:00 už dnes bylo → zítra
+  return end.getTime() - now.getTime();
+}
+
 // ==================== KONSTANTY ====================
 
 // Gemini 3 Live model (https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview)
@@ -189,18 +198,26 @@ export class GeminiLiveService {
   async start(): Promise<void> {
     if (this._destroyed) return;
     aiLog('INFO', 'GeminiLive: start()');
+    // destroy() může přijít během kteréhokoli await (vypnutí hned po zapnutí, konec tichých
+    // hodin v 7:00, dvojí běh efektu ve StrictMode).
+    // Co vzniklo před ním, zavřel on sám; co vznikne až po něm, zavírají _openSession/_startMic.
+    // Zničená služba pak už nic neotevírá a nic nehlásí.
     try {
       await this._openSession();
+      if (this._startAborted()) return;
       // Počkáme krátce — onclose přijde asynchronně těsně po connect()
       await new Promise<void>(r => setTimeout(r, 300));
+      if (this._startAborted()) return;
       // Zkontrolujeme, že WebSocket je stále otevřen (mohl selhat s 1011)
       if (!this._wsOk) {
         throw new Error('Session se ihned uzavřela — zkontroluj model a API klíč.');
       }
       await this._startMic();
+      if (this._startAborted()) return;
       this._setState('dormant');
       this._resetDormantTimer(); // spustíme auto-off odpočet
     } catch (e) {
+      if (this._startAborted()) return;   // chyba jen kvůli zničení (třeba zavřený AudioContext)
       const msg = `Nepodařilo se spustit Live API: ${String(e)}`;
       aiLog('ERR', msg);
       this.callbacks.onError(msg);
@@ -285,6 +302,7 @@ export class GeminiLiveService {
 
   private async _openSession(): Promise<void> {
     const key = await configService.getApiKey('gemini');
+    if (this._destroyed) return;   // zničeno během načítání klíče → vůbec se nepřipojujeme
     if (!key) throw new Error('Chybí Gemini API klíč (Firestore: appConfig/apiKeys/gemini)');
 
     const ai = new GoogleGenAI({ apiKey: key });
@@ -292,7 +310,7 @@ export class GeminiLiveService {
     const voice = getVoice();
     aiLog('INFO', `GeminiLive: připojuji k modelu ${MODEL}, hlas: ${voice}`);
 
-    this.session = await ai.live.connect({
+    const session = await ai.live.connect({
       model: MODEL,
       config: {
         responseModalities: [Modality.AUDIO],   // Live API: jen AUDIO; přepis přes outputAudioTranscription
@@ -322,6 +340,7 @@ export class GeminiLiveService {
         onerror: (e: ErrorEvent) => {
           this._wsOk = false;
           aiLog('ERR', `GeminiLive WS error: ${e.message ?? String(e)}`);
+          if (this._destroyed) return;   // zničená služba do UI nesahá (stejně jako onclose)
           this.callbacks.onError(`Chyba spojení: ${e.message ?? 'neznámá chyba'}`);
         },
         onclose: (e: CloseEvent) => {
@@ -340,6 +359,12 @@ export class GeminiLiveService {
       },
     });
 
+    if (this._destroyed) {
+      // destroy() přišel během připojování a o session nevěděl → zavřeme ji sami
+      try { session.close(); } catch { /* ignore */ }
+      return;
+    }
+    this.session = session;
     aiLog('INFO', 'GeminiLive: session vytvořena');
   }
 
@@ -356,7 +381,7 @@ export class GeminiLiveService {
 
   private async _startMic(): Promise<void> {
     // Požadujeme mono, 16kHz
-    this.micStream = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
         sampleRate: 16000,
@@ -365,12 +390,19 @@ export class GeminiLiveService {
         autoGainControl: true,
       },
     });
+    if (this._destroyed) {
+      // destroy() přišel během žádosti o mikrofon a o streamu nevěděl → zastavíme ho sami
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
+    this.micStream = stream;
 
     // AudioContext na 16kHz — Chrome bude resamplovate interně
     this.audioCtx = new AudioContext({ sampleRate: 16000 });
 
     // Načteme AudioWorklet procesor
     await this.audioCtx.audioWorklet.addModule('/ai-pcm-processor.js');
+    if (this._destroyed) return;   // mikrofon i AudioContext už zavřel destroy()
 
     const sourceNode = this.audioCtx.createMediaStreamSource(this.micStream);
     this.workletNode = new AudioWorkletNode(this.audioCtx, 'ai-pcm-processor');
@@ -565,6 +597,13 @@ export class GeminiLiveService {
   // ─────────────────────────────────────────────
   //  PRIVATE: HELPERS
   // ─────────────────────────────────────────────
+
+  /** true = služba byla během startu zničena → start končí potichu (bez stavu a chyb) */
+  private _startAborted(): boolean {
+    if (!this._destroyed) return false;
+    aiLog('INFO', 'GeminiLive: start přerušen — služba byla mezitím zničena');
+    return true;
+  }
 
   private _setState(newState: LiveState): void {
     if (this.state === newState) return;

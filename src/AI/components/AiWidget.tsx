@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGeminiLive } from '../hooks/useGeminiLive';
+import { useAiDiagnosticsVisible } from '../hooks/useAiDiagnostics';
 import { LogPanel } from './LogPanel';
 import { VoiceSelector } from './VoiceSelector';
 import './AiWidget.css';
@@ -26,6 +27,10 @@ export const AiWidget: React.FC = () => {
 
   const [showLog, setShowLog] = useState(false);
   const [showVoices, setShowVoices] = useState(false);
+  // Ladicí ikony (🗣️, 📋) jsou běžně schované — zapínají se v Nastavení → Systém.
+  // Schované drží své místo (visibility: hidden), aby se koule neposunula.
+  const showDiagnostics = useAiDiagnosticsVisible();
+  const diagBtnClass = showDiagnostics ? 'ai-log-btn' : 'ai-log-btn ai-diag-hidden';
 
   // Auto-dismiss bubliny po návratu do klidového stavu
   useEffect(() => {
@@ -120,7 +125,7 @@ export const AiWidget: React.FC = () => {
 
       {/* Výběr hlasu */}
       <button
-        className="ai-log-btn"
+        className={diagBtnClass}
         onClick={() => setShowVoices(v => !v)}
         title="Vybrat hlas asistenta"
         aria-label="Výběr hlasu"
@@ -130,7 +135,7 @@ export const AiWidget: React.FC = () => {
 
       {/* Log tlačítko */}
       <button
-        className="ai-log-btn"
+        className={diagBtnClass}
         onClick={() => setShowLog(v => !v)}
         title="Zobrazit AI log (diagnostika)"
         aria-label="AI log"

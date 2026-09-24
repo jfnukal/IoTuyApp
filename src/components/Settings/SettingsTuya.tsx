@@ -76,7 +76,11 @@ const SettingsTuya: React.FC<SettingsTuyaProps> = ({
       <p className="setting-description">
         📡 Automatická synchronizace zajišťuje aktuální data ze zařízení bez
         nutnosti manuálního refreshe. Různé typy zařízení mají různé intervaly
-        podle důležitosti.
+        podle důležitosti — interval říká, jak stará smí data být.
+        <br />
+        Stahuje se jen při zapnuté obrazovce a jen to, co je zrovna vidět
+        (hlavní obrazovka = venkovní teploměr, stránka Zařízení = vše). Po
+        rozsvícení tabletu se stará data stáhnou hned.
       </p>
 
       {/* Hlavní přepínač */}
@@ -171,7 +175,8 @@ const SettingsTuya: React.FC<SettingsTuyaProps> = ({
               onChange={(val) => updateTuyaSyncSetting('syncOnlyOnline', val)}
             />
             <p className="setting-description">
-              💡 Šetří API volání - offline zařízení se přeskočí.
+              💡 Šetří API volání - offline zařízení se zkouší jen jednou za
+              pasivní interval, jestli už zase nenaskočilo.
             </p>
 
             <ToggleSwitch

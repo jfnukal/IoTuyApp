@@ -58,6 +58,31 @@ interface WeatherMiniWidgetProps {
 // ID venkovního Tuya teploměru
 const OUTDOOR_TEMP_SENSOR_ID = 'bfb0ff3b441b1fc2ecv8au';
 
+// Jak dávno byl senzor naposledy aktualizován. Přepočítává se samo (každou
+// minutu a po rozsvícení displeje) — jinak by po nepovedené obnově dál
+// svítilo „právě teď" u hodnoty staré hodiny. Samostatná komponenta, ať se
+// kvůli tomu nepřekresluje celý widget (animace deště se losují při vykreslení).
+const SensorAgo: React.FC<{ timestamp?: number }> = ({ timestamp }) => {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setTick((n) => n + 1);
+    const interval = setInterval(refresh, 60 * 1000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  if (!timestamp) return null;
+  const diff = Math.floor((Date.now() - timestamp) / 60000); // minuty
+  const text =
+    diff < 1 ? 'právě teď' : diff < 60 ? `před ${diff} min` : `před ${Math.floor(diff / 60)} hod`;
+
+  return <span style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{text}</span>;
+};
+
 const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   className = '',
   onExpand,
@@ -65,25 +90,16 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
   headerMode = false,
   compactMode = false,
 }) => {
-  // Tuya hook pro reálnou venkovní teplotu
-  const { devices, syncCategory, isSyncing } = useTuya();
+  // Tuya hook pro reálnou venkovní teplotu — auto-sync drží čerstvý jen tenhle teploměr
+  const { devices, refreshDevices, isSyncing } = useTuya({
+    autoSync: [OUTDOOR_TEMP_SENSOR_ID],
+  });
 
   // Najdi venkovní teploměr
   const outdoorSensor = devices.find(d => d.id === OUTDOOR_TEMP_SENSOR_ID);
   const realTemperature = outdoorSensor ? getTemperature(outdoorSensor.status) : undefined;
   const realHumidity = outdoorSensor ? getHumidity(outdoorSensor.status) : undefined;
   const sensorOnline = outdoorSensor?.online ?? false;
-
-  // Jak dávno byl senzor naposledy aktualizován
-  const sensorAgoText = (() => {
-    const ts = outdoorSensor?.lastUpdated;
-    if (!ts) return null;
-    const diff = Math.floor((Date.now() - ts) / 60000); // minuty
-    if (diff < 1) return 'právě teď';
-    if (diff < 60) return `před ${diff} min`;
-    const h = Math.floor(diff / 60);
-    return `před ${h} hod`;
-  })();
 
   const {
     isLoading,
@@ -172,9 +188,10 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
     e.stopPropagation();
     // Obnov předpověď
     refreshWeather();
-    // A zároveň vynuť čerstvé čtení reálného Tuya teploměru (ne jen předpověď)
-    if (outdoorSensor?.category) {
-      syncCategory([outdoorSensor.category]).catch((err) =>
+    // A zároveň vynuť čerstvé čtení reálného Tuya teploměru (ne jen předpověď),
+    // i když je vedený jako offline — mohl mezitím naskočit
+    if (outdoorSensor) {
+      refreshDevices([OUTDOOR_TEMP_SENSOR_ID]).catch((err) =>
         console.error('[Weather] Tuya refresh selhal:', err)
       );
     }
@@ -502,11 +519,7 @@ const WeatherMiniWidget: React.FC<WeatherMiniWidgetProps> = ({
                     <span className="humidity-value">{realHumidity}%</span>
                   </div>
                 )}
-                {sensorAgoText && (
-                  <span style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>
-                    {sensorAgoText}
-                  </span>
-                )}
+                <SensorAgo timestamp={outdoorSensor?.lastUpdated} />
               </>
             ) : (
               <span className="real-temp no-data">--°C</span>

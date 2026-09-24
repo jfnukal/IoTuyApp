@@ -199,6 +199,31 @@ class SettingsService {
   }
 
   /**
+   * Načte jen nastavení Tuya synchronizace, doplněné o výchozí hodnoty.
+   * Na rozdíl od loadSettings vrací při chybě (třeba tablet po probuzení
+   * ještě nemá Wi-Fi) null, ne výchozí nastavení — to má synchronizaci
+   * VYPNUTOU, takže by se po nepovedeném startu nesynchronizovalo vůbec.
+   */
+  async loadTuyaSyncSettings(): Promise<TuyaSyncSettings | null> {
+    try {
+      const docSnap = await getDoc(doc(db, this.COLLECTION, this.DOC_ID));
+      const saved: Partial<TuyaSyncSettings> | undefined = docSnap.exists()
+        ? docSnap.data()?.systemSettings?.tuyaSync
+        : undefined;
+      const defaults = DEFAULT_SETTINGS.systemSettings.tuyaSync;
+
+      return {
+        ...defaults,
+        ...saved,
+        intervals: { ...defaults.intervals, ...saved?.intervals },
+      };
+    } catch (error) {
+      console.warn('⚠️ Nastavení Tuya synchronizace se nepodařilo načíst:', error);
+      return null;
+    }
+  }
+
+  /**
    * Uloží celá nastavení
    */
   async saveSettings(settings: AppSettings): Promise<void> {

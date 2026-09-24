@@ -152,6 +152,28 @@ class DeviceService {
     }
   }
 
+  /**
+   * Jako updateDevice, ale NEposune `lastUpdated`. To pole říká, jak čerstvá
+   * jsou data zařízení (widget počasí z něj píše „před X min") — u offline
+   * zařízení nebo neúspěšného dotazu na Tuya se proto posouvat nesmí.
+   */
+  async updateDeviceKeepLastUpdated(
+    deviceId: string,
+    updates: Partial<TuyaDevice>
+  ): Promise<void> {
+    try {
+      const cleanedUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([, value]) => value !== undefined)
+      );
+      if (Object.keys(cleanedUpdates).length === 0) return;
+
+      await updateDoc(doc(db, 'devices', deviceId), cleanedUpdates);
+    } catch (error) {
+      console.error('Error updating device:', error);
+      throw new Error('Nepodařilo se aktualizovat zařízení');
+    }
+  }
+
   async updateDevicePosition(
     deviceId: string,
     position: { x: number; y: number }

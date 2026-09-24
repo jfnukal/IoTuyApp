@@ -24,6 +24,7 @@ export interface TuyaDevice {
   online: boolean;
   status?: TuyaStatus[] | null;
   lastUpdated?: number;
+  lastChecked?: number; // kdy se na zařízení naposledy ptala synchronizace (i když bylo offline)
   isVisible?: boolean;
   roomId?: string;
   position?: {

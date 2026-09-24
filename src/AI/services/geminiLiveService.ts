@@ -41,6 +41,15 @@ export function isQuietHours(): boolean {
   return h >= QUIET_HOURS_START || h < QUIET_HOURS_END;
 }
 
+/** Kolik ms zbývá do konce tichých hodin (do nejbližších 7:00) */
+export function msUntilQuietHoursEnd(): number {
+  const now = new Date();
+  const end = new Date(now);
+  end.setHours(QUIET_HOURS_END, 0, 0, 0);
+  if (end <= now) end.setDate(end.getDate() + 1); // 7:00 už dnes bylo → zítra
+  return end.getTime() - now.getTime();
+}
+
 // ==================== KONSTANTY ====================
 
 // Gemini 3 Live model (https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview)

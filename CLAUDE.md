@@ -35,5 +35,5 @@ Scraper kupi.cz na Apify **nepíše do Firestore přímo** (do 8/2026 to dělal 
 
 ## Známé otevřené problémy (neřešit znovu od nuly — viz paměť)
 - Duplicitní push notifikace (řešeno opakovaně, zatím nedořešeno).
-- Počasí z Tuya senzoru se občas přestane aktualizovat (visí na starých datech i 24 h+).
+- Venkovní teplota z Tuya senzoru visela na starých datech i 24 h+ (auto-sync čekal 15 min nepřerušeného běhu stránky, tablet mezitím zhasne). Oprava dd86bb5 (9/2026) čeká na nasazení a pár dní ověření — synchronizace teď jede podle stáří dat, jen při zapnutém displeji a jen pro to, co je vidět (`src/tuya/services/tuyaAutoSync.ts`, `useTuya({ autoSync })`).
 - Widget dopravy jede na mock datech (`VITE_USE_MOCK_TRANSPORT=true`); plán = GTFS data + Cloud Function, IDOS API není.

@@ -114,37 +114,38 @@ export function useGeminiLive() {
         oneShotRef.current = false;
         svc.start().catch(e => aiLog('ERR', `GeminiLive start chyba: ${String(e)}`));
       }
-    } else {
-      if (svcRef.current) {
-        aiLog('INFO', 'useGeminiLive: zastavuji GeminiLiveService');
-        svcRef.current.stop();
-        svcRef.current = null;
-        setState('off');
-        setTranscript('');
-        setResponse('');
-        setErrorMsg('');
-      }
     }
+    // alwaysOn=false: nic nespouštíme. Běžící session (i jednorázovou) už zastavil
+    // cleanup předchozího běhu níže, bublinu po ručním vypnutí uklízí toggleAlwaysOn.
 
     // Cleanup při unmount, změně alwaysOn nebo po konci tichých hodin
     return () => {
       stopWaiting?.();
       if (svcRef.current) {
+        aiLog('INFO', 'useGeminiLive: zastavuji GeminiLiveService');
         svcRef.current.destroy();
         svcRef.current = null;
+        // destroy() změnu stavu nehlásí → bez toho by koule zůstala třeba na 'dormant'
+        setState('off');
       }
     };
   }, [alwaysOn, quietEndTick, makeCallbacks]);
 
   // ─── Toggle always-on ───
   const toggleAlwaysOn = useCallback(() => {
-    setAlwaysOn(prev => {
-      const next = !prev;
-      try { localStorage.setItem(STORAGE_KEY, String(next)); } catch { /* ignore */ }
-      aiLog('INFO', `alwaysOn → ${next}`);
-      return next;
-    });
-  }, []);
+    const next = !alwaysOn;
+    setAlwaysOn(next);
+    try { localStorage.setItem(STORAGE_KEY, String(next)); } catch { /* ignore */ }
+    aiLog('INFO', `alwaysOn → ${next}`);
+    if (!next) {
+      // Ruční vypnutí — session zastaví cleanup efektu výše, tady uklidíme bublinu
+      // (i hlášku o tichých hodinách, která by už neplatila). Auto-vypnutí (onAutoOff)
+      // tudy nevede, takže jeho hláška 🔕 zůstane vidět.
+      setTranscript('');
+      setResponse('');
+      setErrorMsg('');
+    }
+  }, [alwaysOn]);
 
   // ─── Manuální spuštění (klik na orb) ───
   const startListening = useCallback(() => {

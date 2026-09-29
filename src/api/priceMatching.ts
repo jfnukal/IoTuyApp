@@ -32,6 +32,14 @@ export interface PriceDeal {
   productUrl: string | null;
 }
 
+/** „24,90 Kč" / „25 Kč" — česky s čárkou (19. 9. 2026; dřív „24.9 Kč"). */
+export function cenaCesky(cena: number): string {
+  if (!Number.isFinite(cena)) return '';
+  return Number.isInteger(cena)
+    ? `${cena} Kč`
+    : `${cena.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč`;
+}
+
 export interface PriceResult {
   store: string;
   price: string;
@@ -44,6 +52,9 @@ export interface PriceResult {
   validUntil?: string;
   validityText?: string;
   isFuture?: boolean; // true pokud leták ještě neplatí
+  /** V letácích není přímo to, co člověk hledá — cena patří JINÉMU výrobku
+   *  z téže suroviny („vejce" → Vejce v aspiku). Musí to říct i obrazovka. */
+  jinyVyrobek?: boolean;
 }
 
 /* Český kmen — usečne koncovou samohlásku, aby „mléko/mléka“ nebo
@@ -70,6 +81,83 @@ const stemMatch = (a: string, b: string): boolean => {
      „jablka/jablko") a nic dalšího nepustí. */
   return kmen(a) === kmen(b);
 };
+
+/* ══════════════════════════════════════════════════════════════════════════
+   JINÝ VÝROBEK Z TÉŽE SUROVINY                       (prověrka 14-6, 29. 9. 2026)
+   ══════════════════════════════════════════════════════════════════════════
+   Hlava názvu sedí, a přesto se kupuje něco jiného: „vejce" → Vejce v aspiku
+   (Penny 22,90 vyhrávalo před vejci za 34,90), „česnek" → Česneková pomazánka,
+   „ryba" → Rybí salát, „švestky" → Pálenka Švestka, „knedlíky" → Knedlíky
+   v prášku. Skóre to nerozliší (hlava i klíčové slovo sedí) a mezi
+   srovnatelnými pak rozhoduje cena — hotové jídlo bývá levnější.
+   Slovo ze seznamu v názvu = JINÝ VÝROBEK, ledaže ho napsal i člověk
+   („vaječná pomazánka" chce pomazánku) nebo před ním stojí účel („Sýr NA
+   burger" je sýr, „Kuličky DO polévky" nejsou polévka).
+   ⚠️ KAŽDÉ SLOVO JE ZMĚŘENÉ proti vzorku letáků (1 278 nabídek) — ve vzorku
+   chytilo jen opravdu jiné výrobky. Schválně tu NENÍ (měřeno, chytalo správné):
+     'dezert'     „Dezert Pribináček" JE pribináček (i Bobík, Lipánek),
+     'omack'      „Tatarská omáčka" JE tatarka,
+     'cokolad'    „Čokoláda Milka" JE milka (proto jen „v čokoládě"),
+     'napoj'      „Minerální nápoj" chce ten, kdo píše minerálku,
+     'polevkov…'  „Polévkové nudle" JSOU nudle (proto jen podstatné jméno),
+     'salatov…'   „Okurka salátová" JE okurka (proto jen podstatné jméno).
+   Hlídá `npm run test:ceny` (případy s `jiny:`). */
+const JINE_VYROBKY: ReadonlyArray<readonly [string, RegExp]> = [
+  ['aspik', /^aspik/],
+  ['pomazanka', /^pomazank/],
+  ['palenka', /^palenk/],
+  ['liker', /^liker/],
+  ['burger', /^burger/],
+  ['tycinka', /^tycink/],
+  ['salat', /^salat(u|y|em)?$/],
+  ['prasek', /^pras(ek|ku|kem)$/],
+  ['dip', /^dip(y|u|em)?$/],
+  ['chleb', /^chleb(a|u|em|ik|iky|icek|icky|icku)?$/],
+  ['bageta', /^baget(a|y|u|ou)$/],
+  ['polevka', /^polev(ka|ky|ku|kou)$/],
+];
+/** Obalené — „Rozinky v čokoládě" nejsou rozinky, „Kešu v čokoládě" nejsou kešu. */
+const JINE_VYROBKY_FRAZE = ['v cokolade'];
+/** Účel: „X na/do/pro Y" je pořád X. */
+const UCEL = new Set(['na', 'do', 'pro']);
+
+const slovaTextu = (text: string): string[] =>
+  normalizeText(text).split(/[^a-z0-9]+/).filter(Boolean);
+
+const druhJinehoVyrobku = (slovo: string): string | null =>
+  JINE_VYROBKY.find(([, vzor]) => vzor.test(slovo))?.[0] ?? null;
+
+/**
+ * Je nabídka JINÝ VÝROBEK, než jaký hledané výrazy myslí?
+ * @param hledane  co člověk napsal + naučené aliasy rodiny (`canonicals`)
+ */
+export const jeJinyVyrobek = (hledane: string[], nazev: string): boolean => {
+  const vysvetleno = new Set<string>();
+  const frazeHledani: string[] = [];
+  for (const h of hledane) {
+    frazeHledani.push(slovaTextu(h).join(' '));
+    for (const w of slovaTextu(h)) {
+      vysvetleno.add(w);
+      for (const r of relatedTerms(w)) vysvetleno.add(r);
+    }
+  }
+  const druhyHledani = new Set([...vysvetleno].map(druhJinehoVyrobku).filter(Boolean));
+
+  const slova = slovaTextu(nazev);
+  for (let i = 0; i < slova.length; i++) {
+    const druh = druhJinehoVyrobku(slova[i]);
+    if (!druh || druhyHledani.has(druh)) continue;
+    if (i > 0 && UCEL.has(slova[i - 1])) continue;
+    return true;
+  }
+  const cely = slova.join(' ');
+  return JINE_VYROBKY_FRAZE.some((f) => cely.includes(f) && !frazeHledani.some((h) => h.includes(f)));
+};
+
+/* O kolik smí být nabídka horší než ta nejlepší, aby se ještě počítala za
+   „týž produkt“. Sdílí ho hledání cen i nabídka druhů — kdyby měla každá
+   svoje číslo, ukazovala by nabídka druhů něco jiného než cena pod ní. */
+const ROZUMNY_ODSTUP = 4;
 
 /* Ořížne množství, které si člověk připsal k položce — „2x mléko“,
    „3 rohlíky“, „vejce 10 ks“. Zůstane jen to, co popisuje PRODUKT.
@@ -162,12 +250,12 @@ export const calculateMatchScore = (
   const nazevTokeny = tokenize(deal.productName);
   if (nazevTokeny.length > 0) {
     /* Do posuzování patří i KONKRETIZACE dotazu, ne jen slova, která člověk
-       napsal. Bez toho platilo, že „pečivo" uzná za svoje jen výrobek, který
-       má slovo „pečivo" přímo v názvu — takže vyhrála „Pečivo tyčinka sýrová"
+       napsal. Bez toho platilo, že „pečivo“ uzná za svoje jen výrobek, který
+       má slovo „pečivo“ přímo v názvu — takže vyhrála „Pečivo tyčinka sýrová“
        (15 bodů) a rohlíky s houskami (8 bodů) filtr odstupu zahodil, přestože
        jsou to přesně ty výrobky, které člověk myslel.
-       `relatedTerms` je jednosměrné: „pečivo" sem přidá rohlík a housku,
-       ale „radegast" nepřidá gambrinus. */
+       `relatedTerms` je po opravě značek jednosměrné: „pečivo“ sem přidá
+       rohlík a housku, ale „radegast“ nepřidá gambrinus. */
     const pokryto = new Set<string>(tokens);
     for (const t of tokens) {
       for (const r of relatedTerms(t)) pokryto.add(r);
@@ -214,7 +302,7 @@ export const hledejVNabidkach = (
   // Kategorie hledané položky — pro upřednostnění akcí ze stejné kategorie
   const queryCategory = detectCategory(dotaz);
 
-  const matches: Array<{ deal: PriceDeal; score: number }> = [];
+  const vsechnyShody: Array<{ deal: PriceDeal; score: number; jiny: boolean }> = [];
 
   for (const deal of deals) {
     let bestScore = 0;
@@ -229,9 +317,24 @@ export const hledejVNabidkach = (
       if (queryCategory && deal.category) {
         bestScore += queryCategory === deal.category ? 4 : -4;
       }
-      matches.push({ deal, score: bestScore });
+      vsechnyShody.push({ deal, score: bestScore, jiny: jeJinyVyrobek(searchTerms, deal.productName) });
     }
   }
+
+  /* SUROVINA PŘED JINÝM VÝROBKEM — ještě PŘED řazením podle ceny (14-6).
+     Nejdřív se vezme, co je podle skóre srovnatelně dobré (stejný odstup
+     jako níž), a teprve MEZI TÍM se oddělí opravdový výrobek od jiného.
+     Obráceně by jiný výrobek s vysokým skóre uvolnil místo čemukoli
+     „přesnému" s mizerným skóre — bez vajec v letáku by pak cenu vajec
+     dalo čokoládové vajíčko Kinder (1 bod proti 16 u aspiku).
+     Je-li mezi srovnatelnými aspoň jeden opravdový výrobek, jiné se vůbec
+     nenabízí (ani v detailu jako „další obchod"). Když jsou tam JEN jiné,
+     ukážou se — ale s příznakem, aby obrazovka neřekla, že je to cena vajec. */
+  const nejlepsiVubec = Math.max(0, ...vsechnyShody.map((m) => m.score));
+  const srovnatelneShody = vsechnyShody.filter((m) => m.score >= nejlepsiVubec - ROZUMNY_ODSTUP);
+  const presne = srovnatelneShody.filter((m) => !m.jiny);
+  const jenJine = presne.length === 0;
+  const matches = jenJine ? srovnatelneShody : presne;
 
   // Seřadíme podle skóre (nejlepší shoda), pak podle ceny (nejlevnější)
   matches.sort((a, b) => {
@@ -262,7 +365,7 @@ export const hledejVNabidkach = (
       score: m.score,
       r: {
         store: deal.store,
-        price: `${deal.price} Kč`,
+        price: cenaCesky(deal.price),
         priceNum: deal.price,
         unit: deal.unit || undefined,
         pricePerUnit: deal.pricePerUnit || undefined,
@@ -272,6 +375,7 @@ export const hledejVNabidkach = (
         validUntil: deal.validUntil || undefined,
         validityText: deal.validityText || undefined,
         isFuture,
+        ...(jenJine ? { jinyVyrobek: true } : {}),
       },
     });
   }
@@ -288,7 +392,6 @@ export const hledejVNabidkach = (
      Proto se nejdřív zahodí nabídky, které jsou o něčem znatelně jiném než
      ta nejlepší, a teprve ze zbytku se vybírá nejlevnější obchod. */
   const nejlepsiSkore = Math.max(...vsechny.map((x) => x.score));
-  const ROZUMNY_ODSTUP = 4;
   const srovnatelne = vsechny.filter(
     (x) => x.score >= nejlepsiSkore - ROZUMNY_ODSTUP
   );
@@ -300,4 +403,200 @@ export const hledejVNabidkach = (
       if (a.isFuture !== b.isFuture) return a.isFuture ? 1 : -1;
       return a.priceNum - b.priceNum;
     });
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NABÍDKA DRUHŮ — „co jsi vlastně myslel?"            (přidáno 4. 9. 2026)
+   ══════════════════════════════════════════════════════════════════════════
+   `hledejVNabidkach` odpovídá na otázku „KDE to koupit nejlevněji" — proto
+   nechává jednu nabídku na obchod, tedy nejvýš pět řádků. Jenže když si člověk
+   napíše „káva", takřka nikdy nemyslí „jakoukoli kávu, hlavně lacinou": ve
+   vzorku letáků na to slovo sedí 55 různých výrobků, od ledové kávy za 14,90
+   po zrnkovou za 449. Vybrat z nich „nejlevnější" je odpověď na otázku,
+   kterou nikdo nepoložil.
+   Tahle funkce se ptá na to druhé: Z ČEHO se vlastně vybírá. Deduplikuje
+   proto podle VÝROBKU, ne podle obchodu.
+
+   ── JEDEN MECHANISMUS, DVĚ PODOBY ────────────────────────────────────────
+   Výrobky se třídí po dvou různých osách a napřed to vypadalo na dvě různá
+   pravidla (změřeno na vzorku 1 331 nabídek):
+     káva (55 výrobků)  → podle DRUHU:   instantní · zrnková · mletá · ledová
+     sýr  (99 výrobků)  → podle DRUHU:   eidam · tavený · gouda · cheddar
+     minerálka (8)      → podle ZNAČKY:  Gemerka · Vincentka · Magnesia…
+     mouka (5)          → podle ZNAČKY:  Ramill · Zátkova · Karlova Koruna
+   Ve skutečnosti je to jedna a tatáž věc: u každého výrobku se najde PRVNÍ
+   SLOVO, KTERÉ DOTAZ NEVYSVĚTLUJE („Mletá káva Jacobs" → mletá, „Mouka
+   Ramill" → Ramill). Když těch slov pár opakuje víc výrobků, jsou to druhy;
+   když je každé jiné, jsou to značky. Hádat se nemusí nic.
+
+   ── PROČ TAK PŘÍSNÉ PODMÍNKY ─────────────────────────────────────────────
+   První pokus se ptal u 59 z 79 běžných položek, tedy skoro pořád, a nabízel
+   nesmysly: u „soli" nabídl Sůl do myčky, u „mléka" Mléko na opalování,
+   u „česneku" chléb česnekový (skutečný česnek ve vzorku nebyl) a u „slaniny"
+   dvakrát tutéž slaninu s jinak useknutým názvem. Odtud tři brzdy níž. */
+
+/** Kolik různých voleb musí vyjít, aby to byl výběr a ne jen dva řádky. */
+const NEJMENE_VOLEB = 3;
+
+/** Víc voleb už není výběr, ale další seznam k prohledání. */
+const MAX_VOLEB = 8;
+
+export interface Druh {
+  /** Co se člověku ukáže jako volba — „Mletá" / „Minerální voda Vincentka". */
+  popis: string;
+  /** Čím se má hledat, když si tohle vybere. */
+  dotaz: string;
+  /** Kolik různých výrobků do téhle volby spadá (1 = konkrétní výrobek). */
+  pocet: number;
+  /** Nejnižší cena ve volbě — aby to nebyl jen holý nápis. */
+  odCeny: number;
+  obchod: string;
+}
+
+/** Hlavička pro zobrazení: první písmeno velké, zbytek jak je. */
+const sVelkym = (s: string): string =>
+  s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
+
+/**
+ * Vrátí volby „cos myslel?" pro obecný dotaz. Prázdné pole = není z čeho
+ * vybírat a má se rovnou ukázat cena — tak to dopadne u většiny položek.
+ *
+ * Volá se STEJNÉ skórování jako u hledání cen. Kdyby mělo vlastní, rozešlo
+ * by se to a nabídka druhů by ukazovala něco jiného než cena pod ní.
+ */
+export const nabidniDruhy = (
+  searchText: string,
+  deals: PriceDeal[],
+  canonicals: string[]
+): Druh[] => {
+  if (!searchText || searchText.length < 3) return [];
+  if (deals.length === 0) return [];
+
+  const dotaz = bezMnozstvi(searchText);
+  const dotazTokeny = tokenize(dotaz);
+
+  /* BRZDA 1 — „pokud není přímo zadavatelem specifikováno".
+     Kdo napsal „mletá káva" nebo „sýr eidam", už si vybral; ptát se ho
+     podruhé je otravné. Nabídka druhů patří jen k JEDNOSLOVNÉ položce. */
+  if (dotazTokeny.length !== 1) return [];
+
+  /* BRZDA 1b — UŽ SE JEDNOU ZEPTALO a on odpověděl.
+     Výběr druhu se ukládá jako naučený alias („káva" → „mletá káva"), jenže
+     položka na seznamu zůstane pořád jednoslovná — bez tohohle by brzda 1
+     nezabrala a appka by se ptala po každém načtení znovu. */
+  if (canonicals.length > 0) return [];
+
+  const searchTerms = [dotaz, ...canonicals];
+  const queryCategory = detectCategory(dotaz);
+
+  const matches: Array<{ deal: PriceDeal; score: number }> = [];
+  for (const deal of deals) {
+    /* BRZDA 2 — jen zboží ze STEJNÉ kategorie. U cen stačí, že se jiná
+       kategorie penalizuje čtyřmi body, protože tam jde o jeden nejlepší
+       výsledek. Tady se vypisuje víc řádků najednou, takže se to protlačí:
+       u „soli" nabízelo Sůl do myčky, u „mléka" Mléko na opalování. */
+    if (queryCategory && deal.category && deal.category !== queryCategory) continue;
+
+    let bestScore = 0;
+    for (const term of searchTerms) {
+      const score = calculateMatchScore(term, deal);
+      if (score > bestScore) bestScore = score;
+    }
+    if (bestScore < 3) continue;
+    matches.push({ deal, score: bestScore });
+  }
+  if (matches.length === 0) return [];
+
+  /* Stejný odstup jako u cen — co je o něčem znatelně jiném, není „druh",
+     ale omyl. Bez toho by se mezi volby u „kávy" dostaly smetánky do kávy. */
+  const nejlepsi = Math.max(...matches.map((x) => x.score));
+  /* Jiný výrobek (14-6) není druh — pomazánka není druh česneku. Vyřazuje se
+     AŽ ZA odstupem, stejně jako u cen, ať nabídka druhů neukazuje něco jiného
+     než cena pod ní. Když zbudou jen jiné výrobky, nenabízí se nic a cena
+     s příznakem to řekne sama. */
+  const blizko = matches.filter(
+    (x) => x.score >= nejlepsi - ROZUMNY_ODSTUP && !jeJinyVyrobek(searchTerms, x.deal.productName)
+  );
+  if (blizko.length === 0) return [];
+
+  // Jeden řádek na VÝROBEK (ne na obchod); při shodě názvu vyhrává lacinější.
+  const podleVyrobku = new Map<string, PriceDeal>();
+  for (const x of blizko) {
+    const klic = normalizeText(x.deal.productName);
+    const ma = podleVyrobku.get(klic);
+    if (!ma || x.deal.price < ma.price) podleVyrobku.set(klic, x.deal);
+  }
+
+  /* Rozlišující slovo = první slovo názvu, které dotaz nevysvětluje.
+     Klíčem je jeho KMEN, jinak by se „Pivo světlý ležák" a „Pivo světlé
+     výčepní" rozpadly na dvě skupiny téhož (změřeno: 35 + 12 řádků). */
+  const vysvetleno = new Set<string>(dotazTokeny);
+  for (const t of dotazTokeny) {
+    for (const r of relatedTerms(t)) vysvetleno.add(r);
+  }
+
+  const skupiny = new Map<string, { popis: string; kusy: PriceDeal[] }>();
+  for (const deal of podleVyrobku.values()) {
+    const rozlisujici = tokenize(deal.productName).find((w) => !vysvetleno.has(w));
+    if (!rozlisujici) continue; // název neříká nic nad rámec dotazu
+    const klic = kmen(rozlisujici);
+    const ma = skupiny.get(klic);
+    if (ma) ma.kusy.push(deal);
+    else skupiny.set(klic, { popis: rozlisujici, kusy: [deal] });
+  }
+
+  const nejlevnejsi = (kusy: PriceDeal[]) =>
+    kusy.reduce((a, b) => (a.price <= b.price ? a : b));
+
+  /* ── PODOBA A: DRUHY ──────────────────────────────────────────────────
+     Rozlišující slovo sdílí víc výrobků → je to druh, ne jméno.
+     „káva" → mletá · instantní · zrnková · ledová */
+  const druhy = Array.from(skupiny.values()).filter((g) => g.kusy.length >= 2);
+  if (druhy.length >= 2) {
+    return druhy
+      .sort((a, b) => b.kusy.length - a.kusy.length)
+      .slice(0, MAX_VOLEB)
+      .map((g) => {
+        const nej = nejlevnejsi(g.kusy);
+        return {
+          popis: sVelkym(g.popis),
+          dotaz: `${g.popis} ${dotaz}`,
+          pocet: g.kusy.length,
+          odCeny: nej.price,
+          obchod: nej.store,
+        };
+      });
+  }
+
+  /* ── PODOBA B: ZNAČKY ─────────────────────────────────────────────────
+     Každý výrobek má rozlišující slovo sám pro sebe → jsou to jména.
+     „mouka" → Ramill · Albert · Karlova Koruna · Zátkova
+
+     BRZDA 3 — musí jich být aspoň NEJMENE_VOLEB. Dvě položky nejsou výběr
+     a bývají to dvě podoby téhož: „Slanina pikantní Deli" a „Slanina
+     pikantní delikátní" se liší jen tím, kde leták usekl název. Počítají
+     se SKUPINY, ne výrobky — troje „Brambory konzumní rané" od tří obchodů
+     mají totéž rozlišující slovo, takže je to jedna volba, a tedy žádná.
+
+     Vypisují se ale VÝROBKY, ne skupiny: u „minerálky" spadne šest značek pod
+     společné slovo „voda", a kdyby se z každé skupiny brala jen nejlevnější,
+     zmizely by Vincentka, Magnesia i Mattoni — tedy právě to, z čeho se má
+     vybírat.
+
+     PROČ U DRUHŮ STAČÍ DVĚ a tady je potřeba tři: dva skutečné druhy jsou
+     pořádná otázka („cukr: krystal, nebo krupice?"), kdežto dva výrobky bývají
+     dvě podoby téhož. */
+  if (skupiny.size < NEJMENE_VOLEB) return [];
+
+  return Array.from(skupiny.values())
+    .flatMap((g) => g.kusy)
+    .sort((a, b) => a.price - b.price)
+    .slice(0, MAX_VOLEB)
+    .map((deal) => ({
+      popis: deal.productName,
+      dotaz: deal.productName,
+      pocet: 1,
+      odCeny: deal.price,
+      obchod: deal.store,
+    }));
 };

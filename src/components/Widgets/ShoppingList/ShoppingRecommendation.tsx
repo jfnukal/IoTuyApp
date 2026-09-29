@@ -44,10 +44,16 @@ export const ShoppingRecommendation: React.FC<ShoppingRecommendationProps> = ({
         name: item.text,
         completed: item.completed,
       }));
-      const result = await analyzeShoppingList(mappedItems);
-      if (isMounted) {
-        setAnalysis(result);
-        setLoading(false);
+      /* Když ceny nejdou načíst, doporučení se prostě neukáže — bez
+         tohohle by tu zůstalo navždy „🔍 Analyzuji nabídky…" (převzato
+         z Family-Dashboard; `findAllDeals` teď při výpadku vyhazuje chybu). */
+      try {
+        const result = await analyzeShoppingList(mappedItems);
+        if (isMounted) setAnalysis(result);
+      } catch {
+        if (isMounted) setAnalysis(null);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 

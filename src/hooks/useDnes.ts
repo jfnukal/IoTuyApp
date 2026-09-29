@@ -40,7 +40,8 @@ export function useDnes(): string {
   return useAktualni(dnesniDatum);
 }
 
-function dnesniDatum(): string {
+/** Dnešek MÍSTNĚ, ne v UTC — `toISOString()` je do dvou ráno ještě včerejšek. */
+export function dnesniDatum(): string {
   const d = new Date();
   const mesic = String(d.getMonth() + 1).padStart(2, '0');
   const den = String(d.getDate()).padStart(2, '0');

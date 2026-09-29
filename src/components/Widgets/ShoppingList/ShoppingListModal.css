@@ -297,3 +297,93 @@
     font-size: 1.2rem;
   }
 }
+
+/* ===== VÝBĚR DRUHU („Co myslíš?") — DruhChooserModal =====
+   Převzato z Family-Dashboard (29. 9. 2026); barvy místo proměnných šablon
+   natvrdo ve stylu okna výš (bílé okno, tmavý text). */
+.druh-volby {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.druh-volba {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  /* Dotykový terč: tablet na zdi se ovládá prstem, ne myší. */
+  min-height: 44px;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.druh-volba:hover,
+.druh-volba:focus-visible {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.druh-volba-popis {
+  font-weight: 600;
+  /* Dlouhý název výrobku se má zalomit, ne ustřelit cenu z okna. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.druh-volba-pocet {
+  font-weight: 400;
+  opacity: 0.65;
+  font-size: 0.85em;
+}
+
+.druh-volba-cena {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: 0 0 auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.druh-volba-obchod {
+  font-weight: 400;
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.druh-preskocit {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  margin-top: 4px;
+  background: none;
+  color: #333;
+  border: 1px dashed #bdbdbd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.druh-preskocit:hover {
+  opacity: 1;
+  background: #f5f5f5;
+}
+
+/* Prstem se čte z dálky — na dotykových zařízeních větší písmo. */
+@media (pointer: coarse) {
+  .druh-volba {
+    font-size: 1rem;
+    min-height: 52px;
+  }
+}

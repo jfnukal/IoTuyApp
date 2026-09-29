@@ -3,13 +3,16 @@ import { findAllDeals, type PriceResult } from './pricesAPI';
 
 export interface StoreRecommendation {
   store: string;
-  itemsFound: number;
+  itemsFound: number; // v AKTUÁLNĚ platné akci
+  itemsSoon: number; // bude v akci, ale leták ještě nezačal
   totalItems: number;
-  totalPrice: number;
+  totalPrice: number; // jen za aktuálně platné akce
+  platiDo?: string; // dokdy platí leták, ze kterého se počítalo
   items: Array<{
     name: string;
     price: number;
     found: boolean;
+    soon?: boolean; // cena existuje, ale platí až od příštího letáku
   }>;
   savings?: number; // Oproti nejdražší variantě
 }
@@ -41,7 +44,9 @@ export const analyzeShoppingList = async (
   const notFound: string[] = [];
 
   for (const item of activeItems) {
-    const deals = await findAllDeals(item.name);
+    /* Jiný výrobek (prověrka 14-6) se do doporučení NEPOČÍTÁ — aspik není
+       vejce, a obchod by se doporučoval podle zboží, které rodina nechce. */
+    const deals = (await findAllDeals(item.name)).filter((d) => !d.jinyVyrobek);
     if (deals.length > 0) {
       itemDeals.set(item.name, deals);
     } else {
@@ -58,43 +63,57 @@ export const analyzeShoppingList = async (
     storeMap.set(store, {
       store,
       itemsFound: 0,
+      itemsSoon: 0,
       totalItems: activeItems.length,
       totalPrice: 0,
       items: [],
     });
   }
 
-  // Pro každou položku přidáme cenu do příslušného obchodu
+  /* Do doporučení se počítají JEN AKTUÁLNĚ PLATNÉ akce.
+     Letáky se sbírají s předstihem, takže mezi nabídkami běžně leží i ty,
+     které začnou až příští týden. Dřív se počítaly všechny — a člověk podle
+     toho VYRAZIL DO OBCHODU, kde ty ceny ještě nebyly. To je horší než
+     špatná cenovka na seznamu: špatná cenovka mate u stolu, špatné
+     doporučení pošle autem do Alberta.
+     Budoucí akce se ale nezahazují — počítají se zvlášť jako „od příštího
+     letáku tam bude ještě N položek". */
   for (const [itemName, deals] of itemDeals) {
-    // Seskupíme nabídky podle obchodu
-    const dealsByStore = new Map<string, PriceResult>();
+    const aktualniPodleObchodu = new Map<string, PriceResult>();
+    const budouciPodleObchodu = new Map<string, PriceResult>();
 
     for (const deal of deals) {
+      const kam = deal.isFuture ? budouciPodleObchodu : aktualniPodleObchodu;
       // Vezmeme první (nejlepší) nabídku pro každý obchod
-      if (!dealsByStore.has(deal.store)) {
-        dealsByStore.set(deal.store, deal);
-      }
+      if (!kam.has(deal.store)) kam.set(deal.store, deal);
     }
 
-    // Přidáme do každého obchodu
     for (const store of stores) {
       const storeRec = storeMap.get(store)!;
-      const deal = dealsByStore.get(store);
+      const aktualni = aktualniPodleObchodu.get(store);
+      const budouci = budouciPodleObchodu.get(store);
 
-      if (deal) {
+      if (aktualni) {
         storeRec.itemsFound++;
-        storeRec.totalPrice += deal.priceNum;
+        storeRec.totalPrice += aktualni.priceNum;
+        storeRec.items.push({ name: itemName, price: aktualni.priceNum, found: true });
+        // Dokdy leták platí — bereme nejbližší konec, ať tip nelže
+        if (
+          aktualni.validUntil &&
+          (!storeRec.platiDo || aktualni.validUntil < storeRec.platiDo)
+        ) {
+          storeRec.platiDo = aktualni.validUntil;
+        }
+      } else if (budouci) {
+        storeRec.itemsSoon++;
         storeRec.items.push({
           name: itemName,
-          price: deal.priceNum,
-          found: true,
+          price: budouci.priceNum,
+          found: false,
+          soon: true,
         });
       } else {
-        storeRec.items.push({
-          name: itemName,
-          price: 0,
-          found: false,
-        });
+        storeRec.items.push({ name: itemName, price: 0, found: false });
       }
     }
   }
@@ -133,8 +152,16 @@ export const analyzeShoppingList = async (
 
   const bestStore = allStores[0] || null;
 
-  // Vytvoříme tip
+  /* Tip musí říct DVĚ věci, které dřív chyběly: že jde o akci, která
+     PRÁVĚ TEĎ platí, a dokdy. Bez toho nešlo poznat, jestli má cenu jet
+     dneska, nebo počkat. */
   let tip: string | undefined;
+
+  const dokdy = (s: StoreRecommendation) => {
+    if (!s.platiDo) return '';
+    const [, m, d] = s.platiDo.split('-');
+    return `, platí do ${Number(d)}. ${Number(m)}.`;
+  };
 
   if (bestStore && allStores.length > 1) {
     const secondBest = allStores[1];
@@ -144,12 +171,18 @@ export const analyzeShoppingList = async (
       bestStore.savings &&
       bestStore.savings > 10
     ) {
-      tip = `V ${bestStore.store} ušetříš ${bestStore.savings} Kč oproti ${secondBest.store}`;
+      tip = `V ${bestStore.store} ušetříš ${bestStore.savings} Kč oproti ${secondBest.store}${dokdy(bestStore)}`;
     } else if (bestStore.itemsFound > secondBest.itemsFound) {
-      tip = `${bestStore.store} má ${bestStore.itemsFound} z ${bestStore.totalItems} položek v akci`;
+      tip = `Jdi do ${bestStore.store} — ${bestStore.itemsFound} z ${bestStore.totalItems} položek v aktuální akci${dokdy(bestStore)}`;
     }
   } else if (bestStore) {
-    tip = `${bestStore.store} má ${bestStore.itemsFound} položek v akci`;
+    tip = `${bestStore.store} má ${bestStore.itemsFound} z ${bestStore.totalItems} položek v aktuální akci${dokdy(bestStore)}`;
+  }
+
+  // Co teprve přijde — informace navíc, ne záměna za tu hlavní
+  if (tip && bestStore && bestStore.itemsSoon > 0) {
+    // „platí do 1. 9." už tečkou končí — jinak by vyšlo „1. 9.. V příštím…"
+    tip += `${tip.endsWith('.') ? '' : '.'} V příštím letáku tam přibude dalších ${bestStore.itemsSoon}`;
   }
 
   return {

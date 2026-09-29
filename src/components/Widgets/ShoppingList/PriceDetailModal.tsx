@@ -3,7 +3,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import {
   type PriceResult,
-  clearPriceCache,
+  zapomenHledani,
 } from '../../../api/pricesAPI';
 import { deleteAliasBySearch, clearAliasCache } from '../../../api/aliasesAPI';
 import './ShoppingListModal.css';
@@ -35,9 +35,10 @@ const PriceDetailModal: React.FC<PriceDetailModalProps> = ({
     // Smažeme aliasy pro tento hledaný výraz
     const deleted = await deleteAliasBySearch(itemName);
 
-    // Vyčistíme cache
+    // Vyčistíme cache — jen aliasy a spočítaná hledání. Stažené ceny se
+    // aliasem nemění, jejich smazání stálo celé nové stažení `priceDeals`.
     clearAliasCache();
-    clearPriceCache();
+    zapomenHledani();
 
     console.log(
       `[PriceDetailModal] Smazáno ${deleted} aliasů pro "${itemName}"`
@@ -90,6 +91,29 @@ const PriceDetailModal: React.FC<PriceDetailModalProps> = ({
           Hledáno: <strong>{itemName}</strong>
         </div>
 
+        {/* JINÝ VÝROBEK (převzato z Family-Dashboard, 29. 9. 2026) — přímo
+            tahle položka v letácích není; ukazuje se podobný výrobek
+            („vejce" → Vejce v aspiku) a okno to musí říct nahlas. */}
+        {bestOffer.jinyVyrobek && (
+          <div
+            className="price-modal-jiny"
+            role="note"
+            style={{
+              margin: '0 0 10px',
+              padding: '8px 10px',
+              borderRadius: '8px',
+              border: '1px dashed #9e9e9e',
+              background: '#f5f5f5',
+              color: '#333',
+              fontSize: '0.85rem',
+              lineHeight: 1.4,
+            }}
+          >
+            V letácích teď není přímo „{itemName}". Níž je <strong>jiný výrobek</strong> — cenu
+            ber jen orientačně a zkontroluj, jestli ti sedí.
+          </div>
+        )}
+
         {/* Nejlepší nabídka */}
         <div
           className="price-modal-best"
@@ -97,7 +121,10 @@ const PriceDetailModal: React.FC<PriceDetailModalProps> = ({
             opacity: bestOffer.isFuture ? 0.6 : 1,
             background: bestOffer.isFuture
               ? 'linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%)'
-              : 'linear-gradient(135deg, #FFF9C4 0%, #FFEB3B 100%)',
+              : bestOffer.jinyVyrobek
+                ? 'linear-gradient(135deg, #FFFFFF 0%, #F2F2F2 100%)'
+                : 'linear-gradient(135deg, #FFF9C4 0%, #FFEB3B 100%)',
+            ...(bestOffer.jinyVyrobek ? { border: '2px dashed #9e9e9e' } : {}),
           }}
         >
           {bestOffer.isFuture && (

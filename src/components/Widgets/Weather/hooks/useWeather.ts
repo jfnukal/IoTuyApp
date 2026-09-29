@@ -1,5 +1,5 @@
 // src/components/Widgets/Weather/hooks/useWeather.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { weatherAPI, type WeatherData } from '../api/weatherAPI';
 import type { WeatherWidgetSettings, WeatherState, WeatherLocation } from '../types/index';
 import { DEFAULT_WEATHER_SETTINGS } from '../types';
@@ -75,7 +75,7 @@ const initialize = useCallback(async () => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Neznámá chyba při inicializaci.';
     console.error("Chyba při inicializaci useWeather:", errorMessage);
-    setState(prev => ({ ...prev, isLoading: false, error: "Nepodařilo se načíst výchozí lokaci." }));
+    setState(prev => ({ ...prev, isLoading: false, error: "Počasí se teď nepodařilo načíst — zkouším to znovu…" }));
   }
 }, [state.settings]);
 
@@ -190,6 +190,47 @@ const initialize = useCallback(async () => {
     window.addEventListener('online', refreshWeather);
     return () => window.removeEventListener('online', refreshWeather);
   }, [state.settings.isEnabled, refreshWeather]);
+
+  // Když se počasí vůbec nenačetlo (start hned po probuzení, Wi-Fi ještě
+  // nejede), zkoušet to samo znovu za 10 s, 20 s, 40 s… nejdéle po intervalu
+  // obnovy. Dřív chybová hláška visela až 15 minut, dokud někdo neklepl
+  // na „Zkusit znovu" (viděno 28. 9. 2026).
+  const retryAttemptRef = useRef(0);
+  useEffect(() => {
+    if (state.locations.length > 0) {
+      retryAttemptRef.current = 0;
+      return;
+    }
+    if (!state.settings.isEnabled || !state.error) return;
+    const maxDelay = Math.max(state.settings.refreshInterval, 1) * 60 * 1000;
+    const delay = Math.min(10 * 1000 * 2 ** retryAttemptRef.current, maxDelay);
+    retryAttemptRef.current++;
+    const timer = setTimeout(initialize, delay);
+    return () => clearTimeout(timer);
+  }, [state.error, state.locations.length, state.settings.isEnabled, state.settings.refreshInterval, initialize]);
+
+  // Po rozsvícení displeje obnovit, když jsou data stará nebo chybí —
+  // pravidelná obnova se zhasnutým displejem neběží (prohlížeč ji brzdí)
+  const lastUpdateRef = useRef(state.lastUpdate);
+  lastUpdateRef.current = state.lastUpdate;
+  useEffect(() => {
+    if (!state.settings.isEnabled) return;
+    const maxAge = Math.max(state.settings.refreshInterval, 1) * 60 * 1000;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      const last = lastUpdateRef.current;
+      if (last && Date.now() - last < maxAge) return;
+      retryAttemptRef.current = 0; // po probuzení zase zkoušet hned
+      clearTimeout(timer);
+      timer = setTimeout(refreshWeather, 2000); // chvilku počkat, než naskočí Wi-Fi
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearTimeout(timer);
+    };
+  }, [state.settings.isEnabled, state.settings.refreshInterval, refreshWeather]);
 
 
   return {

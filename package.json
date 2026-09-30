@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "netlify": "netlify dev",
-    "test:ceny": "node tests/ceny/spustit.mjs"
+    "test:ceny": "node tests/ceny/spustit.mjs",
+    "test:ceny-doporuceni": "node tests/ceny/doporuceni.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

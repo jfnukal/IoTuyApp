@@ -267,8 +267,7 @@ export const PRIPADY = [
   // 26. 8. = den po konci letáků 19.–25. 8. (556 nabídek vzorku). Server je
   // v databázi drží ještě 3 dny a hledání je dřív bralo jako dnešní — Jarek
   // 30. 9. dostal „Doporučení: Billa … platí do 29. 9.". Doporučení samo
-  // hlídá v Family-Dashboard `test:ceny-doporuceni` (část „prošlá akce") —
-  // tady taková zkouška není.
+  // hlídá `test:ceny-doporuceni` (část „prošlá akce").
   {
     dotaz: 'vejce',
     dnes: '2026-08-26',

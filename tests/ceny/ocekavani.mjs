@@ -330,6 +330,23 @@ export const DRUHY = [
     nesmi: /opalov/i,
     proc: '„Mléko na opalování" má v názvu „mléko“ a padalo do kategorie mlecne',
   },
+  // --- VOLBY S HÁČKY A ČÁRKAMI (29. 9. 2026) ---
+  // Rozlišující slovo se bralo z `tokenize`, tedy bez diakritiky, a okno pak
+  // nabízelo „Instantni", „Mleta", „Cerstve". Regexy výš berou obojí, proto
+  // tady přesně — starý kód tu propadne.
+  {
+    dotaz: 'káva',
+    aspon: 3,
+    musi: [/^Mletá$/, /^Instantní$/, /^Zrnková$/],
+    proc: 'volby se ukazují lidem — „Mleta" a „Instantni" je čeština bez háčků',
+  },
+  {
+    dotaz: 'mléko',
+    aspon: 2,
+    musi: [/^Trvanlivé$/, /^Čerstvé$/],
+    proc: 'totéž u mléka („Trvanlive", „Cerstve")',
+  },
+
   // --- PTÁ SE, ale volby jsou ZNAČKY, ne druhy ---
   {
     dotaz: 'minerálka',
@@ -396,9 +413,7 @@ export const DRUHY = [
     dotaz: 'káva',
     dnes: '2026-08-26',
     aspon: 3,
-    /* V Family-Dashboard přesně /^Mletá$/ atd. — tam mají volby háčky
-       (`puvodniSlovo`, FD 5bf00ac), tady zatím ne („Mleta"). Proto obojí. */
-    musi: [/^Mlet[áa]$/, /^Instantn[íi]$/, /^Zrnkov[áa]$/],
+    musi: [/^Mletá$/, /^Instantní$/, /^Zrnková$/],
     proc: 'PROTIVÁHA — druhy, které v platných letácích jsou, se po vyřazení prošlých nabízet musí dál',
   },
 ];

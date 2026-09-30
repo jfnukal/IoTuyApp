@@ -481,6 +481,14 @@ export interface Druh {
 const sVelkym = (s: string): string =>
   s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
 
+/* Slovo tak, jak stojí v názvu výrobku — S HÁČKY A ČÁRKAMI (29. 9. 2026).
+   `tokenize` vrací slova bez diakritiky, protože se tak porovnává, a volby
+   druhů se proto ukazovaly jako „Instantni", „Mleta", „Cerstve". Dělí se
+   stejnými oddělovači jako `tokenize`, takže se slovo najde vždycky (jinak
+   zůstane token); malými písmeny jako dřív, velké první přidá `sVelkym`. */
+const puvodniSlovo = (nazev: string, token: string): string =>
+  (nazev.split(/[\s,./()]+/).find((w) => normalizeText(w) === token) ?? token).toLowerCase();
+
 /**
  * Vrátí volby „cos myslel?" pro obecný dotaz. Prázdné pole = není z čeho
  * vybírat a má se rovnou ukázat cena — tak to dopadne u většiny položek.
@@ -559,7 +567,9 @@ export const nabidniDruhy = (
 
   /* Rozlišující slovo = první slovo názvu, které dotaz nevysvětluje.
      Klíčem je jeho KMEN, jinak by se „Pivo světlý ležák" a „Pivo světlé
-     výčepní" rozpadly na dvě skupiny téhož (změřeno: 35 + 12 řádků). */
+     výčepní" rozpadly na dvě skupiny téhož (změřeno: 35 + 12 řádků).
+     Popis (i dotaz, a tím i uložený alias) je PŮVODNÍ slovo s diakritikou —
+     hledání ji stejně zahodí, takže najde totéž co dřív. */
   const vysvetleno = new Set<string>(dotazTokeny);
   for (const t of dotazTokeny) {
     for (const r of relatedTerms(t)) vysvetleno.add(r);
@@ -572,7 +582,7 @@ export const nabidniDruhy = (
     const klic = kmen(rozlisujici);
     const ma = skupiny.get(klic);
     if (ma) ma.kusy.push(deal);
-    else skupiny.set(klic, { popis: rozlisujici, kusy: [deal] });
+    else skupiny.set(klic, { popis: puvodniSlovo(deal.productName, rozlisujici), kusy: [deal] });
   }
 
   const nejlevnejsi = (kusy: PriceDeal[]) =>

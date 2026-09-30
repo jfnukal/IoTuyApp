@@ -4,6 +4,7 @@ import {
   analyzeShoppingList,
   type ShoppingAnalysis,
 } from '../../../api/shoppingAnalyzer';
+import { useDnes } from '../../../hooks/useDnes';
 
 interface ShoppingRecommendationProps {
   items: Array<{ text: string; completed: boolean }>;
@@ -24,6 +25,11 @@ export const ShoppingRecommendation: React.FC<ShoppingRecommendationProps> = ({
   const [analysis, setAnalysis] = useState<ShoppingAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  /* O půlnoci počítat znovu (převzato z Family-Dashboard, 30. 9. 2026).
+     Nástěnka visí na zdi týdny a seznam se přes noc nemění — doporučení
+     spočítané večer by ráno dál tvrdilo „platí do <včera>", i když hledání
+     prošlé akce už vyřazuje. */
+  const den = useDnes();
 
   useEffect(() => {
     // Filtrujeme jen nekoupené položky a mapujeme na správný formát
@@ -64,7 +70,7 @@ export const ShoppingRecommendation: React.FC<ShoppingRecommendationProps> = ({
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [items]);
+  }, [items, den]);
 
   if (loading) {
     return (

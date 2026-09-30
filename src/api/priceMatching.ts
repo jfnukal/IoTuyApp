@@ -57,6 +57,27 @@ export interface PriceResult {
   jinyVyrobek?: boolean;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PROŠLÁ AKCE SE NEUKAZUJE                                    (30. 9. 2026)
+   ══════════════════════════════════════════════════════════════════════════
+   Server drží nabídku v databázi ještě 3 dny po konci letáku (`expiresAt`
+   ve `functions/src/letaky.ts`) a prohlížeč si ji podle verze dávky pamatuje
+   i déle. Hledání přitom hlídalo jen „ještě nezačala" (`isFuture`) — akce,
+   která VČERA skončila, tak platila dál jako dnešní. Jarek 30. 9.: „Doporučení:
+   Billa — V Billa ušetříš 13 Kč oproti Kaufland, platí do 29. 9." (úterní
+   dávka nový leták Billy nepřinesla; všech 325 jejích nabídek končilo 29. 9.).
+   Vyřazuje se UŽ PŘED hledáním, ne až z výsledků: prošlá opravdová vejce by
+   jinak dál schovávala dnešní aspik a „jiný výrobek" i výběr druhu by se
+   řídily letákem, který neplatí.
+   Nabídka BEZ konce platnosti zůstává (leták ho neuvedl, server ji uklidí
+   za 21 dní). Obě data jsou `YYYY-MM-DD` (jiný tvar server nepustí), takže
+   se porovnávají jako text. `dnes` je MÍSTNÍ den (`klicDne`), nikdy
+   `toISOString` — to je do dvou ráno ještě včerejšek. */
+export const jeProslaAkce = (deal: Pick<PriceDeal, 'validUntil'>, dnes: string): boolean =>
+  typeof deal.validUntil === 'string'
+  && /^\d{4}-\d{2}-\d{2}/.test(deal.validUntil)
+  && deal.validUntil.slice(0, 10) < dnes;
+
 /* Český kmen — usečne koncovou samohlásku, aby „mléko/mléka“ nebo
    „mletá/mleté“ byly totéž slovo. Bez toho neshoda na POSLEDNÍM písmenu
    shodila celou shodu, protože původní porovnání pracovalo jen s předponou:
@@ -282,15 +303,18 @@ export const calculateMatchScore = (
  * @param searchText  co uživatel napsal na seznam
  * @param deals       všechny známé nabídky
  * @param canonicals  kanonické názvy z naučených aliasů (může být prázdné)
- * @param dnes        dnešní datum ve tvaru YYYY-MM-DD (kvůli `isFuture`)
+ * @param dnes        místní dnešek `YYYY-MM-DD` (`klicDne`) — rozhoduje, co už
+ *                    skončilo (`jeProslaAkce`) a co ještě nezačalo (`isFuture`)
  */
 export const hledejVNabidkach = (
   searchText: string,
-  deals: PriceDeal[],
+  vsechnyNabidky: PriceDeal[],
   canonicals: string[],
   dnes: string
 ): PriceResult[] => {
   if (!searchText || searchText.length < 3) return [];
+  // Prošlé akce pryč dřív, než se začne porovnávat (viz `jeProslaAkce`).
+  const deals = vsechnyNabidky.filter((d) => !jeProslaAkce(d, dnes));
   if (deals.length === 0) return [];
 
   // Počet kusů pryč — hledá se produkt, ne „2x"
@@ -463,13 +487,19 @@ const sVelkym = (s: string): string =>
  *
  * Volá se STEJNÉ skórování jako u hledání cen. Kdyby mělo vlastní, rozešlo
  * by se to a nabídka druhů by ukazovala něco jiného než cena pod ní.
+ *
+ * @param dnes  místní dnešek `YYYY-MM-DD` — druh, který je jen v prošlém
+ *              letáku, se koupit nedá, a nabízet se proto nesmí (30. 9. 2026)
  */
 export const nabidniDruhy = (
   searchText: string,
-  deals: PriceDeal[],
-  canonicals: string[]
+  vsechnyNabidky: PriceDeal[],
+  canonicals: string[],
+  dnes: string
 ): Druh[] => {
   if (!searchText || searchText.length < 3) return [];
+  // Stejně jako u cen: prošlé akce pryč dřív, než se začne vybírat.
+  const deals = vsechnyNabidky.filter((d) => !jeProslaAkce(d, dnes));
   if (deals.length === 0) return [];
 
   const dotaz = bezMnozstvi(searchText);

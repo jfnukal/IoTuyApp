@@ -170,6 +170,26 @@ const nactiDeals = async (): Promise<PriceDeal[]> => {
   return cachedDeals;
 };
 
+/** Klíč paměti hledání: tentýž dotaz v jiný DEN je jiné hledání
+ *  (viz `hlidejDen`). */
+const klicHledani = (productName: string, dnes: string): string =>
+  `${productName.toLowerCase().trim()}|${dnes}`;
+
+/* HLEDÁNÍ PLATÍ JEN TEN DEN, KDY SE SPOČÍTALO (převzato z Family-Dashboard,
+   30. 9. 2026). Výsledek v sobě nese, co už skončilo (`jeProslaAkce`) a co
+   ještě nezačalo (`isFuture`) — obojí k jednomu dni. Bez tohohle by výsledek
+   z 23:55 vydržel do 0:05 a cenovka ukázala akci, která o půlnoci skončila.
+   Den je i v klíči (hledání rozběhnuté před půlnocí, které se dopíše po ní,
+   se tak dnes nepřečte); tady se paměť jen vyprázdní, ať neroste. Stažené
+   ceny zůstávají. */
+let denHledani = '';
+const hlidejDen = (dnes: string): void => {
+  if (dnes === denHledani) return;
+  denHledani = dnes;
+  searchCache.clear();
+  druhyCache.clear();
+};
+
 // Hlavní funkce - hledá nejlepší cenu pro produkt
 export const checkProductPrice = async (productName: string): Promise<PriceResult | null> => {
   try {
@@ -194,8 +214,15 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
   try {
     if (!productName || productName.length < 3) return [];
 
+    /* Dnešek MÍSTNĚ, ne v UTC (převzato z Family-Dashboard): `toISOString`
+       je do dvou ráno ještě včerejšek, takže akce končící včera svítila
+       jako platná a akce od dneška jako budoucí. Určuje se PŘED pamětí
+       hledání — nový den ji vyprázdní (`hlidejDen`). */
+    const dnes = dnesniDatum();
+    hlidejDen(dnes);
+
     // Kontrola cache pro toto hledání
-    const cacheKey = productName.toLowerCase().trim();
+    const cacheKey = klicHledani(productName, dnes);
     const cached = searchCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < SEARCH_CACHE_DURATION) {
       return cached.offers;
@@ -207,10 +234,6 @@ export const findAllDeals = async (productName: string): Promise<PriceResult[]> 
     // Naučené aliasy rodiny (např. „žervé → lučina")
     const canonicals = await findCanonical(productName);
 
-    /* Dnešek MÍSTNĚ, ne v UTC (převzato z Family-Dashboard): `toISOString`
-       je do dvou ráno ještě včerejšek, takže akce končící včera svítila
-       jako platná a akce od dneška jako budoucí. */
-    const dnes = dnesniDatum();
     const results = hledejVNabidkach(productName, deals, canonicals, dnes);
 
     // Uložit do cache
@@ -234,7 +257,10 @@ export const findDruhy = async (productName: string): Promise<Druh[]> => {
   try {
     if (!productName || productName.length < 3) return [];
 
-    const cacheKey = productName.toLowerCase().trim();
+    const dnes = dnesniDatum();
+    hlidejDen(dnes);
+
+    const cacheKey = klicHledani(productName, dnes);
     const cached = druhyCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_DURATION) {
       return cached.druhy;
@@ -244,7 +270,7 @@ export const findDruhy = async (productName: string): Promise<Druh[]> => {
     if (deals.length === 0) return [];
 
     const canonicals = await findCanonical(productName);
-    const druhy = nabidniDruhy(productName, deals, canonicals);
+    const druhy = nabidniDruhy(productName, deals, canonicals, dnes);
 
     druhyCache.set(cacheKey, { druhy, timestamp: Date.now() });
     return druhy;

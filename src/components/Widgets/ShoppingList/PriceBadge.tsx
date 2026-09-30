@@ -15,6 +15,7 @@ import {
 } from '../../../api/pricesAPI';
 import PriceDetailModal from './PriceDetailModal';
 import DruhChooserModal from './DruhChooserModal';
+import { useDnes } from '../../../hooks/useDnes';
 
 interface PriceBadgeProps {
   itemName: string;
@@ -39,6 +40,11 @@ export const PriceBadge: React.FC<PriceBadgeProps> = ({ itemName }) => {
      to zkusí znovu (`pokusCen`). */
   const [nedostupne, setNedostupne] = useState(false);
   const [pokusCen, setPokusCen] = useState(0);
+  /* O půlnoci hledat znovu (převzato z Family-Dashboard, 30. 9. 2026).
+     Položka na zdi visí přes noc beze změny a cenovka by jinak dál
+     ukazovala akci, která o půlnoci skončila (a „⏳" u té, která začala).
+     `useDnes` se přepočítá každou minutu a hned po rozsvícení displeje. */
+  const den = useDnes();
 
   /* JINÉ NALEZENÉ PRODUKTY — ukážou se po „✕ Špatný" místo prázdného pole.
      Dřív se nálezy zahodily a člověk musel název uhodnout, ačkoli appka
@@ -84,7 +90,7 @@ export const PriceBadge: React.FC<PriceBadgeProps> = ({ itemName }) => {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [itemName, pokusCen]);
+  }, [itemName, pokusCen, den]); // nový den = hledat znovu
 
   // Focus na input když se otevře
   useEffect(() => {

@@ -11,7 +11,11 @@
 //   jiny    true = první výsledek musí nést příznak „jiný výrobek" (cena patří
 //           něčemu jinému a obrazovka to musí říct), false = nesmí ho nést
 //   bez     tyhle nabídky z letáku odeber (co když tam JEN jiný výrobek je)
+//   dnes    hledej k tomuto dni místo dne vzorku 25. 8. (prošlé akce, 30. 9. 2026)
 //   proc    proč tenhle případ v seznamu je — ať se nesmaže omylem
+//
+// U KAŽDÉHO případu navíc platí: žádný výsledek nesmí být k danému dni
+// PROŠLÝ (`validUntil` před dneškem) — ani jako „další obchod" v detailu.
 //
 // Značky vad z NAVRH-ceny-letaky.md §4:
 //   V1 řadí podle ceny → vyhraje levnější, ale jiný produkt
@@ -258,6 +262,35 @@ export const PRIPADY = [
     jiny: false,
     proc: '14-6 PROTIVÁHA — kdo pomazánku napíše, chce pomazánku; slovo ze seznamu jiných výrobků v dotazu neplatí',
   },
+
+  // --- PROŠLÁ AKCE SE NEUKAZUJE (30. 9. 2026) ---
+  // 26. 8. = den po konci letáků 19.–25. 8. (556 nabídek vzorku). Server je
+  // v databázi drží ještě 3 dny a hledání je dřív bralo jako dnešní — Jarek
+  // 30. 9. dostal „Doporučení: Billa … platí do 29. 9.". Doporučení samo
+  // hlídá v Family-Dashboard `test:ceny-doporuceni` (část „prošlá akce") —
+  // tady taková zkouška není.
+  {
+    dotaz: 'vejce',
+    dnes: '2026-08-26',
+    musi: /vejce z podest.* L Albert/i,
+    nesmiNikde: /pol[ée]vk|aspik/i,
+    jiny: false,
+    proc: 'Albert: vejce M za 34,90 v letáku do 25. 8., vejce L za 39,90 od 26. 8. — stará verze 26. 8. ukázala levnější PROŠLOU cenu (i Penny 79,90 a Billa 84,90 z prošlých letáků)',
+  },
+  {
+    dotaz: 'máslo',
+    dnes: '2026-08-26',
+    musi: /^m[áa]slo/i,
+    nesmiNikde: /madeta/i,
+    proc: 'máslo Madeta (Billa 32,90, Penny 34,90) bylo jen v letácích do 25. 8. — 26. 8. se nesmí nabízet ani jako „další obchod"',
+  },
+  {
+    dotaz: 'vincentka',
+    dnes: '2026-08-26',
+    aspon: 0,
+    nesmiNikde: /vincentka/i,
+    proc: 'Vincentka byla jen v letáku Penny do 25. 8. — po konci akce se nesmí ukázat včerejší cena (cenovka má říct „nenalezeno")',
+  },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -273,6 +306,7 @@ export const PRIPADY = [
 //   musi    pole vzorů; každý musí sedět na některou z voleb
 //   nesmi   tenhle vzor nesmí sedět na žádnou volbu
 //   zadne   true = nesmí se ptát vůbec
+//   dnes    vybírej k tomuto dni místo dne vzorku 25. 8. (prošlé akce)
 //   proc    proč tenhle případ v seznamu je
 
 export const DRUHY = [
@@ -341,6 +375,31 @@ export const DRUHY = [
     zadne: true,
     nesmi: /my[čc]k/i,
     proc: 'první pokus nabízel Sůl do myčky — proto se druhy berou jen ze stejné kategorie',
+  },
+
+  // --- PROŠLÁ AKCE (30. 9. 2026): co je jen v prošlém letáku, není volba ---
+  {
+    dotaz: 'mouka',
+    dnes: '2026-08-26',
+    aspon: 0,
+    nesmi: /ramill|karlova/i,
+    proc: 'Mouka Ramill (Albert) a Karlova Koruna (Penny) byly jen v letácích do 25. 8. — 26. 8. se koupit nedají (zbudou dvě mouky, a to výběr není)',
+  },
+  {
+    dotaz: 'minerálka',
+    dnes: '2026-08-26',
+    aspon: 0,
+    nesmi: /vincentka/i,
+    proc: 'Vincentka byla jen v letáku Penny do 25. 8.',
+  },
+  {
+    dotaz: 'káva',
+    dnes: '2026-08-26',
+    aspon: 3,
+    /* V Family-Dashboard přesně /^Mletá$/ atd. — tam mají volby háčky
+       (`puvodniSlovo`, FD 5bf00ac), tady zatím ne („Mleta"). Proto obojí. */
+    musi: [/^Mlet[áa]$/, /^Instantn[íi]$/, /^Zrnkov[áa]$/],
+    proc: 'PROTIVÁHA — druhy, které v platných letácích jsou, se po vyřazení prošlých nabízet musí dál',
   },
 ];
 

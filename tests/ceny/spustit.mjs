@@ -73,6 +73,7 @@ const ZAHOZENO = SUROVY.length - NABIDKY.length;
 
 // Datum vzorku, ne dnešek — jinak by po vypršení letáků spadlo úplně všechno
 // a zkouška by přestala měřit hledání a začala měřit kalendář.
+// Případ s `dnes` hledá k jinému dni (prošlé akce, 30. 9. 2026).
 const DEN_VZORKU = '2026-08-25';
 
 const barva = (t, c) => `[${c}m${t}[0m`;
@@ -90,15 +91,22 @@ for (const p of PRIPADY) {
   /* `bez` = tyhle nabídky v letáku nejsou (14-6: „co když jsou tam JEN vejce
      v aspiku"), ať se dá změřit i případ, který vzorek sám nemá. */
   const nabidky = p.bez ? NABIDKY.filter((d) => !p.bez.test(d.productName)) : NABIDKY;
-  const vysledky = hledejVNabidkach(p.dotaz, nabidky, [], DEN_VZORKU);
+  const den = p.dnes ?? DEN_VZORKU;
+  const vysledky = hledejVNabidkach(p.dotaz, nabidky, [], den);
   const prvni = vysledky[0];
   const nazev = prvni?.productName ?? '';
   const potreba = p.aspon ?? 1;
-  const popisDotazu = p.bez ? `${p.dotaz} (bez ${p.bez.source})` : p.dotaz;
+  const popisDotazu = p.bez ? `${p.dotaz} (bez ${p.bez.source})` : p.dnes ? `${p.dotaz} (k ${p.dnes})` : p.dotaz;
 
   const chyby = [];
   if (vysledky.length < potreba) {
     chyby.push(`nalezeno ${vysledky.length}, čekáno aspoň ${potreba}`);
+  }
+  /* PROŠLÁ AKCE (30. 9. 2026) — hlídá se u KAŽDÉHO případu: nic z výsledků
+     nesmí k danému dni už skončit, ani jako „další obchod" v detailu. */
+  const prosla = vysledky.find((v) => v.validUntil && v.validUntil < den);
+  if (prosla) {
+    chyby.push(`mezi výsledky je PROŠLÁ akce „${prosla.productName}" (${prosla.store} ${prosla.price}, platila do ${prosla.validUntil}, hledáno k ${den})`);
   }
   if (p.musi && !(prvni && p.musi.test(nazev))) {
     chyby.push(`první je „${nazev || '(nic)'}", má odpovídat ${p.musi}`);
@@ -140,8 +148,9 @@ console.log(`\n${prosly} z ${PRIPADY.length} v pořádku`);
 console.log(`\nNabídka druhů — ${DRUHY.length} případů\n`);
 
 for (const p of DRUHY) {
-  const volby = nabidniDruhy(p.dotaz, NABIDKY, p.aliasy ?? []);
+  const volby = nabidniDruhy(p.dotaz, NABIDKY, p.aliasy ?? [], p.dnes ?? DEN_VZORKU);
   const popisy = volby.map((v) => v.popis);
+  const popisDotazu = p.dnes ? `${p.dotaz} (k ${p.dnes})` : p.dotaz;
   const chyby = [];
 
   if (p.zadne) {
@@ -166,11 +175,11 @@ for (const p of DRUHY) {
 
   if (chyby.length === 0) {
     prosly++;
-    const shrnuti = p.zadne ? '— mlčí, správně' : popisy.join(' · ');
-    console.log(`  ${zeleny('✓')} ${p.dotaz.padEnd(20)} ${seda(shrnuti.slice(0, 60))}`);
+    const shrnuti = p.zadne ? '— mlčí, správně' : popisy.join(' · ') || '— nic k výběru';
+    console.log(`  ${zeleny('✓')} ${popisDotazu.padEnd(20)} ${seda(shrnuti.slice(0, 60))}`);
   } else {
-    padly.push({ p, chyby });
-    console.log(`  ${cerveny('✗')} ${p.dotaz.padEnd(20)} ${cerveny(chyby[0].slice(0, 70))}`);
+    padly.push({ p: { ...p, dotaz: popisDotazu }, chyby });
+    console.log(`  ${cerveny('✗')} ${popisDotazu.padEnd(20)} ${cerveny(chyby[0].slice(0, 70))}`);
   }
 }
 

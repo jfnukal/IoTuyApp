@@ -14,7 +14,6 @@ export interface StoreRecommendation {
     found: boolean;
     soon?: boolean; // cena existuje, ale platí až od příštího letáku
   }>;
-  savings?: number; // Oproti nejdražší variantě
 }
 
 export interface ShoppingAnalysis {
@@ -142,14 +141,6 @@ export const analyzeShoppingList = async (
       return a.totalPrice - b.totalPrice;
     });
 
-  // Vypočítáme úspory oproti nejdražšímu
-  if (allStores.length > 1) {
-    const maxPrice = Math.max(...allStores.map((s) => s.totalPrice));
-    for (const store of allStores) {
-      store.savings = Math.round((maxPrice - store.totalPrice) * 10) / 10;
-    }
-  }
-
   const bestStore = allStores[0] || null;
 
   /* Tip musí říct DVĚ věci, které dřív chyběly: že jde o akci, která
@@ -166,14 +157,31 @@ export const analyzeShoppingList = async (
   if (bestStore && allStores.length > 1) {
     const secondBest = allStores[1];
 
-    if (
-      bestStore.itemsFound === secondBest.itemsFound &&
-      bestStore.savings &&
-      bestStore.savings > 10
-    ) {
-      tip = `V ${bestStore.store} ušetříš ${bestStore.savings} Kč oproti ${secondBest.store}${dokdy(bestStore)}`;
-    } else if (bestStore.itemsFound > secondBest.itemsFound) {
+    // Řazení je podle počtu, takže první má vždycky aspoň tolik jako druhý.
+    if (bestStore.itemsFound > secondBest.itemsFound) {
       tip = `Jdi do ${bestStore.store} — ${bestStore.itemsFound} z ${bestStore.totalItems} položek v aktuální akci${dokdy(bestStore)}`;
+    } else {
+      /* ÚSPORA = kolik stojí TOTÉŽ ZBOŽÍ v obchodě, který tip jmenuje, navíc
+         (převzato z Family-Dashboard 2d0747e, 29. 9. 2026). Dřív se počítala
+         proti NEJDRAŽŠÍMU obchodu ze všech, ale věta jmenovala obchod na druhém
+         místě: „V Penny ušetříš 28 Kč oproti Albert", přitom proti Albertu to
+         byly 4 Kč. A sčítalo se přes RŮZNÉ zboží — stejný počet položek
+         neznamená stejné položky (Penny mléko + rohlíky, Lidl mléko + jablka:
+         rozdíl součtů je rozdíl mezi rohlíky a jablky, ne úspora). Proto jen
+         proti jmenovanému obchodu a jen za položky, které mají v aktuální akci
+         OBA; když nemají stejné všechny, věta to řekne. Celé koruny — ceny
+         jsou orientační a „12.4 Kč" s tečkou nebyla čeština. */
+      const vDruhem = new Map(
+        secondBest.items.filter((i) => i.found).map((i) => [i.name, i.price])
+      );
+      const spolecne = bestStore.items.filter((i) => i.found && vDruhem.has(i.name));
+      const uspora = Math.round(
+        spolecne.reduce((suma, i) => suma + (vDruhem.get(i.name)! - i.price), 0)
+      );
+      if (spolecne.length > 0 && uspora > 10) {
+        const totezZbozi = spolecne.length === bestStore.itemsFound;
+        tip = `V ${bestStore.store} ušetříš ${uspora} Kč oproti ${secondBest.store}${totezZbozi ? '' : ' za zboží, které mají v akci oba'}${dokdy(bestStore)}`;
+      }
     }
   } else if (bestStore) {
     tip = `${bestStore.store} má ${bestStore.itemsFound} z ${bestStore.totalItems} položek v aktuální akci${dokdy(bestStore)}`;
